@@ -21,6 +21,7 @@ import androidx.annotation.Nullable;
 
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.profiles.ProfileIconCache;
+import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
 import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 
@@ -166,8 +167,13 @@ public class ProfileShortcutHelper {
                 .setIntent(intent)
                 .build();
 
-        //noinspection deprecation
-        shortcutManager.requestPinShortcut(shortcut);
+        // On API 33+ the one-arg overload is removed; use the two-arg version with null callback.
+        if (SDK_INT >= VERSION_CODES.TIRAMISU) {
+            shortcutManager.requestPinShortcut(shortcut, null);
+        } else {
+            //noinspection deprecation
+            shortcutManager.requestPinShortcut(shortcut);
+        }
     }
 
     // ─── API 25 path ────────────────────────────────────────────────────
@@ -194,8 +200,13 @@ public class ProfileShortcutHelper {
                 .setIntent(intent)
                 .build();
 
-        //noinspection deprecation
-        shortcutManager.requestPinShortcut(shortcut);
+        // On API 33+ the one-arg overload is removed; use the two-arg version with null callback.
+        if (SDK_INT >= VERSION_CODES.TIRAMISU) {
+            shortcutManager.requestPinShortcut(shortcut, null);
+        } else {
+            //noinspection deprecation
+            shortcutManager.requestPinShortcut(shortcut);
+        }
     }
 
     // ─── API 21-24 legacy path ─────────────────────────────────────────

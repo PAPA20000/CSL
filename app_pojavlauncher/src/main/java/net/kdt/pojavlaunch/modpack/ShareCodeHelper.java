@@ -2,6 +2,7 @@ package net.kdt.pojavlaunch.modpack;
 
 import android.util.Log;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
@@ -34,15 +35,20 @@ public class ShareCodeHelper {
         String description = "CS Launcher Modpack: " + (modpackName != null ? modpackName : "Untitled");
 
         // Build request body
-        JSONObject files = new JSONObject();
-        JSONObject fileObj = new JSONObject();
-        fileObj.put("content", manifestJson);
-        files.put(filename, fileObj);
+        JSONObject body;
+        try {
+            JSONObject files = new JSONObject();
+            JSONObject fileObj = new JSONObject();
+            fileObj.put("content", manifestJson);
+            files.put(filename, fileObj);
 
-        JSONObject body = new JSONObject();
-        body.put("description", description);
-        body.put("public", false);
-        body.put("files", files);
+            body = new JSONObject();
+            body.put("description", description);
+            body.put("public", false);
+            body.put("files", files);
+        } catch (JSONException e) {
+            throw new ShareCodeException("Failed to build request JSON", e);
+        }
 
         byte[] postData = body.toString().getBytes(StandardCharsets.UTF_8);
 
@@ -68,12 +74,16 @@ public class ShareCodeHelper {
             }
 
             String responseBody = readStream(conn.getInputStream());
-            JSONObject resp = new JSONObject(responseBody);
+            try {
+                JSONObject resp = new JSONObject(responseBody);
 
-            if (!resp.has("id")) {
-                throw new ShareCodeException("Gist response missing 'id' field");
+                if (!resp.has("id")) {
+                    throw new ShareCodeException("Gist response missing 'id' field");
+                }
+                return resp.getString("id");
+            } catch (JSONException e) {
+                throw new ShareCodeException("Failed to parse Gist response", e);
             }
-            return resp.getString("id");
 
         } finally {
             if (conn != null) conn.disconnect();
@@ -104,21 +114,25 @@ public class ShareCodeHelper {
             }
 
             String responseBody = readStream(conn.getInputStream());
-            JSONObject resp = new JSONObject(responseBody);
+            try {
+                JSONObject resp = new JSONObject(responseBody);
 
-            JSONObject files = resp.optJSONObject("files");
-            if (files == null || files.length() == 0) {
-                throw new ShareCodeException("Gist has no files");
-            }
+                JSONObject files = resp.optJSONObject("files");
+                if (files == null || files.length() == 0) {
+                    throw new ShareCodeException("Gist has no files");
+                }
 
-            // Pick the first file's content
-            String firstKey = files.keys().next();
-            JSONObject firstFile = files.getJSONObject(firstKey);
-            String content = firstFile.optString("content", null);
-            if (content == null) {
-                throw new ShareCodeException("Gist file \"" + firstKey + "\" has no content");
+                // Pick the first file's content
+                String firstKey = files.keys().next();
+                JSONObject firstFile = files.getJSONObject(firstKey);
+                String content = firstFile.optString("content", null);
+                if (content == null) {
+                    throw new ShareCodeException("Gist file \"" + firstKey + "\" has no content");
+                }
+                return content;
+            } catch (JSONException e) {
+                throw new ShareCodeException("Failed to parse Gist response", e);
             }
-            return content;
 
         } finally {
             if (conn != null) conn.disconnect();
