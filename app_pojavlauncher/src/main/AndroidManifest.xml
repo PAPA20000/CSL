@@ -61,7 +61,7 @@
         <activity
             android:name=".shortcuts.ShortcutActivity"
             android:exported="true"
-            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:theme="@style/AppTheme"
             android:excludeFromRecents="true"
             android:taskAffinity=""
             android:noHistory="true" />
@@ -106,7 +106,7 @@
         <activity
             android:process=":gui_installer"
             android:name=".JavaGUILauncherActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:theme="@style/AppTheme"
             android:configChanges="keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|keyboard|navigation|uiMode"
             android:screenOrientation="sensorLandscape" />
         <activity
