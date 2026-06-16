@@ -2,7 +2,7 @@
 <resources>
 
     <!-- ── Default (Dark) ───────────────────────────────────── -->
-    <style name="AppTheme" parent="@style/Theme.AppCompat.NoActionBar">
+    <style name="AppTheme" parent="@style/Theme.Material3.Dark.NoActionBar">
         <item name="windowNoTitle">true</item>
         <item name="windowActionBar">false</item>
         <item name="android:windowContentOverlay">@null</item>
@@ -20,6 +20,10 @@
         <item name="bgMainDrawable">#121212</item>
         <item name="android:windowBackground">#121212</item>
         <item name="colorAccent">#39FF14</item>
+        <item name="colorOnSurface">@color/primary_text</item>
+        <item name="colorOnSurfaceVariant">@color/secondary_text</item>
+        <item name="colorSurface">#121212</item>
+        <item name="colorSurfaceVariant">#1E1E1E</item>
     </style>
     <style name="AppTheme.Gradient">
         <item name="bgMainDrawable">@drawable/bg_gradient_default</item>
@@ -43,6 +47,10 @@
         <item name="bgMainDrawable">#121212</item>
         <item name="android:windowBackground">#121212</item>
         <item name="colorAccent">#1E90FF</item>
+        <item name="colorOnSurface">@color/mb_text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/mb_text_secondary</item>
+        <item name="colorSurface">#121212</item>
+        <item name="colorSurfaceVariant">#1E1E1E</item>
     </style>
     <style name="AppTheme.MidnightBlue.Gradient">
         <item name="android:statusBarColor">@color/mb_bg_status_bar</item>
@@ -68,6 +76,10 @@
         <item name="bgMainDrawable">#121212</item>
         <item name="android:windowBackground">#121212</item>
         <item name="colorAccent">#4CAF50</item>
+        <item name="colorOnSurface">@color/fg_text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/fg_text_secondary</item>
+        <item name="colorSurface">#121212</item>
+        <item name="colorSurfaceVariant">#1E1E1E</item>
     </style>
     <style name="AppTheme.ForestGreen.Gradient">
         <item name="android:statusBarColor">@color/fg_bg_status_bar</item>
@@ -93,6 +105,10 @@
         <item name="bgMainDrawable">#121212</item>
         <item name="android:windowBackground">#121212</item>
         <item name="colorAccent">#E53935</item>
+        <item name="colorOnSurface">@color/cr_text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/cr_text_secondary</item>
+        <item name="colorSurface">#121212</item>
+        <item name="colorSurfaceVariant">#1E1E1E</item>
     </style>
     <style name="AppTheme.Crimson.Gradient">
         <item name="android:statusBarColor">@color/cr_bg_status_bar</item>
@@ -118,6 +134,10 @@
         <item name="bgMainDrawable">#121212</item>
         <item name="android:windowBackground">#121212</item>
         <item name="colorAccent">#9C27B0</item>
+        <item name="colorOnSurface">@color/am_text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/am_text_secondary</item>
+        <item name="colorSurface">#121212</item>
+        <item name="colorSurfaceVariant">#1E1E1E</item>
     </style>
     <style name="AppTheme.Amethyst.Gradient">
         <item name="android:statusBarColor">@color/am_bg_status_bar</item>
@@ -152,6 +172,10 @@
         <item name="colorBgBottomBar">@color/ar_bg_bottom_bar</item>
         <item name="colorBgStatusBar">@color/ar_bg_status_bar</item>
         <item name="colorAccent">#00BCD4</item>
+        <item name="colorOnSurface">@color/ar_text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/ar_text_secondary</item>
+        <item name="colorSurface">#121212</item>
+        <item name="colorSurfaceVariant">#1E1E1E</item>
     </style>
 
     <style name="LauncherFragment_Divider">
