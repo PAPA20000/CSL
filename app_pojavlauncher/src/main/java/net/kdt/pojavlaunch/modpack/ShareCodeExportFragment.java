@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -116,7 +117,7 @@ public class ShareCodeExportFragment extends Fragment {
                     requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
             cm.setPrimaryClip(ClipData.newPlainText("CS Modpack Code", code));
             Tools.runOnUiThread(() -> {
-                Toast.makeText(getContext(), R.string.mp_code_copied, Toast.LENGTH_SHORT).show();
+                android.widget.Toast.makeText(getContext(), R.string.mp_code_copied, android.widget.Toast.LENGTH_SHORT).show();
             });
         });
 
@@ -145,9 +146,9 @@ public class ShareCodeExportFragment extends Fragment {
                 Tools.runOnUiThread(() -> {
                     mProgressBar.setVisibility(View.GONE);
                     mBtnGist.setEnabled(true);
-                    Toast.makeText(getContext(),
+                    android.widget.Toast.makeText(getContext(),
                             "Upload failed: " + e.getMessage(),
-                            Toast.LENGTH_LONG).show();
+                            android.widget.Toast.LENGTH_LONG).show();
                 });
             }
         });
@@ -159,11 +160,5 @@ public class ShareCodeExportFragment extends Fragment {
         mCodeText.setText(gistCode);
         mCodeText.setTextIsSelectable(true);
         mCodeText.append("\n\n" + getString(R.string.mp_gist_uploaded));
-    }
-
-    public static class Toast {
-        public static void makeText(Context c, CharSequence s, int dur) {
-            android.widget.Toast.makeText(c, s, dur).show();
-        }
     }
 }

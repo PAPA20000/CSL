@@ -3,8 +3,6 @@ package net.kdt.pojavlaunch.shortcuts;
 import static android.os.Build.VERSION.SDK_INT;
 import static android.os.Build.VERSION_CODES;
 
-import android.app.PendingIntent;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ShortcutInfo;
@@ -20,12 +18,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.pm.ShortcutInfoCompat;
-import androidx.core.content.pm.ShortcutManagerCompat;
-import androidx.core.graphics.drawable.IconCompat;
-import androidx.core.os.BuildCompat;
 
-import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.profiles.ProfileIconCache;
 import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
@@ -173,9 +166,8 @@ public class ProfileShortcutHelper {
                 .setIntent(intent)
                 .build();
 
-        // Request pin
-        IntentSenderCallback callback = new IntentSenderCallback();
-        shortcutManager.requestPinShortcut(shortcut, callback.getIntentSender(context));
+        //noinspection deprecation
+        shortcutManager.requestPinShortcut(shortcut);
     }
 
     // ─── API 25 path ────────────────────────────────────────────────────
@@ -323,21 +315,5 @@ public class ProfileShortcutHelper {
         drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
         drawable.draw(canvas);
         return bitmap;
-    }
-
-    /**
-     * PendingIntent sender wrapper for requestPinShortcut callback.
-     */
-    private static class IntentSenderCallback {
-        private static final int REQ_CODE_PIN_SHORTCUT = 0x1001;
-
-        PendingIntent getIntentSender(Context context) {
-            Intent intent = new Intent();
-            intent.setAction("net.kdt.pojavlaunch.SHORTCUT_PINNED");
-            return PendingIntent.getBroadcast(
-                    context, REQ_CODE_PIN_SHORTCUT, intent,
-                    PendingIntent.FLAG_IMMUTABLE |
-                    PendingIntent.FLAG_UPDATE_CURRENT);
-        }
     }
 }

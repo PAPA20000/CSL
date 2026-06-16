@@ -13,6 +13,7 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Gravity;
 import android.widget.*;
 
 import net.kdt.pojavlaunch.PojavApplication;
@@ -571,8 +572,6 @@ public class ModpackBuilderFragment extends Fragment {
         private String mSelected;
         private final VersionClickListener mListener;
 
-        interface VersionClickListener { void onVersionSelected(String version); }
-
         VersionAdapter(List<String> versions, String selected, VersionClickListener listener) {
             mOriginal = versions != null ? versions : new ArrayList<>();
             mFiltered = new ArrayList<>(mOriginal);
@@ -647,8 +646,6 @@ public class ModpackBuilderFragment extends Fragment {
         private final List<BuilderState.ModEntry> mMods;
         private final ModCountCallback mCallback;
 
-        interface ModCountCallback { void onChanged(int enabledCount, List<String> warnings); }
-
         ModCheckableAdapter(List<BuilderState.ModEntry> mods, ModCountCallback cb) {
             mMods = mods; mCallback = cb;
         }
@@ -711,7 +708,6 @@ public class ModpackBuilderFragment extends Fragment {
     private class ResourcePackAdapter extends RecyclerView.Adapter<ResourcePackAdapter.VH> {
         private final List<BuilderState.ModEntry> mItems;
         private final CountCallback mCb;
-        interface CountCallback { void onChanged(int count); }
 
         ResourcePackAdapter(List<BuilderState.ModEntry> items, CountCallback cb) {
             mItems = items; mCb = cb; notifyCount();
@@ -758,7 +754,6 @@ public class ModpackBuilderFragment extends Fragment {
     private class ShaderAdapter extends RecyclerView.Adapter<ShaderAdapter.VH> {
         private final List<BuilderState.ModEntry> mItems;
         private final CountCallback mCb;
-        interface CountCallback { void onChanged(int count); }
 
         ShaderAdapter(List<BuilderState.ModEntry> items, CountCallback cb) {
             mItems = items; mCb = cb; notifyCount();
@@ -797,6 +792,12 @@ public class ModpackBuilderFragment extends Fragment {
             }
         }
     }
+
+    /* ─── Interfaces moved outside inner classes to avoid "Illegal static declaration" ─── */
+
+    public interface VersionClickListener { void onVersionSelected(String version); }
+    public interface ModCountCallback { void onChanged(int enabledCount, List<String> warnings); }
+    public interface CountCallback { void onChanged(int count); }
 
     /* ══════════════════════════════════════════
      *  Populate step (dispatcher)

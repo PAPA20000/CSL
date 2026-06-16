@@ -281,8 +281,8 @@ public class ShortcutIconPickerFragment extends Fragment {
     private String getCurrentUsername() {
         try {
             net.kdt.pojavlaunch.value.MinecraftAccount account =
-                    net.kdt.pojavlaunch.PojavProfile.getCurrentProfile(
-                            getContext().getContentResolver());
+                    net.kdt.pojavlaunch.PojavProfile.getCurrentProfileContent(
+                            getContext(), null);
             return account != null ? account.username : null;
         } catch (Exception e) {
             return null;
