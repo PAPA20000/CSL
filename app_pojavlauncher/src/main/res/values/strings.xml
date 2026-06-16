@@ -582,4 +582,93 @@
     <string name="mod_installing">INSTALLING...</string>
     <string name="mod_description_label">Description</string>
 
+    <!-- Shortcut Strings -->
+    <string name="shortcut_add_title">Add to Home Screen</string>
+    <string name="shortcut_add_subtitle">Create a shortcut to launch this profile directly from your home screen</string>
+    <string name="shortcut_name_hint">Shortcut name</string>
+    <string name="shortcut_icon_label">Icon Preview</string>
+    <string name="shortcut_icon_choose">Choose icon source</string>
+    <string name="shortcut_icon_profile">Profile Icon</string>
+    <string name="shortcut_icon_skin">Skin Head</string>
+    <string name="shortcut_icon_custom">Custom Image</string>
+    <string name="shortcut_create_btn">Create Shortcut</string>
+    <string name="shortcut_no_account">No account found. Add an account first to use skin head icons.</string>
+    <string name="shortcut_downloading_skin">Downloading skin head...</string>
+    <string name="shortcut_skin_failed">Failed to download skin head. Try another icon source.</string>
+    <string name="shortcut_image_error">Failed to load image.</string>
+    <string name="shortcut_error">Failed to create shortcut.</string>
+    <string name="shortcut_name_required">Shortcut name is required.</string>
+    <string name="shortcut_created">Shortcut created!</string>
+
+    <!-- Modpack Builder Strings -->
+    <string name="modpack_builder_title">Modpack Builder</string>
+    <string name="mp_generate">Generate</string>
+    <string name="mp_generating">Generating...</string>
+    <string name="mp_already_generated">This modpack has already been generated</string>
+    <string name="mp_generated_success">Modpack \"%s\" created successfully!</string>
+    <string name="mp_generate_failed">Generation failed: %s</string>
+    <string name="mp_step1_short">Version</string>
+    <string name="mp_step2_short">Loader</string>
+    <string name="mp_step3_short">Mods</string>
+    <string name="mp_step4_short">RPs</string>
+    <string name="mp_step5_short">Shaders</string>
+    <string name="mp_step6_short">Review</string>
+    <string name="mp_step1_title">Select Version</string>
+    <string name="mp_step1_subtitle">Choose a Minecraft version for your modpack</string>
+    <string name="mp_step2_title">Select Loader</string>
+    <string name="mp_step2_subtitle">Choose your mod loader</string>
+    <string name="mp_step3_title">Select Mods</string>
+    <string name="mp_step3_subtitle">Choose mods for your modpack</string>
+    <string name="mp_step4_title">Select Resource Packs</string>
+    <string name="mp_step4_subtitle">Choose resource packs</string>
+    <string name="mp_step5_title">Select Shaders</string>
+    <string name="mp_step5_subtitle">Choose shader packs</string>
+    <string name="mp_step6_title">Review &amp; Generate</string>
+    <string name="mp_step6_subtitle">Review your modpack configuration</string>
+    <string name="mp_select_version_first">Select a Minecraft version first</string>
+    <string name="mp_no_versions_found">No installed Minecraft versions found. Install a version first.</string>
+    <string name="mp_loader_vanilla_desc">No mod loader. Play with the standard Minecraft experience.</string>
+    <string name="mp_loader_fabric_desc">Lightweight mod loader. Best for performance mods.</string>
+    <string name="mp_loader_forge_desc">The original major mod loader. Supports many large mods.</string>
+    <string name="mp_loader_neoforge_desc">A modern fork of Forge. Supports the latest versions.</string>
+    <string name="mp_loader_quilt_desc">A Fabric-compatible loader with modern tooling.</string>
+    <string name="mp_mods_selected_count">%d mods selected</string>
+    <string name="mp_rp_selected_count">%d resource packs selected</string>
+    <string name="mp_shader_selected_count">%d shaders selected</string>
+    <string name="mp_review_version">Version: %s</string>
+    <string name="mp_review_loader">Loader: %s</string>
+    <string name="mp_review_mods">Mods selected: %d</string>
+    <string name="mp_review_rp">Resource packs selected: %d</string>
+    <string name="mp_review_shader">Shaders selected: %d</string>
+    <string name="mp_review_summary">Summary</string>
+    <string name="mp_name_required">Modpack name is required</string>
+    <string name="mp_name_hint">Modpack Name</string>
+    <string name="mp_desc_hint">Description (optional)</string>
+    <string name="mp_recommended_badge">Recommended</string>
+
+    <string name="global_next">Next</string>
+    <string name="global_close">Close</string>
+
+    <!-- Share Code System Strings -->
+    <string name="mp_export_title">Export Share Code</string>
+    <string name="mp_share_title">Share Modpack Code</string>
+    <string name="mp_copy_code">Copy Code</string>
+    <string name="mp_share_code">Share Code</string>
+    <string name="mp_upload_gist">Upload to GitHub Gist</string>
+    <string name="mp_code_copied">Code copied to clipboard</string>
+    <string name="mp_code_too_long_hint">Code is too long for offline sharing.\nUpload to GitHub Gist instead.</string>
+    <string name="mp_gist_uploaded">✓ Uploaded to GitHub Gist</string>
+
+    <string name="mp_import_title">Import Share Code</string>
+    <string name="mp_import_instructions">Paste a modpack share code below to import and recreate the profile.</string>
+    <string name="mp_import_code_hint">Paste share code here</string>
+    <string name="mp_import_code_required">Please enter a share code</string>
+    <string name="mp_import_invalid_code">Invalid share code format. Must start with CS-MP- or CS-MP-GH-</string>
+    <string name="mp_import_decoding">Decoding share code…</string>
+    <string name="mp_import_downloading">Downloading from GitHub Gist…</string>
+    <string name="mp_import_success">Modpack imported successfully!</string>
+    <string name="mp_import_failed">Import failed: %s</string>
+    <string name="mp_import_action">Import Modpack</string>
+    <string name="mp_paste_code">Paste from Clipboard</string>
+
 </resources>

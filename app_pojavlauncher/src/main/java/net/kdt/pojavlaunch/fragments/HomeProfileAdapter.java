@@ -38,6 +38,7 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
     public interface OnProfileActionListener {
         void onProfilePlay(String profileKey, MinecraftProfile profile);
         void onProfileEdit(String profileKey, MinecraftProfile profile);
+        void onProfileAddShortcut(String profileKey, MinecraftProfile profile);
     }
 
     public HomeProfileAdapter(List<String> profileKeys, List<MinecraftProfile> profiles,
@@ -134,6 +135,13 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
 
         holder.cardRoot.setOnClickListener(v -> {
             if (mListener != null) mListener.onProfileEdit(profileKey, profile);
+        });
+
+        holder.cardRoot.setOnLongClickListener(v -> {
+            if (mListener != null) {
+                mListener.onProfileAddShortcut(profileKey, profile);
+            }
+            return true;
         });
 
         holder.btnPlay.setOnClickListener(v -> {

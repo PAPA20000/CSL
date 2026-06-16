@@ -155,6 +155,26 @@ public class RightPaneHomeFragment extends Fragment {
                     Tools.swapFragment(requireActivity(),
                             ProfileEditorFragment.class, ProfileEditorFragment.TAG, null);
                 }
+
+                @Override
+                public void onProfileAddShortcut(String profileKey, MinecraftProfile profile) {
+                    Bundle args = new Bundle();
+                    args.putString(
+                            net.kdt.pojavlaunch.shortcuts.ShortcutIconPickerFragment.ARG_PROFILE_KEY,
+                            profileKey);
+                    Fragment parent = getParentFragment();
+                    if (parent instanceof MainMenuFragment) {
+                        ((MainMenuFragment) parent).openChildPane(
+                                net.kdt.pojavlaunch.shortcuts.ShortcutIconPickerFragment.class,
+                                net.kdt.pojavlaunch.shortcuts.ShortcutIconPickerFragment.TAG,
+                                args);
+                    } else if (getActivity() != null) {
+                        Tools.swapFragment(requireActivity(),
+                                net.kdt.pojavlaunch.shortcuts.ShortcutIconPickerFragment.class,
+                                net.kdt.pojavlaunch.shortcuts.ShortcutIconPickerFragment.TAG,
+                                args);
+                    }
+                }
             });
 
             mRecyclerView.setAdapter(mAdapter);
