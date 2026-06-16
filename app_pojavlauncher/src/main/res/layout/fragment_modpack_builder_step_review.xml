@@ -72,7 +72,7 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            style="@style/Widget.Material3.Card.Outlined"
+            style="@style/Widget.Material3.CardView.Outlined"
             android:layout_marginBottom="16dp">
 
             <LinearLayout
@@ -136,7 +136,7 @@
             android:id="@+id/review_compat_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            style="@style/Widget.Material3.Card.Outlined"
+            style="@style/Widget.Material3.CardView.Outlined"
             android:layout_marginBottom="16dp"
             android:visibility="gone">
 
