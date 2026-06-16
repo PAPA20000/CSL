@@ -5,9 +5,6 @@ on:
     branches-ignore:
       - 'l10n_v3_openjdk'
     types: [opened, reopened]
-  push:
-    branches-ignore:
-      - 'l10n_v3_openjdk'
   workflow_dispatch:
 
 jobs:
@@ -52,13 +49,8 @@ jobs:
           cache-read-only: ${{ github.event_name == 'pull_request' }}
 
       # ── Signing keystore ─────────────────────────────────────────────────────
-      # Secrets required (add in GitHub → Settings → Secrets):
-      #   SIGNING_KEYSTORE_BASE64  — base64-encoded .jks file
-      #   SIGNING_KEY_ALIAS        — key alias
-      #   SIGNING_KEY_PASSWORD     — key password
-      #   SIGNING_STORE_PASSWORD   — store password
       - name: Decode signing keystore
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'workflow_dispatch'
         run: |
           echo "${{ secrets.SIGNING_KEYSTORE_BASE64 }}" | base64 --decode > keystore.jks
           echo "KEYSTORE_PATH=${{ github.workspace }}/keystore.jks" >> $GITHUB_ENV
@@ -147,10 +139,10 @@ jobs:
           path: out/*
           retention-days: 30
 
-      # ── GitHub Release (push / manual only) ─────────────────────────────────
+      # ── GitHub Release (manual only) ─────────────────────────────────────────
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'workflow_dispatch'
         with:
           artifacts: "out/CS-LAUNCHER-V2.apk,out/CS-LAUNCHER-V2.md5,out/CS-LAUNCHER-V2.sha256,out/CS-LAUNCHER-V2-NO-RUNTIME.apk,out/CS-LAUNCHER-V2-NO-RUNTIME.md5,out/CS-LAUNCHER-V2-NO-RUNTIME.sha256"
           token: ${{ secrets.GITHUB_TOKEN }}
