@@ -28,6 +28,7 @@ import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.UUID;
 
 /**
@@ -168,11 +169,18 @@ public class ProfileShortcutHelper {
                 .build();
 
         // On API 33+ the one-arg overload is removed; use the two-arg version with null callback.
+        // On API <33 the one-arg method exists at runtime but is invisible to the SDK 34 compiler,
+        // so we call it via reflection.
         if (SDK_INT >= VERSION_CODES.TIRAMISU) {
             shortcutManager.requestPinShortcut(shortcut, null);
         } else {
-            //noinspection deprecation
-            shortcutManager.requestPinShortcut(shortcut);
+            try {
+                Method oneArg = ShortcutManager.class.getMethod(
+                        "requestPinShortcut", ShortcutInfo.class);
+                oneArg.invoke(shortcutManager, shortcut);
+            } catch (Exception e) {
+                Log.w(TAG, "Failed to create shortcut via reflection", e);
+            }
         }
     }
 
@@ -201,11 +209,18 @@ public class ProfileShortcutHelper {
                 .build();
 
         // On API 33+ the one-arg overload is removed; use the two-arg version with null callback.
+        // On API <33 the one-arg method exists at runtime but is invisible to the SDK 34 compiler,
+        // so we call it via reflection.
         if (SDK_INT >= VERSION_CODES.TIRAMISU) {
             shortcutManager.requestPinShortcut(shortcut, null);
         } else {
-            //noinspection deprecation
-            shortcutManager.requestPinShortcut(shortcut);
+            try {
+                Method oneArg = ShortcutManager.class.getMethod(
+                        "requestPinShortcut", ShortcutInfo.class);
+                oneArg.invoke(shortcutManager, shortcut);
+            } catch (Exception e) {
+                Log.w(TAG, "Failed to create shortcut via reflection", e);
+            }
         }
     }
 
