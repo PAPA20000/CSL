@@ -5,7 +5,7 @@ plugins {
 static def getDate() { return new Date().format('yyyyMMdd') }
 
 def getVersionName = {
-    // Show clean "CS Launcher v2 Build 1.1.5" style version names.
+    // Show clean "CS Launcher V3 Build 1.1.5" style version names.
     String semVer = "1.1.5"
     
     // Try to get a git tag for the full version
@@ -101,8 +101,8 @@ android {
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.customDebug
-            resValue "string", "app_name", "CS LAUNCHER V2"
-            resValue "string", "app_short_name", "CS LAUNCHER V2"
+            resValue "string", "app_name", "CS Launcher V3"
+            resValue "string", "app_short_name", "CS Launcher V3"
             resValue 'string', 'application_package', 'com.craftstudio.cslauncher.debug'
             resValue 'string', 'storageProviderAuthorities', 'com.craftstudio.cslauncher.scoped.gamefolder.debug'
             resValue 'string', 'shareProviderAuthority', 'com.craftstudio.cslauncher.scoped.controlfolder.debug'
@@ -127,8 +127,8 @@ android {
             if (System.getenv("KEYSTORE_PATH") != null) {
                 signingConfig signingConfigs.release
             }
-            resValue "string", "app_name", "CS LAUNCHER V2"
-            resValue "string", "app_short_name", "CS LAUNCHER V2"
+            resValue "string", "app_name", "CS Launcher V3"
+            resValue "string", "app_short_name", "CS Launcher V3"
             resValue 'string', 'storageProviderAuthorities', 'com.craftstudio.cslauncher.gamefolder'
             resValue 'string', 'application_package', 'com.craftstudio.cslauncher'
         }

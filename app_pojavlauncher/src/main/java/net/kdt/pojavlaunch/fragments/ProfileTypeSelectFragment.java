@@ -21,8 +21,7 @@ import androidx.fragment.app.Fragment;
 
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
-import net.kdt.pojavlaunch.modpack.ModpackBuilderFragment;
-import net.kdt.pojavlaunch.modpack.ShareCodeImportFragment;
+
 
 public class ProfileTypeSelectFragment extends Fragment {
     public static final String TAG = "ProfileTypeSelectFragment";
@@ -93,14 +92,6 @@ public class ProfileTypeSelectFragment extends Fragment {
 
         b = view.findViewById(R.id.modded_profile_quilt);
         b.setOnClickListener(v -> tryInstall(QuiltInstallFragment.class, QuiltInstallFragment.TAG));
-        setupTouchAnimation(b);
-
-        b = view.findViewById(R.id.modpack_builder);
-        b.setOnClickListener(v -> navigateTo(ModpackBuilderFragment.class, ModpackBuilderFragment.TAG, null));
-        setupTouchAnimation(b);
-
-        b = view.findViewById(R.id.modpack_import);
-        b.setOnClickListener(v -> navigateTo(ShareCodeImportFragment.class, ShareCodeImportFragment.TAG, null));
         setupTouchAnimation(b);
 
         b = view.findViewById(R.id.modded_profile_bta);

@@ -43,7 +43,7 @@
 
         </FrameLayout>
 
-        <!-- CS LAUNCHER v2 (clickable → home) -->
+        <!-- CS Launcher V3 (clickable → home) -->
         <TextView
             android:id="@+id/tv_launcher_title"
             android:layout_width="wrap_content"

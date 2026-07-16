@@ -1,6 +1,8 @@
-name: CS Launcher V2 CI
+name: CS Launcher V3 CI
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches-ignore:
       - 'l10n_v3_openjdk'
@@ -82,9 +84,9 @@ jobs:
 
           RELEASE_APK=$(find app_pojavlauncher/build/outputs/apk/release -name "*.apk" | head -n 1)
           if [ -n "$RELEASE_APK" ]; then
-            cp "$RELEASE_APK" out/CS-LAUNCHER-V2.apk
-            md5sum  out/CS-LAUNCHER-V2.apk > out/CS-LAUNCHER-V2.md5
-            sha256sum out/CS-LAUNCHER-V2.apk > out/CS-LAUNCHER-V2.sha256
+            cp "$RELEASE_APK" out/CS-LAUNCHER-V3.apk
+            md5sum  out/CS-LAUNCHER-V3.apk > out/CS-LAUNCHER-V3.md5
+            sha256sum out/CS-LAUNCHER-V3.apk > out/CS-LAUNCHER-V3.sha256
           else
             echo "ERROR: Release APK not found" && exit 1
           fi
@@ -97,8 +99,8 @@ jobs:
 
           DEBUG_APK=$(find app_pojavlauncher/build/outputs/apk/debug -name "*.apk" | head -n 1)
           if [ -n "$DEBUG_APK" ]; then
-            cp "$DEBUG_APK" out/CS-LAUNCHER-V2-DEBUG.apk
-            md5sum out/CS-LAUNCHER-V2-DEBUG.apk > out/CS-LAUNCHER-V2-DEBUG.md5
+            cp "$DEBUG_APK" out/CS-LAUNCHER-V3-DEBUG.apk
+            md5sum out/CS-LAUNCHER-V3-DEBUG.apk > out/CS-LAUNCHER-V3-DEBUG.md5
           fi
 
       # ── No-runtime APK ───────────────────────────────────────────────────────
@@ -115,9 +117,9 @@ jobs:
 
           NORUNTIME_APK=$(find app_pojavlauncher/build/outputs/apk/release -name "*.apk" | head -n 1)
           if [ -n "$NORUNTIME_APK" ]; then
-            cp "$NORUNTIME_APK" out/CS-LAUNCHER-V2-NO-RUNTIME.apk
-            md5sum    out/CS-LAUNCHER-V2-NO-RUNTIME.apk > out/CS-LAUNCHER-V2-NO-RUNTIME.md5
-            sha256sum out/CS-LAUNCHER-V2-NO-RUNTIME.apk > out/CS-LAUNCHER-V2-NO-RUNTIME.sha256
+            cp "$NORUNTIME_APK" out/CS-LAUNCHER-V3-NO-RUNTIME.apk
+            md5sum    out/CS-LAUNCHER-V3-NO-RUNTIME.apk > out/CS-LAUNCHER-V3-NO-RUNTIME.md5
+            sha256sum out/CS-LAUNCHER-V3-NO-RUNTIME.apk > out/CS-LAUNCHER-V3-NO-RUNTIME.sha256
           fi
 
       # ── APK size report ──────────────────────────────────────────────────────
@@ -135,7 +137,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: cs-launcher-v2-build-${{ github.run_number }}
+          name: cs-launcher-v3-build-${{ github.run_number }}
           path: out/*
           retention-days: 30
 
@@ -144,12 +146,12 @@ jobs:
         uses: ncipollo/release-action@v1
         if: github.event_name == 'workflow_dispatch'
         with:
-          artifacts: "out/CS-LAUNCHER-V2.apk,out/CS-LAUNCHER-V2.md5,out/CS-LAUNCHER-V2.sha256,out/CS-LAUNCHER-V2-NO-RUNTIME.apk,out/CS-LAUNCHER-V2-NO-RUNTIME.md5,out/CS-LAUNCHER-V2-NO-RUNTIME.sha256"
+          artifacts: "out/CS-LAUNCHER-V3.apk,out/CS-LAUNCHER-V3.md5,out/CS-LAUNCHER-V3.sha256,out/CS-LAUNCHER-V3-NO-RUNTIME.apk,out/CS-LAUNCHER-V3-NO-RUNTIME.md5,out/CS-LAUNCHER-V3-NO-RUNTIME.sha256"
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: "v2.${{ github.run_number }}"
-          name: "CS Launcher V2 — Build ${{ github.run_number }}"
+          tag: "v3.${{ github.run_number }}"
+          name: "CS Launcher V3 — Build ${{ github.run_number }}"
           body: |
-            ## CS Launcher V2 — Build ${{ github.run_number }}
+            ## CS Launcher V3 — Build ${{ github.run_number }}
 
             **Branch:** `${{ github.ref_name }}`
             **Commit:** `${{ github.sha }}`
@@ -157,8 +159,8 @@ jobs:
             ### Downloads
             | File | Description |
             |------|-------------|
-            | `CS-LAUNCHER-V2.apk` | ✅ **Recommended** — Signed release build with bundled JRE 8 |
-            | `CS-LAUNCHER-V2-NO-RUNTIME.apk` | Signed release build without bundled runtime (smaller, requires device JRE) |
+            | `CS-LAUNCHER-V3.apk` | ✅ **Recommended** — Signed release build with bundled JRE 8 |
+            | `CS-LAUNCHER-V3-NO-RUNTIME.apk` | Signed release build without bundled runtime (smaller, requires device JRE) |
 
             > ℹ️ Verify your download with the `.md5` / `.sha256` checksum files.
           allowUpdates: true

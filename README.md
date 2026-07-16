@@ -1,7 +1,7 @@
 <div align="center">
 
 <!-- 🎬 Animated Header -->
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=220&section=header&text=CS%20LAUNCHER%20V2&fontSize=60&fontColor=ffffff&animation=twinkling&fontAlignY=35&desc=Play%20Minecraft%3A%20Java%20Edition%20on%20Android&descSize=20&descAlignY=55" width="100%"/>
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=220&section=header&text=CS%20Launcher%20V3&fontSize=60&fontColor=ffffff&animation=twinkling&fontAlignY=35&desc=Play%20Minecraft%3A%20Java%20Edition%20on%20Android&descSize=20&descAlignY=55" width="100%"/>
 
 <!-- ⌨️ Animated Typing Tagline -->
 <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=700&size=24&duration=2500&pause=800&color=F76C00&center=true&vCenter=true&width=600&lines=⚡+Fast+•+Free+•+Open+Source+⚡;🧩+Forge+%26+Fabric+Mod+Support;🎮+Every+Version+from+rd-132211+to+1.21;🚀+Built+for+Android+8.0%2B" alt="Typing animation"/>
@@ -11,7 +11,7 @@
 <p>
   <img src="https://img.shields.io/badge/Platform-Android-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Platform"/>
   <img src="https://img.shields.io/badge/Min%20SDK-26-2196F3?style=for-the-badge&logo=android&logoColor=white" alt="Min SDK"/>
-  <img src="https://img.shields.io/badge/Version-V2-FF6F00?style=for-the-badge" alt="Version"/>
+  <img src="https://img.shields.io/badge/Version-V3-FF6F00?style=for-the-badge" alt="Version"/>
   <img src="https://img.shields.io/badge/License-GPL--3.0-blueviolet?style=for-the-badge" alt="License"/>
 </p>
 
@@ -36,7 +36,7 @@
 
 </div>
 
-> 🎮 **CS LAUNCHER V2** is a powerful Minecraft: Java Edition launcher for Android, forked from [Amethyst](https://github.com/AngelAuraMC/Amethyst-Android) and built on the legendary foundations of [Boardwalk](https://github.com/zhuowei/Boardwalk) and [PojavLauncher](https://github.com/PojavLauncherTeam/PojavLauncher).
+> 🎮 **CS Launcher V3** is a powerful Minecraft: Java Edition launcher for Android, forked from [Amethyst](https://github.com/AngelAuraMC/Amethyst-Android) and built on the legendary foundations of [Boardwalk](https://github.com/zhuowei/Boardwalk) and [PojavLauncher](https://github.com/PojavLauncherTeam/PojavLauncher).
 
 <br>
 
@@ -179,7 +179,7 @@ scripts\languagelist_updater.bat
 
 ```mermaid
 timeline
-    title CS LAUNCHER V2 — Development Roadmap
+    title CS Launcher V3 — Development Roadmap
     NOW : 🔬 New rendering technologies
     NEXT : ⚡ Stability & performance improvements
     LATER : 🧩 Better mod installation experience
@@ -195,7 +195,7 @@ timeline
 ## ❓ FAQ
 
 <details>
-<summary><b>Is CS LAUNCHER V2 free?</b></summary>
+<summary><b>Is CS Launcher V3 free?</b></summary>
 <br>
 Yes! 100% free and open source. However, you need a legitimate Minecraft: Java Edition account for online play.
 </details>
@@ -261,7 +261,7 @@ Check the **issue tracker** for known issues and their status. Found a new bug? 
 
 ## 📜 License
 
-**CS LAUNCHER V2** is licensed under the **GNU GPL v3.0**.
+**CS Launcher V3** is licensed under the **GNU GPL v3.0**.
 See the LICENSE file for details.
 
 <br>

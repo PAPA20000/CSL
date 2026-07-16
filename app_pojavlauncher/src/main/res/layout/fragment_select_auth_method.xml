@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@color/bg_launcher_dark">
 
-    <!-- CS LAUNCHER v2 Branding -->
+    <!-- CS Launcher V3 Branding -->
     <LinearLayout
         android:id="@+id/auth_branding"
         android:layout_width="wrap_content"
@@ -21,7 +21,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="CS LAUNCHER v2"
+            android:text="CS Launcher V3"
             android:textColor="#A6FF3D"
             android:textSize="@dimen/_18ssp"
             android:textStyle="bold"
