@@ -2,7 +2,7 @@
 <com.kdt.DefocusableScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0A0A0A"
+    android:background="#060A14"
     android:fillViewport="true"
     android:scrollbarSize="3dp"
     android:fadeScrollbars="true"
@@ -24,7 +24,7 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:padding="16dp"
-            android:background="@drawable/bg_fastclient_card"
+            android:background="@drawable/bg_glass_header"
             android:layout_marginBottom="24dp">
 
             <View
@@ -44,7 +44,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Create Profile"
-                    android:textColor="#00FF41"
+                    android:textColor="#00E5FF"
                     android:textSize="20sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.05" />
@@ -64,7 +64,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="VANILLA LIKE"
-            android:textColor="#00FF41"
+            android:textColor="#00E5FF"
             android:textSize="12sp"
             android:textStyle="bold"
             android:layout_marginBottom="12dp" />
@@ -76,7 +76,7 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingHorizontal="16dp"
-            android:background="@drawable/bg_profile_button"
+            android:background="@drawable/bg_glass_card_premium"
             android:clickable="true"
             android:focusable="true"
             android:layout_marginBottom="10dp">
@@ -103,7 +103,7 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingHorizontal="16dp"
-            android:background="@drawable/bg_profile_button"
+            android:background="@drawable/bg_glass_card_premium"
             android:clickable="true"
             android:focusable="true">
 
@@ -128,7 +128,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="MODDED VERSIONS"
-            android:textColor="#00FF41"
+            android:textColor="#00E5FF"
             android:textSize="12sp"
             android:textStyle="bold"
             android:layout_marginTop="24dp"
@@ -141,7 +141,7 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingHorizontal="16dp"
-            android:background="@drawable/bg_profile_button"
+            android:background="@drawable/bg_glass_card_premium"
             android:clickable="true"
             android:focusable="true"
             android:layout_marginBottom="10dp">
@@ -168,7 +168,7 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingHorizontal="16dp"
-            android:background="@drawable/bg_profile_button"
+            android:background="@drawable/bg_glass_card_premium"
             android:clickable="true"
             android:focusable="true"
             android:layout_marginBottom="10dp">
@@ -195,7 +195,7 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingHorizontal="16dp"
-            android:background="@drawable/bg_profile_button"
+            android:background="@drawable/bg_glass_card_premium"
             android:clickable="true"
             android:focusable="true"
             android:layout_marginBottom="10dp">
@@ -223,7 +223,7 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingHorizontal="16dp"
-            android:background="@drawable/bg_profile_button"
+            android:background="@drawable/bg_glass_card_premium"
             android:clickable="true"
             android:focusable="true">
 
@@ -248,7 +248,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="MODPACKS"
-            android:textColor="#00FF41"
+            android:textColor="#00E5FF"
             android:textSize="12sp"
             android:textStyle="bold"
             android:layout_marginTop="24dp"
@@ -261,7 +261,7 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingHorizontal="16dp"
-            android:background="@drawable/bg_profile_button_highlight"
+            android:background="@drawable/bg_glass_card_premium"
             android:clickable="true"
             android:focusable="true"
             android:layout_marginBottom="10dp">
@@ -289,7 +289,7 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingHorizontal="16dp"
-            android:background="@drawable/bg_profile_button"
+            android:background="@drawable/bg_glass_card_premium"
             android:clickable="true"
             android:focusable="true">
 
