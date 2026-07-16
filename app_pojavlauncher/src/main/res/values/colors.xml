@@ -127,4 +127,5 @@
     <color name="installed_color">#22C55E</color>
 
     <color name="bg_nav_item_active">#AA39FF14</color>
+    <color name="premium_cyan">#00E5FF</color>
 </resources>
