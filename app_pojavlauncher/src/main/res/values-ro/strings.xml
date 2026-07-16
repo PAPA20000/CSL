@@ -170,4 +170,5 @@
     <string name="preference_category_miscellaneous">Setări diverse</string>
     <string name="controller_button_select">Selectați</string>
     <string name="preference_experimental_title">Lucruri experimentale</string>
+    <string name="download">Download</string>
 </resources>

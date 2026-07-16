@@ -438,4 +438,5 @@
     <string name="oldL4JFound">你正在使用的 Legacy4J 版本未包含 Android 修复！你需要在手柄设置中手动启用 SDL 才能获得最佳体验！</string>
     <string name="global_warning">警告！</string>
     <string name="controllableFound">Controllable 目前启动时有概率随机崩溃。你可以继续尝试并等待其成功启动，或者使用其他模组，例如 Controlify。</string>
+    <string name="download">Download</string>
 </resources>

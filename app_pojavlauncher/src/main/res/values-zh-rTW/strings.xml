@@ -429,4 +429,5 @@
     <string name="error_vanilla_json_corrupt">原版 JSON 似乎已損壞。請在 GitHub 或 Discord 上提交錯誤報告。</string>
     <string name="preference_ask_for_microphone_title">允許麥克風</string>
     <string name="preference_ask_for_microphone_description">點擊以重新請求通知權限，Simple Voice Chat 等語音聊天模組需要此權限。</string>
+    <string name="download">Download</string>
 </resources>

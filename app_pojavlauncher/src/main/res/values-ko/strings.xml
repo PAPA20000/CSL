@@ -413,4 +413,5 @@
     <string name="neoforge_dl_no_installer">죄송합니다. 이 버전의 NeoForge는 아직 지원되는 설치기를 가지고 있지 않습니다.</string>
     <string name="preference_category_touchcontroller_settings">터치 컨트롤러 설정</string>
     <string name="preference_force_enable_touchcontroller_title">터치 컨트롤러 강제 활성화</string>
+    <string name="download">Download</string>
 </resources>

@@ -411,4 +411,5 @@ mcl_indítás_letöltés_folyamatban"</string>
     <string name="neoforge_dl_no_installer">Sajnáljuk, de ez a NeoForge verziónak nincsen beépített telepítője, ami még nem támogatott.</string>
     <string name="preference_category_touchcontroller_settings">TouchController beállítások</string>
     <string name="preference_touchcontroller_vibrate_length_title">TouchController rezgésének hossza</string>
+    <string name="download">Download</string>
 </resources>

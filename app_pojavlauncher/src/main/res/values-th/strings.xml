@@ -308,4 +308,5 @@
     <string name="newdl_downloading_metadata">กำลังดาวโหลดข้อมูลไฟล์เกม (%s)</string>
     <string name="controller_button_select">เลือก</string>
     <string name="preference_experimental_title">การตั้งค่าที่ทดสอบ</string>
+    <string name="download">Download</string>
 </resources>

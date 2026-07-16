@@ -580,6 +580,7 @@
     <string name="mod_install_title">Install Mod</string>
     <string name="mod_install_now">INSTALL NOW</string>
     <string name="mod_installing">INSTALLING...</string>
+    <string name="download">Download</string>
     <string name="mod_description_label">Description</string>
 
     <!-- Shortcut Strings -->

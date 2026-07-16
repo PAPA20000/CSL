@@ -426,4 +426,5 @@
     <string name="preference_touchcontroller_vibrate_length_title">Panjang getaran TouchController</string>
     <string name="preference_touchcontroller_vibrate_length_description">Menetapkan panjang getaran apabila menggunakan TouchController.</string>
     <string name="error_vanilla_json_corrupt">Json vanila nampaknya rosak. Sila hantar laporan pepijat pada github atau discord.</string>
+    <string name="download">Download</string>
 </resources>
