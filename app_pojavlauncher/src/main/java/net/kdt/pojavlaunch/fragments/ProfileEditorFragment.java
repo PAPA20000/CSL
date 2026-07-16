@@ -247,8 +247,20 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
         mProfileIcon.setOnClickListener(v -> CropperUtils.startCropper(mCropperLauncher));
 
         mModsAddButton.setOnClickListener(v -> {
+            // Profile-based download: pass current profile info automatically
+            Bundle profileBundle = new Bundle();
+            profileBundle.putString("profile_key", mProfileKey);
+            profileBundle.putString("game_dir", mTempProfile != null ? mTempProfile.gameDir : null);
+            profileBundle.putString("target_folder", "mods");
+
             File gameDir = Tools.getGameDirPath(mTempProfile);
+            // Open profile mods folder (existing behavior preserved)
             Tools.openPath(v.getContext(), new File(gameDir, "mods"), false);
+
+            // Launch SearchModFragment with profile context for profile-based download flow
+            SearchModFragment searchFragment = new SearchModFragment();
+            searchFragment.setArguments(profileBundle);
+            navigateToFragment(SearchModFragment.class, SearchModFragment.TAG, profileBundle);
         });
 
         mResourcePacksFolder.setOnClickListener(v -> {

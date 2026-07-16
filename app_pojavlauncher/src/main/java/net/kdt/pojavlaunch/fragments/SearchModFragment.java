@@ -93,7 +93,16 @@ public class SearchModFragment extends Fragment implements ModItemAdapter.Search
         mModItemAdapter.setOnItemClickListener(item -> {
             Bundle args = new Bundle();
             args.putSerializable("mod_item", item);
-            args.putString(ManageModsFragment.BUNDLE_PROFILE_KEY, null);
+
+            // Profile-based download: read profile info passed from ProfileEditorFragment
+            Bundle parentArgs = getArguments();
+            String profileKey = parentArgs != null ? parentArgs.getString("profile_key") : null;
+            String gameDir = parentArgs != null ? parentArgs.getString("game_dir") : null;
+            String targetFolder = parentArgs != null ? parentArgs.getString("target_folder") : "mods";
+
+            args.putString(ManageModsFragment.BUNDLE_PROFILE_KEY, profileKey);
+            args.putString("profile_game_dir", gameDir);
+            args.putString("profile_target_folder", targetFolder);
             if (mSearchFilters.isModpack) {
                 args.putString("content_type", "modpack");
             }

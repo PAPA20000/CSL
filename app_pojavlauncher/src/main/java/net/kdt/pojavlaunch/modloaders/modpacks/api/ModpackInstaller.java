@@ -182,4 +182,23 @@ public class ModpackInstaller {
 interface InstallFunction {
         ModLoader installModpack(File modpackFile, File instanceDestination) throws IOException;
     }
+
+    /**
+     * Profile-based download installation: saves directly to the profile's
+     * gameDir subfolder (mods/, resourcepacks/, shaderpacks/) instead of
+     * creating a new custom_instances/ profile.
+     */
+    public static void installToProfileFolder(File file, File profileGameDir, String targetFolder) throws IOException {
+        File destDir = new File(profileGameDir, targetFolder);
+        if (!destDir.exists()) destDir.mkdirs();
+        File destFile = new File(destDir, file.getName());
+        try (java.io.InputStream is = new java.io.FileInputStream(file);
+             java.io.FileOutputStream os = new java.io.FileOutputStream(destFile)) {
+            byte[] buffer = new byte[8192];
+            int len;
+            while ((len = is.read(buffer)) > 0) {
+                os.write(buffer, 0, len);
+            }
+        }
+    }
 }
