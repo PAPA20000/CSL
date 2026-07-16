@@ -74,6 +74,7 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
     private String mValueToConsume = "";
     private Button mSaveButton, mDeleteButton, mControlSelectButton, mGameDirButton, mVersionSelectButton;
     private ImageButton mModsAddButton, mModsImport, mResourcePacksFolder, mShaderPacksFolder, mResourcePacksImport, mShaderPacksImport;
+    private ImageButton mResourcePacksAdd, mShaderPacksAdd;
     private RecyclerView mModsRecycler, mResourcePacksRecycler, mShaderPacksRecycler;
     private TextView mModsHeader, mModsEmpty, mResourcePacksEmpty, mShaderPacksEmpty;
     private Spinner mDefaultRuntime, mDefaultRenderer;
@@ -246,22 +247,14 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
         // Set up the icon change click listener
         mProfileIcon.setOnClickListener(v -> CropperUtils.startCropper(mCropperLauncher));
 
-        mModsAddButton.setOnClickListener(v -> {
-            // Profile-based download: pass current profile info automatically
-            Bundle profileBundle = new Bundle();
-            profileBundle.putString("profile_key", mProfileKey);
-            profileBundle.putString("game_dir", mTempProfile != null ? mTempProfile.gameDir : null);
-            profileBundle.putString("target_folder", "mods");
-
-            File gameDir = Tools.getGameDirPath(mTempProfile);
-            // Open profile mods folder (existing behavior preserved)
-            Tools.openPath(v.getContext(), new File(gameDir, "mods"), false);
-
-            // Launch SearchModFragment with profile context for profile-based download flow
-            SearchModFragment searchFragment = new SearchModFragment();
-            searchFragment.setArguments(profileBundle);
-            navigateToFragment(SearchModFragment.class, SearchModFragment.TAG, profileBundle);
-        });
+        // Download buttons: open the profile-scoped Mods / Resource Packs / Shaders
+        // store. The profile key is passed automatically so the install goes straight
+        // into this profile's content folder — no profile selection dialog is shown.
+        mModsAddButton.setOnClickListener(v -> openProfileDownloadStore("mods"));
+        mResourcePacksAdd = view.findViewById(R.id.vprof_editor_resource_packs_add);
+        mShaderPacksAdd = view.findViewById(R.id.vprof_editor_shader_packs_add);
+        mResourcePacksAdd.setOnClickListener(v -> openProfileDownloadStore("resourcepacks"));
+        mShaderPacksAdd.setOnClickListener(v -> openProfileDownloadStore("shaderpacks"));
 
         mResourcePacksFolder.setOnClickListener(v -> {
             File gameDir = Tools.getGameDirPath(mTempProfile);
@@ -311,6 +304,16 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
                 });
             }
         });
+    }
+
+    /** Open the profile-scoped download store for the given content type. */
+    private void openProfileDownloadStore(String targetFolder) {
+        Bundle profileBundle = new Bundle();
+        profileBundle.putString(ManageModsFragment.BUNDLE_PROFILE_KEY, mProfileKey);
+        profileBundle.putString("profile_key", mProfileKey);
+        profileBundle.putString("game_dir", mTempProfile != null ? mTempProfile.gameDir : null);
+        profileBundle.putString("target_folder", targetFolder);
+        navigateToFragment(ModsSearchFragment.class, ModsSearchFragment.TAG, profileBundle);
     }
 
     /** Navigate to a fragment — stays inside the right pane when running as a child fragment. */
