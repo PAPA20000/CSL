@@ -924,6 +924,26 @@ public class GLFW
         height.put(mGLFWWindowHeight);
     }
 
+    public static void glfwGetMonitorPhysicalSize(@NativeType("GLFWmonitor *") long monitor, @Nullable @NativeType("int *") IntBuffer widthMM, @Nullable @NativeType("int *") IntBuffer heightMM) {
+        if (widthMM != null && heightMM != null) {
+            widthMM.put(mGLFWWindowWidth);
+            heightMM.put(mGLFWWindowHeight);
+        }
+    }
+
+    @Nullable // The normal implementation is nullable.
+    @NativeType("char const *")
+    public static String glfwGetMonitorName(@NativeType("GLFWmonitor *") long monitor) {
+        return String.format(Locale.US, "Android Display (%dx%d)", mGLFWWindowWidth, mGLFWWindowHeight);
+    }
+
+    public static void glfwSetMonitorUserPointer(@NativeType("GLFWmonitor *") long monitor, @NativeType("void *") long pointer) {
+    }
+
+    public static long glfwGetMonitorUserPointer(@NativeType("GLFWmonitor *") long monitor) {
+        return 0L;
+    }
+
     @NativeType("GLFWmonitor *")
     public static long glfwGetWindowMonitor(@NativeType("GLFWwindow *") long window) {
         return mGLFWWindowMonitor;
@@ -1433,17 +1453,12 @@ public class GLFW
     }
 
     /** Array version of: {@link #glfwGetMonitorPhysicalSize GetMonitorPhysicalSize} */
-/*
     public static void glfwGetMonitorPhysicalSize(@NativeType("GLFWmonitor *") long monitor, @Nullable @NativeType("int *") int[] widthMM, @Nullable @NativeType("int *") int[] heightMM) {
-        long __functionAddress = Functions.GetMonitorPhysicalSize;
-        if (CHECKS) {
-            // check(monitor);
-            checkSafe(widthMM, 1);
-            checkSafe(heightMM, 1);
+        if (widthMM != null && heightMM != null) {
+            widthMM[0] = mGLFWWindowWidth;
+            heightMM[0] = mGLFWWindowHeight;
         }
-        invokePPPV(monitor, widthMM, heightMM, __functionAddress);
     }
-*/
 
     /** Array version of: {@link #glfwGetMonitorContentScale GetMonitorContentScale} */
 
