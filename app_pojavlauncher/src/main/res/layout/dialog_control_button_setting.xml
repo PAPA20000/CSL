@@ -199,10 +199,13 @@
         style="?android:attr/spinnerItemStyle"
         android:layout_width="0dp"
         android:layout_height="@dimen/_30sdp"
-        android:ellipsize="marquee"
+        android:ellipsize="end"
         android:gravity="center"
+        android:maxLines="1"
         android:singleLine="true"
         android:textAlignment="inherit"
+        android:textColor="?attr/colorTextPrimary"
+        android:textSize="@dimen/_12ssp"
 
         app:layout_constraintEnd_toStartOf="@id/mapping_2_textview"
         app:layout_constraintStart_toStartOf="parent"
@@ -227,10 +230,13 @@
         style="?android:attr/spinnerItemStyle"
         android:layout_width="0dp"
         android:layout_height="@dimen/_30sdp"
-        android:ellipsize="marquee"
+        android:ellipsize="end"
         android:gravity="center"
+        android:maxLines="1"
         android:singleLine="true"
         android:textAlignment="inherit"
+        android:textColor="?attr/colorTextPrimary"
+        android:textSize="@dimen/_12ssp"
 
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/mapping_1_textview"
@@ -243,10 +249,13 @@
         style="?android:attr/spinnerItemStyle"
         android:layout_width="0dp"
         android:layout_height="@dimen/_30sdp"
-        android:ellipsize="marquee"
+        android:ellipsize="end"
         android:gravity="center"
+        android:maxLines="1"
         android:singleLine="true"
         android:textAlignment="inherit"
+        android:textColor="?attr/colorTextPrimary"
+        android:textSize="@dimen/_12ssp"
 
         app:layout_constraintEnd_toStartOf="@id/mapping_4_textview"
         app:layout_constraintStart_toStartOf="parent"
@@ -272,10 +281,13 @@
         style="?android:attr/spinnerItemStyle"
         android:layout_width="0dp"
         android:layout_height="@dimen/_30sdp"
-        android:ellipsize="marquee"
+        android:ellipsize="end"
         android:gravity="center"
+        android:maxLines="1"
         android:singleLine="true"
         android:textAlignment="inherit"
+        android:textColor="?attr/colorTextPrimary"
+        android:textSize="@dimen/_12ssp"
 
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/mapping_3_textview"
@@ -308,15 +320,30 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editOrientation_textView" />
 
+    <!--
+        Barrier below both the (mutually exclusive) MAPPING and ORIENTATION sections.
+        Whichever section is visible, the switches below always start under the tallest
+        one. This prevents the mapping key text (2nd row) from bleeding into and
+        overlapping the Toggleable / Mouse pass-thru / Swipeable switches.
+    -->
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/mapping_orientation_barrier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="bottom"
+        app:barrierAllowsGoneWidgets="false"
+        app:constraint_referenced_ids="mapping_3_textview,mapping_4_textview,editOrientation_spinner" />
+
     <!-- TOGGLE SECTION -->
     <Switch
         android:id="@+id/checkboxToggle"
         android:layout_width="match_parent"
         android:layout_height="@dimen/_36sdp"
+        android:layout_marginTop="@dimen/_6sdp"
         android:text="@string/customctrl_toggle"
 
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/editOrientation_spinner"
+        app:layout_constraintTop_toBottomOf="@id/mapping_orientation_barrier"
         tools:ignore="UseSwitchCompatOrMaterialXml" />
 
     <!-- MOUSE PASS THROUGH SECTION -->
