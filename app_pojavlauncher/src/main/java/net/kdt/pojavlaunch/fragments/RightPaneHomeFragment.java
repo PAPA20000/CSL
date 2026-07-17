@@ -47,7 +47,7 @@ public class RightPaneHomeFragment extends Fragment {
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         setupProfileAdapter();
 
-        // Floating "+" FAB opens the new 3-step Profile Wizard (Step 1: Loader select)
+        // Floating "+" FAB opens the Version Setup Hub (3-category grid)
         View fab = view.findViewById(R.id.fab_create_profile);
         if (fab != null) {
             // Apply 200ms scale-up reveal with DecelerateInterpolator
@@ -69,12 +69,12 @@ public class RightPaneHomeFragment extends Fragment {
                 Fragment parent = getParentFragment();
                 if (parent instanceof MainMenuFragment) {
                     ((MainMenuFragment) parent).openChildPane(
-                            ProfileWizardFragment.class,
-                            ProfileWizardFragment.TAG, null);
+                            ProfileTypeSelectFragment.class,
+                            ProfileTypeSelectFragment.TAG, null);
                 } else if (getActivity() != null) {
                     Tools.swapFragment(getActivity(),
-                            ProfileWizardFragment.class,
-                            ProfileWizardFragment.TAG, null);
+                            ProfileTypeSelectFragment.class,
+                            ProfileTypeSelectFragment.TAG, null);
                 }
             });
         }
