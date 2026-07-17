@@ -86,6 +86,23 @@ public class RightPaneHomeFragment extends Fragment {
                 Toast.makeText(getContext(), "Profiles refreshed", Toast.LENGTH_SHORT).show();
             });
         }
+
+        View settingsBtn = view.findViewById(R.id.btn_home_settings);
+        if (settingsBtn != null) {
+            settingsBtn.setOnClickListener(v -> {
+                if (!isAdded() || getContext() == null) return;
+                Fragment parent = getParentFragment();
+                if (parent instanceof MainMenuFragment) {
+                    ((MainMenuFragment) parent).openChildPane(
+                            net.kdt.pojavlaunch.prefs.screens.LauncherPreferenceFragment.class,
+                            "SETTINGS_FRAGMENT", null);
+                } else if (getActivity() != null) {
+                    Tools.swapFragment(requireActivity(),
+                            net.kdt.pojavlaunch.prefs.screens.LauncherPreferenceFragment.class,
+                            "SETTINGS_FRAGMENT", null);
+                }
+            });
+        }
     }
 
     @Override

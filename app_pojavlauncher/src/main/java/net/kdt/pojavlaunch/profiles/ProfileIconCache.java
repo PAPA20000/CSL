@@ -67,6 +67,37 @@ public class ProfileIconCache {
     public static void dropIcon(@Nullable String key) {
         if (key == null) return;
         sIconCache.remove(key);
+        sIconCache.remove(key + "_bg");
+    }
+
+    /**
+     * Fetch a profile background banner drawable from a data URI (separate from the profile icon).
+     * Returns null when no background is set, so callers can hide the banner view.
+     * @param resources the Resources object
+     * @param key the profile key (used for caching)
+     * @param background the background data URI stored in MinecraftProfile.background
+     * @return a decoded drawable, or null if none is set / decode failed
+     */
+    public static @Nullable Drawable fetchBackground(Resources resources, @Nullable String key, @Nullable String background) {
+        if (background == null || !background.startsWith(DATA_HEADER)) return null;
+        String cacheKey = (key != null ? key : "bg") + "_bg";
+        Drawable cached = sIconCache.get(cacheKey);
+        if (cached != null) return cached;
+        byte[] data = extractIconData(background);
+        if (data == null) return null;
+        BitmapFactory.Options opts = new BitmapFactory.Options();
+        opts.inJustDecodeBounds = true;
+        BitmapFactory.decodeByteArray(data, 0, data.length, opts);
+        // Banner images are displayed large (full card width) — decode at up to 512px.
+        opts.inSampleSize = computeInSampleSize(opts, 512, 512);
+        opts.inJustDecodeBounds = false;
+        opts.inMutable = false;
+        opts.inPreferredConfig = Bitmap.Config.RGB_565;
+        Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, opts);
+        if (bitmap == null) return null;
+        Drawable drawable = new BitmapDrawable(resources, bitmap);
+        sIconCache.put(cacheKey, drawable);
+        return drawable;
     }
 
     private static Drawable fetchDataIcon(Resources resources, @Nullable String key, @NonNull String icon) {

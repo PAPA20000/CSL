@@ -13,7 +13,11 @@ public class MinecraftProfile {
 	public String created;
 	public String lastUsed;
 	public String icon;
+	/** Profile background banner image (separate from the profile icon). Stored as a data URI. */
+	public String background;
 	public String lastVersionId;
+	/** Per-profile RAM allocation in megabytes. Null means "use the global launcher setting". */
+	public Integer ramAllocationMB;
 	public String gameDir;
 	public String javaDir;
 	public String javaArgs;
@@ -30,6 +34,8 @@ public class MinecraftProfile {
 		TEMPLATE.lastVersionId = LATEST_RELEASE;
 		TEMPLATE.icon = "default";
 		TEMPLATE.type = "custom";
+		TEMPLATE.background = null;
+		TEMPLATE.ramAllocationMB = null;
 		return TEMPLATE;
 	}
 
@@ -50,6 +56,8 @@ public class MinecraftProfile {
 		created = profile.created;
 		lastUsed = profile.lastUsed;
 		icon = profile.icon;
+		background = profile.background;
+		ramAllocationMB = profile.ramAllocationMB;
 		lastVersionId = profile.lastVersionId;
 		gameDir = profile.gameDir;
 		javaDir = profile.javaDir;

@@ -3,23 +3,26 @@ package net.kdt.pojavlaunch.fragments;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import net.kdt.pojavlaunch.LauncherPreferences;
 import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.profiles.ProfileIconCache;
 import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.ViewHolder> {
@@ -116,34 +119,29 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
 
         holder.tvName.setText(profile.name != null ? profile.name : "");
 
-        StringBuilder meta = new StringBuilder();
-        if (profile.lastVersionId != null && !profile.lastVersionId.isEmpty()) {
-            meta.append(profile.lastVersionId);
-        }
-        if (profile.lastUsed != null && !profile.lastUsed.isEmpty()) {
-            if (meta.length() > 0) meta.append(" \u2022 ");
-            String date = profile.lastUsed.length() >= 10
-                    ? profile.lastUsed.substring(0, 10) : profile.lastUsed;
-            meta.append(date);
-        }
-        holder.tvMeta.setText(meta.toString());
+        // Exact Loader/Version — displayed exactly as stored (e.g. fabric-loader-0.19.3-26.2)
+        holder.tvVersion.setText(profile.lastVersionId != null && !profile.lastVersionId.isEmpty()
+                ? profile.lastVersionId : "");
 
         // Read from pre-computed cache — never blocks on I/O
         int modCount = mModCountCache[position];
         holder.tvModCount.setText("Installed Mods: " + modCount);
 
+        // Exact Allocated RAM — per-profile value when set, otherwise the global launcher setting
+        int ramMB = (profile.ramAllocationMB != null)
+                ? profile.ramAllocationMB : LauncherPreferences.PREF_RAM_ALLOCATION;
+        holder.tvRam.setText(holder.itemView.getContext().getString(R.string.allocated_ram)
+                + ": " + ramMB + " MB");
+
         bindIcon(holder.imgIcon, profileKey, profile);
+        bindBackground(holder.imgBackground, profileKey, profile);
 
         holder.cardRoot.setOnClickListener(v -> {
             if (mListener != null) mListener.onProfileEdit(profileKey, profile);
         });
 
-        holder.cardRoot.setOnLongClickListener(v -> {
-            if (mListener != null) {
-                mListener.onProfileAddShortcut(profileKey, profile);
-            }
-            return true;
-        });
+        // Three-dot (⋮) menu replaces the old long-press shortcut behavior.
+        holder.btnMenu.setOnClickListener(v -> showProfileMenu(v, profileKey, profile));
 
         holder.btnPlay.setOnClickListener(v -> {
             if (mListener != null) mListener.onProfilePlay(profileKey, profile);
@@ -154,11 +152,34 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         });
     }
 
+    /**
+     * Shows the profile overflow menu (Edit Profile + Shortcuts) anchored to the three-dot button.
+     */
+    private void showProfileMenu(View anchor, String profileKey, MinecraftProfile profile) {
+        PopupMenu popup = new PopupMenu(anchor.getContext(), anchor);
+        popup.getMenu().add(0, R.id.menu_profile_edit, 0, R.string.edit_profile);
+        popup.getMenu().add(0, R.id.menu_profile_shortcuts, 1, R.string.profile_menu_shortcuts);
+        popup.setOnMenuItemClickListener(item -> {
+            if (mListener == null) return false;
+            int id = item.getItemId();
+            if (id == R.id.menu_profile_edit) {
+                mListener.onProfileEdit(profileKey, profile);
+                return true;
+            } else if (id == R.id.menu_profile_shortcuts) {
+                mListener.onProfileAddShortcut(profileKey, profile);
+                return true;
+            }
+            return false;
+        });
+        popup.show();
+    }
+
     @Override
     public void onViewRecycled(@NonNull ViewHolder holder) {
         super.onViewRecycled(holder);
         // Clear image drawable reference to help GC and avoid stale bitmap retention
         holder.imgIcon.setImageDrawable(null);
+        holder.imgBackground.setImageDrawable(null);
     }
 
     /**
@@ -186,6 +207,26 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
     }
 
     /**
+     * Binds the profile background banner image. Hides the banner when no background is set,
+     * so the card falls back to its default background drawable.
+     */
+    private void bindBackground(ImageView target, String profileKey, MinecraftProfile profile) {
+        Drawable drawable = null;
+        try {
+            drawable = ProfileIconCache.fetchBackground(target.getResources(), profileKey, profile.background);
+        } catch (Exception e) {
+            Log.w(TAG, "Background load failed for " + profileKey, e);
+        }
+        if (drawable != null) {
+            target.setImageDrawable(drawable);
+            target.setVisibility(View.VISIBLE);
+        } else {
+            target.setImageDrawable(null);
+            target.setVisibility(View.GONE);
+        }
+    }
+
+    /**
      * Picks a type-aware fallback icon based on the profile's MC version id
      * (e.g. "fabric-loader-1.20.1" → fabric icon). Avoids empty boxes when
      * the base64 icon payload is missing or corrupted.
@@ -210,9 +251,12 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
     static class ViewHolder extends RecyclerView.ViewHolder {
         final View cardRoot;
         final ImageView imgIcon;
+        final ImageView imgBackground;
         final TextView tvName;
-        final TextView tvMeta;
+        final TextView tvVersion;
         final TextView tvModCount;
+        final TextView tvRam;
+        final ImageButton btnMenu;
         final FrameLayout btnPlay;
         final FrameLayout btnBrowse;
 
@@ -220,9 +264,12 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
             super(itemView);
             cardRoot = itemView.findViewById(R.id.card_profile_root);
             imgIcon = itemView.findViewById(R.id.img_profile_icon);
+            imgBackground = itemView.findViewById(R.id.img_profile_background);
             tvName = itemView.findViewById(R.id.tv_profile_name);
-            tvMeta = itemView.findViewById(R.id.tv_profile_meta);
+            tvVersion = itemView.findViewById(R.id.tv_profile_version);
             tvModCount = itemView.findViewById(R.id.tv_profile_mod_count);
+            tvRam = itemView.findViewById(R.id.tv_profile_ram);
+            btnMenu = itemView.findViewById(R.id.btn_profile_menu);
             btnPlay = itemView.findViewById(R.id.btn_profile_play);
             btnBrowse = itemView.findViewById(R.id.btn_profile_browse);
         }

@@ -80,7 +80,40 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
     private EditText mDefaultName, mDefaultJvmArgument;
     private TextView mDefaultPath, mDefaultVersion, mDefaultControl;
     private ImageView mProfileIcon;
+    private ImageView mProfileBackground;
+    private EditText mRamInput;
+    private final CropperUtils.CropperListener mBackgroundCropperListener = new CropperUtils.CropperListener() {
+        @Override
+        public void onCropped(Bitmap contentBitmap) {
+            if (mProfileBackground != null) mProfileBackground.setImageBitmap(contentBitmap);
+            mBgExecutor.execute(() -> {
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                try (Base64OutputStream base64OutputStream = new Base64OutputStream(byteArrayOutputStream, Base64.NO_WRAP)) {
+                    contentBitmap.compress(
+                        Build.VERSION.SDK_INT < Build.VERSION_CODES.R ?
+                            Bitmap.CompressFormat.WEBP : Bitmap.CompressFormat.WEBP_LOSSY,
+                        60, base64OutputStream);
+                    base64OutputStream.flush();
+                    byteArrayOutputStream.flush();
+                } catch (IOException e) {
+                    mMainHandler.post(() -> Tools.showErrorRemote(e));
+                    return;
+                }
+                String iconLine = new String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8);
+                String dataUri = "data:image/webp;base64," + iconLine;
+                mMainHandler.post(() -> {
+                    if (mTempProfile != null) mTempProfile.background = dataUri;
+                });
+            });
+        }
+
+        @Override
+        public void onFailed(Exception exception) {
+            Tools.showErrorRemote(exception);
+        }
+    };
     private final ActivityResultLauncher<?> mCropperLauncher = CropperUtils.registerCropper(this, this);
+    private final ActivityResultLauncher<?> mBackgroundCropperLauncher = CropperUtils.registerCropper(this, mBackgroundCropperListener);
 
     private final ActivityResultLauncher<String> mModPicker = registerForActivityResult(
             new ActivityResultContracts.GetContent(),
@@ -355,6 +388,15 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
         mDefaultPath.setText(mTempProfile.gameDir == null ? "" : mTempProfile.gameDir);
         mDefaultControl.setText(mTempProfile.controlFile == null ? "" : mTempProfile.controlFile);
 
+        // Per-profile background banner preview
+        if (mTempProfile.background != null && mTempProfile.background.startsWith("data:")) {
+            Drawable bg = ProfileIconCache.fetchBackground(getResources(), mProfileKey, mTempProfile.background);
+            if (bg != null) mProfileBackground.setImageDrawable(bg);
+        }
+
+        // Per-profile RAM (empty means fall back to the global launcher setting)
+        mRamInput.setText(mTempProfile.ramAllocationMB != null ? String.valueOf(mTempProfile.ramAllocationMB) : "");
+
         // TODO: Remove this jank when it's not relevant anymore
         if ("vulkan_zink".equals(mTempProfile.pojavRendererName)) {
             mTempProfile.pojavRendererName = "opengles3_desktopgl_zink_kopper";
@@ -478,6 +520,8 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
         mVersionSelectButton = view.findViewById(R.id.vprof_editor_version_button);
         mGameDirButton = view.findViewById(R.id.vprof_editor_path_button);
         mProfileIcon = view.findViewById(R.id.vprof_editor_profile_icon);
+        mProfileBackground = view.findViewById(R.id.vprof_editor_background_preview);
+        mRamInput = view.findViewById(R.id.vprof_editor_ram_input);
 
         mModsHeader = view.findViewById(R.id.vprof_editor_mods_header);
         mResourcePacksFolder = view.findViewById(R.id.vprof_editor_resource_packs_folder);
@@ -490,6 +534,10 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
         mShaderPacksEmpty = view.findViewById(R.id.vprof_editor_shader_packs_empty);
         mResourcePacksImport = view.findViewById(R.id.vprof_editor_resource_packs_import);
         mShaderPacksImport = view.findViewById(R.id.vprof_editor_shader_packs_import);
+
+        // Background image change (separate from the profile icon)
+        view.findViewById(R.id.vprof_editor_background_button)
+                .setOnClickListener(v -> CropperUtils.startCropper(mBackgroundCropperLauncher));
     }
 
     private void readInputsFromUi() {
@@ -501,6 +549,18 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
                 .replaceAll("[\r\n]+", " ")
                 .trim();
         mTempProfile.gameDir = mDefaultPath.getText().toString();
+
+        // Per-profile RAM allocation (null = use global launcher setting)
+        String ramText = mRamInput.getText().toString().trim();
+        if (ramText.isEmpty()) {
+            mTempProfile.ramAllocationMB = null;
+        } else {
+            try {
+                mTempProfile.ramAllocationMB = Integer.parseInt(ramText);
+            } catch (NumberFormatException e) {
+                mTempProfile.ramAllocationMB = null;
+            }
+        }
 
         if(mTempProfile.controlFile != null && mTempProfile.controlFile.isEmpty()) mTempProfile.controlFile = null;
         if(mTempProfile.javaArgs != null && mTempProfile.javaArgs.isEmpty()) mTempProfile.javaArgs = null;

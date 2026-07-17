@@ -247,6 +247,14 @@
     <string name="profiles_profile_version">Version</string>
     <string name="click_to_edit">Click to edit</string>
     <string name="global_delete">Delete</string>
+    <string name="edit_profile">Edit Profile</string>
+    <string name="home_profiles_title">Profiles</string>
+    <string name="profile_menu_shortcuts">Shortcuts</string>
+    <string name="profile_background">Profile Background</string>
+    <string name="change_background">Change Background</string>
+    <string name="allocated_ram">Allocated RAM</string>
+    <string name="per_profile_ram">RAM Allocation (MB)</string>
+    <string name="use_global_ram">Use global RAM</string>
     <string name="pedit_java_runtime">Java Runtime</string>
     <string name="pedit_renderer">Renderer</string>
     <string name="arc_capes_title">Cosmetica Capes</string>

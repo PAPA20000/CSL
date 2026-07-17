@@ -388,8 +388,17 @@ public class JREUtils {
         purgeArg(userArgs, "-XX:ActiveProcessorCount");
 
         //Add automatically generated args
-        userArgs.add("-Xms" + LauncherPreferences.PREF_RAM_ALLOCATION + "M");
-        userArgs.add("-Xmx" + LauncherPreferences.PREF_RAM_ALLOCATION + "M");
+        // Per-profile RAM overrides the global launcher setting when configured.
+        int effectiveRam = LauncherPreferences.PREF_RAM_ALLOCATION;
+        try {
+            net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile currentProfile =
+                    net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles.getCurrentProfile();
+            if (currentProfile != null && currentProfile.ramAllocationMB != null) {
+                effectiveRam = currentProfile.ramAllocationMB;
+            }
+        } catch (Throwable ignored) {}
+        userArgs.add("-Xms" + effectiveRam + "M");
+        userArgs.add("-Xmx" + effectiveRam + "M");
         if(LOCAL_RENDERER != null) userArgs.add("-Dorg.lwjgl.opengl.libname=" + graphicsLib);
 
         // Force LWJGL to use the Freetype library intended for it, instead of using the one
