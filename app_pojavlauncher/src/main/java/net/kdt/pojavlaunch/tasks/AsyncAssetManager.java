@@ -126,11 +126,29 @@ public class AsyncAssetManager {
                 }
             }
 
+            // Validate that the target natives directory actually contains the expected .so files.
+            // Without this check, a stale/corrupt folder from a previous run would be silently used.
+            if (!shouldUpdate) {
+                File nativesTargetDir = new File(rootDir, pathToLwjglNatives);
+                File sentinelFile = new File(nativesTargetDir, "liblwjgl.so");
+                if (!nativesTargetDir.isDirectory() || !sentinelFile.exists() || sentinelFile.length() == 0) {
+                    Log.w("UnpackLwjgl", lwjglVer + " natives directory is missing or corrupt, forcing re-extraction...");
+                    shouldUpdate = true;
+                }
+            }
+
             if (shouldUpdate) {
                 Log.i("UnpackLwjgl", lwjglVer + " was installed manually, or does not exist, unpacking new...");
                 String[] fileList = am.list("components/" + pathToLwjglNatives);
                 for (String fileName : fileList) {
                     Tools.copyAssetFile(ctx, "components/" + pathToLwjglNatives + "/" + fileName, rootDir + "/" + pathToLwjglNatives, true);
+                }
+                // After extraction, update the version file so future checks are faster
+                try (InputStream is = am.open("components/lwjgl3/" + lwjglVer + "/version")) {
+                    String versionContent = Tools.read(is);
+                    FileUtils.writeStringToFile(versionFile, versionContent, "UTF-8");
+                } catch (IOException e) {
+                    Log.w("UnpackLwjgl", "Failed to write version file for " + lwjglVer, e);
                 }
             } else {
                 Log.i("UnpackLwjgl", lwjglVer + " is up-to-date with the launcher, continuing...");
