@@ -37,6 +37,34 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editName_textView" />
 
+    <!-- CHAT COMMAND SECTION (only relevant for the "Command" special button) -->
+    <TextView
+        android:id="@+id/editCommand_textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_6sdp"
+        android:gravity="center"
+        android:paddingEnd="5dp"
+        android:text="@string/customctrl_command"
+        android:visibility="gone"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/editName_editText" />
+
+    <EditText
+        android:id="@+id/editCommand_editText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:hint="@string/customctrl_command_hint"
+        android:imeOptions="flagNoExtractUi"
+        android:inputType="text"
+        android:visibility="gone"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/editCommand_textView" />
+
     <!--  SIZE SECTION -->
     <TextView
         android:id="@+id/editSize_textView"
@@ -47,7 +75,7 @@
         android:text="@string/customctrl_size"
 
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/editName_editText"
+        app:layout_constraintTop_toBottomOf="@id/editCommand_editText"
         tools:visibility="visible" />
 
     <EditText
@@ -256,34 +284,6 @@
         tools:text="HELLO" />
 
 
-    <!-- CHAT COMMAND SECTION (only relevant for the "Command" special button) -->
-    <TextView
-        android:id="@+id/editCommand_textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/_6sdp"
-        android:gravity="center"
-        android:paddingEnd="5dp"
-        android:text="@string/customctrl_command"
-        android:visibility="gone"
-
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/editCommand_editText" />
-
-    <EditText
-        android:id="@+id/editCommand_editText"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:hint="@string/customctrl_command_hint"
-        android:imeOptions="flagNoExtractUi"
-        android:inputType="text"
-        android:visibility="gone"
-
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/editCommand_textView" />
-
     <!-- ORIENTATION SECTION -->
     <TextView
         android:id="@+id/editOrientation_textView"
@@ -295,7 +295,7 @@
         android:text="@string/customctrl_orientation"
 
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/mapping_3_textview" />
+        app:layout_constraintTop_toBottomOf="@+id/editSize_editTextX" />
 
     <Spinner
         android:id="@+id/editOrientation_spinner"

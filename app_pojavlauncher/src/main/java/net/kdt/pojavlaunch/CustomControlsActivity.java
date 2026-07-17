@@ -46,6 +46,7 @@ public class CustomControlsActivity extends BaseActivity implements EditorExitab
 				android.R.drawable.ic_menu_add, // Add Button
 				android.R.drawable.ic_menu_gallery, // Add Drawer
 				android.R.drawable.ic_menu_compass, // Add Joystick
+				android.R.drawable.ic_menu_send, // Add Command Button
 				android.R.drawable.ic_menu_upload, // Load
 				android.R.drawable.ic_menu_save, // Save
 				android.R.drawable.ic_menu_myplaces, // Default
@@ -69,10 +70,31 @@ public class CustomControlsActivity extends BaseActivity implements EditorExitab
 				case 0: android.util.Log.i("CustomControlsActivity", "Action: Add Button"); mControlLayout.addControlButton(new ControlData("New")); break;
 				case 1: android.util.Log.i("CustomControlsActivity", "Action: Add Button Drawer"); mControlLayout.addDrawer(new ControlDrawerData()); break;
 				case 2: android.util.Log.i("CustomControlsActivity", "Action: Add Joystick"); mControlLayout.addJoystickButton(new ControlJoystickData()); break;
-				case 3: android.util.Log.i("CustomControlsActivity", "Action: Load"); mControlLayout.openLoadDialog(); break;
-				case 4: android.util.Log.i("CustomControlsActivity", "Action: Save"); mControlLayout.openSaveDialog(this); break;
-				case 5: android.util.Log.i("CustomControlsActivity", "Action: Select Default"); mControlLayout.openSetDefaultDialog(); break;
-				case 6: // Saving the currently shown control
+				case 3: {
+					android.util.Log.i("CustomControlsActivity", "Action: Add Command Button");
+					net.kdt.pojavlaunch.customcontrols.ControlData cmdData = new net.kdt.pojavlaunch.customcontrols.ControlData("Command");
+					cmdData.keycodes[0] = net.kdt.pojavlaunch.customcontrols.ControlData.SPECIALBTN_CHATCOMMAND;
+					mControlLayout.addControlButton(cmdData);
+					// Open the edit dialog for this new button immediately
+					final net.kdt.pojavlaunch.customcontrols.ControlData finalCmdData = cmdData;
+					mControlLayout.post(() -> {
+						for (int i = 0; i < mControlLayout.getChildCount(); i++) {
+							android.view.View child = mControlLayout.getChildAt(i);
+							if (child instanceof net.kdt.pojavlaunch.customcontrols.buttons.ControlInterface) {
+								net.kdt.pojavlaunch.customcontrols.buttons.ControlInterface iface = (net.kdt.pojavlaunch.customcontrols.buttons.ControlInterface) child;
+								if (iface.getProperties() == finalCmdData) {
+									mControlLayout.editControlButton(iface);
+									break;
+								}
+							}
+						}
+					});
+					break;
+				}
+				case 4: android.util.Log.i("CustomControlsActivity", "Action: Load"); mControlLayout.openLoadDialog(); break;
+				case 5: android.util.Log.i("CustomControlsActivity", "Action: Save"); mControlLayout.openSaveDialog(this); break;
+				case 6: android.util.Log.i("CustomControlsActivity", "Action: Select Default"); mControlLayout.openSetDefaultDialog(); break;
+				case 7: // Saving the currently shown control
 					android.util.Log.i("CustomControlsActivity", "Action: Share layout");
 					try {
 						Uri contentUri = DocumentsContract.buildDocumentUri(getString(R.string.storageProviderAuthorities), mControlLayout.saveToDirectory(mControlLayout.mLayoutFileName));
