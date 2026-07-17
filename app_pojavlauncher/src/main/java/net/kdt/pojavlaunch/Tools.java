@@ -845,7 +845,7 @@ public final class Tools {
     public static String generateLaunchClasspath(JMinecraftVersionList.Version info, String actualname) {
         StringBuilder launchClasspath = new StringBuilder(); //versnDir + "/" + version + "/" + version + ".jar:";
         String libClasspath = getLibClasspath(info); // Sets lwjglVersion, janky, but we can't get it any simpler
-        String internalLwjglVersion = iLwjglVersion >= 341 ? "3.4.1" : "3.3.3";
+        String internalLwjglVersion = iLwjglVersion >= 342 ? "3.4.2" : (iLwjglVersion >= 341 ? "3.4.1" : "3.3.3");
         File lwjgl3Folder = new File(Tools.DIR_GAME_HOME, "lwjgl3/"+internalLwjglVersion);
         String lwjglCore = lwjgl3Folder.getAbsolutePath() + "/lwjgl.jar";
         String lwjglMerged = lwjgl3Folder.getAbsolutePath() + "/lwjgl-"+internalLwjglVersion+"-merged-modules.jar";
@@ -1192,7 +1192,9 @@ public final class Tools {
         }
         // Scary message, but we aren't getting LWJGL 1.9.9 or 3.10.100 any time soon
         if (iLwjglVersion < 200 || iLwjglVersion > 999) throw new RuntimeException("Unable to determine LWJGL version, JSON may be corrupt.");
-        sLwjglVersion = iLwjglVersion >= 341 ? "3.4.1" : "3.3.3";
+        if (iLwjglVersion >= 342) sLwjglVersion = "3.4.2";
+        else if (iLwjglVersion >= 341) sLwjglVersion = "3.4.1";
+        else sLwjglVersion = "3.3.3";
         lwjglNativesDir = String.format("%s/lwjgl-%s-natives/%s", Tools.DIR_DATA, sLwjglVersion, archAsStringAndroid(getDeviceArchitecture()));
         // Validate that the resolved native library directory actually contains the
         // essential .so files. If it doesn't, throw a clear error so the user knows

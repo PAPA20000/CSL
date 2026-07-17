@@ -650,6 +650,30 @@ public class JREUtils {
     public static native void setupExitMethod(Context context);
     // Obtain AWT screen pixels to render on Android SurfaceView
     public static native int[] renderAWTScreenFrame(/* Object canvas, int width, int height */);
+
+    public static String getLWJGLVersionForMC(String mcVersion) {
+        if (mcVersion == null || mcVersion.isEmpty()) {
+            return "3.3.3";
+        }
+        try {
+            String[] parts = mcVersion.split("\\.");
+            int major = Integer.parseInt(parts[0]);
+            int minor = parts.length > 1 ? Integer.parseInt(parts[1]) : 0;
+
+            if (major >= 26) {
+                return "3.4.2";
+            } else if (major >= 1 && minor >= 21) {
+                return "3.3.3";
+            } else if (major >= 1 && minor >= 17) {
+                return "3.3.1";
+            } else {
+                return "3.2.2";
+            }
+        } catch (NumberFormatException e) {
+            return "3.3.3";
+        }
+    }
+
     static {
         System.loadLibrary("exithook");
         System.loadLibrary("pojavexec");

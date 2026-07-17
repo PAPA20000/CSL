@@ -26,7 +26,7 @@ static void writeVersionFile(File[] jarFileArray, File versionFile){
     }
     versionFile.write(sha1.digest().collect { String.format("%02x", it) }.join())
 }
-def lwjglVersions = ["lwjgl-3.3.3", "lwjgl-3.4.1"]
+def lwjglVersions = ["lwjgl-3.3.3", "lwjgl-3.4.1", "lwjgl-3.4.2"]
 
 tasks.register("jar") {
     lwjglVersions.each { version ->

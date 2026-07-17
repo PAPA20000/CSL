@@ -109,7 +109,7 @@ public class AsyncAssetManager {
         String rootDir = Tools.DIR_DATA;
         String sArch = archAsStringAndroid(getDeviceArchitecture());
 
-        String[] lwjglVersions = {"3.3.3", "3.4.1"};
+        String[] lwjglVersions = {"3.3.3", "3.4.1", "3.4.2"};
         for (String lwjglVer : lwjglVersions) {
             File versionFile = new File(Tools.DIR_GAME_HOME + String.format("/lwjgl3/%s/version", lwjglVer));
             String pathToLwjglNatives = String.format("lwjgl-%s-natives/", lwjglVer) + sArch;
