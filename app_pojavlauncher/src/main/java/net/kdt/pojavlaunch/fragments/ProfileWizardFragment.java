@@ -30,6 +30,7 @@ import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.extra.ExtraCore;
+import net.kdt.pojavlaunch.extra.ExtraConstants;
 import net.kdt.pojavlaunch.tasks.AsyncVersionList;
 import net.kdt.pojavlaunch.multirt.MultiRTUtils;
 import net.kdt.pojavlaunch.multirt.RTSpinnerAdapter;
@@ -326,19 +327,27 @@ public class ProfileWizardFragment extends Fragment implements CropperUtils.Crop
     private void loadVersionsForLoader() {
         mVersionLoading.setVisibility(View.VISIBLE);
         mVersionLoadingText.setVisibility(View.VISIBLE);
+        mVersionLoadingText.setText("Fetching versions\u2026");
         mVersionFilters.setVisibility(View.GONE);
         mVersionList.setVisibility(View.GONE);
         mVersionSelectedBar.setVisibility(View.GONE);
         mNextButton.setEnabled(false);
 
-        // Reuse the existing launcher backend (AsyncVersionList) which fetches the
-        // version manifest and stores it in ExtraCore RELEASE_TABLE. This is the same
-        // mechanics the old VersionSelectorDialog relies on, so behaviour is identical.
-        // AsyncVersionList runs on a background worker thread and invokes the
-        // callback from there, so ALL view-touching work must hop to the main
-        // thread via mMainHandler (tied to the UI looper). The isAdded() guard
-        // is also inside the posted runnable so a detached fragment won't NPE.
+        // Reuse the EXACT old mechanic: the version table is populated by
+        // LauncherActivity at startup into ExtraCore RELEASE_TABLE (the same
+        // source VersionSelectorDialog reads from). Read it directly on the UI
+        // thread — no new backend logic.
+        JMinecraftVersionList cached = (JMinecraftVersionList)
+                ExtraCore.getValue(ExtraConstants.RELEASE_TABLE);
+        if (cached != null && cached.versions != null && cached.versions.length > 0) {
+            renderVersionList(cached.versions);
+            return;
+        }
+
+        // Not ready yet -> trigger the existing backend (AsyncVersionList) which
+        // downloads the manifest and stores it in RELEASE_TABLE, then render.
         new AsyncVersionList().getVersionList(versionList -> {
+            // AsyncVersionList invokes on a background worker thread, so hop to UI.
             mMainHandler.post(() -> {
                 if (!isAdded() || getContext() == null) return;
                 JMinecraftVersionList.Version[] versions;
@@ -347,24 +356,33 @@ public class ProfileWizardFragment extends Fragment implements CropperUtils.Crop
                 } else {
                     versions = new JMinecraftVersionList.Version[0];
                 }
-
-                mVersionLoading.setVisibility(View.GONE);
-                mVersionLoadingText.setVisibility(View.GONE);
-                mVersionFilters.setVisibility(View.VISIBLE);
-                mVersionList.setVisibility(View.VISIBLE);
-
-                mVersionAdapter = new WizardVersionAdapter(versions);
-                mVersionList.setLayoutManager(new LinearLayoutManager(requireContext()));
-                mVersionList.setAdapter(mVersionAdapter);
-
-                mVersionAdapter.setOnVersionSelectedListener((version, isSnapshot) -> {
-                    mSelectedVersion = version;
-                    mVersionSelectedBar.setVisibility(View.VISIBLE);
-                    mVersionSelectedName.setText(version);
-                    mNextButton.setEnabled(true);
-                });
+                renderVersionList(versions);
             });
         }, false);
+    }
+
+    /** Render the version list on the UI thread. */
+    private void renderVersionList(JMinecraftVersionList.Version[] versions) {
+        if (!isAdded() || getContext() == null) return;
+        mVersionLoading.setVisibility(View.GONE);
+        mVersionLoadingText.setVisibility(View.GONE);
+        mVersionFilters.setVisibility(View.VISIBLE);
+        mVersionList.setVisibility(View.VISIBLE);
+
+        mVersionAdapter = new WizardVersionAdapter(versions);
+        mVersionList.setLayoutManager(new LinearLayoutManager(requireContext()));
+        mVersionList.setAdapter(mVersionAdapter);
+
+        mVersionAdapter.setOnVersionSelectedListener((version, isSnapshot) -> {
+            mSelectedVersion = version;
+            mVersionSelectedBar.setVisibility(View.VISIBLE);
+            mVersionSelectedName.setText(version);
+            mNextButton.setEnabled(true);
+        });
+
+        if (mVersionAdapter.getItemCount() == 0) {
+            Toast.makeText(getContext(), "No versions found", Toast.LENGTH_SHORT).show();
+        }
     }
 
 
