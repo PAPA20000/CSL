@@ -237,7 +237,26 @@ public class ControlButton extends TextView implements ControlInterface {
             case ControlData.SPECIALBTN_MENU:
                 mControlLayout.notifyAppMenu();
                 break;
+            case ControlData.SPECIALBTN_CHATCOMMAND:
+                if (isDown) sendChatCommand(mProperties.command);
+                break;
         }
+    }
+
+    /**
+     * Opens the Minecraft chat box and types + sends the given command/message.
+     * Used by the {@link ControlData#SPECIALBTN_CHATCOMMAND} special button.
+     */
+    private void sendChatCommand(String command) {
+        if (command == null || command.isEmpty()) return;
+        // Open the chat input (press and release the T key)
+        CallbackBridge.sendKeyPress(LwjglGlfwKeycode.GLFW_KEY_T);
+        // Type each character of the command/message into the chat box
+        for (int i = 0; i < command.length(); i++) {
+            CallbackBridge.sendChar(command.charAt(i), 0);
+        }
+        // Submit the chat message (press and release the Enter key)
+        CallbackBridge.sendKeyPress(LwjglGlfwKeycode.GLFW_KEY_ENTER);
     }
 
     @Override

@@ -59,7 +59,8 @@ public class EditControlSideDialog extends SideDialogView {
             internalChanges = false;
         }
     };
-    private EditText mNameEditText, mWidthEditText, mHeightEditText;
+    private EditText mNameEditText, mWidthEditText, mHeightEditText, mCommandEditText;
+    private TextView mCommandTextView;
     @SuppressLint("UseSwitchCompatOrMaterialCode")
     private Switch mToggleSwitch, mPassthroughSwitch, mSwipeableSwitch, mForwardLockSwitch, mAbsoluteTrackingSwitch;
     private Spinner mOrientationSpinner;
@@ -185,6 +186,10 @@ public class EditControlSideDialog extends SideDialogView {
                 mKeycodeSpinners[i].setSelection(EfficientAndroidLWJGLKeycode.getIndexByValue(data.keycodes[i]) + mSpecialArray.size());
             }
         }
+
+        // Chat command field is only relevant for the "Command" special button
+        mCommandEditText.setText(data.command == null ? "" : data.command);
+        updateCommandVisibility();
     }
 
     /**
@@ -281,6 +286,23 @@ public class EditControlSideDialog extends SideDialogView {
         mOrientationSpinner.setAdapter(adapter);
     }
 
+    /**
+     * Show the chat-command input row only when the currently edited button
+     * uses the {@link ControlData#SPECIALBTN_CHATCOMMAND} special keycode.
+     */
+    private void updateCommandVisibility() {
+        boolean isCommand = false;
+        for (int keycode : mCurrentlyEditedButton.getProperties().keycodes) {
+            if (keycode == ControlData.SPECIALBTN_CHATCOMMAND) {
+                isCommand = true;
+                break;
+            }
+        }
+        int visibility = isCommand ? View.VISIBLE : View.GONE;
+        mCommandTextView.setVisibility(visibility);
+        mCommandEditText.setVisibility(visibility);
+    }
+
     private void setDefaultVisibilitySetting() {
         for (int i = 0; i < ((ViewGroup)mDialogContent).getChildCount(); ++i) {
             ((ViewGroup)mDialogContent).getChildAt(i).setVisibility(VISIBLE);
@@ -318,6 +340,9 @@ public class EditControlSideDialog extends SideDialogView {
         mCornerRadiusPercentTextView = mDialogContent.findViewById(R.id.editCornerRadius_textView_percent);
         mDisplayInGameCheckbox = mDialogContent.findViewById(R.id.visibility_game_checkbox);
         mDisplayInMenuCheckbox = mDialogContent.findViewById(R.id.visibility_menu_checkbox);
+
+        mCommandTextView = mDialogContent.findViewById(R.id.editCommand_textView);
+        mCommandEditText = mDialogContent.findViewById(R.id.editCommand_editText);
 
         //Decorative stuff
         mMappingTextView = mDialogContent.findViewById(R.id.editMapping_textView);
@@ -432,6 +457,7 @@ public class EditControlSideDialog extends SideDialogView {
                     mCurrentlyEditedButton.getProperties().keycodes[finalI] = EfficientAndroidLWJGLKeycode.getValueByIndex(mKeycodeSpinners[finalI].getSelectedItemPosition() - mSpecialArray.size());
                 }
                 mKeycodeTextviews[finalI].setText((String) mKeycodeSpinners[finalI].getSelectedItem());
+                updateCommandVisibility();
             });
         }
 
@@ -454,6 +480,11 @@ public class EditControlSideDialog extends SideDialogView {
         mDisplayInMenuCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (internalChanges) return;
             mCurrentlyEditedButton.getProperties().displayInMenu = isChecked;
+        });
+
+        mCommandEditText.addTextChangedListener((SimpleTextWatcher) text -> {
+            if (internalChanges) return;
+            mCurrentlyEditedButton.getProperties().command = text.toString();
         });
 
         mSelectStrokeColor.setOnClickListener(v -> {

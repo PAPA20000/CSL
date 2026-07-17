@@ -33,6 +33,7 @@ public class ControlData {
     public static final int SPECIALBTN_SCROLLUP = -7;
     public static final int SPECIALBTN_SCROLLDOWN = -8;
     public static final int SPECIALBTN_MENU = -9;
+    public static final int SPECIALBTN_CHATCOMMAND = -10;
 
     private static ControlData[] SPECIAL_BUTTONS;
     private static List<String> SPECIAL_BUTTON_NAME_ARRAY;
@@ -65,6 +66,12 @@ public class ControlData {
     public boolean isSwipeable;
     public boolean displayInGame;
     public boolean displayInMenu;
+    /**
+     * Optional chat command / message sent to the Minecraft server when this
+     * button is pressed. Used together with {@link #SPECIALBTN_CHATCOMMAND}.
+     * Null / empty for normal keycode-based buttons.
+     */
+    public String command;
     private float width;         //Dp instead of Px now
     private float height;        //Dp instead of Px now
 
@@ -165,7 +172,8 @@ public class ControlData {
                     new ControlData("MID", new int[]{SPECIALBTN_MOUSEMID}, "${margin}", "${margin}"),
                     new ControlData("SCROLLUP", new int[]{SPECIALBTN_SCROLLUP}, "${margin}", "${margin}"),
                     new ControlData("SCROLLDOWN", new int[]{SPECIALBTN_SCROLLDOWN}, "${margin}", "${margin}"),
-                    new ControlData("MENU", new int[]{SPECIALBTN_MENU}, "${margin}", "${margin}")
+                    new ControlData("MENU", new int[]{SPECIALBTN_MENU}, "${margin}", "${margin}"),
+                    new ControlData("Command", new int[]{SPECIALBTN_CHATCOMMAND}, "${margin}", "${margin}")
             };
         }
 

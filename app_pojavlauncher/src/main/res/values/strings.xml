@@ -147,6 +147,8 @@
     <string name="customctrl_size">Size</string>
 
     <string name="customctrl_mapping">Mapping</string>
+    <string name="customctrl_command">Command</string>
+    <string name="customctrl_command_hint">Type a command (e.g. /login password)</string>
     <string name="customctrl_orientation">Orientation</string>
     <string name="customctrl_background_color">Background color</string>
     <string name="customctrl_corner_radius">Corner radius</string>
