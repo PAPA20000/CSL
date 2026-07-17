@@ -67,7 +67,7 @@ public class ProfileTypeSelectFragment extends Fragment {
     private void wireButton(@NonNull View view) {
         View b;
         b = view.findViewById(R.id.vanilla_profile);
-        b.setOnClickListener(v -> navigateTo(ProfileEditorFragment.class, ProfileEditorFragment.TAG, new Bundle(1)));
+        b.setOnClickListener(v -> navigateTo(ProfileWizardFragment.class, ProfileWizardFragment.TAG, null));
         setupTouchAnimation(b);
 
         b = view.findViewById(R.id.optifine_profile);
