@@ -204,7 +204,7 @@
             android:id="@+id/wizard_browse_resources"
             android:layout_width="match_parent"
             android:layout_height="44dp"
-            android:text="Browse & Install Resources"
+            android:text="Browse &amp; Install Resources"
             android:textColor="#00E5FF"
             android:textSize="13sp"
             android:textStyle="bold"
