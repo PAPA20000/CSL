@@ -334,29 +334,35 @@ public class ProfileWizardFragment extends Fragment implements CropperUtils.Crop
         // Reuse the existing launcher backend (AsyncVersionList) which fetches the
         // version manifest and stores it in ExtraCore RELEASE_TABLE. This is the same
         // mechanics the old VersionSelectorDialog relies on, so behaviour is identical.
+        // AsyncVersionList runs on a background worker thread and invokes the
+        // callback from there, so ALL view-touching work must hop to the main
+        // thread via mMainHandler (tied to the UI looper). The isAdded() guard
+        // is also inside the posted runnable so a detached fragment won't NPE.
         new AsyncVersionList().getVersionList(versionList -> {
-            if (!isAdded() || getContext() == null) return;
-            JMinecraftVersionList.Version[] versions;
-            if (versionList != null && versionList.versions != null) {
-                versions = versionList.versions;
-            } else {
-                versions = new JMinecraftVersionList.Version[0];
-            }
+            mMainHandler.post(() -> {
+                if (!isAdded() || getContext() == null) return;
+                JMinecraftVersionList.Version[] versions;
+                if (versionList != null && versionList.versions != null) {
+                    versions = versionList.versions;
+                } else {
+                    versions = new JMinecraftVersionList.Version[0];
+                }
 
-            mVersionLoading.setVisibility(View.GONE);
-            mVersionLoadingText.setVisibility(View.GONE);
-            mVersionFilters.setVisibility(View.VISIBLE);
-            mVersionList.setVisibility(View.VISIBLE);
+                mVersionLoading.setVisibility(View.GONE);
+                mVersionLoadingText.setVisibility(View.GONE);
+                mVersionFilters.setVisibility(View.VISIBLE);
+                mVersionList.setVisibility(View.VISIBLE);
 
-            mVersionAdapter = new WizardVersionAdapter(versions);
-            mVersionList.setLayoutManager(new LinearLayoutManager(requireContext()));
-            mVersionList.setAdapter(mVersionAdapter);
+                mVersionAdapter = new WizardVersionAdapter(versions);
+                mVersionList.setLayoutManager(new LinearLayoutManager(requireContext()));
+                mVersionList.setAdapter(mVersionAdapter);
 
-            mVersionAdapter.setOnVersionSelectedListener((version, isSnapshot) -> {
-                mSelectedVersion = version;
-                mVersionSelectedBar.setVisibility(View.VISIBLE);
-                mVersionSelectedName.setText(version);
-                mNextButton.setEnabled(true);
+                mVersionAdapter.setOnVersionSelectedListener((version, isSnapshot) -> {
+                    mSelectedVersion = version;
+                    mVersionSelectedBar.setVisibility(View.VISIBLE);
+                    mVersionSelectedName.setText(version);
+                    mNextButton.setEnabled(true);
+                });
             });
         }, false);
     }
