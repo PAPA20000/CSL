@@ -75,14 +75,6 @@
                 android:paddingTop="@dimen/padding_large"
                 android:paddingBottom="@dimen/padding_medium" />
 
-            <!-- MOD STORE -->
-            <com.kdt.mcgui.LauncherMenuButton
-                android:id="@+id/mod_store_button"
-                style="@style/LauncherMenuButton.Universal"
-                android:layout_width="match_parent"
-                android:drawableStart="@drawable/ic_add"
-                android:text="@string/mcl_button_mod_store" />
-
             <!-- CUSTOM CONTROLS -->
             <com.kdt.mcgui.LauncherMenuButton
                 android:id="@+id/custom_control_button"

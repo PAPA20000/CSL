@@ -148,6 +148,23 @@ public class RightPaneHomeFragment extends Fragment {
                 }
 
                 @Override
+                public void onProfileBrowse(String profileKey, MinecraftProfile profile) {
+                    LauncherPreferences.DEFAULT_PREF.edit()
+                            .putString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE, profileKey)
+                            .apply();
+                    Bundle args = new Bundle();
+                    args.putString(ManageModsFragment.BUNDLE_PROFILE_KEY, profileKey);
+                    Fragment parent = getParentFragment();
+                    if (parent instanceof MainMenuFragment) {
+                        ((MainMenuFragment) parent).openChildPane(
+                                ModsSearchFragment.class, ModsSearchFragment.TAG, args);
+                    } else if (getActivity() != null) {
+                        Tools.swapFragment(requireActivity(),
+                                ModsSearchFragment.class, ModsSearchFragment.TAG, args);
+                    }
+                }
+
+                @Override
                 public void onProfileEdit(String profileKey, MinecraftProfile profile) {
                     LauncherPreferences.DEFAULT_PREF.edit()
                             .putString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE, profileKey)

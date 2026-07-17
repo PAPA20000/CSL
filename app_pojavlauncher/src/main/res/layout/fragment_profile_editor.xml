@@ -380,19 +380,6 @@
                 android:src="@drawable/ic_add"
                 android:padding="6dp"
                 app:tint="#00FF41"
-                android:layout_marginEnd="8dp"
-                app:layout_constraintEnd_toStartOf="@+id/vprof_editor_mods_add"
-                app:layout_constraintTop_toTopOf="@+id/vprof_editor_mods_header"
-                app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_mods_header" />
-
-            <ImageButton
-                android:id="@+id/vprof_editor_mods_add"
-                android:layout_width="@dimen/_34sdp"
-                android:layout_height="@dimen/_34sdp"
-                android:background="@drawable/bg_icon_button_neon"
-                android:src="@drawable/ic_folder"
-                android:padding="6dp"
-                app:tint="#00FF41"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/vprof_editor_mods_header"
                 app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_mods_header" />
@@ -450,20 +437,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/vprof_editor_resource_packs_import"
                 app:layout_constraintTop_toBottomOf="@+id/divider3" />
-
-            <ImageButton
-                android:id="@+id/vprof_editor_resource_packs_add"
-                android:layout_width="@dimen/_34sdp"
-                android:layout_height="@dimen/_34sdp"
-                android:background="@drawable/bg_icon_button_neon"
-                android:src="@drawable/ic_download"
-                android:padding="6dp"
-                android:contentDescription="@string/download"
-                app:tint="#00FF41"
-                android:layout_marginEnd="8dp"
-                app:layout_constraintEnd_toStartOf="@+id/vprof_editor_resource_packs_import"
-                app:layout_constraintTop_toTopOf="@+id/vprof_editor_resource_packs_header"
-                app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_resource_packs_header" />
 
             <ImageButton
                 android:id="@+id/vprof_editor_resource_packs_import"
@@ -542,20 +515,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/vprof_editor_shader_packs_import"
                 app:layout_constraintTop_toBottomOf="@+id/divider4" />
-
-            <ImageButton
-                android:id="@+id/vprof_editor_shader_packs_add"
-                android:layout_width="@dimen/_34sdp"
-                android:layout_height="@dimen/_34sdp"
-                android:background="@drawable/bg_icon_button_neon"
-                android:src="@drawable/ic_download"
-                android:padding="6dp"
-                android:contentDescription="@string/download"
-                app:tint="#00FF41"
-                android:layout_marginEnd="8dp"
-                app:layout_constraintEnd_toStartOf="@+id/vprof_editor_shader_packs_import"
-                app:layout_constraintTop_toTopOf="@+id/vprof_editor_shader_packs_header"
-                app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_shader_packs_header" />
 
             <ImageButton
                 android:id="@+id/vprof_editor_shader_packs_import"

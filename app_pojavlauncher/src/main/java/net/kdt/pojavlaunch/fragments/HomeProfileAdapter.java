@@ -37,6 +37,7 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
 
     public interface OnProfileActionListener {
         void onProfilePlay(String profileKey, MinecraftProfile profile);
+        void onProfileBrowse(String profileKey, MinecraftProfile profile);
         void onProfileEdit(String profileKey, MinecraftProfile profile);
         void onProfileAddShortcut(String profileKey, MinecraftProfile profile);
     }
@@ -147,6 +148,10 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         holder.btnPlay.setOnClickListener(v -> {
             if (mListener != null) mListener.onProfilePlay(profileKey, profile);
         });
+
+        holder.btnBrowse.setOnClickListener(v -> {
+            if (mListener != null) mListener.onProfileBrowse(profileKey, profile);
+        });
     }
 
     @Override
@@ -209,6 +214,7 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         final TextView tvMeta;
         final TextView tvModCount;
         final FrameLayout btnPlay;
+        final FrameLayout btnBrowse;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -218,6 +224,7 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
             tvMeta = itemView.findViewById(R.id.tv_profile_meta);
             tvModCount = itemView.findViewById(R.id.tv_profile_mod_count);
             btnPlay = itemView.findViewById(R.id.btn_profile_play);
+            btnBrowse = itemView.findViewById(R.id.btn_profile_browse);
         }
     }
 }

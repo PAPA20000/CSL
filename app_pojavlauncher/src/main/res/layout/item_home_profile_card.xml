@@ -66,6 +66,25 @@
 
         </LinearLayout>
 
+        <!-- Browse Resources Button -->
+        <FrameLayout
+            android:id="@+id/btn_profile_browse"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_browse_button"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_browse_resources"
+                android:tint="#39FF14" />
+
+        </FrameLayout>
+
         <!-- Play Button -->
         <FrameLayout
             android:id="@+id/btn_profile_play"

@@ -174,12 +174,25 @@ public class MainMenuFragment extends Fragment {
         }
         if (isTwoPane()) {
             androidx.fragment.app.FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
-            transaction.setReorderingAllowed(true)
+            transaction.setReorderingAllowed(true);
+            // Smooth premium open animation for the Browse Resources page.
+            if (fragmentClass == ModsSearchFragment.class) {
+                transaction.setCustomAnimations(
+                        R.anim.fade_in_slide_up, R.anim.fade_out_slide_down,
+                        R.anim.fade_in_slide_up, R.anim.fade_out_slide_down);
+            }
+            transaction
                     .replace(R.id.right_pane_container, fragmentClass, args, tag)
                     .addToBackStack(tag)
                     .commit();
         } else {
-            Tools.swapFragment(requireActivity(), fragmentClass, tag, args);
+            if (fragmentClass == ModsSearchFragment.class) {
+                Tools.swapFragment(requireActivity(), fragmentClass, tag, args,
+                        R.anim.fade_in_slide_up, R.anim.fade_out_slide_down,
+                        R.anim.fade_in_slide_up, R.anim.fade_out_slide_down);
+            } else {
+                Tools.swapFragment(requireActivity(), fragmentClass, tag, args);
+            }
         }
     }
 
@@ -308,10 +321,6 @@ public class MainMenuFragment extends Fragment {
             });
         }
 
-        // Mod Store
-        if (mModStoreButton != null)
-            mModStoreButton.setOnClickListener(v ->
-                    openPane(ModsSearchFragment.class, ModsSearchFragment.TAG, null));
 
         // Execute .jar
         if (mInstallJarButton != null) {

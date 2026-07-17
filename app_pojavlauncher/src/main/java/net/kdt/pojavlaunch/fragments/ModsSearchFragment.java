@@ -10,6 +10,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
@@ -147,7 +148,7 @@ public class ModsSearchFragment extends Fragment {
         });
 
         mFilterButton.setOnClickListener(v -> displayFilterDialog());
-        mSearchEditText.setHint(R.string.hint_search_mod);
+        mSearchEditText.setHint("Search...");
 
         // Wire up click listeners — handles fragment creation and recreation
         mFragmentLifecycleCallbacks = new FragmentManager.FragmentLifecycleCallbacks() {
@@ -169,6 +170,35 @@ public class ModsSearchFragment extends Fragment {
             }
         };
         getChildFragmentManager().registerFragmentLifecycleCallbacks(mFragmentLifecycleCallbacks, true);
+
+        playEntryAnimation(view);
+    }
+
+    /** Smooth premium entrance: header slides down, content fades/scales up. */
+    private void playEntryAnimation(@NonNull View root) {
+        View header = root.findViewById(R.id.mod_store_header);
+        View pager = root.findViewById(R.id.download_view_pager);
+        View tabs = root.findViewById(R.id.tab_scroll);
+
+        if (header != null) {
+            header.setAlpha(0f);
+            header.setTranslationY(-40f);
+            header.animate().alpha(1f).translationY(0f)
+                    .setDuration(320).setInterpolator(new DecelerateInterpolator()).start();
+        }
+        if (tabs != null) {
+            tabs.setAlpha(0f);
+            tabs.animate().alpha(1f).setStartDelay(120).setDuration(300).start();
+        }
+        if (pager != null) {
+            pager.setAlpha(0f);
+            pager.setScaleX(0.98f);
+            pager.setScaleY(0.98f);
+            pager.setTranslationY(48f);
+            pager.animate().alpha(1f).scaleX(1f).scaleY(1f).translationY(0f)
+                    .setStartDelay(90).setDuration(360)
+                    .setInterpolator(new DecelerateInterpolator()).start();
+        }
     }
 
     private void setupTabs() {
