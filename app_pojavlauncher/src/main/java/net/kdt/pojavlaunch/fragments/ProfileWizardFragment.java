@@ -83,7 +83,7 @@ public class ProfileWizardFragment extends Fragment implements CropperUtils.Crop
     private TextView mVersionLoadingText;
     private View mVersionFilters;
     private RecyclerView mVersionList;
-    private TextView mVersionSelectedBar;
+    private View mVersionSelectedBar;
     private TextView mVersionSelectedName;
     private TextView mFilterRelease, mFilterSnapshot;
     private boolean mShowSnapshots = false;
