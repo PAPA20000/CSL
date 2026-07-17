@@ -29,8 +29,8 @@ import net.kdt.pojavlaunch.JMinecraftVersionList;
 import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
-import net.kdt.pojavlaunch.extra.ExtraConstants;
 import net.kdt.pojavlaunch.extra.ExtraCore;
+import net.kdt.pojavlaunch.tasks.AsyncVersionList;
 import net.kdt.pojavlaunch.multirt.MultiRTUtils;
 import net.kdt.pojavlaunch.multirt.RTSpinnerAdapter;
 import net.kdt.pojavlaunch.multirt.Runtime;
@@ -138,6 +138,17 @@ public class ProfileWizardFragment extends Fragment implements CropperUtils.Crop
 
         // Container for wizard steps
         android.widget.FrameLayout flipContainer = view.findViewById(R.id.wizard_viewpager);
+
+        // FrameLayout does not honor layout_weight, so give each step MATCH_PARENT
+        // params. Without this the inner RecyclerView (0dp + weight) collapses to
+        // zero height -> blank, non-scrolling version list on Step 2.
+        android.widget.FrameLayout.LayoutParams stepParams =
+                new android.widget.FrameLayout.LayoutParams(
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT);
+        mStep1.setLayoutParams(stepParams);
+        mStep2.setLayoutParams(stepParams);
+        mStep3.setLayoutParams(stepParams);
 
         // Add all steps to container (hidden initially)
         mStep1.setVisibility(View.GONE);
@@ -320,44 +331,34 @@ public class ProfileWizardFragment extends Fragment implements CropperUtils.Crop
         mVersionSelectedBar.setVisibility(View.GONE);
         mNextButton.setEnabled(false);
 
-        mBgExecutor.execute(() -> {
-            try {
-                JMinecraftVersionList versionList = (JMinecraftVersionList)
-                        ExtraCore.getValue(ExtraConstants.RELEASE_TABLE);
-                JMinecraftVersionList.Version[] versions;
-                if (versionList != null && versionList.versions != null) {
-                    versions = versionList.versions;
-                } else {
-                    versions = new JMinecraftVersionList.Version[0];
-                }
-
-                mMainHandler.post(() -> {
-                    if (!isAdded()) return;
-                    mVersionLoading.setVisibility(View.GONE);
-                    mVersionLoadingText.setVisibility(View.GONE);
-                    mVersionFilters.setVisibility(View.VISIBLE);
-                    mVersionList.setVisibility(View.VISIBLE);
-
-                    mVersionAdapter = new WizardVersionAdapter(versions);
-                    mVersionList.setLayoutManager(new LinearLayoutManager(requireContext()));
-                    mVersionList.setAdapter(mVersionAdapter);
-
-                    mVersionAdapter.setOnVersionSelectedListener((version, isSnapshot) -> {
-                        mSelectedVersion = version;
-                        mVersionSelectedBar.setVisibility(View.VISIBLE);
-                        mVersionSelectedName.setText(version);
-                        mNextButton.setEnabled(true);
-                    });
-                });
-            } catch (Exception e) {
-                mMainHandler.post(() -> {
-                    if (!isAdded()) return;
-                    mVersionLoading.setVisibility(View.GONE);
-                    mVersionLoadingText.setText("Failed to load versions");
-                    mNextButton.setEnabled(false);
-                });
+        // Reuse the existing launcher backend (AsyncVersionList) which fetches the
+        // version manifest and stores it in ExtraCore RELEASE_TABLE. This is the same
+        // mechanics the old VersionSelectorDialog relies on, so behaviour is identical.
+        new AsyncVersionList().getVersionList(versionList -> {
+            if (!isAdded() || getContext() == null) return;
+            JMinecraftVersionList.Version[] versions;
+            if (versionList != null && versionList.versions != null) {
+                versions = versionList.versions;
+            } else {
+                versions = new JMinecraftVersionList.Version[0];
             }
-        });
+
+            mVersionLoading.setVisibility(View.GONE);
+            mVersionLoadingText.setVisibility(View.GONE);
+            mVersionFilters.setVisibility(View.VISIBLE);
+            mVersionList.setVisibility(View.VISIBLE);
+
+            mVersionAdapter = new WizardVersionAdapter(versions);
+            mVersionList.setLayoutManager(new LinearLayoutManager(requireContext()));
+            mVersionList.setAdapter(mVersionAdapter);
+
+            mVersionAdapter.setOnVersionSelectedListener((version, isSnapshot) -> {
+                mSelectedVersion = version;
+                mVersionSelectedBar.setVisibility(View.VISIBLE);
+                mVersionSelectedName.setText(version);
+                mNextButton.setEnabled(true);
+            });
+        }, false);
     }
 
 
