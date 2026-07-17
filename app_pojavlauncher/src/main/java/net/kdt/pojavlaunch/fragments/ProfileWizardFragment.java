@@ -387,7 +387,7 @@ public class ProfileWizardFragment extends Fragment implements CropperUtils.Crop
 
         // Java runtime spinner
         ArrayList<Runtime> runtimes = new ArrayList<>(MultiRTUtils.getInstalledRuntimes());
-        RTSpinnerAdapter rtAdapter = new RTSpinnerAdapter(runtimes, requireContext());
+        RTSpinnerAdapter rtAdapter = new RTSpinnerAdapter(requireContext(), runtimes);
         mJavaRuntime.setAdapter(rtAdapter);
 
         // Renderer spinner
