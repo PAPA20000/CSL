@@ -13,15 +13,16 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/cursor_top_bar"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="60dp"
         android:background="#1C1C1E"
-        android:paddingHorizontal="16dp"
+        android:paddingHorizontal="12dp"
+        android:elevation="8dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageButton
             android:id="@+id/cursor_back_button"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
             android:background="@drawable/bg_icon_button_round"
             android:src="@drawable/ic_arrow_back_white"
             android:padding="10dp"
@@ -35,13 +36,13 @@
             android:layout_height="wrap_content"
             android:text="CURSOR CUSTOMIZATION"
             android:textColor="#FFFFFF"
-            android:textSize="14sp"
+            android:textSize="15sp"
             android:textStyle="bold"
-            android:letterSpacing="0.08"
+            android:letterSpacing="0.1"
             android:gravity="center"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/cursor_back_button"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
@@ -54,23 +55,26 @@
         android:layout_height="0dp"
         android:fillViewport="true"
         android:overScrollMode="never"
+        android:clipToPadding="false"
+        android:paddingBottom="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/cursor_top_bar">
 
-        <!-- Centered Container to limit width on Landscape / Tablets -->
-        <LinearLayout
+        <!-- Wrapped in ConstraintLayout to properly enforce maxWidth on large screens -->
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center_horizontal"
-            android:padding="16dp">
+            android:layout_height="wrap_content">
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:maxWidth="600dp"
-                app:layout_constraintWidth_max="600dp">
+                android:padding="20dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintWidth_max="620dp">
 
                 <!-- ═══════════════════════════════════════ -->
                 <!-- ✦ SECTION: CURSOR LIVE PREVIEW        -->
@@ -80,22 +84,23 @@
                     android:layout_height="wrap_content"
                     android:text="LIVE PREVIEW"
                     android:textColor="#8E8E93"
-                    android:textSize="11sp"
+                    android:textSize="12sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.1"
-                    android:layout_marginBottom="8dp"/>
+                    android:layout_marginStart="4dp"
+                    android:layout_marginBottom="12dp"/>
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/cursor_preview_container"
                     android:layout_width="match_parent"
-                    android:layout_height="140dp"
+                    android:layout_height="180dp"
                     android:background="@drawable/bg_cursor_preview"
-                    android:layout_marginBottom="18dp">
+                    android:layout_marginBottom="28dp">
 
                     <ImageView
                         android:id="@+id/cursor_preview_image"
-                        android:layout_width="56dp"
-                        android:layout_height="56dp"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
                         android:scaleType="centerInside"
                         android:src="@drawable/ic_mouse_pointer"
                         android:padding="6dp"
@@ -112,12 +117,12 @@
                         android:layout_height="wrap_content"
                         android:text="DEFAULT"
                         android:textColor="#39FF14"
-                        android:textSize="9sp"
+                        android:textSize="10sp"
                         android:textStyle="bold"
                         android:background="@drawable/bg_size_chip"
-                        android:paddingHorizontal="8dp"
-                        android:paddingVertical="3dp"
-                        android:layout_margin="10dp"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp"
+                        android:layout_margin="16dp"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintStart_toStartOf="parent"/>
 
@@ -127,9 +132,9 @@
                         android:layout_height="wrap_content"
                         android:text="Scale: 100% | Opacity: 100%"
                         android:textColor="#8E8E93"
-                        android:textSize="10sp"
+                        android:textSize="11sp"
                         android:textStyle="bold"
-                        android:layout_margin="10dp"
+                        android:layout_margin="16dp"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"/>
 
@@ -143,16 +148,17 @@
                     android:layout_height="wrap_content"
                     android:text="CURSOR STYLE"
                     android:textColor="#8E8E93"
-                    android:textSize="11sp"
+                    android:textSize="12sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.1"
-                    android:layout_marginBottom="8dp"/>
+                    android:layout_marginStart="4dp"
+                    android:layout_marginBottom="12dp"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="18dp"
+                    android:layout_marginBottom="28dp"
                     android:weightSum="3">
 
                     <!-- Classic Style Card -->
@@ -161,27 +167,27 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_marginEnd="6dp"
+                        android:layout_marginEnd="8dp"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="12dp"
+                        android:padding="16dp"
                         android:background="@drawable/background_card_neon"
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground">
 
                         <ImageView
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
                             android:src="@drawable/ic_mouse_pointer"
-                            android:layout_marginBottom="6dp"/>
+                            android:layout_marginBottom="8dp"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Classic"
                             android:textColor="#FFFFFF"
-                            android:textSize="11sp"
+                            android:textSize="12sp"
                             android:textStyle="bold"/>
                     </LinearLayout>
 
@@ -191,27 +197,27 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_marginHorizontal="3dp"
+                        android:layout_marginHorizontal="4dp"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="12dp"
+                        android:padding="16dp"
                         android:background="@drawable/background_card"
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground">
 
                         <ImageView
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
                             android:src="@drawable/ic_gamepad_pointer"
-                            android:layout_marginBottom="6dp"/>
+                            android:layout_marginBottom="8dp"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Gamepad"
                             android:textColor="#FFFFFF"
-                            android:textSize="11sp"
+                            android:textSize="12sp"
                             android:textStyle="bold"/>
                     </LinearLayout>
 
@@ -221,28 +227,28 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_marginStart="6dp"
+                        android:layout_marginStart="8dp"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="12dp"
+                        android:padding="16dp"
                         android:background="@drawable/background_card"
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground">
 
                         <ImageView
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
                             android:src="@drawable/ic_upload"
                             app:tint="#39FF14"
-                            android:layout_marginBottom="6dp"/>
+                            android:layout_marginBottom="8dp"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Custom File"
                             android:textColor="#FFFFFF"
-                            android:textSize="11sp"
+                            android:textSize="12sp"
                             android:textStyle="bold"/>
                     </LinearLayout>
 
@@ -254,20 +260,21 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="CURSOR SIZE &amp; POSITION"
+                    android:text="CURSOR SIZE & POSITION"
                     android:textColor="#8E8E93"
-                    android:textSize="11sp"
+                    android:textSize="12sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.1"
-                    android:layout_marginBottom="8dp"/>
+                    android:layout_marginStart="4dp"
+                    android:layout_marginBottom="12dp"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/background_card"
                     android:orientation="vertical"
-                    android:padding="14dp"
-                    android:layout_marginBottom="18dp">
+                    android:padding="20dp"
+                    android:layout_marginBottom="28dp">
 
                     <!-- Scale -->
                     <LinearLayout
@@ -282,8 +289,8 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="CURSOR SCALE"
-                            android:textColor="#39FF14"
-                            android:textSize="10.5sp"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp"
                             android:textStyle="bold"
                             android:letterSpacing="0.05"/>
 
@@ -292,8 +299,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="100%"
-                            android:textColor="#FFFFFF"
-                            android:textSize="11sp"
+                            android:textColor="#39FF14"
+                            android:textSize="13sp"
                             android:textStyle="bold"/>
                     </LinearLayout>
 
@@ -314,7 +321,7 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="16dp"
                         android:layout_marginBottom="4dp">
 
                         <TextView
@@ -322,8 +329,8 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="HOTSPOT X"
-                            android:textColor="#39FF14"
-                            android:textSize="10.5sp"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp"
                             android:textStyle="bold"
                             android:letterSpacing="0.05"/>
 
@@ -332,8 +339,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0 px"
-                            android:textColor="#FFFFFF"
-                            android:textSize="11sp"
+                            android:textColor="#39FF14"
+                            android:textSize="13sp"
                             android:textStyle="bold"/>
                     </LinearLayout>
 
@@ -354,7 +361,7 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="16dp"
                         android:layout_marginBottom="4dp">
 
                         <TextView
@@ -362,8 +369,8 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="HOTSPOT Y"
-                            android:textColor="#39FF14"
-                            android:textSize="10.5sp"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp"
                             android:textStyle="bold"
                             android:letterSpacing="0.05"/>
 
@@ -372,8 +379,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0 px"
-                            android:textColor="#FFFFFF"
-                            android:textSize="11sp"
+                            android:textColor="#39FF14"
+                            android:textSize="13sp"
                             android:textStyle="bold"/>
                     </LinearLayout>
 
@@ -396,20 +403,21 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="CURSOR GLOW &amp; COLOR"
+                    android:text="CURSOR GLOW & COLOR"
                     android:textColor="#8E8E93"
-                    android:textSize="11sp"
+                    android:textSize="12sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.1"
-                    android:layout_marginBottom="8dp"/>
+                    android:layout_marginStart="4dp"
+                    android:layout_marginBottom="12dp"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/background_card"
                     android:orientation="vertical"
-                    android:padding="14dp"
-                    android:layout_marginBottom="18dp">
+                    android:padding="20dp"
+                    android:layout_marginBottom="28dp">
 
                     <!-- Glow Intensity -->
                     <LinearLayout
@@ -424,8 +432,8 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="GLOW INTENSITY"
-                            android:textColor="#39FF14"
-                            android:textSize="10.5sp"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp"
                             android:textStyle="bold"
                             android:letterSpacing="0.05"/>
 
@@ -434,8 +442,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0%"
-                            android:textColor="#FFFFFF"
-                            android:textSize="11sp"
+                            android:textColor="#39FF14"
+                            android:textSize="13sp"
                             android:textStyle="bold"/>
                     </LinearLayout>
 
@@ -456,7 +464,7 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="16dp"
                         android:layout_marginBottom="4dp">
 
                         <TextView
@@ -464,8 +472,8 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="CURSOR OPACITY"
-                            android:textColor="#39FF14"
-                            android:textSize="10.5sp"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp"
                             android:textStyle="bold"
                             android:letterSpacing="0.05"/>
 
@@ -474,8 +482,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="100%"
-                            android:textColor="#FFFFFF"
-                            android:textSize="11sp"
+                            android:textColor="#39FF14"
+                            android:textSize="13sp"
                             android:textStyle="bold"/>
                     </LinearLayout>
 
@@ -496,11 +504,11 @@
                         android:layout_height="wrap_content"
                         android:text="GLOW COLOR PRESETS"
                         android:textColor="#8E8E93"
-                        android:textSize="9.5sp"
+                        android:textSize="11sp"
                         android:textStyle="bold"
                         android:letterSpacing="0.05"
-                        android:layout_marginTop="12dp"
-                        android:layout_marginBottom="8dp"/>
+                        android:layout_marginTop="20dp"
+                        android:layout_marginBottom="12dp"/>
 
                     <HorizontalScrollView
                         android:layout_width="match_parent"
@@ -518,9 +526,9 @@
                             <!-- Green -->
                             <ImageView
                                 android:id="@+id/color_green"
-                                android:layout_width="32dp"
-                                android:layout_height="32dp"
-                                android:layout_marginEnd="12dp"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:layout_marginEnd="16dp"
                                 android:background="@drawable/bg_color_circle"
                                 android:backgroundTint="#A6FF3D"
                                 android:clickable="true"
@@ -533,66 +541,66 @@
                             <!-- Cyan -->
                             <ImageView
                                 android:id="@+id/color_cyan"
-                                android:layout_width="32dp"
-                                android:layout_height="32dp"
-                                android:layout_marginEnd="12dp"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:layout_marginEnd="16dp"
                                 android:background="@drawable/bg_color_circle"
                                 android:backgroundTint="#00E5FF"
                                 android:clickable="true"
                                 android:focusable="true"
                                 android:foreground="?attr/selectableItemBackground"
-                                android:padding="6dp"/>
+                                android:padding="8dp"/>
 
                             <!-- Purple -->
                             <ImageView
                                 android:id="@+id/color_purple"
-                                android:layout_width="32dp"
-                                android:layout_height="32dp"
-                                android:layout_marginEnd="12dp"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:layout_marginEnd="16dp"
                                 android:background="@drawable/bg_color_circle"
                                 android:backgroundTint="#D500F9"
                                 android:clickable="true"
                                 android:focusable="true"
                                 android:foreground="?attr/selectableItemBackground"
-                                android:padding="6dp"/>
+                                android:padding="8dp"/>
 
                             <!-- Red -->
                             <ImageView
                                 android:id="@+id/color_red"
-                                android:layout_width="32dp"
-                                android:layout_height="32dp"
-                                android:layout_marginEnd="12dp"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:layout_marginEnd="16dp"
                                 android:background="@drawable/bg_color_circle"
                                 android:backgroundTint="#FF3D00"
                                 android:clickable="true"
                                 android:focusable="true"
                                 android:foreground="?attr/selectableItemBackground"
-                                android:padding="6dp"/>
+                                android:padding="8dp"/>
 
                             <!-- Yellow -->
                             <ImageView
                                 android:id="@+id/color_yellow"
-                                android:layout_width="32dp"
-                                android:layout_height="32dp"
-                                android:layout_marginEnd="12dp"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:layout_marginEnd="16dp"
                                 android:background="@drawable/bg_color_circle"
                                 android:backgroundTint="#FFEA00"
                                 android:clickable="true"
                                 android:focusable="true"
                                 android:foreground="?attr/selectableItemBackground"
-                                android:padding="6dp"/>
+                                android:padding="8dp"/>
 
                             <!-- White -->
                             <ImageView
                                 android:id="@+id/color_white"
-                                android:layout_width="32dp"
-                                android:layout_height="32dp"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
                                 android:background="@drawable/bg_color_circle"
                                 android:backgroundTint="#FFFFFF"
                                 android:clickable="true"
                                 android:focusable="true"
                                 android:foreground="?attr/selectableItemBackground"
-                                android:padding="6dp"/>
+                                android:padding="8dp"/>
 
                         </LinearLayout>
                     </HorizontalScrollView>
@@ -605,48 +613,50 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="IMPORT &amp; EXPORT"
+                    android:text="IMPORT & EXPORT"
                     android:textColor="#8E8E93"
-                    android:textSize="11sp"
+                    android:textSize="12sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.1"
-                    android:layout_marginBottom="8dp"/>
+                    android:layout_marginStart="4dp"
+                    android:layout_marginBottom="12dp"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/background_card"
                     android:orientation="vertical"
-                    android:padding="14dp"
-                    android:layout_marginBottom="24dp">
+                    android:padding="20dp"
+                    android:layout_marginBottom="32dp">
 
                     <!-- Upload Zone -->
                     <LinearLayout
                         android:id="@+id/upload_zone"
                         android:layout_width="match_parent"
-                        android:layout_height="80dp"
+                        android:layout_height="100dp"
                         android:gravity="center"
                         android:orientation="vertical"
                         android:background="@drawable/bg_dashed_border"
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackground"
-                        android:padding="8dp"
-                        android:layout_marginBottom="12dp">
+                        android:padding="12dp"
+                        android:layout_marginBottom="16dp">
 
                         <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
                             android:src="@drawable/ic_upload"
                             app:tint="#39FF14"
-                            android:layout_marginBottom="4dp"/>
+                            android:layout_marginBottom="8dp"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Tap to browse and upload image/GIF"
                             android:textColor="#8E8E93"
-                            android:textSize="11sp"/>
+                            android:textSize="12sp"
+                            android:textStyle="bold"/>
                     </LinearLayout>
 
                     <!-- Import & Export Buttons Row -->
@@ -659,26 +669,26 @@
                         <com.kdt.mcgui.MineButton
                             android:id="@+id/btn_import_png"
                             android:layout_width="0dp"
-                            android:layout_height="44dp"
+                            android:layout_height="48dp"
                             android:layout_weight="1"
-                            android:layout_marginEnd="6dp"
+                            android:layout_marginEnd="8dp"
                             android:background="@drawable/bg_green_gradient_button"
                             android:text="IMPORT FILE"
                             android:textColor="#000000"
-                            android:textSize="11sp"
+                            android:textSize="12sp"
                             android:textStyle="bold"
                             android:stateListAnimator="@null"/>
 
                         <com.kdt.mcgui.MineButton
                             android:id="@+id/btn_export_cursor"
                             android:layout_width="0dp"
-                            android:layout_height="44dp"
+                            android:layout_height="48dp"
                             android:layout_weight="1"
-                            android:layout_marginStart="6dp"
+                            android:layout_marginStart="8dp"
                             android:background="@drawable/background_card_neon"
                             android:text="EXPORT FILE"
                             android:textColor="#39FF14"
-                            android:textSize="11sp"
+                            android:textSize="12sp"
                             android:textStyle="bold"
                             android:stateListAnimator="@null"/>
 
@@ -692,32 +702,31 @@
                 <com.kdt.mcgui.MineButton
                     android:id="@+id/btn_save_cursor"
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
+                    android:layout_height="52dp"
                     android:background="@drawable/bg_save_button_neon"
                     android:text="SAVE CHANGES"
                     android:textColor="#000000"
-                    android:textSize="12sp"
+                    android:textSize="13sp"
                     android:textStyle="bold"
-                    android:letterSpacing="0.05"
+                    android:letterSpacing="0.08"
                     android:stateListAnimator="@null"
                     android:layout_marginBottom="12dp"/>
 
                 <com.kdt.mcgui.MineButton
                     android:id="@+id/btn_reset_cursor"
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
+                    android:layout_height="52dp"
                     android:background="@drawable/bg_delete_button"
                     android:text="RESET TO DEFAULT"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="13sp"
                     android:textStyle="bold"
-                    android:letterSpacing="0.05"
+                    android:letterSpacing="0.08"
                     android:stateListAnimator="@null"
                     android:layout_marginBottom="20dp"/>
 
             </LinearLayout>
-
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
