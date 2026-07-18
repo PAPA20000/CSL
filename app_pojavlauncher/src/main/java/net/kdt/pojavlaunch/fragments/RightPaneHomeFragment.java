@@ -10,7 +10,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import net.kdt.pojavlaunch.R;
@@ -44,17 +44,15 @@ public class RightPaneHomeFragment extends Fragment {
         loadCustomWallpaper(view);
 
         mRecyclerView = view.findViewById(R.id.rv_home_profiles);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        mRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
         setupProfileAdapter();
 
         // Floating "+" FAB opens the Version Setup Hub (3-category grid)
         View fab = view.findViewById(R.id.fab_create_profile);
         if (fab != null) {
-            // Apply 200ms scale-up reveal with DecelerateInterpolator
             fab.setScaleX(0.6f);
             fab.setScaleY(0.6f);
             fab.setAlpha(0f);
-            // Enable hardware layer during animation to reduce jank on low-end devices
             fab.setLayerType(View.LAYER_TYPE_HARDWARE, null);
             fab.animate()
                     .scaleX(1f).scaleY(1f)
@@ -86,23 +84,6 @@ public class RightPaneHomeFragment extends Fragment {
                 Toast.makeText(getContext(), "Profiles refreshed", Toast.LENGTH_SHORT).show();
             });
         }
-
-        View settingsBtn = view.findViewById(R.id.btn_home_settings);
-        if (settingsBtn != null) {
-            settingsBtn.setOnClickListener(v -> {
-                if (!isAdded() || getContext() == null) return;
-                Fragment parent = getParentFragment();
-                if (parent instanceof MainMenuFragment) {
-                    ((MainMenuFragment) parent).openChildPane(
-                            net.kdt.pojavlaunch.prefs.screens.LauncherPreferenceFragment.class,
-                            "SETTINGS_FRAGMENT", null);
-                } else if (getActivity() != null) {
-                    Tools.swapFragment(requireActivity(),
-                            net.kdt.pojavlaunch.prefs.screens.LauncherPreferenceFragment.class,
-                            "SETTINGS_FRAGMENT", null);
-                }
-            });
-        }
     }
 
     @Override
@@ -117,26 +98,18 @@ public class RightPaneHomeFragment extends Fragment {
     }
 
     private void setupProfileAdapter() {
-        // Load profiles on background thread to avoid blocking the UI thread on file I/O
         LauncherProfiles.loadAsync(() -> {
             if (!isAdded() || getContext() == null) return;
 
             Map<String, MinecraftProfile> profilesMap = LauncherProfiles.mainProfileJson != null
                     ? LauncherProfiles.mainProfileJson.profiles : null;
 
-            // Note: Do NOT drop all cached icons here — doing so recycles the underlying
-            // bitmaps while RecyclerView items may still be drawing them, causing
-            // "Canvas: trying to use a recycled bitmap" crashes.
-            // Per-profile icon invalidation happens in ProfileEditorFragment.dropIcon()
-            // when the user actually edits a profile's icon.
-
             List<String> keys = new ArrayList<>();
             List<MinecraftProfile> profiles = new ArrayList<>();
 
-            if (profilesMap != null) {
+            if (profilesMap != null && !profilesMap.isEmpty()) {
                 List<Map.Entry<String, MinecraftProfile>> entries =
                         new ArrayList<>(profilesMap.entrySet());
-                // Sort by lastUsed descending (most recently used first)
                 Collections.sort(entries, (a, b) -> {
                     String ua = a.getValue().lastUsed != null ? a.getValue().lastUsed : "";
                     String ub = b.getValue().lastUsed != null ? b.getValue().lastUsed : "";
@@ -145,7 +118,6 @@ public class RightPaneHomeFragment extends Fragment {
                 for (Map.Entry<String, MinecraftProfile> entry : entries) {
                     String key = entry.getKey();
                     MinecraftProfile profile = entry.getValue();
-                    // Skip invalid/corrupted profiles
                     if (key == null || key.isEmpty()) continue;
                     if (profile == null) continue;
                     if (profile.name == null || profile.name.trim().isEmpty()) continue;

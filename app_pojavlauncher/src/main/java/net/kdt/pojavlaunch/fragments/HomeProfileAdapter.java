@@ -34,7 +34,6 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
     private final List<MinecraftProfile> mProfileList;
     private final List<String> mProfileKeys;
     private final OnProfileActionListener mListener;
-    // Pre-computed mod counts (0 = not loaded yet or no mods). Populated on background thread.
     private final int[] mModCountCache;
     private boolean mModCountsReady;
 
@@ -52,7 +51,6 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         mListener = listener;
         mModCountCache = new int[profiles.size()];
         setHasStableIds(true);
-        // Kick off background loading of mod counts
         preloadModCounts();
     }
 
@@ -61,7 +59,6 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         return mProfileKeys.get(position).hashCode();
     }
 
-    /** Pre-compute mod counts on a background thread so onBindViewHolder never blocks on I/O. */
     private void preloadModCounts() {
         if (mProfileList.isEmpty()) return;
         PojavApplication.sExecutorService.execute(() -> {
@@ -82,7 +79,6 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
                 mModCountCache[i] = count;
             }
             mModCountsReady = true;
-            // Use payload update so only mod count TextView rebinds, not the full card
             Tools.runOnUiThread(() -> notifyItemRangeChanged(0, mProfileList.size(), PAYLOAD_MOD_COUNT));
         });
     }
@@ -103,7 +99,6 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position,
                                  @NonNull List<Object> payloads) {
-        // Payload-based partial binding: skip expensive icon binding when only mod count changed
         if (!payloads.isEmpty()) {
             for (Object payload : payloads) {
                 if (payload instanceof Integer && (Integer) payload == PAYLOAD_MOD_COUNT) {
@@ -119,19 +114,21 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
 
         holder.tvName.setText(profile.name != null ? profile.name : "");
 
-        // Exact Loader/Version — displayed exactly as stored (e.g. fabric-loader-0.19.3-26.2)
-        holder.tvVersion.setText(profile.lastVersionId != null && !profile.lastVersionId.isEmpty()
-                ? profile.lastVersionId : "");
+        // Exact Loader/Version
+        String version = profile.lastVersionId != null ? profile.lastVersionId : "";
+        if (version.length() > 20) {
+            version = version.substring(0, 20) + "...";
+        }
+        holder.tvVersion.setText(version);
 
-        // Read from pre-computed cache — never blocks on I/O
-        int modCount = mModCountCache[position];
+        // Mod count (may not be loaded yet)
+        int modCount = mModCountsReady ? mModCountCache[position] : 0;
         holder.tvModCount.setText("Installed Mods: " + modCount);
 
-        // Exact Allocated RAM — per-profile value when set, otherwise the global launcher setting
+        // RAM allocation
         int ramMB = (profile.ramAllocationMB != null)
                 ? profile.ramAllocationMB : LauncherPreferences.PREF_RAM_ALLOCATION;
-        holder.tvRam.setText(holder.itemView.getContext().getString(R.string.allocated_ram)
-                + ": " + ramMB + " MB");
+        holder.tvRam.setText("RAM: " + ramMB + " MB");
 
         bindIcon(holder.imgIcon, profileKey, profile);
         bindBackground(holder.imgBackground, profileKey, profile);
@@ -140,9 +137,6 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
             if (mListener != null) mListener.onProfileEdit(profileKey, profile);
         });
 
-        // Three-dot (⋮) menu replaces the old long-press shortcut behavior.
-        holder.btnMenu.setOnClickListener(v -> showProfileMenu(v, profileKey, profile));
-
         holder.btnPlay.setOnClickListener(v -> {
             if (mListener != null) mListener.onProfilePlay(profileKey, profile);
         });
@@ -150,11 +144,10 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         holder.btnBrowse.setOnClickListener(v -> {
             if (mListener != null) mListener.onProfileBrowse(profileKey, profile);
         });
+
+        holder.btnMenu.setOnClickListener(v -> showProfileMenu(v, profileKey, profile));
     }
 
-    /**
-     * Shows the profile overflow menu (Edit Profile + Shortcuts) anchored to the three-dot button.
-     */
     private void showProfileMenu(View anchor, String profileKey, MinecraftProfile profile) {
         PopupMenu popup = new PopupMenu(anchor.getContext(), anchor);
         popup.getMenu().add(0, R.id.menu_profile_edit, 0, R.string.edit_profile);
@@ -177,16 +170,10 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
     @Override
     public void onViewRecycled(@NonNull ViewHolder holder) {
         super.onViewRecycled(holder);
-        // Clear image drawable reference to help GC and avoid stale bitmap retention
         holder.imgIcon.setImageDrawable(null);
         holder.imgBackground.setImageDrawable(null);
     }
 
-    /**
-     * Binds the graphical icon resource to the profile card image view.
-     * Falls back to a typed icon (fabric / quilt / default) if the data icon
-     * is missing or invalid, eliminating empty/hollow gray boxes.
-     */
     private void bindIcon(ImageView target, String profileKey, MinecraftProfile profile) {
         String icon = profile.icon;
         Drawable drawable = null;
@@ -206,10 +193,6 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         target.setImageDrawable(drawable);
     }
 
-    /**
-     * Binds the profile background banner image. Hides the banner when no background is set,
-     * so the card falls back to its default background drawable.
-     */
     private void bindBackground(ImageView target, String profileKey, MinecraftProfile profile) {
         Drawable drawable = null;
         try {
@@ -226,11 +209,6 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         }
     }
 
-    /**
-     * Picks a type-aware fallback icon based on the profile's MC version id
-     * (e.g. "fabric-loader-1.20.1" → fabric icon). Avoids empty boxes when
-     * the base64 icon payload is missing or corrupted.
-     */
     private Drawable resolveTypeFallback(ImageView target, String lastVersionId) {
         if (lastVersionId == null) return null;
         String lower = lastVersionId.toLowerCase();
