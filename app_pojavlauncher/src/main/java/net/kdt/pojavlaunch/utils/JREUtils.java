@@ -506,33 +506,14 @@ public class JREUtils {
                 "-Dnet.minecraft.clientmodname=" + Tools.APP_NAME,
                 "-Dfml.earlyprogresswindow=false", //Forge 1.14+ workaround
                 "-Dloader.disable_forked_guis=true",
-                "-Djdk.lang.Process.launchMechanism=FORK", // Default is POSIX_SPAWN which requires starting jspawnhelper, which doesn't work on Android
-
-                // ── Performance / FPS tuning ──────────────────────────────
-                // Use G1GC with a bounded pause target to avoid stutter spikes
-                "-XX:+UseG1GC",
-                "-XX:MaxGCPauseMillis=40",
-                "-XX:G1HeapRegionSize=8m",
-                // Background GC threads so collection does not block the render thread
-                "-XX:+ParallelRefProcEnabled",
-                // Reduce GC overhead from string de-duplication bookkeeping
-                "-XX:-UseStringDeduplication",
-                // Prefer throughput for the render/physics threads over latency
-                "-XX:+UseThreadPriorities",
-                "-XX:ThreadPriorityPolicy=42",
-                // Don't let the JIT fill storage with debug info
-                "-XX:-UsePerfData"
+                "-Djdk.lang.Process.launchMechanism=FORK" // Default is POSIX_SPAWN which requires starting jspawnhelper, which doesn't work on Android
         ));
         if(LauncherPreferences.PREF_ARC_CAPES) {
             overridableArguments.add("-javaagent:"+new File(Tools.DIR_DATA,"arc_dns_injector/arc_dns_injector.jar").getAbsolutePath()+"=23.95.137.176");
         }
         List<String> additionalArguments = new ArrayList<>();
         for(String arg : overridableArguments) {
-            // Extract prefix before '=' for -Dkey=value style args.
-            // For -XX:+Flag / -XX:-Flag style, use the whole flag as the
-            // prefix so a duplicate user-supplied flag won't be added twice.
-            int eqIdx = arg.indexOf('=');
-            String strippedArg = (eqIdx != -1) ? arg.substring(0, eqIdx) : arg;
+            String strippedArg = arg.substring(0,arg.indexOf('='));
             boolean add = true;
             for(String uarg : userArguments) {
                 if(uarg.startsWith(strippedArg)) {
