@@ -102,6 +102,7 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
                 }
                 String iconLine = new String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8);
                 String dataUri = "data:image/webp;base64," + iconLine;
+                mEncodedBackgroundUri = dataUri;
                 mMainHandler.post(() -> {
                     if (mTempProfile != null) mTempProfile.background = dataUri;
                 });
@@ -132,6 +133,7 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
     );
 
     private List<String> mRenderNames;
+    private volatile String mEncodedBackgroundUri = null;
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService mBgExecutor = PojavApplication.sExecutorService;
     private boolean mAsyncLoadComplete = false;
@@ -210,6 +212,12 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
             if (mTempProfile == null) return;
             // 1) Read inputs on the main thread (touching UI state)
             readInputsFromUi();
+            // Apply pending background image from async encoding (race condition fix)
+            String pendingBg = mEncodedBackgroundUri;
+            if (pendingBg != null && mTempProfile != null) {
+                mTempProfile.background = pendingBg;
+                mEncodedBackgroundUri = null;
+            }
             ProfileIconCache.dropIcon(mProfileKey);
             // 2) Disable button immediately to prevent double-tap
             mSaveButton.setEnabled(false);

@@ -3,20 +3,16 @@ package net.kdt.pojavlaunch.fragments;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
-import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
@@ -126,8 +122,8 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         holder.tvModCount.setText("Installed Mods: " + modCount);
 
         // RAM allocation
-        int ramMB = (profile.ramAllocationMB != null)
-                ? profile.ramAllocationMB : LauncherPreferences.PREF_RAM_ALLOCATION;
+        int ramMB = (profile.ramAllocationMB != null) ?
+                profile.ramAllocationMB : net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_RAM_ALLOCATION;
         holder.tvRam.setText("RAM: " + ramMB + " MB");
 
         bindIcon(holder.imgIcon, profileKey, profile);
@@ -144,27 +140,6 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         holder.btnBrowse.setOnClickListener(v -> {
             if (mListener != null) mListener.onProfileBrowse(profileKey, profile);
         });
-
-        holder.btnMenu.setOnClickListener(v -> showProfileMenu(v, profileKey, profile));
-    }
-
-    private void showProfileMenu(View anchor, String profileKey, MinecraftProfile profile) {
-        PopupMenu popup = new PopupMenu(anchor.getContext(), anchor);
-        popup.getMenu().add(0, R.id.menu_profile_edit, 0, R.string.edit_profile);
-        popup.getMenu().add(0, R.id.menu_profile_shortcuts, 1, R.string.profile_menu_shortcuts);
-        popup.setOnMenuItemClickListener(item -> {
-            if (mListener == null) return false;
-            int id = item.getItemId();
-            if (id == R.id.menu_profile_edit) {
-                mListener.onProfileEdit(profileKey, profile);
-                return true;
-            } else if (id == R.id.menu_profile_shortcuts) {
-                mListener.onProfileAddShortcut(profileKey, profile);
-                return true;
-            }
-            return false;
-        });
-        popup.show();
     }
 
     @Override
@@ -203,9 +178,14 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         if (drawable != null) {
             target.setImageDrawable(drawable);
             target.setVisibility(View.VISIBLE);
+            // Show scrim when background is present
+            View scrim = ((ViewGroup) target.getParent()).findViewById(R.id.img_profile_background_scrim);
+            if (scrim != null) scrim.setVisibility(View.VISIBLE);
         } else {
             target.setImageDrawable(null);
             target.setVisibility(View.GONE);
+            View scrim = ((ViewGroup) target.getParent()).findViewById(R.id.img_profile_background_scrim);
+            if (scrim != null) scrim.setVisibility(View.GONE);
         }
     }
 
@@ -234,7 +214,6 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         final TextView tvVersion;
         final TextView tvModCount;
         final TextView tvRam;
-        final ImageButton btnMenu;
         final FrameLayout btnPlay;
         final FrameLayout btnBrowse;
 
@@ -247,7 +226,6 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
             tvVersion = itemView.findViewById(R.id.tv_profile_version);
             tvModCount = itemView.findViewById(R.id.tv_profile_mod_count);
             tvRam = itemView.findViewById(R.id.tv_profile_ram);
-            btnMenu = itemView.findViewById(R.id.btn_profile_menu);
             btnPlay = itemView.findViewById(R.id.btn_profile_play);
             btnBrowse = itemView.findViewById(R.id.btn_profile_browse);
         }
