@@ -5,6 +5,8 @@ import static android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
 import static net.kdt.pojavlaunch.Tools.getTotalDeviceMemory;
 
 import android.app.Activity;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -418,31 +420,30 @@ public class LauncherPreferenceFragment extends Fragment {
         if (mIsDirty) {
             if (bar.getVisibility() != View.VISIBLE) {
                 bar.setVisibility(View.VISIBLE);
-                bar.setAlpha(0f);
-                bar.setTranslationY(80f);
-                bar.animate()
-                        .alpha(1f)
-                        .translationY(0f)
-                        .setDuration(300)
-                        .setInterpolator(new android.view.animation.OvershootInterpolator(1.2f))
-                        .start();
+                bar.startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.slide_up_bottom_bar));
             }
             if (saveBtn != null) {
                 saveBtn.setEnabled(true);
                 saveBtn.setAlpha(1f);
             }
             if (statusText != null) {
-                statusText.setText("● Unsaved Changes");
+                statusText.setText("\u25cf Unsaved Changes");
                 statusText.setTextColor(Color.parseColor("#FFA500"));
             }
         } else {
             if (bar.getVisibility() == View.VISIBLE) {
-                bar.animate()
-                        .alpha(0f)
-                        .translationY(40f)
-                        .setDuration(200)
-                        .withEndAction(() -> bar.setVisibility(View.GONE))
-                        .start();
+                Animation anim = AnimationUtils.loadAnimation(getContext(), R.anim.slide_down_bottom_bar);
+                bar.startAnimation(anim);
+                anim.setAnimationListener(new Animation.AnimationListener() {
+                    @Override
+                    public void onAnimationStart(Animation animation) {}
+                    @Override
+                    public void onAnimationRepeat(Animation animation) {}
+                    @Override
+                    public void onAnimationEnd(Animation animation) {
+                        bar.setVisibility(View.GONE);
+                    }
+                });
             }
             if (saveBtn != null) {
                 saveBtn.setEnabled(false);

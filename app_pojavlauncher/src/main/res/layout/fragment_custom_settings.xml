@@ -13,13 +13,13 @@
         <!-- Compact Modern Toolbar -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="60dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingLeft="8dp"
             android:paddingRight="16dp"
             android:background="#121212"
-            android:elevation="4dp">
+            android:elevation="6dp">
 
             <LinearLayout
                 android:id="@+id/settings_back_button"
@@ -63,7 +63,7 @@
                     android:layout_height="wrap_content"
                     android:text="Settings"
                     android:textColor="@color/text_primary_white"
-                    android:textSize="16sp"
+                    android:textSize="17sp"
                     android:textStyle="bold"
                     android:maxLines="1"
                     android:ellipsize="end" />
@@ -74,11 +74,18 @@
                     android:layout_height="wrap_content"
                     android:text="Customize your launcher experience"
                     android:textColor="@color/text_secondary_light"
-                    android:textSize="11sp"
+                    android:textSize="12sp"
                     android:maxLines="1"
                     android:ellipsize="end" />
             </LinearLayout>
         </LinearLayout>
+
+        <!-- Horizontal Outline (Drawled Look) -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#1FFFFFFF"
+            android:elevation="6dp"/>
 
         <!-- RecyclerView for Settings Cards -->
         <androidx.recyclerview.widget.RecyclerView
@@ -86,10 +93,10 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:paddingLeft="8dp"
-            android:paddingRight="8dp"
-            android:paddingTop="8dp"
-            android:paddingBottom="80dp"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="90dp"
             android:clipToPadding="false"
             android:scrollbars="vertical" />
     </LinearLayout>
