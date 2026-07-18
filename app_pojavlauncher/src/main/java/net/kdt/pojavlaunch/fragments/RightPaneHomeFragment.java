@@ -3,6 +3,7 @@ package net.kdt.pojavlaunch.fragments;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.View;
+import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -43,6 +44,15 @@ public class RightPaneHomeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         loadCustomWallpaper(view);
 
+        // Smooth top bar entrance
+        View topBar = view.findViewById(R.id.home_top_bar);
+        if (topBar != null) {
+            topBar.setAlpha(0f);
+            topBar.setTranslationY(-24f);
+            topBar.animate().alpha(1f).translationY(0f)
+                    .setDuration(260).setInterpolator(new DecelerateInterpolator()).start();
+        }
+
         mRecyclerView = view.findViewById(R.id.rv_home_profiles);
         mRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
         setupProfileAdapter();
@@ -79,7 +89,22 @@ public class RightPaneHomeFragment extends Fragment {
 
         View refreshBtn = view.findViewById(R.id.btn_refresh_profiles);
         if (refreshBtn != null) {
+            refreshBtn.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+            refreshBtn.setAlpha(0f);
+            refreshBtn.setScaleX(0.6f);
+            refreshBtn.setScaleY(0.6f);
+            refreshBtn.animate().alpha(1f).scaleX(1f).scaleY(1f)
+                    .setDuration(220).setStartDelay(160)
+                    .setInterpolator(new DecelerateInterpolator())
+                    .withEndAction(() -> refreshBtn.setLayerType(View.LAYER_TYPE_NONE, null))
+                    .start();
             refreshBtn.setOnClickListener(v -> {
+                v.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+                v.animate().scaleX(0.85f).scaleY(0.85f).setDuration(80)
+                        .withEndAction(() -> {
+                            v.animate().scaleX(1f).scaleY(1f).setDuration(120).start();
+                            v.setLayerType(View.LAYER_TYPE_NONE, null);
+                        }).start();
                 setupProfileAdapter();
                 Toast.makeText(getContext(), "Profiles refreshed", Toast.LENGTH_SHORT).show();
             });
@@ -196,12 +221,17 @@ public class RightPaneHomeFragment extends Fragment {
                 wallpaper.setImageDrawable(d);
                 wallpaper.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 wallpaper.setBackground(null);
-                wallpaper.setVisibility(View.VISIBLE);
+                if (wallpaper.getVisibility() != View.VISIBLE) {
+                    wallpaper.setAlpha(0f);
+                    wallpaper.setVisibility(View.VISIBLE);
+                    wallpaper.animate().alpha(1f).setDuration(400).start();
+                }
                 return;
             }
         }
-        wallpaper.setImageDrawable(null);
-        wallpaper.setBackground(null);
-        wallpaper.setVisibility(View.GONE);
+        if (wallpaper.getVisibility() == View.VISIBLE) {
+            wallpaper.animate().alpha(0f).setDuration(300)
+                    .withEndAction(() -> wallpaper.setVisibility(View.GONE)).start();
+        }
     }
 }

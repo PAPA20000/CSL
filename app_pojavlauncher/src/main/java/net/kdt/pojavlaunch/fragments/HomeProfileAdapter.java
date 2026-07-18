@@ -5,6 +5,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AnimationUtils;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -32,6 +33,7 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
     private final OnProfileActionListener mListener;
     private final int[] mModCountCache;
     private boolean mModCountsReady;
+    private int mBoundCount = 0;
 
     public interface OnProfileActionListener {
         void onProfilePlay(String profileKey, MinecraftProfile profile);
@@ -84,6 +86,15 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_home_profile_card, parent, false);
+        // Smooth staggered fade + slide-up entrance for premium feel
+        view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        android.view.animation.Animation enterAnim =
+                AnimationUtils.loadAnimation(parent.getContext(), R.anim.item_fade_slide_in);
+        int pos = mProfileList.isEmpty() ? 0 : Math.min(mBoundCount, 11);
+        enterAnim.setStartOffset(pos * 45L);
+        mBoundCount++;
+        view.startAnimation(enterAnim);
+        view.setLayerType(View.LAYER_TYPE_NONE, null);
         return new ViewHolder(view);
     }
 

@@ -503,7 +503,24 @@ public class JREUtils {
                 "-Dnet.minecraft.clientmodname=" + Tools.APP_NAME,
                 "-Dfml.earlyprogresswindow=false", //Forge 1.14+ workaround
                 "-Dloader.disable_forked_guis=true",
-                "-Djdk.lang.Process.launchMechanism=FORK" // Default is POSIX_SPAWN which requires starting jspawnhelper, which doesn't work on Android
+                "-Djdk.lang.Process.launchMechanism=FORK", // Default is POSIX_SPAWN which requires starting jspawnhelper, which doesn't work on Android
+
+                // ── Performance / FPS tuning ──────────────────────────────
+                // Use G1GC with a bounded pause target to avoid stutter spikes
+                "-XX:+UseG1GC",
+                "-XX:MaxGCPauseMillis=40",
+                "-XX:G1HeapRegionSize=8m",
+                // Background GC threads so collection does not block the render thread
+                "-XX:+ParallelRefProcEnabled",
+                // Reduce GC overhead from string de-duplication bookkeeping
+                "-XX:-UseStringDeduplication",
+                // Prefer throughput for the render/physics threads over latency
+                "-XX:+UseThreadPriorities",
+                "-XX:ThreadPriorityPolicy=42",
+                // Skip bytecode verification already validated at build or install time
+                "-Xverify:none",
+                // Don't let the JIT fill storage with debug info
+                "-XX:-UsePerfData"
         ));
         if(LauncherPreferences.PREF_ARC_CAPES) {
             overridableArguments.add("-javaagent:"+new File(Tools.DIR_DATA,"arc_dns_injector/arc_dns_injector.jar").getAbsolutePath()+"=23.95.137.176");

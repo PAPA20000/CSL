@@ -15,6 +15,10 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.Signature;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.json.JSONArray;
@@ -200,9 +204,19 @@ public class OfflineYggdrasilServer {
                     Log.i(TAG, "<<< 200 profile found: " + character.name + " / " + character.uuid);
                     Log.i(TAG, "<<< Response: " + responseJson);
                 } else {
-                    statusCode = 204;
-                    statusText = "No Content";
-                    Log.w(TAG, "<<< 204 No profile for UUID: " + uuid);
+                    // Unknown player -> proxy to Mojang for premium / plugin skins.
+                    String mojangJson = proxyToMojang(uuid);
+                    if (mojangJson != null && !mojangJson.isEmpty()) {
+                        body = mojangJson.getBytes(StandardCharsets.UTF_8);
+                        contentType = "application/json; charset=utf-8";
+                        statusCode = 200;
+                        statusText = "OK";
+                        Log.i(TAG, "<<< 200 proxied Mojang profile for: " + uuid);
+                    } else {
+                        statusCode = 204;
+                        statusText = "No Content";
+                        Log.w(TAG, "<<< 204 No profile for UUID: " + uuid);
+                    }
                 }
             } else if (path.equals("/api/profiles/minecraft")) {
                 // POST endpoint: username → profile lookup (authlib-injector uses this)
@@ -317,6 +331,34 @@ public class OfflineYggdrasilServer {
             } catch (IOException e) {
                 // ignore
             }
+        }
+    }
+
+    /**
+     * For players we don't recognise (other online players) we proxy the request
+     * to Mojang's real session server so premium and server-side skin-plugin
+     * textures resolve correctly. Returns null if offline or not found so the
+     * caller can fall back to the default Steve/Alex skin.
+     */
+    private String proxyToMojang(String uuid) {
+        try {
+            URL url = new URL("https://sessionserver.mojang.com/session/minecraft/profile/" + uuid + "?unsigned=false");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(4000);
+            conn.setReadTimeout(4000);
+            conn.setRequestProperty("User-Agent", "CSLauncher");
+            int code = conn.getResponseCode();
+            if (code != 200) return null;
+            StringBuilder sb = new StringBuilder();
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = br.readLine()) != null) sb.append(line);
+            }
+            Log.i(TAG, "Proxied Mojang profile for " + uuid);
+            return sb.toString();
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to proxy Mojang profile for " + uuid + ": " + e.getMessage());
+            return null;
         }
     }
 
