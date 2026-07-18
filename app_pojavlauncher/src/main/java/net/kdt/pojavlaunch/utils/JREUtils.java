@@ -517,8 +517,6 @@ public class JREUtils {
                 // Prefer throughput for the render/physics threads over latency
                 "-XX:+UseThreadPriorities",
                 "-XX:ThreadPriorityPolicy=42",
-                // Skip bytecode verification already validated at build or install time
-                "-Xverify:none",
                 // Don't let the JIT fill storage with debug info
                 "-XX:-UsePerfData"
         ));
