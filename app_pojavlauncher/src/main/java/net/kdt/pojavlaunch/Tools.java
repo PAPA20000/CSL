@@ -1606,6 +1606,44 @@ public final class Tools {
         openPath(context, new File(Tools.DIR_GAME_HOME, "latestlog.txt"), true);
     }
 
+    /** Holds the path to the most recent launch log, used to capture crash logs */
+    public static final String LATEST_LOG_NAME = "latestlog.txt";
+    public static final String LAST_CRASH_LOG_NAME = "last_crash.log";
+
+    /**
+     * Persists the current launch log as the "last crash" log.
+     * Called automatically when the JVM exits with a non-zero code so the
+     * previous (failed) launch log is always retrievable, even after a
+     * subsequent launch overwrites latestlog.txt.
+     */
+    public static void captureCrashLog() {
+        try {
+            File latest = new File(Tools.DIR_GAME_HOME, LATEST_LOG_NAME);
+            if (latest.exists() && latest.length() > 0) {
+                File crash = new File(Tools.DIR_GAME_HOME, LAST_CRASH_LOG_NAME);
+                try (java.io.FileInputStream in = new java.io.FileInputStream(latest);
+                     java.io.FileOutputStream out = new java.io.FileOutputStream(crash)) {
+                    byte[] buf = new byte[8192];
+                    int read;
+                    while ((read = in.read(buf)) != -1) out.write(buf, 0, read);
+                }
+                Logger.appendToLog("Crash log captured to " + crash.getAbsolutePath());
+            }
+        } catch (Throwable ignored) {
+            // Never let crash-log capture break the exit flow
+        }
+    }
+
+    /** Triggers the share intent chooser with the last captured crash log */
+    public static void shareLastCrashLog(Context context) {
+        File crash = new File(Tools.DIR_GAME_HOME, LAST_CRASH_LOG_NAME);
+        if (crash.exists() && crash.length() > 0) {
+            openPath(context, crash, true);
+        } else {
+            shareLog(context);
+        }
+    }
+
     /**
      * Determine the MIME type of a File.
      * @param file The file to determine the type of
