@@ -299,7 +299,12 @@ public class JREUtils {
             while ((line = reader.readLine()) != null) {
                 // Not use split() as only split first one
                 int index = line.indexOf("=");
-                envMap.put(line.substring(0, index), line.substring(index + 1));
+                if (index != -1) {
+                    envMap.put(line.substring(0, index), line.substring(index + 1));
+                } else {
+                    // Lines without '=' are comments or malformed; skip.
+                    Logger.appendToLog("WARN: Skipping env line without delimiter: " + line);
+                }
             }
             reader.close();
         }
@@ -523,7 +528,11 @@ public class JREUtils {
         }
         List<String> additionalArguments = new ArrayList<>();
         for(String arg : overridableArguments) {
-            String strippedArg = arg.substring(0,arg.indexOf('='));
+            // Extract prefix before '=' for -Dkey=value style args.
+            // For -XX:+Flag / -XX:-Flag style, use the whole flag as the
+            // prefix so a duplicate user-supplied flag won't be added twice.
+            int eqIdx = arg.indexOf('=');
+            String strippedArg = (eqIdx != -1) ? arg.substring(0, eqIdx) : arg;
             boolean add = true;
             for(String uarg : userArguments) {
                 if(uarg.startsWith(strippedArg)) {
