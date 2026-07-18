@@ -7,7 +7,6 @@ import static net.kdt.pojavlaunch.Architecture.is64BitsDevice;
 import static net.kdt.pojavlaunch.Tools.LOCAL_RENDERER;
 import static net.kdt.pojavlaunch.Tools.NATIVE_LIB_DIR;
 import static net.kdt.pojavlaunch.Tools.currentDisplayMetrics;
-import static net.kdt.pojavlaunch.Tools.shareLog;
 import static net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_DUMP_SHADERS;
 import static net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_VSYNC_IN_ZINK;
 import static net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_ZINK_PREFER_SYSTEM_DRIVER;
@@ -454,16 +453,13 @@ public class JREUtils {
             Logger.appendToLog("Java Exit code: " + exitCode);
             if (exitCode != 0) {
                 net.kdt.pojavlaunch.Tools.captureCrashLog();
-                LifecycleAwareAlertDialog.DialogCreator dialogCreator = (dialog, builder)->
-                        builder.setMessage(activity.getString(R.string.mcn_exit_title, exitCode))
-                        .setPositiveButton(R.string.main_share_logs, (dialogInterface, which)-> shareLog(activity))
-                        .setNeutralButton(R.string.main_share_crash_log, (dialogInterface, which)-> net.kdt.pojavlaunch.Tools.shareLastCrashLog(activity));
-
-                LifecycleAwareAlertDialog.haltOnDialog(activity.getLifecycle(), activity, dialogCreator);
+                net.kdt.pojavlaunch.Tools.routeToCrashScreen(activity, exitCode);
             }
         } finally {
             net.kdt.pojavlaunch.yggdrasil.LocalYggdrasilServer.stop();
         }
+        // Only hard-exit when the game closed cleanly; crashes are routed to the
+        // dedicated crash screen so the user stays inside the launcher.
         Tools.fullyExit();
     }
 

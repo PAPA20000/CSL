@@ -1606,6 +1606,35 @@ public final class Tools {
         openPath(context, new File(Tools.DIR_GAME_HOME, "latestlog.txt"), true);
     }
 
+    /**
+     * Routes the user to the dedicated crash screen instead of killing the whole app.
+     * The crash log (last_crash.log) is passed along so the screen can display it.
+     * The current (game) process is then terminated after the screen is launched.
+     */
+    public static void routeToCrashScreen(androidx.fragment.app.FragmentActivity activity, int exitCode) {
+        try {
+            File crash = new File(Tools.DIR_GAME_HOME, LAST_CRASH_LOG_NAME);
+            String logPath = crash.exists() && crash.length() > 0
+                    ? crash.getAbsolutePath()
+                    : new File(Tools.DIR_GAME_HOME, LATEST_LOG_NAME).getAbsolutePath();
+
+            Intent crashIntent = new Intent(activity, CrashActivity.class);
+            crashIntent.putExtra(CrashActivity.EXTRA_LOG_PATH, logPath);
+            crashIntent.putExtra(CrashActivity.EXTRA_EXIT_CODE, exitCode);
+            crashIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                    | Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+            activity.startActivity(crashIntent);
+        } catch (Throwable ignored) {
+            // Fall back to the legacy dialog if the crash screen can't start
+            Logger.appendToLog("Failed to route to crash screen, using fallback dialog");
+        } finally {
+            // Kill the game process so the surface/EGL context is released.
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
+                    () -> android.os.Process.killProcess(android.os.Process.myPid()), 300);
+        }
+    }
+
     /** Holds the path to the most recent launch log, used to capture crash logs */
     public static final String LATEST_LOG_NAME = "latestlog.txt";
     public static final String LAST_CRASH_LOG_NAME = "last_crash.log";
