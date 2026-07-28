@@ -18,7 +18,13 @@ public class LocaleUtils extends ContextWrapper {
         super(base);
     }
 
-    public static ContextWrapper setLocale(Context context) {
+    /**
+     * Returns a locale-configured context without wrapping it. Application and
+     * BroadcastReceiver setup paths on recent Android releases require their base
+     * context to remain a ContextImpl; returning a ContextWrapper here crashes
+     * system-created receivers such as ShortcutPinReceiver.
+     */
+    public static Context setLocale(Context context) {
         if (DEFAULT_PREF == null) {
             DEFAULT_PREF = context.getSharedPreferences("cslauncher_settings", Context.MODE_PRIVATE);
             // Too early to initialize all prefs here, as this is called by PojavApplication
@@ -45,6 +51,6 @@ public class LocaleUtils extends ContextWrapper {
             }
         }
 
-        return new LocaleUtils(context);
+        return context;
     }
 }

@@ -237,7 +237,7 @@ public class LauncherPreferenceFragment extends Fragment {
             switch (mCategoryName) {
                 case "Launcher Settings":
                     List<SettingItem> launcherItems = new ArrayList<>();
-                    launcherItems.add(new SettingItem("fastclient_preference", SettingItem.TYPE_CUSTOM_FASTCLIENT, "", "", null));
+                    // FastClient is intentionally not shown in the redesigned Settings UI.
                     launcherItems.add(new SettingItem("force_english", SettingItem.TYPE_SWITCH, getString(R.string.preference_force_english_title), getString(R.string.preference_force_english_description), false));
                     launcherItems.add(new SettingItem("notification_permission_request", SettingItem.TYPE_SWITCH, getString(R.string.preference_ask_for_notification_title), getString(R.string.preference_ask_for_notification_description), false));
                     launcherItems.add(new SettingItem("microphone_permission_request", SettingItem.TYPE_SWITCH, getString(R.string.preference_ask_for_microphone_title), getString(R.string.preference_ask_for_microphone_description), false));
