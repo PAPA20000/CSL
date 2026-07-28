@@ -679,7 +679,7 @@ public class JREUtils {
             int minor = parts.length > 1 ? Integer.parseInt(parts[1]) : 0;
 
             if (major >= 26) {
-                return "3.4.2";
+                return "3.4.1";
             } else if (major >= 1 && minor >= 21) {
                 return "3.3.3";
             } else if (major >= 1 && minor >= 17) {
