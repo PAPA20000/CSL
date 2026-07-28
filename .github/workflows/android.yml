@@ -32,7 +32,22 @@ jobs:
           java-version: '21'
 
       # ── JRE 8 Runtime ───────────────────────────────────────────────────────
-      - name: Download JRE 8
+      # Artifact storage/CDN downloads occasionally time out. Keep the first
+      # attempt non-fatal and retry once with a fresh action invocation.
+      - name: Download JRE 8 (attempt 1)
+        id: download_jre8_primary
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: build.yml
+          path: app_pojavlauncher/src/main/assets/components/jre
+          workflow_conclusion: success
+          repo: AngelAuraMC/angelauramc-openjdk-build
+          branch: buildjre8
+          name: jre8-pojav
+
+      - name: Download JRE 8 (retry after timeout)
+        if: steps.download_jre8_primary.outcome == 'failure'
         uses: dawidd6/action-download-artifact@v6
         with:
           workflow: build.yml
