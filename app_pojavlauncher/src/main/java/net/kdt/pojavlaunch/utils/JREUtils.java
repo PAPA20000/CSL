@@ -401,6 +401,10 @@ public class JREUtils {
                 effectiveRam = currentProfile.ramAllocationMB;
             }
         } catch (Throwable ignored) {}
+        // Apply the same safety policy used when the profile was edited. This
+        // also protects existing/legacy profiles that may contain an invalid RAM
+        // number, so the launched JVM always receives the displayed safe value.
+        effectiveRam = Tools.sanitizeRamAllocation(activity, effectiveRam);
         userArgs.add("-Xms" + effectiveRam + "M");
         userArgs.add("-Xmx" + effectiveRam + "M");
         if(LOCAL_RENDERER != null) userArgs.add("-Dorg.lwjgl.opengl.libname=" + graphicsLib);

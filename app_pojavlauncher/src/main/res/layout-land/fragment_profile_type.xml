@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Landscape-first Profile Creation Hub: a compact dashboard rather than a long vertical list. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/setup_hub_content"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:padding="18dp"
+    android:background="#060A14">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.9"
+        android:layout_marginEnd="16dp"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:padding="22dp"
+        android:background="@drawable/bg_glass_header">
+        <View android:layout_width="42dp" android:layout_height="4dp" android:background="@drawable/bg_neon_indicator" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="18dp" android:text="CREATE\nPROFILE" android:textColor="#FFFFFF"
+            android:textSize="26sp" android:textStyle="bold" android:letterSpacing="0.06" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="10dp" android:text="Choose a game type. Every loader gets its own profile and game folder."
+            android:textColor="#9DA9BC" android:textSize="13sp" android:lineSpacingExtra="3dp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="2.1"
+        android:orientation="horizontal">
+
+        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:layout_marginEnd="10dp">
+            <LinearLayout android:id="@+id/vanilla_profile" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginBottom="10dp" android:padding="15dp" android:gravity="center_vertical" android:orientation="vertical" android:background="@drawable/bg_glass_card_premium" android:stateListAnimator="@animator/card_press_anim" android:clickable="true" android:focusable="true">
+                <ImageView android:layout_width="30dp" android:layout_height="30dp" android:src="@drawable/bg_hero_minecraft" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Vanilla" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="14sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Official releases" android:textColor="#8B98AB" android:textSize="10sp" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/optifine_profile" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="10dp" android:padding="15dp" android:gravity="center_vertical" android:orientation="vertical" android:background="@drawable/bg_glass_card_premium" android:stateListAnimator="@animator/card_press_anim" android:clickable="true" android:focusable="true">
+                <ImageView android:layout_width="30dp" android:layout_height="30dp" android:src="@drawable/ic_menu_settings" android:tint="#A6FF3D" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="OptiFine" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="14sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Shaders &amp; performance" android:textColor="#8B98AB" android:textSize="10sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:layout_marginHorizontal="5dp">
+            <LinearLayout android:id="@+id/modded_profile_fabric" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginBottom="10dp" android:padding="15dp" android:gravity="center_vertical" android:orientation="vertical" android:background="@drawable/bg_glass_card_premium" android:stateListAnimator="@animator/card_press_anim" android:clickable="true" android:focusable="true">
+                <ImageView android:layout_width="30dp" android:layout_height="30dp" android:src="@drawable/ic_fabric" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Fabric" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="14sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Lightweight mods" android:textColor="#8B98AB" android:textSize="10sp" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/modded_profile_quilt" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="10dp" android:padding="15dp" android:gravity="center_vertical" android:orientation="vertical" android:background="@drawable/bg_glass_card_premium" android:stateListAnimator="@animator/card_press_anim" android:clickable="true" android:focusable="true">
+                <ImageView android:layout_width="30dp" android:layout_height="30dp" android:src="@drawable/ic_quilt" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Quilt" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="14sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Modern mod loader" android:textColor="#8B98AB" android:textSize="10sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:layout_marginHorizontal="5dp">
+            <LinearLayout android:id="@+id/modded_profile_forge" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginBottom="10dp" android:padding="15dp" android:gravity="center_vertical" android:orientation="vertical" android:background="@drawable/bg_glass_card_premium" android:stateListAnimator="@animator/card_press_anim" android:clickable="true" android:focusable="true">
+                <ImageView android:layout_width="30dp" android:layout_height="30dp" android:src="@drawable/ic_pojav_full" android:tint="#FFB74D" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Forge" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="14sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Classic modpacks" android:textColor="#8B98AB" android:textSize="10sp" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/modded_profile_neoforge" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="10dp" android:padding="15dp" android:gravity="center_vertical" android:orientation="vertical" android:background="@drawable/bg_glass_card_premium" android:stateListAnimator="@animator/card_press_anim" android:clickable="true" android:focusable="true">
+                <ImageView android:layout_width="30dp" android:layout_height="30dp" android:src="@drawable/ic_pojav_full" android:tint="#7CEB8A" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="NeoForge" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="14sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Next-gen Forge" android:textColor="#8B98AB" android:textSize="10sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:layout_marginStart="10dp">
+            <LinearLayout android:id="@+id/modded_profile_modpack" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginBottom="10dp" android:padding="15dp" android:gravity="center_vertical" android:orientation="vertical" android:background="@drawable/bg_glass_card_premium" android:stateListAnimator="@animator/card_press_anim" android:clickable="true" android:focusable="true">
+                <ImageView android:layout_width="30dp" android:layout_height="30dp" android:src="@drawable/ic_download_box" android:tint="#00E5FF" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Modpack" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="14sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Browse or import" android:textColor="#8B98AB" android:textSize="10sp" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/modded_profile_bta" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="10dp" android:padding="15dp" android:gravity="center_vertical" android:orientation="vertical" android:background="@drawable/bg_glass_card_premium" android:stateListAnimator="@animator/card_press_anim" android:clickable="true" android:focusable="true">
+                <ImageView android:layout_width="30dp" android:layout_height="30dp" android:src="@drawable/ic_pojav_full" android:tint="#C7A6FF" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="BTA" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="14sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Better than Adventure" android:textColor="#8B98AB" android:textSize="10sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

@@ -411,8 +411,17 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
             if (bg != null) mProfileBackground.setImageDrawable(bg);
         }
 
-        // Per-profile RAM (empty means fall back to the global launcher setting)
-        mRamInput.setText(mTempProfile.ramAllocationMB != null ? String.valueOf(mTempProfile.ramAllocationMB) : "");
+        // Per-profile RAM uses exactly the same safe limits and 128 MB steps as
+        // Launcher Settings. Empty intentionally means "use global allocation".
+        if (mTempProfile.ramAllocationMB != null) {
+            int safeRam = Tools.sanitizeRamAllocation(requireContext(), mTempProfile.ramAllocationMB);
+            mTempProfile.ramAllocationMB = safeRam;
+            mRamInput.setText(String.valueOf(safeRam));
+            mRamInput.setHint("256–" + Tools.getMaximumRamAllocation(requireContext()) + " MB (global if empty)");
+        } else {
+            mRamInput.setText("");
+            mRamInput.setHint("Global: " + LauncherPreferences.PREF_RAM_ALLOCATION + " MB");
+        }
 
         // TODO: Remove this jank when it's not relevant anymore
         if ("vulkan_zink".equals(mTempProfile.pojavRendererName)) {
@@ -567,13 +576,21 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
                 .trim();
         mTempProfile.gameDir = mDefaultPath.getText().toString();
 
-        // Per-profile RAM allocation (null = use global launcher setting)
+        // Per-profile RAM allocation (empty = global setting). The value is
+        // normalized with the same policy used by the Java Runtime settings page,
+        // so the saved value is the value the game will actually receive.
         String ramText = mRamInput.getText().toString().trim();
         if (ramText.isEmpty()) {
             mTempProfile.ramAllocationMB = null;
         } else {
             try {
-                mTempProfile.ramAllocationMB = Integer.parseInt(ramText);
+                int requested = Integer.parseInt(ramText);
+                int safeRam = Tools.sanitizeRamAllocation(requireContext(), requested);
+                mTempProfile.ramAllocationMB = safeRam;
+                if (safeRam != requested) {
+                    mRamInput.setText(String.valueOf(safeRam));
+                    Toast.makeText(requireContext(), "RAM adjusted to " + safeRam + " MB for this device", Toast.LENGTH_SHORT).show();
+                }
             } catch (NumberFormatException e) {
                 mTempProfile.ramAllocationMB = null;
             }

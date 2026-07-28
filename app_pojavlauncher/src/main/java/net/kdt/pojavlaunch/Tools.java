@@ -1413,6 +1413,25 @@ public final class Tools {
         return (int) (memInfo.totalMem / 1048576L);
     }
 
+    /**
+     * The one RAM safety policy shared by Launcher Settings, profile editing and
+     * the JVM launch path. Keeping one calculation prevents a profile from
+     * displaying an allocation that Android cannot safely start.
+     */
+    public static int getMaximumRamAllocation(Context ctx) {
+        int deviceRam = getTotalDeviceMemory(ctx);
+        if (Architecture.is32BitsDevice() || deviceRam < 2048) {
+            return Math.max(256, Math.min(1024, deviceRam));
+        }
+        return Math.max(256, deviceRam - (deviceRam < 3064 ? 800 : 1024));
+    }
+
+    /** Clamps and aligns an allocation to the same 128 MB steps as Settings. */
+    public static int sanitizeRamAllocation(Context ctx, int requestedMb) {
+        int bounded = Math.max(256, Math.min(requestedMb, getMaximumRamAllocation(ctx)));
+        return Math.max(256, (bounded / 128) * 128);
+    }
+
     public static int getFreeDeviceMemory(Context ctx){
         ActivityManager actManager = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
         ActivityManager.MemoryInfo memInfo = new ActivityManager.MemoryInfo();

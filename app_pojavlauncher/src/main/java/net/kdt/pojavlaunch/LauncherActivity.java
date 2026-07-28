@@ -247,9 +247,9 @@ public class LauncherActivity extends BaseActivity {
         // Apply saved colour theme before layout inflation
         setTheme(net.kdt.pojavlaunch.theme.ThemeManager.getSavedTheme());
         
-        // Keep the launcher responsive on phones, tablets, and foldables. Dedicated
-        // landscape layouts are still used automatically when space is available.
-        setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+        // The launcher UI is designed as a wide dashboard: keep every flow in
+        // landscape instead of allowing a partial portrait layout to appear.
+        setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
 
         setContentView(R.layout.activity_pojav_launcher);
         
