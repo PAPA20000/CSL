@@ -407,6 +407,8 @@ public class JREUtils {
         effectiveRam = Tools.sanitizeRamAllocation(activity, effectiveRam);
         userArgs.add("-Xms" + effectiveRam + "M");
         userArgs.add("-Xmx" + effectiveRam + "M");
+        Log.i("ProfileLaunch", "Effective JVM RAM: -Xms" + effectiveRam
+                + "M -Xmx" + effectiveRam + "M");
         if(LOCAL_RENDERER != null) userArgs.add("-Dorg.lwjgl.opengl.libname=" + graphicsLib);
 
         // Force LWJGL to use the Freetype library intended for it, instead of using the one

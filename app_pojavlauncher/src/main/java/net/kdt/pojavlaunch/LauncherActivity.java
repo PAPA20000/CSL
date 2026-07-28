@@ -173,6 +173,15 @@ public class LauncherActivity extends BaseActivity {
             return false;
         }
 
+        // Commit the exact profile being launched before Java arguments are built.
+        // JREUtils resolves RAM from this key, so it can never accidentally use
+        // the RAM setting of a previously selected profile.
+        LauncherPreferences.DEFAULT_PREF.edit()
+                .putString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE, selectedProfile)
+                .commit();
+        Log.i("ProfileLaunch", "Launching " + selectedProfile + " with profile RAM="
+                + (prof.ramAllocationMB == null ? "global" : prof.ramAllocationMB + "MB"));
+
         if(mAccountSpinner.getSelectedAccount() == null){
             Toast.makeText(this, R.string.no_saved_accounts, Toast.LENGTH_LONG).show();
             ExtraCore.setValue(ExtraConstants.SELECT_AUTH_METHOD, true);
