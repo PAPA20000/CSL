@@ -175,10 +175,25 @@ android {
     buildToolsVersion = '34.0.0'
 }
 
+// Modern 26.x snapshots need the 3.4.2 core and merged LWJGL modules. Fail
+// the build here instead of shipping an APK that later crashes with
+// NoClassDefFoundError after component extraction.
+tasks.register("verifyLwjgl342Assets") {
+    dependsOn(":jre_lwjgl3glfw:jar")
+    doLast {
+        File componentDir = file("src/main/assets/components/lwjgl3/3.4.2")
+        String[] required = ["lwjgl.jar", "lwjgl-3.4.2-merged-modules.jar", "version"]
+        List<String> missing = required.findAll { !new File(componentDir, it).isFile() }
+        if (!missing.isEmpty()) {
+            throw new GradleException("LWJGL 3.4.2 asset generation failed; missing: " + missing.join(", "))
+        }
+    }
+}
+
 afterEvaluate {
     // Explicit dependencies for which the apk relies on
-    tasks.mergeDebugAssets.dependsOn(":forge_installer:jar", ":arc_dns_injector:jar", ":methods_injector_agent:jar", ":jre_lwjgl3glfw:jar")
-    tasks.mergeReleaseAssets.dependsOn(":forge_installer:jar", ":arc_dns_injector:jar", ":methods_injector_agent:jar", ":jre_lwjgl3glfw:jar")
+    tasks.mergeDebugAssets.dependsOn(":forge_installer:jar", ":arc_dns_injector:jar", ":methods_injector_agent:jar", ":jre_lwjgl3glfw:jar", "verifyLwjgl342Assets")
+    tasks.mergeReleaseAssets.dependsOn(":forge_installer:jar", ":arc_dns_injector:jar", ":methods_injector_agent:jar", ":jre_lwjgl3glfw:jar", "verifyLwjgl342Assets")
 }
 
 dependencies {
