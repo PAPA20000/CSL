@@ -147,6 +147,11 @@ public class LauncherPreferenceFragment extends Fragment {
         }
 
         setupSettingsList();
+        // Settings categories and controls cascade in rather than appearing as a
+        // static block; this uses a lightweight view animation on the RecyclerView.
+        mRecyclerView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(
+                requireContext(), R.anim.item_stagger_fade));
+        mRecyclerView.scheduleLayoutAnimation();
         updateSaveBar();
     }
 

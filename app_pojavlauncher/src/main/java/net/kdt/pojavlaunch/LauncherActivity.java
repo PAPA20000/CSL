@@ -26,6 +26,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -246,8 +247,9 @@ public class LauncherActivity extends BaseActivity {
         // Apply saved colour theme before layout inflation
         setTheme(net.kdt.pojavlaunch.theme.ThemeManager.getSavedTheme());
         
-        // Ensure landscape orientation
-        setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+        // Keep the launcher responsive on phones, tablets, and foldables. Dedicated
+        // landscape layouts are still used automatically when space is available.
+        setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
 
         setContentView(R.layout.activity_pojav_launcher);
         
@@ -255,6 +257,15 @@ public class LauncherActivity extends BaseActivity {
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content),
             (v, insets) -> WindowInsetsCompat.CONSUMED);
         FragmentManager fragmentManager = getSupportFragmentManager();
+        // One motion policy for every launcher page (home, settings and all child
+        // flows), so new screens do not need to reinvent their own entrance logic.
+        fragmentManager.registerFragmentLifecycleCallbacks(new FragmentManager.FragmentLifecycleCallbacks() {
+            @Override
+            public void onFragmentViewCreated(@NonNull FragmentManager fm, @NonNull Fragment fragment,
+                                              @NonNull View view, @Nullable Bundle savedInstanceState) {
+                view.post(() -> UiMotion.revealScreen(view));
+            }
+        }, true);
         // If we don't have a back stack root yet...
         if(fragmentManager.getBackStackEntryCount() < 1) {
             // Check if FastClient is enabled
@@ -264,6 +275,8 @@ public class LauncherActivity extends BaseActivity {
 
             // Manually add the first fragment to the backstack to get easily back to it
             fragmentManager.beginTransaction()
+                    .setCustomAnimations(R.anim.fragment_enter_forward, R.anim.fragment_exit_forward,
+                            R.anim.fragment_enter_back, R.anim.fragment_exit_back)
                     .setReorderingAllowed(true)
                     .addToBackStack("ROOT")
                     .add(R.id.container_fragment, rootFragment, null, "ROOT").commit();
@@ -293,6 +306,10 @@ public class LauncherActivity extends BaseActivity {
         );
         getWindow().setBackgroundDrawable(null);
         bindViews();
+        // Give the persistent launcher chrome the same polished arrival as pages.
+        UiMotion.revealChrome(findViewById(R.id.header_bar));
+        UiMotion.revealChrome(mAccountSpinner);
+        UiMotion.revealChrome(mSettingsButton);
         mClientFeaturesManager = new ClientFeaturesManager(this);
         setupNavButtons();
         checkNotificationPermission();

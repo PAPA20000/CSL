@@ -6,6 +6,7 @@
     android:layout_marginHorizontal="4dp"
     android:layout_marginVertical="4dp"
     android:background="@drawable/bg_profile_card"
+    android:stateListAnimator="@animator/card_press_anim"
     android:clipChildren="true"
     android:clickable="true"
     android:focusable="true">
@@ -116,6 +117,7 @@
                 android:layout_height="34dp"
                 android:layout_marginEnd="4dp"
                 android:background="@drawable/bg_browse_button"
+                android:stateListAnimator="@animator/card_press_anim"
                 android:clickable="true"
                 android:focusable="true"
                 android:contentDescription="@string/shortcut_add_title">
@@ -136,6 +138,7 @@
                 android:layout_weight="1"
                 android:layout_marginEnd="4dp"
                 android:background="@drawable/bg_browse_button"
+                android:stateListAnimator="@animator/card_press_anim"
                 android:clickable="true"
                 android:focusable="true">
 
@@ -155,6 +158,7 @@
                 android:layout_weight="1"
                 android:layout_marginStart="4dp"
                 android:background="@drawable/bg_play_button_green"
+                android:stateListAnimator="@animator/card_press_anim"
                 android:clickable="true"
                 android:focusable="true">
 

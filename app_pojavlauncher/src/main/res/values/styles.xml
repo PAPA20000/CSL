@@ -186,6 +186,8 @@
 
     <style name="LauncherMenuButton" parent="Widget.AppCompat.Button">
         <item name="android:background">?android:attr/selectableItemBackground</item>
+        <!-- Native state animator: tactile scale/elevation feedback without replacing click handlers. -->
+        <item name="android:stateListAnimator">@animator/card_press_anim</item>
     </style>
 
     <style name="LauncherMenuButton.Universal" parent="LauncherMenuButton">

@@ -175,12 +175,11 @@ public class MainMenuFragment extends Fragment {
         if (isTwoPane()) {
             androidx.fragment.app.FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
             transaction.setReorderingAllowed(true);
-            // Smooth premium open animation for the Browse Resources page.
-            if (fragmentClass == ModsSearchFragment.class) {
-                transaction.setCustomAnimations(
-                        R.anim.fade_in_slide_up, R.anim.fade_out_slide_down,
-                        R.anim.fade_in_slide_up, R.anim.fade_out_slide_down);
-            }
+            // Every pane destination uses the same reversible motion, rather than
+            // abruptly replacing the content when a user moves through a flow.
+            transaction.setCustomAnimations(
+                    R.anim.fragment_enter_forward, R.anim.fragment_exit_forward,
+                    R.anim.fragment_enter_back, R.anim.fragment_exit_back);
             transaction
                     .replace(R.id.right_pane_container, fragmentClass, args, tag)
                     .addToBackStack(tag)

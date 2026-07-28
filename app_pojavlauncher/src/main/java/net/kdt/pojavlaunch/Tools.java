@@ -1459,7 +1459,8 @@ public final class Tools {
                                     @Nullable String fragmentTag, @Nullable Bundle bundle) {
         // When people tab out, it might happen
         fragmentActivity.getSupportFragmentManager().beginTransaction()
-                .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out, android.R.anim.fade_in, android.R.anim.fade_out)
+                .setCustomAnimations(R.anim.fragment_enter_forward, R.anim.fragment_exit_forward,
+                        R.anim.fragment_enter_back, R.anim.fragment_exit_back)
                 .setReorderingAllowed(true)
                 .addToBackStack(fragmentClass.getName())
                 .replace(R.id.container_fragment, fragmentClass, bundle, fragmentTag).commit();
