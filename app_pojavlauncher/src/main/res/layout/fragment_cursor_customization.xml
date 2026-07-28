@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121214"
+    android:background="@drawable/bg_studio_page"
     android:animateLayoutChanges="true">
 
     <!-- ═══════════════════════════════════════ -->
@@ -13,8 +13,8 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/cursor_top_bar"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:background="#1C1C1E"
+        android:layout_height="68dp"
+        android:background="@drawable/bg_studio_header"
         android:paddingHorizontal="12dp"
         android:elevation="8dp"
         app:layout_constraintTop_toTopOf="parent">

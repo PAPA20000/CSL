@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0A0A0A"
+    android:background="@drawable/bg_studio_page"
     android:id="@+id/fragment_profile_editor_root"
     android:orientation="vertical"
     android:animateLayoutChanges="true">
@@ -21,10 +21,10 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingHorizontal="20dp"
-            android:background="@drawable/bg_profile_editor_card_new"
-            android:layout_marginHorizontal="12dp"
-            android:layout_marginTop="12dp"
+            android:paddingHorizontal="28dp"
+            android:background="@drawable/bg_studio_panel"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="18dp"
             android:layout_marginBottom="8dp"
             android:paddingBottom="40dp"
             android:animateLayoutChanges="true">

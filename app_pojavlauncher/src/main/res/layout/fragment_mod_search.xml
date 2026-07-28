@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0D0D0D"
+    android:background="@drawable/bg_studio_page"
     android:orientation="vertical">
 
     <!-- ── HEADER (back + title + search bar) ── -->
@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="#1C1C1C"
+        android:background="@drawable/bg_studio_header"
         android:paddingTop="8dp"
         android:paddingBottom="8dp">
 
@@ -39,7 +39,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginStart="12dp"
-                android:text="Download Mods"
+                android:text="BROWSE RESOURCES"
                 android:textColor="#FFFFFF"
                 android:textSize="16sp"
                 android:textStyle="bold" />
