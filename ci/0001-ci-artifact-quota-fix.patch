@@ -1,0 +1,87 @@
+From 818ee7c934b2aba5c3c3d610b36ce005269068c5 Mon Sep 17 00:00:00 2001
+From: Rohit <rohit@craftstudio.dev>
+Date: Tue, 28 Jul 2026 14:53:15 +0000
+Subject: [PATCH] ci: stop artifact uploads exhausting storage quota
+
+The CI failure on PR #1 was not a build failure. Every step through 'Build APK
+without runtime' and 'APK size report' succeeded; only 'Upload artifacts' failed
+with 'Artifact storage quota has been hit'.
+
+Cause: each run uploaded out/* (release + debug + no-runtime APKs, ~450 MB) with
+30-day retention. 28 live artifacts had accumulated to ~12.7 GB, over the quota
+for a private repo on a user account.
+
+The release and no-runtime APKs were also being stored twice, since the
+'Create GitHub Release' step already publishes them as release assets
+(confirmed on v3.38).
+
+Changes:
+- Skip artifact upload entirely on pull_request; the build steps already prove
+  the code compiles
+- On push/manual runs upload only the debug APK plus checksums, not the APKs
+  that Releases already holds
+- Drop retention 30 -> 7 days
+- compression-level 0, since APKs are already ZIP containers
+- Add 'synchronize' to pull_request types, so pushes to an open PR re-run CI.
+  Previously only the first commit of a PR was ever built
+
+Co-authored-by: arena-agent <297053741+arena-agent@users.noreply.github.com>
+---
+ .github/workflows/android.yml | 31 ++++++++++++++++++++++++++-----
+ 1 file changed, 26 insertions(+), 5 deletions(-)
+
+diff --git a/.github/workflows/android.yml b/.github/workflows/android.yml
+index 8150973..2ef3ab5 100644
+--- a/.github/workflows/android.yml
++++ b/.github/workflows/android.yml
+@@ -6,7 +6,10 @@ on:
+   pull_request:
+     branches-ignore:
+       - 'l10n_v3_openjdk'
+-    types: [opened, reopened]
++    # 'synchronize' re-runs CI when new commits are pushed to an open PR.
++    # Without it only the very first commit was ever verified, so a PR could be
++    # merged green while its latest commit had never been built.
++    types: [opened, reopened, synchronize]
+   workflow_dispatch:
+ 
+ jobs:
+@@ -144,13 +147,31 @@ jobs:
+             echo "| $(basename $f) | $SIZE |" >> $GITHUB_STEP_SUMMARY
+           done
+ 
+-      # ── Upload all artifacts ─────────────────────────────────────────────────
+-      - name: Upload artifacts
++      # ── Upload artifacts ─────────────────────────────────────────────────────
++      # Storage notes: each run produced ~450 MB (three APKs plus checksums) and
++      # kept it for 30 days, which exhausted the repository's artifact quota and
++      # started failing every build.
++      #
++      # Two changes keep usage bounded:
++      #   1. Pull requests upload nothing. A PR only needs to prove the code
++      #      compiles, and the build steps above already do that.
++      #   2. Pushes and manual runs upload only the debug APK. The release and
++      #      no-runtime APKs are published to GitHub Releases by the next step,
++      #      so shipping them as artifacts too was storing the same file twice.
++      - name: Upload debug APK
+         uses: actions/upload-artifact@v4
++        if: github.event_name != 'pull_request'
+         with:
+           name: cs-launcher-v3-build-${{ github.run_number }}
+-          path: out/*
+-          retention-days: 30
++          path: |
++            out/CS-LAUNCHER-V3-DEBUG.apk
++            out/*.md5
++            out/*.sha256
++          retention-days: 7
++          # APKs are already ZIP containers, so recompressing them costs CI time
++          # for almost no size reduction.
++          compression-level: 0
++          if-no-files-found: warn
+ 
+       # ── GitHub Release (manual only) ─────────────────────────────────────────
+       - name: Create GitHub Release
+-- 
+2.39.5
+
