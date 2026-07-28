@@ -109,6 +109,25 @@
             android:paddingHorizontal="6dp"
             android:paddingBottom="8dp">
 
+            <!-- Add to Home Screen -->
+            <FrameLayout
+                android:id="@+id/btn_profile_shortcut"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginEnd="4dp"
+                android:background="@drawable/bg_browse_button"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="@string/shortcut_add_title">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_shortcut_add"
+                    android:tint="@color/premium_cyan" />
+            </FrameLayout>
+
             <!-- Browse Resources Button -->
             <FrameLayout
                 android:id="@+id/btn_profile_browse"

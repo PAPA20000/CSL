@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One selectable action in the shortcut editor: icon, title, description, tick. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/action_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/bg_shortcut_action_default"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingHorizontal="14dp"
+    android:paddingVertical="12dp">
+
+    <ImageView
+        android:id="@+id/action_icon"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_marginEnd="14dp"
+        android:contentDescription="@null" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/action_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/primary_text"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/action_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:textColor="@color/secondary_text"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <!-- Shown only for the currently selected action. -->
+    <ImageView
+        android:id="@+id/action_check"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:layout_marginStart="10dp"
+        android:src="@drawable/ic_check"
+        android:tint="@color/premium_cyan"
+        android:visibility="invisible"
+        android:contentDescription="@null" />
+
+    <!-- Marks actions that already have a shortcut on the home screen. -->
+    <TextView
+        android:id="@+id/action_existing_badge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/bg_chip_dark"
+        android:paddingHorizontal="7dp"
+        android:paddingVertical="2dp"
+        android:text="@string/shortcut_action_exists"
+        android:textColor="@color/secondary_text"
+        android:textSize="9sp"
+        android:visibility="gone" />
+
+</LinearLayout>

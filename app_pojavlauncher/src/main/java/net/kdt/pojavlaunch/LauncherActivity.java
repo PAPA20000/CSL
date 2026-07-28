@@ -318,6 +318,42 @@ public class LauncherActivity extends BaseActivity {
         mProgressLayout.observe(ProgressLayout.DOWNLOAD_VERSION_LIST);
     }
 
+    /**
+     * Handle a routing instruction delivered by {@link net.kdt.pojavlaunch.shortcuts.ShortcutActivity}.
+     *
+     * <p>Called from {@link #onResume()} rather than {@code onCreate}, because a
+     * shortcut may arrive while the launcher is already running. The extra is
+     * removed once consumed so a later configuration change does not replay it.</p>
+     */
+    private void handleShortcutIntent() {
+        Intent intent = getIntent();
+        if (intent == null) return;
+
+        String profileKey = intent.getStringExtra(
+                net.kdt.pojavlaunch.shortcuts.ShortcutActivity.EXTRA_PROFILE_KEY);
+        String actionId = intent.getStringExtra(
+                net.kdt.pojavlaunch.shortcuts.ShortcutActivity.EXTRA_ACTION);
+
+        if (profileKey == null || actionId == null) return;
+
+        // Consume immediately — rotating the device must not relaunch the game.
+        intent.removeExtra(net.kdt.pojavlaunch.shortcuts.ShortcutActivity.EXTRA_PROFILE_KEY);
+        intent.removeExtra(net.kdt.pojavlaunch.shortcuts.ShortcutActivity.EXTRA_ACTION);
+
+        net.kdt.pojavlaunch.shortcuts.ShortcutType action =
+                net.kdt.pojavlaunch.shortcuts.ShortcutType.fromId(actionId);
+
+        net.kdt.pojavlaunch.shortcuts.ShortcutRouter.route(this, profileKey, action);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        // A shortcut tapped while the launcher is already alive arrives here;
+        // swap the stored intent so onResume() sees the fresh extras.
+        setIntent(intent);
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -326,6 +362,10 @@ public class LauncherActivity extends BaseActivity {
         net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles.loadAsync(() -> {
             if (isDestroyed() || isFinishing()) return;
             updateNavSkinIcon();
+            // Profiles are loaded, so shortcut routing can safely resolve them.
+            handleShortcutIntent();
+            // Refresh the app-icon long-press menu with the most recent profiles.
+            net.kdt.pojavlaunch.shortcuts.ShortcutRouter.syncDynamicShortcuts(this);
         });
         mInstallTracker.attach();
         android.widget.Button btnClientFeatures = findViewById(R.id.btn_client_features);

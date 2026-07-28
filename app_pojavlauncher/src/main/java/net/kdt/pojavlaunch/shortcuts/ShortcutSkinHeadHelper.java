@@ -3,9 +3,6 @@ package net.kdt.pojavlaunch.shortcuts;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Rect;
-import android.graphics.RectF;
 import android.util.Base64;
 import android.util.Log;
 
@@ -13,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.utils.DownloadUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -35,6 +33,9 @@ public class ShortcutSkinHeadHelper {
     private static final String TAG = "ShortcutSkinHeadHelper";
     private static final String CACHE_DIR = "skin_heads";
     private static final long CACHE_TTL_MS = 24 * 60 * 60 * 1000L; // 24 hours
+
+    /** Connect and read timeout for skin texture downloads. */
+    private static final int NETWORK_TIMEOUT_MS = 10_000;
 
     private static final String MOJANG_API_PROFILE =
             "https://api.mojang.com/users/profiles/minecraft/";
@@ -102,7 +103,10 @@ public class ShortcutSkinHeadHelper {
     private static String resolveUuid(@NonNull String username)
             throws IOException {
         String url = MOJANG_API_PROFILE + username.toLowerCase();
-        String json = Tools.read(url);
+        // Must be an HTTP fetch. Tools.read(String) opens a FileInputStream, so
+        // the previous call here always threw FileNotFoundException and the skin
+        // head option could never succeed.
+        String json = DownloadUtils.downloadString(url);
 
         if (json == null || json.isEmpty()) return null;
 
@@ -127,7 +131,8 @@ public class ShortcutSkinHeadHelper {
     private static String getSkinUrl(@NonNull String uuid)
             throws IOException {
         String url = SESSION_SERVER_PROFILE + uuid;
-        String json = Tools.read(url);
+        // Same fix as resolveUuid: this is a network call, not a file read.
+        String json = DownloadUtils.downloadString(url);
 
         if (json == null || json.isEmpty()) return null;
 
@@ -170,6 +175,10 @@ public class ShortcutSkinHeadHelper {
             HttpURLConnection conn = (HttpURLConnection)
                     new URL(skinUrl).openConnection();
             conn.setRequestProperty("User-Agent", Tools.APP_NAME);
+            // Without timeouts a stalled texture server keeps the worker thread
+            // blocked indefinitely and the picker appears frozen.
+            conn.setConnectTimeout(NETWORK_TIMEOUT_MS);
+            conn.setReadTimeout(NETWORK_TIMEOUT_MS);
 
             Bitmap skin = BitmapFactory.decodeStream(conn.getInputStream());
             conn.disconnect();
@@ -207,8 +216,25 @@ public class ShortcutSkinHeadHelper {
             Bitmap head = Bitmap.createBitmap(skin, headX, headY,
                     headSize, headSize);
 
-            // Scale to 128×128 for crisp shortcut icons
-            Bitmap scaled = Bitmap.createScaledBitmap(head, 128, 128, true);
+            // Composite the hat/helmet overlay layer so hats are not lost.
+            // On 64x64 skins it lives at (40, 8); 64x32 skins have no overlay.
+            if (skinWidth == 64 && skinHeight == 64 && headSize == 8) {
+                try {
+                    Bitmap overlay = Bitmap.createBitmap(skin, 40, 8, 8, 8);
+                    Bitmap merged = head.copy(Bitmap.Config.ARGB_8888, true);
+                    new android.graphics.Canvas(merged).drawBitmap(overlay, 0, 0, null);
+                    overlay.recycle();
+                    head.recycle();
+                    head = merged;
+                } catch (Exception ignored) {
+                    // Malformed skin — keep the base head layer.
+                }
+            }
+
+            // Nearest-neighbour upscale: bilinear filtering turns 8x8 pixel art
+            // into a blurry smear, which looked poor as a launcher icon.
+            Bitmap scaled = ShortcutIconRenderer.upscalePixelArt(
+                    head, ShortcutIconRenderer.ICON_SIZE);
 
             if (head != scaled) {
                 head.recycle();

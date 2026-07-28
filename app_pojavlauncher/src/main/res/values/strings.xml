@@ -612,6 +612,77 @@
     <string name="shortcut_error">Failed to create shortcut.</string>
     <string name="shortcut_name_required">Shortcut name is required.</string>
     <string name="shortcut_created">Shortcut created!</string>
+    <string name="shortcut_add_subtitle_named">Pin %1$s to your home screen</string>
+    <string name="shortcut_name_label">Shortcut name</string>
+    <string name="shortcut_icon_loader">Loader</string>
+    <string name="shortcut_preview_hint">This is how the shortcut will look on your home screen. Adjust the action, icon and shape below.</string>
+
+    <!-- Shortcut actions -->
+    <string name="shortcut_action_label">What should it do?</string>
+    <string name="shortcut_action_caption">Each profile can have one shortcut per action.</string>
+    <string name="shortcut_action_launch">Launch game</string>
+    <string name="shortcut_action_launch_desc">Start Minecraft with this profile right away</string>
+    <string name="shortcut_action_open_profile">Open launcher</string>
+    <string name="shortcut_action_open_profile_desc">Open the launcher with this profile selected</string>
+    <string name="shortcut_action_mods">Browse mods</string>
+    <string name="shortcut_action_mods_desc">Jump straight into the mod browser for this profile</string>
+    <string name="shortcut_action_edit">Edit profile</string>
+    <string name="shortcut_action_edit_desc">Open this profile\'s settings</string>
+    <string name="shortcut_action_folder">Open folder</string>
+    <string name="shortcut_action_folder_desc">Open this profile\'s game directory in a file manager</string>
+    <string name="shortcut_action_exists">Added</string>
+
+    <!-- Suggested names -->
+    <string name="shortcut_suggested_mods">%1$s Mods</string>
+    <string name="shortcut_suggested_edit">%1$s Settings</string>
+    <string name="shortcut_suggested_folder">%1$s Files</string>
+
+    <!-- Icon shape -->
+    <string name="shortcut_shape_label">Icon shape</string>
+    <string name="shortcut_shape_squircle">Squircle</string>
+    <string name="shortcut_shape_circle">Circle</string>
+    <string name="shortcut_shape_rounded">Rounded</string>
+    <string name="shortcut_shape_square">Square</string>
+
+    <!-- Options -->
+    <string name="shortcut_options_label">Options</string>
+    <string name="shortcut_option_adaptive">Adaptive icon</string>
+    <string name="shortcut_option_adaptive_desc">Let your launcher apply its own icon mask. Recommended on Android 8 and newer.</string>
+    <string name="shortcut_option_badge">Show action badge</string>
+    <string name="shortcut_option_badge_desc">Adds a small corner glyph showing what the shortcut does.</string>
+    <string name="shortcut_option_dynamic">Quick menu on app icon</string>
+    <string name="shortcut_option_dynamic_desc">Long-press the launcher icon to jump into your recent profiles.</string>
+
+    <!-- Manage shortcuts -->
+    <string name="shortcut_manage_title">Manage shortcuts</string>
+    <string name="shortcut_manage_empty">No shortcuts yet</string>
+    <string name="shortcut_manage_empty_hint">Long-press a profile on the home screen, or tap its shortcut button, to pin it to your device.</string>
+    <string name="shortcut_entry_subtitle">%1$s · %2$s</string>
+    <string name="shortcut_entry_never_used">Created %1$s · not used yet</string>
+    <string name="shortcut_unknown_profile">Unknown profile</string>
+    <string name="shortcut_orphaned">Profile deleted</string>
+    <string name="shortcut_remove">Remove</string>
+    <string name="shortcut_remove_confirm">Remove “%1$s”? The icon will stop working, and you may need to drag it off your home screen manually.</string>
+    <string name="shortcut_remove_all">Remove all</string>
+    <string name="shortcut_remove_all_confirm">Remove every shortcut created by CS Launcher? This cannot be undone.</string>
+    <string name="shortcut_removed">Shortcut removed</string>
+
+    <!-- Shortcut states -->
+    <string name="shortcut_already_exists">A shortcut for this action already exists. Creating another copy.</string>
+    <string name="shortcut_pin_unsupported">Your home screen app does not support pinned shortcuts, so this shortcut cannot be created.</string>
+    <string name="shortcut_disabled_message">This shortcut was removed in CS Launcher.</string>
+    <string name="shortcut_profile_missing">That profile no longer exists. The shortcut has been removed.</string>
+    <string name="shortcut_folder_missing">This profile\'s game folder could not be found.</string>
+
+    <plurals name="shortcut_manage_count">
+        <item quantity="one">%1$d shortcut</item>
+        <item quantity="other">%1$d shortcuts</item>
+    </plurals>
+
+    <plurals name="shortcut_entry_used">
+        <item quantity="one">Used %1$d time · last %2$s</item>
+        <item quantity="other">Used %1$d times · last %2$s</item>
+    </plurals>
 
     <!-- Modpack Builder Strings -->
     <string name="modpack_builder_title">Modpack Builder</string>

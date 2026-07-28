@@ -2,6 +2,7 @@ package net.kdt.pojavlaunch.fragments;
 
 import android.graphics.drawable.Drawable;
 import android.util.Log;
+import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -144,6 +145,17 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
             if (mListener != null) mListener.onProfileEdit(profileKey, profile);
         });
 
+        // Long-press opens the shortcut creator. Without this the whole shortcut
+        // feature was unreachable: onProfileAddShortcut was declared and
+        // implemented, but nothing ever invoked it.
+        holder.cardRoot.setOnLongClickListener(v -> {
+            if (mListener == null) return false;
+            // Short haptic tick so the gesture is discoverable by feel.
+            v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+            mListener.onProfileAddShortcut(profileKey, profile);
+            return true;
+        });
+
         holder.btnPlay.setOnClickListener(v -> {
             if (mListener != null) mListener.onProfilePlay(profileKey, profile);
         });
@@ -151,6 +163,13 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         holder.btnBrowse.setOnClickListener(v -> {
             if (mListener != null) mListener.onProfileBrowse(profileKey, profile);
         });
+
+        // Explicit affordance for users who never discover long-press.
+        if (holder.btnShortcut != null) {
+            holder.btnShortcut.setOnClickListener(v -> {
+                if (mListener != null) mListener.onProfileAddShortcut(profileKey, profile);
+            });
+        }
     }
 
     @Override
@@ -227,6 +246,7 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         final TextView tvRam;
         final FrameLayout btnPlay;
         final FrameLayout btnBrowse;
+        final View btnShortcut;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -239,6 +259,7 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
             tvRam = itemView.findViewById(R.id.tv_profile_ram);
             btnPlay = itemView.findViewById(R.id.btn_profile_play);
             btnBrowse = itemView.findViewById(R.id.btn_profile_browse);
+            btnShortcut = itemView.findViewById(R.id.btn_profile_shortcut);
         }
     }
 }

@@ -248,6 +248,14 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
                 mBgExecutor.execute(() -> {
                     LauncherProfiles.mainProfileJson.profiles.remove(mProfileKey);
                     LauncherProfiles.write();
+                    // Revoke any home screen shortcuts pointing at the deleted
+                    // profile, otherwise tapping one lands on a dead reference.
+                    try {
+                        net.kdt.pojavlaunch.shortcuts.ProfileShortcutHelper
+                                .removeShortcutsForProfile(requireContext(), mProfileKey);
+                    } catch (Exception ignored) {
+                        // Cleanup is best effort; never block profile deletion.
+                    }
                     ExtraCore.setValue(ExtraConstants.REFRESH_VERSION_SPINNER, ProfileEditorFragment.DELETED_PROFILE);
                     mMainHandler.post(() -> {
                         if (!isAdded()) return;

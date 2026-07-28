@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lists every shortcut this launcher created, with usage stats and removal. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_app"
+    android:orientation="vertical">
+
+    <!-- ── Header ─────────────────────────────────────────────────── -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="12dp">
+
+        <ImageButton
+            android:id="@+id/shortcut_manager_back"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginEnd="8dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/global_back"
+            android:src="@drawable/ic_arrow_back_white" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/shortcut_manage_title"
+                android:textColor="@color/primary_text"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/shortcut_manager_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:textColor="@color/secondary_text"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/shortcut_manager_clear_all"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/shortcut_remove_all"
+            android:src="@drawable/ic_menu_delete_forever"
+            android:tint="#FF6B6B" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/divider" />
+
+    <!-- ── List ───────────────────────────────────────────────────── -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/shortcut_manager_recycler"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingHorizontal="14dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="20dp" />
+
+    <!-- ── Empty state ────────────────────────────────────────────── -->
+    <LinearLayout
+        android:id="@+id/shortcut_manager_empty"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:alpha="0.35"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_shortcut_add"
+            android:tint="@color/secondary_text" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="@string/shortcut_manage_empty"
+            android:textColor="@color/primary_text"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center"
+            android:text="@string/shortcut_manage_empty_hint"
+            android:textColor="@color/secondary_text"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+</LinearLayout>

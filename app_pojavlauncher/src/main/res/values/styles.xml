@@ -222,4 +222,39 @@
         <item name="android:activityCloseExitAnimation">@anim/slide_out_right</item>
     </style>
 
+    <!--
+        Theme for the shortcut trampoline activity. It only routes an intent and
+        finishes, so it must never paint: a normal opaque theme shows a black
+        flash between tapping the icon and the launcher appearing.
+    -->
+    <style name="ShortcutTrampolineTheme" parent="@android:style/Theme.Translucent.NoTitleBar">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
+    <!-- ── Home screen shortcut screens ───────────────────────────────── -->
+
+    <!-- Bold label that opens each configuration block in the shortcut editor. -->
+    <style name="ShortcutSectionHeader">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">20dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/primary_text</item>
+    </style>
+
+    <!-- Muted helper line sitting directly under a header or a switch. -->
+    <style name="ShortcutSectionCaption">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:lineSpacingExtra">1dp</item>
+        <item name="android:textColor">@color/secondary_text</item>
+    </style>
+
 </resources>

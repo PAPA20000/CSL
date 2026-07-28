@@ -58,13 +58,24 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- Invisible trampoline opened by home screen shortcuts. Transparent so
+             no blank frame flashes before the launcher appears. -->
         <activity
             android:name=".shortcuts.ShortcutActivity"
             android:exported="true"
-            android:theme="@style/AppTheme"
+            android:theme="@style/ShortcutTrampolineTheme"
             android:excludeFromRecents="true"
             android:taskAffinity=""
             android:noHistory="true" />
+
+        <!-- Receives confirmation that the home screen actually pinned a shortcut. -->
+        <receiver
+            android:name=".shortcuts.ShortcutPinReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="net.kdt.pojavlaunch.action.SHORTCUT_PINNED" />
+            </intent-filter>
+        </receiver>
 
         <activity
             android:name=".LauncherActivity"
