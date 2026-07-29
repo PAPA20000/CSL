@@ -74,14 +74,10 @@ public class CursorCustomizationFragment extends Fragment {
         // Setup seekbars
         SeekBar scaleSeek = view.findViewById(R.id.seek_cursor_size);
         SeekBar glowSeek = view.findViewById(R.id.seek_glow_strength);
-        SeekBar hotspotXSeek = view.findViewById(R.id.seek_hotspot_x);
-        SeekBar hotspotYSeek = view.findViewById(R.id.seek_hotspot_y);
         SeekBar opacitySeek = view.findViewById(R.id.seek_cursor_opacity);
 
         TextView scaleText = view.findViewById(R.id.scale_value_text);
         TextView glowText = view.findViewById(R.id.glow_value_text);
-        TextView hotspotXText = view.findViewById(R.id.hotspot_x_value_text);
-        TextView hotspotYText = view.findViewById(R.id.hotspot_y_value_text);
         TextView opacityText = view.findViewById(R.id.opacity_value_text);
 
         // Style selector cards
@@ -112,12 +108,6 @@ public class CursorCustomizationFragment extends Fragment {
         glowSeek.setProgress(mGlowRadius);
         glowText.setText(mGlowRadius + "%");
 
-        hotspotXSeek.setProgress(mHotspotX);
-        hotspotXText.setText(mHotspotX + " px");
-
-        hotspotYSeek.setProgress(mHotspotY);
-        hotspotYText.setText(mHotspotY + " px");
-
         opacitySeek.setProgress(mOpacity);
         opacityText.setText(mOpacity + "%");
 
@@ -140,8 +130,8 @@ public class CursorCustomizationFragment extends Fragment {
                             mUseCustomBitmap = true;
                             applyStyleSelection(cardClassic, cardGamepad, cardCustom, 2);
                             
-                            hotspotXSeek.setMax(mCurrentCursorBitmap.getWidth());
-                            hotspotYSeek.setMax(mCurrentCursorBitmap.getHeight());
+                            mHotspotX = mCurrentCursorBitmap.getWidth() / 2;
+                            mHotspotY = mCurrentCursorBitmap.getHeight() / 2;
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -172,6 +162,8 @@ public class CursorCustomizationFragment extends Fragment {
         cardClassic.setOnClickListener(v -> {
             mUseCustomBitmap = false;
             mSelectedCursorStyleRes = R.drawable.ic_mouse_pointer;
+            mHotspotX = 0;
+            mHotspotY = 0;
             applyStyleSelection(cardClassic, cardGamepad, cardCustom, 0);
             updateLivePreview();
         });
@@ -179,6 +171,8 @@ public class CursorCustomizationFragment extends Fragment {
         cardGamepad.setOnClickListener(v -> {
             mUseCustomBitmap = false;
             mSelectedCursorStyleRes = R.drawable.ic_gamepad_pointer;
+            mHotspotX = 0;
+            mHotspotY = 0;
             applyStyleSelection(cardClassic, cardGamepad, cardCustom, 1);
             updateLivePreview();
         });
@@ -226,25 +220,6 @@ public class CursorCustomizationFragment extends Fragment {
             @Override public void onStopTrackingTouch(SeekBar seekBar) {}
         });
 
-        hotspotXSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                mHotspotX = progress;
-                hotspotXText.setText(progress + " px");
-                updateLivePreview();
-            }
-            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
-        });
-
-        hotspotYSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                mHotspotY = progress;
-                hotspotYText.setText(progress + " px");
-                updateLivePreview();
-            }
-            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
-        });
 
         opacitySeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -398,26 +373,18 @@ public class CursorCustomizationFragment extends Fragment {
 
         SeekBar scaleSeek = root.findViewById(R.id.seek_cursor_size);
         SeekBar glowSeek = root.findViewById(R.id.seek_glow_strength);
-        SeekBar hotspotXSeek = root.findViewById(R.id.seek_hotspot_x);
-        SeekBar hotspotYSeek = root.findViewById(R.id.seek_hotspot_y);
         SeekBar opacitySeek = root.findViewById(R.id.seek_cursor_opacity);
 
         TextView scaleText = root.findViewById(R.id.scale_value_text);
         TextView glowText = root.findViewById(R.id.glow_value_text);
-        TextView hotspotXText = root.findViewById(R.id.hotspot_x_value_text);
-        TextView hotspotYText = root.findViewById(R.id.hotspot_y_value_text);
         TextView opacityText = root.findViewById(R.id.opacity_value_text);
 
         if (scaleSeek != null) scaleSeek.setProgress(100);
         if (glowSeek != null) glowSeek.setProgress(0);
-        if (hotspotXSeek != null) hotspotXSeek.setProgress(0);
-        if (hotspotYSeek != null) hotspotYSeek.setProgress(0);
         if (opacitySeek != null) opacitySeek.setProgress(100);
 
         if (scaleText != null) scaleText.setText("100%");
         if (glowText != null) glowText.setText("0%");
-        if (hotspotXText != null) hotspotXText.setText("0 px");
-        if (hotspotYText != null) hotspotYText.setText("0 px");
         if (opacityText != null) opacityText.setText("100%");
 
         View cardClassic = root.findViewById(R.id.style_classic);
@@ -522,8 +489,22 @@ public class CursorCustomizationFragment extends Fragment {
         return destFile;
     }
 
+    private File saveBitmapToFile(Bitmap bitmap, String destName) throws Exception {
+        File dir = new File(net.kdt.pojavlaunch.Tools.DIR_CURSORS);
+        if (!dir.exists()) dir.mkdirs();
+        File destFile = new File(dir, destName);
+        try (FileOutputStream out = new FileOutputStream(destFile)) {
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+        }
+        return destFile;
+    }
+
     private void onImageSelected(Uri uri) {
         if (uri == null) return;
+        if (isGif(uri)) {
+            Toast.makeText(getContext(), "GIF cursor is no longer supported. Please choose a normal image.", Toast.LENGTH_SHORT).show();
+            return;
+        }
         mSelectedImageUri = uri;
 
         try {
@@ -562,19 +543,9 @@ public class CursorCustomizationFragment extends Fragment {
 
                     applyStyleSelection(cardClassic, cardGamepad, cardCustom, 2);
 
-                    // Update hotspot seekbars max limits based on loaded image dimensions
-                    SeekBar hotspotXSeek = root.findViewById(R.id.seek_hotspot_x);
-                    SeekBar hotspotYSeek = root.findViewById(R.id.seek_hotspot_y);
-                    if (hotspotXSeek != null) {
-                        hotspotXSeek.setMax(mCurrentCursorBitmap.getWidth());
-                        mHotspotX = Math.min(mHotspotX, mCurrentCursorBitmap.getWidth());
-                        hotspotXSeek.setProgress(mHotspotX);
-                    }
-                    if (hotspotYSeek != null) {
-                        hotspotYSeek.setMax(mCurrentCursorBitmap.getHeight());
-                        mHotspotY = Math.min(mHotspotY, mCurrentCursorBitmap.getHeight());
-                        hotspotYSeek.setProgress(mHotspotY);
-                    }
+                    // Auto-center custom cursor hotspot for a simpler setup
+                    mHotspotX = mCurrentCursorBitmap.getWidth() / 2;
+                    mHotspotY = mCurrentCursorBitmap.getHeight() / 2;
                 }
 
                 // Update live preview
@@ -594,17 +565,15 @@ public class CursorCustomizationFragment extends Fragment {
             String path = null;
 
             if (mUseCustomBitmap) {
-                if (mCurrentCursorBitmap == null || mSelectedImageUri == null) {
+                if (mCurrentCursorBitmap == null) {
                     path = LauncherPreferences.PREF_CUSTOM_CURSOR_PATH;
                     if (path == null) {
                         Toast.makeText(getContext(), "Please select an image first!", Toast.LENGTH_SHORT).show();
                         return;
                     }
                 } else {
-                    boolean isGif = isGif(mSelectedImageUri);
-                    String extension = isGif ? ".gif" : ".png";
-                    String name = "custom_cursor_" + System.currentTimeMillis() + extension;
-                    File savedFile = copyUriToFile(mSelectedImageUri, name);
+                    String name = "custom_cursor_" + System.currentTimeMillis() + ".png";
+                    File savedFile = saveBitmapToFile(mCurrentCursorBitmap, name);
                     path = savedFile.getAbsolutePath();
                 }
             } else if (mSelectedCursorStyleRes == R.drawable.ic_gamepad_pointer) {

@@ -96,6 +96,10 @@ public class SkinManagerFragment extends Fragment {
         mTvSkinPath = view.findViewById(R.id.tv_skin_path);
         mTvCapePath = view.findViewById(R.id.tv_cape_path);
 
+        View backButton = view.findViewById(R.id.skin_back_button);
+        if (backButton != null) {
+            backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
+        }
 
         // Setup OpenGL Surface
         mSkinPreviewSurface.setEGLContextClientVersion(2);
@@ -309,6 +313,84 @@ public class SkinManagerFragment extends Fragment {
         });
 
         updatePreview();
+        animateEntry(view);
+        applyInteractiveAnimations(view);
+    }
+
+    private void animateEntry(@NonNull View root) {
+        int[] ids = new int[]{
+                R.id.skin_top_bar,
+                R.id.skin_preview_card,
+                R.id.skin_skin_card,
+                R.id.skin_cape_card,
+                R.id.skin_action_card
+        };
+        long delay = 0L;
+        for (int id : ids) {
+            View target = root.findViewById(id);
+            if (target == null) continue;
+            target.setAlpha(0f);
+            target.setTranslationY(id == R.id.skin_top_bar ? -28f : 28f);
+            target.animate()
+                    .alpha(1f)
+                    .translationY(0f)
+                    .setStartDelay(delay)
+                    .setDuration(320)
+                    .start();
+            delay += 70L;
+        }
+    }
+
+    private void applyInteractiveAnimations(@NonNull View root) {
+        int[] animatedButtons = new int[]{
+                R.id.skin_back_button,
+                R.id.btn_change_skin,
+                R.id.btn_remove_skin,
+                R.id.btn_reset_default,
+                R.id.btn_change_cape,
+                R.id.btn_remove_cape,
+                R.id.btn_save_skin_changes,
+                R.id.btn_cam_reset,
+                R.id.btn_cam_rot_reset,
+                R.id.btn_cam_auto_rot,
+                R.id.btn_cam_zoom_in,
+                R.id.btn_cam_zoom_out
+        };
+        for (int id : animatedButtons) {
+            View target = root.findViewById(id);
+            applyPressAnimation(target);
+        }
+
+        if (mSwitchModelType != null) {
+            mSwitchModelType.setOnTouchListener((v, event) -> {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        v.animate().scaleX(0.97f).scaleY(0.97f).setDuration(80).start();
+                        break;
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        v.animate().scaleX(1f).scaleY(1f).setDuration(120).start();
+                        break;
+                }
+                return false;
+            });
+        }
+    }
+
+    private void applyPressAnimation(@Nullable View target) {
+        if (target == null) return;
+        target.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    v.animate().scaleX(0.96f).scaleY(0.96f).setDuration(80).start();
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    v.animate().scaleX(1f).scaleY(1f).setDuration(130).start();
+                    break;
+            }
+            return false;
+        });
     }
 
     private void updateAccountInfo() {
@@ -391,6 +473,10 @@ public class SkinManagerFragment extends Fragment {
         } else {
             textView.setText(defaultText);
         }
+        textView.setAlpha(0.6f);
+        textView.setScaleX(0.985f);
+        textView.setScaleY(0.985f);
+        textView.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(180).start();
     }
 
     private void updatePreview() {
@@ -406,6 +492,13 @@ public class SkinManagerFragment extends Fragment {
             mSkinRenderer.mIsSlim = mSwitchModelType.isChecked();
             mSkinRenderer.setTexture(skinBitmap, capeBitmap);
             mSkinPreviewSurface.requestRender();
+        }
+        if (mSkinPreviewSurface != null) {
+            mSkinPreviewSurface.animate().cancel();
+            mSkinPreviewSurface.setScaleX(0.985f);
+            mSkinPreviewSurface.setScaleY(0.985f);
+            mSkinPreviewSurface.setAlpha(0.92f);
+            mSkinPreviewSurface.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(180).start();
         }
     }
 

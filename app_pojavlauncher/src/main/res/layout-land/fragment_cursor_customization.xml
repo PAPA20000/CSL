@@ -307,7 +307,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:letterSpacing="0.12"
-                    android:text="SIZE &amp; POSITION"
+                    android:text="SIZE"
                     android:textColor="#66D9FF"
                     android:textSize="10sp"
                     android:textStyle="bold" />
@@ -363,91 +363,13 @@
                         android:thumb="@drawable/bg_settings_seekbar_thumb"
                         android:thumbOffset="0dp" />
 
-                    <LinearLayout
+                    <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="HOTSPOT X"
-                            android:textColor="#F4F8FF"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/hotspot_x_value_text"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/bg_settings_value_chip"
-                            android:paddingHorizontal="10dp"
-                            android:paddingVertical="4dp"
-                            android:text="0 px"
-                            android:textColor="#7AFFFF"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <SeekBar
-                        android:id="@+id/seek_hotspot_x"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:max="128"
-                        android:maxHeight="6dp"
-                        android:minHeight="6dp"
-                        android:progress="0"
-                        android:progressDrawable="@drawable/bg_settings_seekbar_progress"
-                        android:splitTrack="false"
-                        android:thumb="@drawable/bg_settings_seekbar_thumb"
-                        android:thumbOffset="0dp" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="HOTSPOT Y"
-                            android:textColor="#F4F8FF"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/hotspot_y_value_text"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/bg_settings_value_chip"
-                            android:paddingHorizontal="10dp"
-                            android:paddingVertical="4dp"
-                            android:text="0 px"
-                            android:textColor="#7AFFFF"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <SeekBar
-                        android:id="@+id/seek_hotspot_y"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:max="128"
-                        android:maxHeight="6dp"
-                        android:minHeight="6dp"
-                        android:progress="0"
-                        android:progressDrawable="@drawable/bg_settings_seekbar_progress"
-                        android:splitTrack="false"
-                        android:thumb="@drawable/bg_settings_seekbar_thumb"
-                        android:thumbOffset="0dp" />
+                        android:text="Cursor hotspot is auto-managed for a cleaner setup."
+                        android:textColor="#8FA3BC"
+                        android:textSize="11sp" />
                 </LinearLayout>
 
                 <TextView
@@ -684,7 +606,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Tap to browse image or GIF"
+                            android:text="Tap to add cursor image"
                             android:textColor="#C9D7EA"
                             android:textSize="12sp"
                             android:textStyle="bold" />
