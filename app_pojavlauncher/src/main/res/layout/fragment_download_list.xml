@@ -10,10 +10,20 @@
         android:layout_height="match_parent"
         android:clipToPadding="false"
         android:paddingStart="12dp"
-        android:paddingTop="12dp"
+        android:paddingTop="58dp"
         android:paddingEnd="12dp"
         android:paddingBottom="20dp"
         android:scrollbars="none" />
+
+    <!-- Powered-by Infrawire badge above downloads -->
+    <include
+        layout="@layout/infrawire_powered_badge"
+        android:layout_width="match_parent"
+        android:layout_height="34dp"
+        android:layout_gravity="top"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="12dp" />
 
     <LinearLayout
         android:id="@+id/download_loading_card"
@@ -21,7 +31,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="top"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="52dp"
         android:layout_marginEnd="16dp"
         android:background="@drawable/bg_resource_search_box"
         android:gravity="center_vertical"

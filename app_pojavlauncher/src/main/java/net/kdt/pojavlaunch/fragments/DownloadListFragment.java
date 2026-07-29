@@ -86,6 +86,15 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
             }
         });
 
+        // Infrawire "Powered by" badge → Official Partners page (elegant, not an ad)
+        View poweredBadge = view.findViewById(R.id.infrawire_powered_badge);
+        if (poweredBadge != null) {
+            net.kdt.pojavlaunch.sponsor.InfrawirePartner.applyPressAnimation(poweredBadge);
+            poweredBadge.setOnClickListener(v ->
+                    net.kdt.pojavlaunch.sponsor.InfrawirePartner.openPartnerPage(requireActivity()));
+            net.kdt.pojavlaunch.sponsor.InfrawirePartner.fadeIn(poweredBadge, 200);
+        }
+
         loadContent();
     }
 

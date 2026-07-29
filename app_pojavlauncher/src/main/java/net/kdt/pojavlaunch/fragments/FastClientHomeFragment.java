@@ -74,6 +74,38 @@ public class FastClientHomeFragment extends Fragment {
 
         // Server cards click listeners
         setupServerCards(view);
+
+        // Infrawire Official Partner cards (home card below Play + feed card in right pane)
+        setupInfrawireCard(view.findViewById(R.id.infrawire_card_play), 350);
+        setupInfrawireCard(view.findViewById(R.id.infrawire_card_feed), 450);
+    }
+
+    /**
+     * Wire one Infrawire sponsor card: card tap opens the Official Partners page,
+     * Deploy VPS / Learn More open the device browser directly. Non-intrusive by design.
+     */
+    private void setupInfrawireCard(@Nullable View card, long fadeDelayMs) {
+        if (card == null) return;
+
+        net.kdt.pojavlaunch.sponsor.InfrawirePartner.applyPressAnimation(card);
+        card.setOnClickListener(v ->
+                net.kdt.pojavlaunch.sponsor.InfrawirePartner.openPartnerPage(requireActivity()));
+
+        View deploy = card.findViewById(R.id.infrawire_btn_deploy);
+        if (deploy != null) {
+            net.kdt.pojavlaunch.sponsor.InfrawirePartner.applyPressAnimation(deploy);
+            deploy.setOnClickListener(v -> net.kdt.pojavlaunch.sponsor.InfrawirePartner
+                    .openLink(requireContext(), net.kdt.pojavlaunch.sponsor.InfrawirePartner.URL_VPS));
+        }
+
+        View learnMore = card.findViewById(R.id.infrawire_btn_learn_more);
+        if (learnMore != null) {
+            net.kdt.pojavlaunch.sponsor.InfrawirePartner.applyPressAnimation(learnMore);
+            learnMore.setOnClickListener(v -> net.kdt.pojavlaunch.sponsor.InfrawirePartner
+                    .openLink(requireContext(), net.kdt.pojavlaunch.sponsor.InfrawirePartner.URL_WEBSITE));
+        }
+
+        net.kdt.pojavlaunch.sponsor.InfrawirePartner.fadeIn(card, fadeDelayMs);
     }
 
     private void bindAccountData(View view) {

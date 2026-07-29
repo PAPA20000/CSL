@@ -167,6 +167,7 @@ public class LauncherPreferenceFragment extends Fragment {
             case "Experimental": return R.drawable.ic_settings_experimental;
             case "Advanced": return R.drawable.ic_settings_advanced;
             case "Miscellaneous": return R.drawable.ic_settings_misc;
+            case "Sponsors": return R.drawable.ic_infrawire_logo;
             default: return R.drawable.ic_menu_settings;
         }
     }
@@ -261,6 +262,8 @@ public class LauncherPreferenceFragment extends Fragment {
                 return "Cache management, reset tools, and maintenance actions for the launcher.";
             case "Miscellaneous":
                 return "Verification, capes, and extra compatibility switches that support special cases.";
+            case "Sponsors":
+                return "Official partners who keep CS Launcher fast, free, and professionally backed.";
             default:
                 return "Premium launcher settings tailored for a mobile Minecraft experience.";
         }
@@ -278,6 +281,7 @@ public class LauncherPreferenceFragment extends Fragment {
             case "Experimental": return "LAB";
             case "Advanced": return "TOOLS";
             case "Miscellaneous": return "EXTRA";
+            case "Sponsors": return "PARTNER";
             default: return "PAGE";
         }
     }
@@ -293,6 +297,7 @@ public class LauncherPreferenceFragment extends Fragment {
         rootItems.add(new SettingItem("cat_experimental", SettingItem.TYPE_CATEGORY_LINK, "Experimental", "Test launcher orientations, wall-papers, and colors", "Experimental"));
         rootItems.add(new SettingItem("cat_advanced", SettingItem.TYPE_CATEGORY_LINK, "Advanced", "Perform debug clears and database resets", "Advanced"));
         rootItems.add(new SettingItem("cat_misc", SettingItem.TYPE_CATEGORY_LINK, "Miscellaneous", "Library verifications, system drivers, and in-game capes", "Miscellaneous"));
+        rootItems.add(new SettingItem("cat_sponsors", SettingItem.TYPE_CATEGORY_LINK, "Sponsors", "Official partners backing CS Launcher with cloud power", "Sponsors"));
         return rootItems;
     }
 
@@ -488,6 +493,42 @@ public class LauncherPreferenceFragment extends Fragment {
                     miscItems.add(new SettingItem("arc_capes", SettingItem.TYPE_SWITCH, getString(R.string.arc_capes_title), getString(R.string.arc_capes_desc), false));
                     miscItems.add(new SettingItem("zinkPreferSystemDriver", SettingItem.TYPE_SWITCH, getString(R.string.preference_vulkan_driver_system_title), getString(R.string.preference_vulkan_driver_system_description), false));
                     categories.add(new SettingCategory("Miscellaneous Settings", miscItems));
+                    break;
+
+                case "Sponsors":
+                    List<SettingItem> sponsorItems = new ArrayList<>();
+                    sponsorItems.add(new SettingItem("infrawire_partner_info", SettingItem.TYPE_INFO,
+                            "Infrawire — Official Hosting Partner",
+                            "High-Performance VPS & Cloud Hosting • Official Cloud Hosting Partner of CS Launcher V2", null));
+                    sponsorItems.add(new SettingItem("infrawire_about_info", SettingItem.TYPE_INFO,
+                            "Official Sponsor",
+                            "Infrawire powers CS Launcher with latest-generation VPS & cloud infrastructure — NVMe SSD storage, DDR4 memory, a 10 Gbps independent global network, multi-layer Anti-DDoS protection, hourly billing from €0.007/hour and 24/7 expert support.", null));
+                    sponsorItems.add(new SettingItem("infrawire_view_partner_page", SettingItem.TYPE_ACTION,
+                            "View Partner Page", "Plans, benefits, and promotions — inside the launcher", null)
+                            .setAction(() -> Tools.swapFragment(requireActivity(),
+                                    net.kdt.pojavlaunch.sponsor.InfrawirePartnerFragment.class,
+                                    net.kdt.pojavlaunch.sponsor.InfrawirePartnerFragment.TAG, null)));
+                    sponsorItems.add(new SettingItem("infrawire_visit_website", SettingItem.TYPE_ACTION,
+                            "Visit Website", "infrawire.net — VPS, cloud and dedicated infrastructure", null)
+                            .setAction(() -> net.kdt.pojavlaunch.sponsor.InfrawirePartner.openLink(requireContext(),
+                                    net.kdt.pojavlaunch.sponsor.InfrawirePartner.URL_WEBSITE)));
+                    sponsorItems.add(new SettingItem("infrawire_deploy_vps", SettingItem.TYPE_ACTION,
+                            "Deploy VPS", "High-performance VPS from €0.007/hour — deploy in ~55 seconds", null)
+                            .setAction(() -> net.kdt.pojavlaunch.sponsor.InfrawirePartner.openLink(requireContext(),
+                                    net.kdt.pojavlaunch.sponsor.InfrawirePartner.URL_VPS)));
+                    sponsorItems.add(new SettingItem("infrawire_promotions", SettingItem.TYPE_ACTION,
+                            "Latest Promotions", "Current offers and seasonal deals from Infrawire", null)
+                            .setAction(() -> net.kdt.pojavlaunch.sponsor.InfrawirePartner.openLink(requireContext(),
+                                    net.kdt.pojavlaunch.sponsor.InfrawirePartner.URL_PROMOTIONS)));
+                    sponsorItems.add(new SettingItem("infrawire_documentation", SettingItem.TYPE_ACTION,
+                            "Documentation", "Guides, tutorials and the Infrawire knowledge base", null)
+                            .setAction(() -> net.kdt.pojavlaunch.sponsor.InfrawirePartner.openLink(requireContext(),
+                                    net.kdt.pojavlaunch.sponsor.InfrawirePartner.URL_DOCS)));
+                    sponsorItems.add(new SettingItem("infrawire_support", SettingItem.TYPE_ACTION,
+                            "Support — 24/7", "Get help from Infrawire's expert technical team", null)
+                            .setAction(() -> net.kdt.pojavlaunch.sponsor.InfrawirePartner.openLink(requireContext(),
+                                    net.kdt.pojavlaunch.sponsor.InfrawirePartner.URL_SUPPORT)));
+                    categories.add(new SettingCategory("Official Sponsors", sponsorItems));
                     break;
             }
         }
@@ -1335,6 +1376,16 @@ public class LauncherPreferenceFragment extends Fragment {
                 return R.drawable.ic_settings_notification;
             case "microphone_permission_request":
                 return R.drawable.ic_settings_microphone;
+            case "cat_sponsors":
+            case "infrawire_partner_info":
+            case "infrawire_about_info":
+            case "infrawire_view_partner_page":
+            case "infrawire_visit_website":
+            case "infrawire_deploy_vps":
+            case "infrawire_promotions":
+            case "infrawire_documentation":
+            case "infrawire_support":
+                return R.drawable.ic_infrawire_logo;
             default:
                 return R.drawable.ic_menu_settings;
         }

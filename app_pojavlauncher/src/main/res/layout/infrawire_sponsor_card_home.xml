@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Infrawire Official Partner — compact home card (~120dp, glass, 24dp corners).
+     Placed below the Play button: discoverable, never blocking. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/infrawire_home_card"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="118dp"
+    android:orientation="vertical"
+    android:background="@drawable/bg_infrawire_card_glass"
+    android:padding="14dp"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- Row 1: logo + identity + partner badge -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:src="@drawable/ic_infrawire_logo"
+            android:layout_marginEnd="12dp"
+            android:contentDescription="@string/infrawire_name" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/infrawire_name"
+                    android:textColor="#FFFFFF"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.02"
+                    android:layout_marginEnd="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/infrawire_badge_partner"
+                    android:textColor="#7FE9FF"
+                    android:textSize="8.5sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.09"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="3dp"
+                    android:background="@drawable/bg_infrawire_badge" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/infrawire_tagline"
+                android:textColor="#9FB3D1"
+                android:textSize="11sp"
+                android:layout_marginTop="3dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Row 2: trust chips -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="10dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="24dp"
+            android:gravity="center"
+            android:text="@string/infrawire_chip_uptime"
+            android:textColor="#C9E8FF"
+            android:textSize="10sp"
+            android:paddingHorizontal="10dp"
+            android:background="@drawable/bg_infrawire_chip"
+            android:layout_marginEnd="6dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="24dp"
+            android:gravity="center"
+            android:text="@string/infrawire_chip_antiddos"
+            android:textColor="#C9E8FF"
+            android:textSize="10sp"
+            android:paddingHorizontal="10dp"
+            android:background="@drawable/bg_infrawire_chip"
+            android:layout_marginEnd="6dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="24dp"
+            android:gravity="center"
+            android:text="@string/infrawire_chip_support"
+            android:textColor="#C9E8FF"
+            android:textSize="10sp"
+            android:paddingHorizontal="10dp"
+            android:background="@drawable/bg_infrawire_chip" />
+    </LinearLayout>
+
+    <!-- Row 3: actions -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="12dp">
+
+        <TextView
+            android:id="@+id/infrawire_btn_deploy"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1.2"
+            android:gravity="center"
+            android:text="@string/infrawire_deploy_vps"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.05"
+            android:background="@drawable/bg_infrawire_button_primary"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/infrawire_btn_learn_more"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/infrawire_learn_more"
+            android:textColor="#8FE3FF"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:background="@drawable/bg_infrawire_button_ghost"
+            android:clickable="true"
+            android:focusable="true" />
+    </LinearLayout>
+
+</LinearLayout>

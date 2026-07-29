@@ -342,6 +342,48 @@ public class LauncherActivity extends BaseActivity {
         mProgressLayout.observe(ProgressLayout.INSTALL_MODPACK);
         mProgressLayout.observe(ProgressLayout.AUTHENTICATE_MICROSOFT);
         mProgressLayout.observe(ProgressLayout.DOWNLOAD_VERSION_LIST);
+
+        // Official partner welcome — shown exactly once, after first launch settles
+        maybeShowInfrawireWelcome();
+    }
+
+    /**
+     * Infrawire Official Partner welcome dialog. Shown once (flag persisted),
+     * never again. Explore opens the partner page; Skip just dismisses.
+     */
+    private void maybeShowInfrawireWelcome() {
+        if (net.kdt.pojavlaunch.sponsor.InfrawirePartner.wasWelcomeShown(this)) return;
+        View root = findViewById(android.R.id.content);
+        if (root == null) return;
+        root.postDelayed(() -> {
+            if (isFinishing() || isDestroyed()) return;
+            if (net.kdt.pojavlaunch.sponsor.InfrawirePartner.wasWelcomeShown(this)) return;
+            net.kdt.pojavlaunch.sponsor.InfrawirePartner.markWelcomeShown(this);
+
+            View dialogView = getLayoutInflater().inflate(R.layout.dialog_infrawire_welcome, null);
+            android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
+                    .setView(dialogView)
+                    .setCancelable(true)
+                    .create();
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setBackgroundDrawable(
+                        new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            }
+
+            View explore = dialogView.findViewById(R.id.infrawire_welcome_btn_explore);
+            View skip = dialogView.findViewById(R.id.infrawire_welcome_btn_skip);
+            net.kdt.pojavlaunch.sponsor.InfrawirePartner.applyPressAnimation(explore);
+            net.kdt.pojavlaunch.sponsor.InfrawirePartner.applyPressAnimation(skip);
+            explore.setOnClickListener(v -> {
+                dialog.dismiss();
+                net.kdt.pojavlaunch.sponsor.InfrawirePartner.openPartnerPage(this);
+            });
+            skip.setOnClickListener(v -> dialog.dismiss());
+
+            dialog.show();
+            net.kdt.pojavlaunch.sponsor.InfrawirePartner.fadeIn(
+                    dialogView.findViewById(R.id.infrawire_welcome_root), 0);
+        }, 700);
     }
 
     /**

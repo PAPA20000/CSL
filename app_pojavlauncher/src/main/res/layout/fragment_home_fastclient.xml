@@ -262,6 +262,14 @@
             android:clickable="true"
             android:focusable="true" />
 
+        <!-- Infrawire Official Partner — premium sponsor card (below Play, never blocking) -->
+        <include
+            android:id="@+id/infrawire_card_play"
+            layout="@layout/infrawire_sponsor_card_home"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_10sdp" />
+
     </LinearLayout>
 
     <!-- RIGHT PANE -->
@@ -327,6 +335,18 @@
                 android:background="?android:attr/selectableItemBackground" />
 
         </LinearLayout>
+
+        <!-- Scrollable feed: servers + Official Partners -->
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:overScrollMode="never"
+            android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
         <!-- Server 1 -->
         <LinearLayout
@@ -741,6 +761,29 @@
                 android:textSize="@dimen/_10ssp" />
 
         </LinearLayout>
+
+        <!-- ═══ OFFICIAL PARTNERS — Infrawire appears first ═══ -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="OFFICIAL PARTNERS"
+            android:textAllCaps="true"
+            android:textSize="@dimen/_10ssp"
+            android:textColor="#8FE3FF"
+            android:letterSpacing="0.1"
+            android:textStyle="bold"
+            android:layout_marginTop="@dimen/_14sdp"
+            android:layout_marginBottom="@dimen/_8sdp" />
+
+        <include
+            android:id="@+id/infrawire_card_feed"
+            layout="@layout/infrawire_sponsor_card_home"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/_6sdp" />
+
+        </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
 
     </LinearLayout>
 
