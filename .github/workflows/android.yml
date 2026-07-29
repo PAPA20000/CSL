@@ -60,6 +60,7 @@ jobs:
       # ── Gradle ──────────────────────────────────────────────────────────────
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+        continue-on-error: true
         with:
           validate-wrappers: false
           gradle-version: "8.11"
