@@ -51,9 +51,17 @@ public class SkinManagerFragment extends Fragment {
     public static final String TAG = "SKIN_MANAGER_FRAGMENT";
     private static final int REQUEST_CODE_SKIN = 1001;
     private static final int REQUEST_CODE_CAPE = 1002;
-    private static final float DEFAULT_PREVIEW_ZOOM = 1.20f;
+    // Player model spans exactly Y=-16..+16 in model space. The ortho frustum is
+    // built at 16 * FIT_MARGIN, so zoom 1.0 fits the full body perfectly centered.
+    // The 13% margin absorbs the hat-layer expansion and the projected height of
+    // diagonal head corners at extreme pitch/yaw, so nothing is ever clipped.
+    private static final float PREVIEW_MODEL_HALF_HEIGHT = 16.0f;
+    private static final float PREVIEW_FIT_MARGIN = 1.13f;
+    private static final float DEFAULT_PREVIEW_ZOOM = 1.0f;
     private static final float DEFAULT_PREVIEW_YAW = 18f;
     private static final float DEFAULT_PREVIEW_PITCH = -4f;
+    private static final float MIN_PREVIEW_ZOOM = 0.75f;
+    private static final float MAX_PREVIEW_ZOOM = 1.60f;
 
     private GLSurfaceView mSkinPreviewSurface;
     private SwitchCompat mSwitchModelType;
@@ -350,7 +358,7 @@ public class SkinManagerFragment extends Fragment {
                     public boolean onScale(ScaleGestureDetector detector) {
                         if (mSkinRenderer == null) return false;
                         float nextZoom = mSkinRenderer.mZoomFactor * detector.getScaleFactor();
-                        mSkinRenderer.mZoomFactor = Math.max(0.78f, Math.min(1.95f, nextZoom));
+                        mSkinRenderer.mZoomFactor = Math.max(MIN_PREVIEW_ZOOM, Math.min(MAX_PREVIEW_ZOOM, nextZoom));
                         mSkinPreviewSurface.requestRender();
                         return true;
                     }
@@ -391,7 +399,9 @@ public class SkinManagerFragment extends Fragment {
                             float dx = x - previousX;
                             float dy = y - previousY;
                             mSkinRenderer.mAngleX += dx * 0.45f;
-                            mSkinRenderer.mAngleY = Math.max(-35f, Math.min(35f, mSkinRenderer.mAngleY + dy * 0.35f));
+                            // Keep pitch within ±30° so even the hat-layer corners at
+                            // diagonal yaw stay inside the (marge-safe) ortho frustum.
+                            mSkinRenderer.mAngleY = Math.max(-30f, Math.min(30f, mSkinRenderer.mAngleY + dy * 0.35f));
                             mSkinPreviewSurface.requestRender();
                             previousX = x;
                             previousY = y;
@@ -735,8 +745,17 @@ public class SkinManagerFragment extends Fragment {
         @Override
         public void onSurfaceChanged(javax.microedition.khronos.opengles.GL10 gl, int width, int height) {
             GLES20.glViewport(0, 0, width, height);
-            float ratio = (float) width / height;
-            Matrix.orthoM(mProjectionMatrix, 0, -ratio * 15.0f, ratio * 15.0f, -16.0f, 16.0f, 0.1f, 100.0f);
+            // The player model is exactly 32 units tall (Y=-16..+16). Give the frustum
+            // a small vertical margin so the full body (head -> feet) is never clipped,
+            // and derive the horizontal half-extent from the SAME unit height via the
+            // aspect ratio, so X/Y unit scales stay identical at any surface size and
+            // the model is never squashed or stretched.
+            float halfHeight = PREVIEW_MODEL_HALF_HEIGHT * PREVIEW_FIT_MARGIN;
+            float aspect = (float) width / Math.max(1, height);
+            Matrix.orthoM(mProjectionMatrix, 0,
+                    -halfHeight * aspect, halfHeight * aspect,
+                    -halfHeight, halfHeight,
+                    0.1f, 200.0f);
         }
 
         @Override
