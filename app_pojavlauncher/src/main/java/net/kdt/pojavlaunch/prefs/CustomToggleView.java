@@ -122,29 +122,36 @@ public class CustomToggleView extends View {
         mTrackRect.set(0, 0, w, h);
         float radius = h / 2f;
 
-        // Transition from dark grey (#222222) to neon green (#39FF14)
-        int darkBg = 0xFF222222;
-        int activeBg = 0xFF39FF14;
+        // Off: deep slate · On: cyan → mint for Control Center look
+        int darkBg = 0xFF1A2436;
+        int activeBg = 0xFF00E5FF;
         int trackColor = blendColors(darkBg, activeBg, mAnimProgress);
 
         mPaint.setStyle(Paint.Style.FILL);
         mPaint.setColor(trackColor);
         canvas.drawRoundRect(mTrackRect, radius, radius, mPaint);
 
+        // Subtle border on the track
+        mPaint.setStyle(Paint.Style.STROKE);
+        mPaint.setStrokeWidth(Math.max(1f, getResources().getDisplayMetrics().density));
+        mPaint.setColor(blendColors(0x33FFFFFF, 0x6600E5FF, mAnimProgress));
+        canvas.drawRoundRect(mTrackRect, radius, radius, mPaint);
+        mPaint.setStyle(Paint.Style.FILL);
+
         // Draw thumb (white circle)
         float padding = 3f * getResources().getDisplayMetrics().density;
         float thumbRadius = radius - padding;
-        
+
         // Thumb position interpolation
         float minX = radius;
         float maxX = w - radius;
         float thumbX = minX + (maxX - minX) * mAnimProgress;
         float thumbY = h / 2f;
 
-        // Draw small shadow/glow if enabled
+        // Soft cyan glow when enabled
         if (mAnimProgress > 0.05f) {
-            mPaint.setColor(blendColors(0x0039FF14, 0x4439FF14, mAnimProgress));
-            canvas.drawCircle(thumbX, thumbY, thumbRadius + padding * 0.5f, mPaint);
+            mPaint.setColor(blendColors(0x0000E5FF, 0x5500E5FF, mAnimProgress));
+            canvas.drawCircle(thumbX, thumbY, thumbRadius + padding * 0.7f, mPaint);
         }
 
         mPaint.setColor(0xFFFFFFFF);
