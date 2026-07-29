@@ -1,113 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="@dimen/_300sdp"
-    android:layout_height="wrap_content"
-    android:layout_gravity="center_vertical|end"
+    android:layout_width="@dimen/_280sdp"
     android:layout_marginVertical="@dimen/padding_heavy"
-    android:layout_marginEnd="16dp"
-    android:background="@drawable/background_control_editor"
-    android:elevation="12dp"
-    android:orientation="vertical">
-
-    <!-- Header Section -->
-    <LinearLayout
+    android:orientation="vertical"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_vertical"
+    android:background="@drawable/background_control_editor">
+    <TextView
+        android:id="@+id/side_dialog_title_textview"
+        style="@style/TextAppearance.AppCompat.Large"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="4dp"
-        android:paddingTop="4dp"
-        android:paddingEnd="4dp"
-        android:paddingBottom="8dp">
+        android:padding="@dimen/padding_moderate"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
 
-        <View
-            android:layout_width="3.5dp"
-            android:layout_height="18dp"
-            android:background="#00E5FF" />
-
-        <TextView
-            android:id="@+id/side_dialog_title_textview"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_weight="1"
-            android:letterSpacing="0.08"
-            android:textColor="#F4F8FF"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            tools:text="QUICK IN-GAME SETTINGS"
-            tools:visibility="visible" />
-
-    </LinearLayout>
-
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Quick settings"
+        tools:visibility="visible" />
     <View
         android:id="@+id/side_dialog_title_divider"
+        style="@style/ThickDivider"
         android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/bg_settings_divider_soft"
-        tools:visibility="visible" />
+        android:paddingHorizontal="@dimen/padding_moderate"
+        android:visibility="gone"
 
-    <!-- Content ScrollView -->
+        tools:visibility="visible"
+        />
     <com.kdt.DefocusableScrollView
         android:id="@+id/side_dialog_scrollview"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:clipToPadding="false"
-        android:overScrollMode="never"
-        android:paddingBottom="8dp"
-        android:scrollbars="none">
-        <!-- Inflated dialog content -->
+        tools:background="@color/background_status_bar">
+        <!-- The content is inflated here -->
     </com.kdt.DefocusableScrollView>
 
-    <!-- Bottom Action Button Bar -->
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="4dp"
-        android:paddingEnd="4dp">
-
+        android:orientation="horizontal">
         <Button
             android:id="@+id/side_dialog_start_button"
+            style="@style/Widget.AppCompat.Button.Borderless"
             android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:background="@drawable/bg_settings_back_chip"
-            android:letterSpacing="0.06"
-            android:minWidth="90dp"
-            android:paddingStart="14dp"
-            android:paddingEnd="14dp"
-            android:textColor="#8FA3BC"
-            android:textSize="11sp"
-            android:textStyle="bold"
-            tools:text="CANCEL"
-            tools:visibility="visible" />
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:visibility="gone"
 
-        <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            tools:visibility="visible"
+            tools:text="Cancel"
+            />
 
         <Button
             android:id="@+id/side_dialog_end_button"
+            style="@style/Widget.AppCompat.Button.Borderless"
             android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:background="@drawable/bg_settings_save_button"
-            android:letterSpacing="0.06"
-            android:minWidth="100dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:textColor="#061018"
-            android:textSize="11sp"
-            android:textStyle="bold"
-            tools:text="APPLY"
-            tools:visibility="visible" />
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:visibility="gone"
 
-    </LinearLayout>
+            tools:text="Confirm"
+            tools:visibility="visible"
+            tools:ignore="RelativeOverlap" />
+        <!-- Appears to be no way to properly fix this, and I'm not super fond of child ConstraintLayouts -->
+    </RelativeLayout>
 </LinearLayout>

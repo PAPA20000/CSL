@@ -24,3 +24,6 @@ test_fabric.sh
 index.html
 loader.json
 fs-manager-udroid/
+
+# Agent local skills
+.agents/
