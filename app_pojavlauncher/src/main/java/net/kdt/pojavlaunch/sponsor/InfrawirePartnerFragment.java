@@ -1,7 +1,6 @@
 package net.kdt.pojavlaunch.sponsor;
 
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -136,7 +135,8 @@ public class InfrawirePartnerFragment extends Fragment {
             grid.addView(tile);
             InfrawirePartner.fadeIn(tile, 200L + i * 35L);
         }
-        grid.setGravity(Gravity.FILL_HORIZONTAL);
+        // Tiles already stretch to their column via weighted columnSpec — no
+        // extra gravity call needed (framework GridLayout has none).
     }
 
     private int dp(int value) {
