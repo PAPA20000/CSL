@@ -1,34 +1,117 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Landscape settings dashboard: permanent context panel + focused content pane. -->
+<!-- Full-screen mobile landscape Control Center. RecyclerView remains the source of truth for working settings. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent" android:background="#060A14">
-    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="horizontal" android:padding="14dp">
-        <LinearLayout android:layout_width="220dp" android:layout_height="match_parent" android:layout_marginEnd="14dp" android:orientation="vertical" android:padding="20dp" android:background="@drawable/bg_glass_header">
-            <View android:layout_width="38dp" android:layout_height="4dp" android:background="@drawable/bg_neon_indicator" />
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:text="SETTINGS" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="24sp" android:letterSpacing="0.08" />
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Tune your launcher, runtime and game experience." android:textColor="#91A0B5" android:textSize="12sp" />
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="22dp" android:background="#29354B" />
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="CHANGES ARE SAVED FROM THE PANEL" android:textColor="#00E5FF" android:textStyle="bold" android:textSize="10sp" android:letterSpacing="0.08" />
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_studio_page">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <!-- Persistent landscape rail: gives a phone-sized dashboard clear context. -->
+        <LinearLayout
+            android:layout_width="260dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:background="@drawable/bg_studio_header">
+
+            <ImageView
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:src="@drawable/ic_menu_settings"
+                android:tint="#00E5FF" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:text="CONTROL\nCENTER"
+                android:textColor="#FFFFFF"
+                android:textSize="25sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.07" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="Launcher, game and runtime settings in one focused workspace."
+                android:textColor="#9AABC2"
+                android:textSize="12sp"
+                android:lineSpacingExtra="3dp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginVertical="22dp"
+                android:background="#334764" />
+
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="LAUNCHER" android:textColor="#00E5FF" android:textStyle="bold" android:textSize="10sp" android:letterSpacing="0.1" android:paddingVertical="8dp" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="GAME &amp; GRAPHICS" android:textColor="#C8D3E2" android:textStyle="bold" android:textSize="10sp" android:letterSpacing="0.1" android:paddingVertical="8dp" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="JAVA RUNTIME" android:textColor="#C8D3E2" android:textStyle="bold" android:textSize="10sp" android:letterSpacing="0.1" android:paddingVertical="8dp" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="CONTROLS" android:textColor="#C8D3E2" android:textStyle="bold" android:textSize="10sp" android:letterSpacing="0.1" android:paddingVertical="8dp" />
+
             <Space android:layout_width="1dp" android:layout_height="0dp" android:layout_weight="1" />
-            <LinearLayout android:id="@+id/settings_back_button" android:layout_width="match_parent" android:layout_height="48dp" android:gravity="center_vertical" android:paddingHorizontal="14dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+
+            <LinearLayout
+                android:id="@+id/settings_back_button"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="14dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
                 <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_arrow_back" android:tint="#00E5FF" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:text="Back to launcher" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="13sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:text="EXIT SETTINGS" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="12sp" />
             </LinearLayout>
         </LinearLayout>
-        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:background="@drawable/bg_glass_card_premium" android:padding="18dp">
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:padding="22dp"
+            android:background="@drawable/bg_studio_panel">
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
-                    <TextView android:id="@+id/settings_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Settings" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="21sp" />
-                    <TextView android:id="@+id/settings_subtitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:textColor="#91A0B5" android:textSize="12sp" />
+                    <TextView android:id="@+id/settings_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Settings" android:textColor="#FFFFFF" android:textSize="23sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/settings_subtitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:textColor="#9AABC2" android:textSize="12sp" />
                 </LinearLayout>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CS CONTROL CENTER" android:textColor="#00E5FF" android:textStyle="bold" android:textSize="10sp" android:letterSpacing="0.1" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="LIVE CONFIG" android:textColor="#00E5FF" android:textStyle="bold" android:textSize="10sp" android:letterSpacing="0.1" />
             </LinearLayout>
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="14dp" android:background="#29354B" />
-            <androidx.recyclerview.widget.RecyclerView android:id="@+id/settings_recycler_view" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:clipToPadding="false" android:paddingBottom="78dp" android:overScrollMode="never" />
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="16dp" android:background="#334764" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/settings_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:paddingBottom="86dp"
+                android:overScrollMode="never" />
         </LinearLayout>
     </LinearLayout>
-    <LinearLayout android:id="@+id/unsaved_changes_bar" android:layout_width="wrap_content" android:layout_height="58dp" android:layout_gravity="bottom|end" android:layout_margin="28dp" android:gravity="center_vertical" android:paddingStart="18dp" android:paddingEnd="8dp" android:visibility="gone" android:background="@drawable/bg_save_bar" android:elevation="12dp">
-        <TextView android:id="@+id/save_status_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="● Unsaved changes" android:textColor="#FFB74D" android:textStyle="bold" android:textSize="13sp" />
-        <Button android:id="@+id/btn_save_settings" android:layout_width="wrap_content" android:layout_height="42dp" android:layout_marginStart="16dp" android:text="SAVE" android:textColor="#07131A" android:textStyle="bold" android:background="@drawable/bg_save_button" />
+
+    <LinearLayout
+        android:id="@+id/unsaved_changes_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="62dp"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="26dp"
+        android:gravity="center_vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="10dp"
+        android:visibility="gone"
+        android:background="@drawable/bg_save_bar"
+        android:elevation="14dp">
+        <TextView android:id="@+id/save_status_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="● CHANGES READY" android:textColor="#FFB74D" android:textStyle="bold" android:textSize="12sp" />
+        <Button android:id="@+id/btn_save_settings" android:layout_width="wrap_content" android:layout_height="44dp" android:layout_marginStart="18dp" android:text="APPLY" android:textColor="#07131A" android:textStyle="bold" android:background="@drawable/bg_save_button" />
     </LinearLayout>
 </FrameLayout>
