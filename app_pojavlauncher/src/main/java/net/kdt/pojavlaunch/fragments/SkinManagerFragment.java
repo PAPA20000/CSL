@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.net.Uri;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
@@ -15,11 +14,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -113,8 +113,12 @@ public class SkinManagerFragment extends Fragment {
         // Setup OpenGL Surface
         mSkinPreviewSurface.setEGLContextClientVersion(2);
         mSkinRenderer = new SkinRenderer(requireContext());
+        mSkinRenderer.mZoomFactor = DEFAULT_PREVIEW_ZOOM;
+        mSkinRenderer.mAngleX = DEFAULT_PREVIEW_YAW;
+        mSkinRenderer.mAngleY = DEFAULT_PREVIEW_PITCH;
         mSkinPreviewSurface.setRenderer(mSkinRenderer);
         mSkinPreviewSurface.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+        setupPreviewGestures();
 
         // Load skin/cape and model type locally associated with the current profile
         File skinsDir = new File(Tools.DIR_DATA + "/skins");
@@ -188,31 +192,6 @@ public class SkinManagerFragment extends Fragment {
             updatePreview();
         });
 
-        // Touch listener for rotation control
-        mSkinPreviewSurface.setOnTouchListener(new View.OnTouchListener() {
-            private float previousX;
-            private float previousY;
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                float x = event.getX();
-                float y = event.getY();
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_MOVE:
-                        float dx = x - previousX;
-                        float dy = y - previousY;
-                        if (mSkinRenderer != null) {
-                            mSkinRenderer.mAngleX += dx * 0.5f;
-                            mSkinRenderer.mAngleY += dy * 0.5f;
-                        }
-                        mSkinPreviewSurface.requestRender();
-                        break;
-                }
-                previousX = x;
-                previousY = y;
-                return true;
-            }
-        });
-
         // Save Changes Button
         view.findViewById(R.id.btn_save_skin_changes).setOnClickListener(v -> {
             MinecraftAccount acc = net.kdt.pojavlaunch.PojavProfile.getCurrentProfileContent(requireContext(), null);
@@ -280,54 +259,8 @@ public class SkinManagerFragment extends Fragment {
                 Toast.makeText(requireContext(), "Failed to save textures: " + e.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
-        // Camera Control Listeners
-        view.findViewById(R.id.btn_cam_reset).setOnClickListener(v -> {
-            if (mSkinRenderer != null) {
-                mSkinRenderer.mAngleX = 0f;
-                mSkinRenderer.mAngleY = 0f;
-                mSkinRenderer.mZoomFactor = 1.0f;
-                mSkinRenderer.mAutoRotate = false;
-                View autoBtn = view.findViewById(R.id.btn_cam_auto_rot);
-                if (autoBtn instanceof Button) {
-                    ((Button) autoBtn).setTextColor(Color.WHITE);
-                }
-                mAutoRotateHandler.removeCallbacks(mAutoRotateRunnable);
-                mSkinPreviewSurface.requestRender();
-            }
-        });
-        view.findViewById(R.id.btn_cam_rot_reset).setOnClickListener(v -> {
-            if (mSkinRenderer != null) {
-                mSkinRenderer.mAngleX = 0f;
-                mSkinRenderer.mAngleY = 0f;
-                mSkinPreviewSurface.requestRender();
-            }
-        });
-        view.findViewById(R.id.btn_cam_auto_rot).setOnClickListener(v -> {
-            if (mSkinRenderer != null) {
-                mSkinRenderer.mAutoRotate = !mSkinRenderer.mAutoRotate;
-                Button autoBtn = (Button) v;
-                autoBtn.setTextColor(mSkinRenderer.mAutoRotate ? 0xFF39FF14 : Color.WHITE);
-                if (mSkinRenderer.mAutoRotate) {
-                    mAutoRotateHandler.post(mAutoRotateRunnable);
-                } else {
-                    mAutoRotateHandler.removeCallbacks(mAutoRotateRunnable);
-                }
-                mSkinPreviewSurface.requestRender();
-            }
-        });
-        view.findViewById(R.id.btn_cam_zoom_in).setOnClickListener(v -> {
-            if (mSkinRenderer != null) {
-                mSkinRenderer.mZoomFactor = Math.min(2.5f, mSkinRenderer.mZoomFactor + 0.1f);
-                mSkinPreviewSurface.requestRender();
-            }
-        });
-        view.findViewById(R.id.btn_cam_zoom_out).setOnClickListener(v -> {
-            if (mSkinRenderer != null) {
-                mSkinRenderer.mZoomFactor = Math.max(0.4f, mSkinRenderer.mZoomFactor - 0.1f);
-                mSkinPreviewSurface.requestRender();
-            }
-        });
 
+        resetPreviewCamera(false);
         updatePreview();
         animateEntry(view);
         applyInteractiveAnimations(view);
@@ -366,16 +299,15 @@ public class SkinManagerFragment extends Fragment {
                 R.id.btn_reset_default,
                 R.id.btn_change_cape,
                 R.id.btn_remove_cape,
-                R.id.btn_save_skin_changes,
-                R.id.btn_cam_reset,
-                R.id.btn_cam_rot_reset,
-                R.id.btn_cam_auto_rot,
-                R.id.btn_cam_zoom_in,
-                R.id.btn_cam_zoom_out
+                R.id.btn_save_skin_changes
         };
         for (int id : animatedButtons) {
             View target = root.findViewById(id);
             applyPressAnimation(target);
+        }
+
+        if (mSwitchModelType != null) {
+            mSwitchModelType.setOnation(target);
         }
 
         if (mSwitchModelType != null) {
@@ -408,6 +340,82 @@ public class SkinManagerFragment extends Fragment {
             }
             return false;
         });
+    }
+
+    private void setupPreviewGestures() {
+        mScaleGestureDetector = new ScaleGestureDetector(requireContext(),
+                new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+                    @Override
+                    public boolean onScale(ScaleGestureDetector detector) {
+                        if (mSkinRenderer == null) return false;
+                        float nextZoom = mSkinRenderer.mZoomFactor * detector.getScaleFactor();
+                        mSkinRenderer.mZoomFactor = Math.max(0.78f, Math.min(1.95f, nextZoom));
+                        mSkinPreviewSurface.requestRender();
+                        return true;
+                    }
+                });
+
+        mGestureDetector = new GestureDetector(requireContext(),
+                new GestureDetector.SimpleOnGestureListener() {
+                    @Override
+                    public boolean onDoubleTap(MotionEvent e) {
+                        resetPreviewCamera(true);
+                        return true;
+                    }
+                });
+
+        mSkinPreviewSurface.setOnTouchListener(new View.OnTouchListener() {
+            private float previousX;
+            private float previousY;
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (mScaleGestureDetector != null) {
+                    mScaleGestureDetector.onTouchEvent(event);
+                }
+                if (mGestureDetector != null) {
+                    mGestureDetector.onTouchEvent(event);
+                }
+                if (mSkinRenderer == null) return true;
+
+                if (event.getPointerCount() == 1 && (mScaleGestureDetector == null || !mScaleGestureDetector.isInProgress())) {
+                    float x = event.getX();
+                    float y = event.getY();
+                    switch (event.getActionMasked()) {
+                        case MotionEvent.ACTION_DOWN:
+                            previousX = x;
+                            previousY = y;
+                            break;
+                        case MotionEvent.ACTION_MOVE:
+                            float dx = x - previousX;
+                            float dy = y - previousY;
+                            mSkinRenderer.mAngleX += dx * 0.45f;
+                            mSkinRenderer.mAngleY = Math.max(-35f, Math.min(35f, mSkinRenderer.mAngleY + dy * 0.35f));
+                            mSkinPreviewSurface.requestRender();
+                            previousX = x;
+                            previousY = y;
+                            break;
+                    }
+                }
+                return true;
+            }
+        });
+    }
+
+    private void resetPreviewCamera(boolean animateSurface) {
+        if (mSkinRenderer == null || mSkinPreviewSurface == null) return;
+        mSkinRenderer.mAutoRotate = false;
+        mSkinRenderer.mAngleX = DEFAULT_PREVIEW_YAW;
+        mSkinRenderer.mAngleY = DEFAULT_PREVIEW_PITCH;
+        mSkinRenderer.mZoomFactor = DEFAULT_PREVIEW_ZOOM;
+        mAutoRotateHandler.removeCallbacks(mAutoRotateRunnable);
+        mSkinPreviewSurface.requestRender();
+        if (animateSurface) {
+            mSkinPreviewSurface.animate().cancel();
+            mSkinPreviewSurface.setScaleX(0.985f);
+            mSkinPreviewSurface.setScaleY(0.985f);
+            mSkinPreviewSurface.animate().scaleX(1f).scaleY(1f).setDuration(180).start();
+        }
     }
 
     private void updateAccountInfo() {
@@ -727,7 +735,7 @@ public class SkinManagerFragment extends Fragment {
         public void onSurfaceChanged(javax.microedition.khronos.opengles.GL10 gl, int width, int height) {
             GLES20.glViewport(0, 0, width, height);
             float ratio = (float) width / height;
-            Matrix.orthoM(mProjectionMatrix, 0, -ratio * 18f, ratio * 18f, -19f, 19f, 0.1f, 100.0f);
+            Matrix.orthoM(mProjectionMatrix, 0, -ratio * 15.0f, ratio * 15.0f, -16.0f, 16.0f, 0.1f, 100.0f);
         }
 
         @Override
@@ -773,7 +781,7 @@ public class SkinManagerFragment extends Fragment {
                 mAngleX += 1.0f;
             }
 
-            Matrix.setLookAtM(mViewMatrix, 0, 0f, 0f, 40f, 0f, 0f, 0f, 0f, 1.0f, 0f);
+            Matrix.setLookAtM(mViewMatrix, 0, 0f, 0f, 34f, 0f, 0f, 0f, 0f, 1.0f, 0f);
             Matrix.setIdentityM(mModelMatrix, 0);
             Matrix.rotateM(mModelMatrix, 0, mAngleY, 1f, 0f, 0f);
             Matrix.rotateM(mModelMatrix, 0, mAngleX, 0f, 1f, 0f);
