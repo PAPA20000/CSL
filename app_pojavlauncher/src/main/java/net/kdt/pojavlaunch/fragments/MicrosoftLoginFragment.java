@@ -31,11 +31,15 @@ public class MicrosoftLoginFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        mWebview = (WebView) inflater.inflate(R.layout.fragment_microsoft_login, container, false);
+        View root = inflater.inflate(R.layout.fragment_microsoft_login, container, false);
+        mWebview = root.findViewById(R.id.microsoft_login_webview);
+        root.setAlpha(0f);
+        root.setTranslationY(22f);
+        root.animate().alpha(1f).translationY(0f).setDuration(280).start();
         setWebViewSettings();
         if(savedInstanceState == null) startNewSession();
         else restoreWebViewState(savedInstanceState);
-        return mWebview;
+        return root;
     }
 
     // WebView.restoreState() does not restore the WebSettings or the client, so set them there

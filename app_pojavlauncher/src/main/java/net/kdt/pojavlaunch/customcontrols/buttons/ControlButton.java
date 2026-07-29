@@ -19,6 +19,7 @@ import net.kdt.pojavlaunch.EfficientAndroidLWJGLKeycode;
 import net.kdt.pojavlaunch.LwjglGlfwKeycode;
 import net.kdt.pojavlaunch.MainActivity;
 import net.kdt.pojavlaunch.R;
+import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.customcontrols.ControlData;
 import net.kdt.pojavlaunch.customcontrols.ControlLayout;
 import net.kdt.pojavlaunch.customcontrols.handleview.EditControlSideDialog;
@@ -244,19 +245,32 @@ public class ControlButton extends TextView implements ControlInterface {
     }
 
     /**
-     * Opens the Minecraft chat box and types + sends the given command/message.
-     * Used by the {@link ControlData#SPECIALBTN_CHATCOMMAND} special button.
+     * Opens chat/command input, waits a frame for the UI to actually appear,
+     * types the payload, then submits it. This avoids the old behaviour where
+     * commands only worked when chat was already open or chat stayed stuck.
      */
     private void sendChatCommand(String command) {
-        if (command == null || command.isEmpty()) return;
-        // Open the chat input (press and release the T key)
-        CallbackBridge.sendKeyPress(LwjglGlfwKeycode.GLFW_KEY_T);
-        // Type each character of the command/message into the chat box
-        for (int i = 0; i < command.length(); i++) {
-            CallbackBridge.sendChar(command.charAt(i), 0);
-        }
-        // Submit the chat message (press and release the Enter key)
-        CallbackBridge.sendKeyPress(LwjglGlfwKeycode.GLFW_KEY_ENTER);
+        if (command == null) return;
+        final String raw = command.trim();
+        if (raw.isEmpty()) return;
+
+        final boolean useCommandBar = raw.startsWith("/");
+        final String payload = useCommandBar ? raw.substring(1) : raw;
+        final int openerKey = useCommandBar
+                ? LwjglGlfwKeycode.GLFW_KEY_SLASH
+                : LwjglGlfwKeycode.GLFW_KEY_T;
+
+        CallbackBridge.sendKeyPress(openerKey);
+
+        Tools.MAIN_HANDLER.postDelayed(() -> {
+            for (int i = 0; i < payload.length(); i++) {
+                CallbackBridge.sendChar(payload.charAt(i), 0);
+            }
+            Tools.MAIN_HANDLER.postDelayed(
+                    () -> CallbackBridge.sendKeyPress(LwjglGlfwKeycode.GLFW_KEY_ENTER),
+                    28
+            );
+        }, 42);
     }
 
     @Override

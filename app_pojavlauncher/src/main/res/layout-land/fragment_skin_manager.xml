@@ -111,130 +111,86 @@
         app:layout_constraintTop_toBottomOf="@id/skin_top_bar"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <LinearLayout
+        <FrameLayout
+            android:id="@+id/skin_preview_card"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_marginEnd="10dp"
-            android:layout_weight="0.92"
-            android:orientation="vertical">
+            android:layout_weight="1.1"
+            android:background="@drawable/bg_skin_preview_panel"
+            android:elevation="5dp"
+            android:padding="10dp">
 
-            <FrameLayout
-                android:id="@+id/skin_preview_card"
+            <android.opengl.GLSurfaceView
+                android:id="@+id/skin_preview_surface"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:background="@drawable/bg_skin_preview_panel"
-                android:elevation="5dp"
-                android:padding="10dp">
+                android:layout_height="match_parent" />
 
-                <android.opengl.GLSurfaceView
-                    android:id="@+id/skin_preview_surface"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="top|start"
-                    android:layout_margin="12dp"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/tv_skin_status_chip"
-                        android:layout_width="wrap_content"
-                        android:layout_height="28dp"
-                        android:background="@drawable/bg_skin_status_chip_inactive"
-                        android:gravity="center"
-                        android:paddingStart="10dp"
-                        android:paddingEnd="10dp"
-                        android:text="DEFAULT SKIN"
-                        android:textColor="#BFD1E6"
-                        android:textSize="10sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tv_cape_status_chip"
-                        android:layout_width="wrap_content"
-                        android:layout_height="28dp"
-                        android:layout_marginStart="8dp"
-                        android:background="@drawable/bg_skin_status_chip_inactive"
-                        android:gravity="center"
-                        android:paddingStart="10dp"
-                        android:paddingEnd="10dp"
-                        android:text="NO CAPE"
-                        android:textColor="#BFD1E6"
-                        android:textSize="10sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|start"
+                android:layout_margin="12dp"
+                android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/tv_model_status_chip"
+                    android:id="@+id/tv_skin_status_chip"
                     android:layout_width="wrap_content"
                     android:layout_height="28dp"
-                    android:layout_gravity="top|end"
-                    android:layout_margin="12dp"
-                    android:background="@drawable/bg_skin_status_chip_active"
+                    android:background="@drawable/bg_skin_status_chip_inactive"
                     android:gravity="center"
                     android:paddingStart="10dp"
                     android:paddingEnd="10dp"
-                    android:text="MODEL: STEVE"
-                    android:textColor="#EFFFFF"
+                    android:text="DEFAULT SKIN"
+                    android:textColor="#BFD1E6"
                     android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
-                    android:id="@+id/tv_preview_hint"
+                    android:id="@+id/tv_cape_status_chip"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom|start"
-                    android:layout_margin="14dp"
-                    android:text="Drag to rotate • Smart server only with custom textures"
-                    android:textColor="#A7BCD4"
-                    android:textSize="11sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="30dp"
-                    android:layout_gravity="bottom|center_horizontal"
-                    android:layout_marginBottom="12dp"
-                    android:background="@drawable/bg_skin_camera_bar"
+                    android:layout_height="28dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_skin_status_chip_inactive"
                     android:gravity="center"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="14dp"
-                    android:text="DRAG TO ROTATE  •  PINCH TO ZOOM  •  DOUBLE TAP TO RESET"
-                    android:textColor="#DFF7FF"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:text="NO CAPE"
+                    android:textColor="#BFD1E6"
                     android:textSize="10sp"
                     android:textStyle="bold" />
-            </FrameLayout>
-
-            <LinearLayout
-                android:id="@+id/skin_status_card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/bg_skin_section_card"
-                android:elevation="4dp"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="SMART LOCAL SERVER"
-                    android:textColor="#66D9FF"
-                    android:textSize="11sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:text="Local server stays off until a custom skin or cape is really active. Default Minecraft look remains untouched otherwise."
-                    android:textColor="#8FA3BC"
-                    android:textSize="12sp" />
             </LinearLayout>
-        </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_model_status_chip"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:layout_gravity="top|end"
+                android:layout_margin="12dp"
+                android:background="@drawable/bg_skin_status_chip_active"
+                android:gravity="center"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:text="MODEL: STEVE"
+                android:textColor="#EFFFFF"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_preview_hint"
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"
+                android:layout_gravity="bottom|center_horizontal"
+                android:layout_marginBottom="14dp"
+                android:background="@drawable/bg_skin_camera_bar"
+                android:gravity="center"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="DRAG TO ROTATE  •  PINCH TO ZOOM  •  DOUBLE TAP TO RESET"
+                android:textColor="#DFF7FF"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+        </FrameLayout>
 
         <androidx.core.widget.NestedScrollView
             android:layout_width="0dp"

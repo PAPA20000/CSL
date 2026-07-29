@@ -27,6 +27,7 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
     private String mContentType;
     private RecyclerView mRecyclerView;
     private ProgressBar mProgressBar;
+    private View mLoadingCard;
     private TextView mStatusText;
     private ModItemAdapter mAdapter;
     private ModpackApi mApi;
@@ -63,6 +64,7 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
 
         mRecyclerView = view.findViewById(R.id.download_list);
         mProgressBar = view.findViewById(R.id.download_list_progress);
+        mLoadingCard = view.findViewById(R.id.download_loading_card);
         mStatusText = view.findViewById(R.id.download_list_status);
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -89,6 +91,7 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
 
     private void loadContent() {
         SearchFilters filters = buildFilters("");
+        if (mLoadingCard != null) mLoadingCard.setVisibility(View.VISIBLE);
         mProgressBar.setVisibility(View.VISIBLE);
         mAdapter.performSearchQuery(filters);
     }
@@ -101,6 +104,7 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
         SearchFilters filters = buildFilters(query != null ? query : "");
         filters.mcVersion = mcVersion != null && !mcVersion.isEmpty() ? mcVersion : null;
         filters.modLoader = modLoader != null && !modLoader.isEmpty() ? modLoader : null;
+        if (mLoadingCard != null) mLoadingCard.setVisibility(View.VISIBLE);
         mProgressBar.setVisibility(View.VISIBLE);
         mAdapter.performSearchQuery(filters);
     }
@@ -126,6 +130,7 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
     @Override
     public void onSearchFinished() {
         mProgressBar.setVisibility(View.GONE);
+        if (mLoadingCard != null) mLoadingCard.setVisibility(View.GONE);
         mStatusText.setVisibility(View.GONE);
     }
 

@@ -64,6 +64,11 @@ public class LocalLoginFragment extends Fragment {
 
             Tools.swapFragment(requireActivity(), MainMenuFragment.class, MainMenuFragment.TAG, null);
         });
+
+        view.setAlpha(0f);
+        view.setScaleX(0.985f);
+        view.setScaleY(0.985f);
+        view.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(300).start();
     }
 
 

@@ -207,15 +207,25 @@ public class ModsSearchFragment extends Fragment {
             TextView tab = new TextView(requireContext());
             tab.setText(TAB_TITLES[i]);
             tab.setTextSize(14);
-            tab.setPadding(24, 8, 24, 8);
+            tab.setPadding(28, 12, 28, 12);
             tab.setGravity(android.view.Gravity.CENTER);
-            tab.setTextColor(i == 0 ? Color.parseColor("#39FF14") : Color.parseColor("#9CA3AF"));
+            tab.setBackgroundResource(i == 0 ? R.drawable.bg_resource_tab_active : R.drawable.bg_resource_tab_idle);
+            tab.setTextColor(i == 0 ? Color.parseColor("#DFF7E6") : Color.parseColor("#91A29A"));
             tab.setTypeface(null, i == 0 ? Typeface.BOLD : Typeface.NORMAL);
             tab.setTag(i);
-            tab.setOnClickListener(v -> mViewPager.setCurrentItem((int) v.getTag(), true));
-            mTabBar.addView(tab, new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT));
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
+            lp.rightMargin = 12;
+            tab.setLayoutParams(lp);
+            tab.setOnClickListener(v -> {
+                v.animate().scaleX(0.97f).scaleY(0.97f).setDuration(70)
+                        .withEndAction(() -> {
+                            v.animate().scaleX(1f).scaleY(1f).setDuration(90).start();
+                            mViewPager.setCurrentItem((int) v.getTag(), true);
+                        }).start();
+            });
+            mTabBar.addView(tab);
         }
         mTabIndicator.post(() -> {
             if (mTabBar.getChildCount() > 0) {
@@ -234,26 +244,14 @@ public class ModsSearchFragment extends Fragment {
     private void updateTabSelection(int position) {
         for (int i = 0; i < mTabBar.getChildCount(); i++) {
             TextView tab = (TextView) mTabBar.getChildAt(i);
-            if (i == position) {
-                tab.setTextColor(Color.parseColor("#39FF14"));
-                tab.setTypeface(null, Typeface.BOLD);
-            } else {
-                tab.setTextColor(Color.parseColor("#9CA3AF"));
-                tab.setTypeface(null, Typeface.NORMAL);
-            }
+            boolean active = i == position;
+            tab.setBackgroundResource(active ? R.drawable.bg_resource_tab_active : R.drawable.bg_resource_tab_idle);
+            tab.setTextColor(Color.parseColor(active ? "#E6FFE9" : "#91A29A"));
+            tab.setTypeface(null, active ? Typeface.BOLD : Typeface.NORMAL);
+            tab.animate().scaleX(active ? 1.03f : 1f).scaleY(active ? 1.03f : 1f).setDuration(150).start();
         }
         View selectedTab = mTabBar.getChildAt(position);
         if (selectedTab != null) {
-            selectedTab.post(() -> {
-                int targetX = selectedTab.getLeft();
-                int targetWidth = selectedTab.getWidth();
-                if (targetWidth > 0) {
-                    mTabIndicator.setTranslationX(targetX);
-                    ViewGroup.LayoutParams lp = mTabIndicator.getLayoutParams();
-                    lp.width = targetWidth;
-                    mTabIndicator.requestLayout();
-                }
-            });
             mTabScroll.smoothScrollTo(selectedTab.getLeft() - 50, 0);
         }
     }

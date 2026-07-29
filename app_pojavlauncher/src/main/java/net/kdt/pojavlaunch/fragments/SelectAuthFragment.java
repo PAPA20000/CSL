@@ -32,6 +32,10 @@ public class SelectAuthFragment extends Fragment {
 
         mLocalButton.setOnClickListener(v -> hasNoOnlineProfileDialog(requireActivity(),
                 () -> navigateTo(LocalLoginFragment.class, LocalLoginFragment.TAG, null)));
+
+        view.setAlpha(0f);
+        view.setTranslationY(26f);
+        view.animate().alpha(1f).translationY(0f).setDuration(280).start();
     }
 
     /** Navigate within right pane if inside MainMenuFragment, otherwise full-screen swap. */
