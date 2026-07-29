@@ -132,18 +132,13 @@ public class CursorCustomizationFragment extends Fragment {
                     mSelectedCursorStyleRes = R.drawable.ic_gamepad_pointer;
                     mUseCustomBitmap = false;
                     
-                    cardClassic.setBackgroundResource(R.drawable.background_card);
-                    cardGamepad.setBackgroundResource(R.drawable.background_card_neon);
-                    cardCustom.setBackgroundResource(R.drawable.background_card);
+                    applyStyleSelection(cardClassic, cardGamepad, cardCustom, 1);
                 } else {
                     try {
                         mCurrentCursorBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
                         if (mCurrentCursorBitmap != null) {
                             mUseCustomBitmap = true;
-                            
-                            cardClassic.setBackgroundResource(R.drawable.background_card);
-                            cardGamepad.setBackgroundResource(R.drawable.background_card);
-                            cardCustom.setBackgroundResource(R.drawable.background_card_neon);
+                            applyStyleSelection(cardClassic, cardGamepad, cardCustom, 2);
                             
                             hotspotXSeek.setMax(mCurrentCursorBitmap.getWidth());
                             hotspotYSeek.setMax(mCurrentCursorBitmap.getHeight());
@@ -156,10 +151,7 @@ public class CursorCustomizationFragment extends Fragment {
         } else {
             mSelectedCursorStyleRes = R.drawable.ic_mouse_pointer;
             mUseCustomBitmap = false;
-            
-            cardClassic.setBackgroundResource(R.drawable.background_card_neon);
-            cardGamepad.setBackgroundResource(R.drawable.background_card);
-            cardCustom.setBackgroundResource(R.drawable.background_card);
+            applyStyleSelection(cardClassic, cardGamepad, cardCustom, 0);
         }
 
         // Initialize glow color circles selection state
@@ -180,18 +172,14 @@ public class CursorCustomizationFragment extends Fragment {
         cardClassic.setOnClickListener(v -> {
             mUseCustomBitmap = false;
             mSelectedCursorStyleRes = R.drawable.ic_mouse_pointer;
-            cardClassic.setBackgroundResource(R.drawable.background_card_neon);
-            cardGamepad.setBackgroundResource(R.drawable.background_card);
-            cardCustom.setBackgroundResource(R.drawable.background_card);
+            applyStyleSelection(cardClassic, cardGamepad, cardCustom, 0);
             updateLivePreview();
         });
 
         cardGamepad.setOnClickListener(v -> {
             mUseCustomBitmap = false;
             mSelectedCursorStyleRes = R.drawable.ic_gamepad_pointer;
-            cardClassic.setBackgroundResource(R.drawable.background_card);
-            cardGamepad.setBackgroundResource(R.drawable.background_card_neon);
-            cardCustom.setBackgroundResource(R.drawable.background_card);
+            applyStyleSelection(cardClassic, cardGamepad, cardCustom, 1);
             updateLivePreview();
         });
 
@@ -200,9 +188,7 @@ public class CursorCustomizationFragment extends Fragment {
                 openFilePicker();
             } else {
                 mUseCustomBitmap = true;
-                cardClassic.setBackgroundResource(R.drawable.background_card);
-                cardGamepad.setBackgroundResource(R.drawable.background_card);
-                cardCustom.setBackgroundResource(R.drawable.background_card_neon);
+                applyStyleSelection(cardClassic, cardGamepad, cardCustom, 2);
                 updateLivePreview();
             }
         });
@@ -438,9 +424,7 @@ public class CursorCustomizationFragment extends Fragment {
         View cardGamepad = root.findViewById(R.id.style_gamepad);
         View cardCustom = root.findViewById(R.id.style_custom);
 
-        if (cardClassic != null) cardClassic.setBackgroundResource(R.drawable.background_card_neon);
-        if (cardGamepad != null) cardGamepad.setBackgroundResource(R.drawable.background_card);
-        if (cardCustom != null) cardCustom.setBackgroundResource(R.drawable.background_card);
+        applyStyleSelection(cardClassic, cardGamepad, cardCustom, 0);
 
         ImageView imgGreen = root.findViewById(R.id.color_green);
         selectGlowColor(mGlowColor, imgGreen);
@@ -576,9 +560,7 @@ public class CursorCustomizationFragment extends Fragment {
                     View cardGamepad = root.findViewById(R.id.style_gamepad);
                     View cardCustom = root.findViewById(R.id.style_custom);
 
-                    if (cardClassic != null) cardClassic.setBackgroundResource(R.drawable.background_card);
-                    if (cardGamepad != null) cardGamepad.setBackgroundResource(R.drawable.background_card);
-                    if (cardCustom != null) cardCustom.setBackgroundResource(R.drawable.background_card_neon);
+                    applyStyleSelection(cardClassic, cardGamepad, cardCustom, 2);
 
                     // Update hotspot seekbars max limits based on loaded image dimensions
                     SeekBar hotspotXSeek = root.findViewById(R.id.seek_hotspot_x);
@@ -716,5 +698,27 @@ public class CursorCustomizationFragment extends Fragment {
             }
             return false;
         });
+    }
+
+    /**
+     * Apply the Control Center selected/unselected chrome to style cards.
+     * @param selectedIndex 0 = classic, 1 = gamepad, 2 = custom
+     */
+    private void applyStyleSelection(View classic, View gamepad, View custom, int selectedIndex) {
+        if (classic != null) {
+            classic.setBackgroundResource(selectedIndex == 0
+                    ? R.drawable.bg_cursor_style_card_selected
+                    : R.drawable.bg_cursor_style_card);
+        }
+        if (gamepad != null) {
+            gamepad.setBackgroundResource(selectedIndex == 1
+                    ? R.drawable.bg_cursor_style_card_selected
+                    : R.drawable.bg_cursor_style_card);
+        }
+        if (custom != null) {
+            custom.setBackgroundResource(selectedIndex == 2
+                    ? R.drawable.bg_cursor_style_card_selected
+                    : R.drawable.bg_cursor_style_card);
+        }
     }
 }
