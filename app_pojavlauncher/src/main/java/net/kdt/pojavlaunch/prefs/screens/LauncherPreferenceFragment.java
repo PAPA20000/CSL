@@ -69,6 +69,12 @@ public class LauncherPreferenceFragment extends Fragment {
     private SharedPreferences mDraftPrefs;
     private boolean mIsDirty = false;
     private String mCategoryName = null;
+    private TextView mHeaderTitle;
+    private TextView mHeaderSubtitle;
+    private TextView mHeaderBadge;
+    private ImageView mHeaderIcon;
+    private LinearLayout mCategoryRail;
+    private View mCategoryRailScroll;
 
     // JRE result launcher
     private final ActivityResultLauncher<Object> mVmInstallLauncher =
@@ -112,18 +118,16 @@ public class LauncherPreferenceFragment extends Fragment {
         mRecyclerView.setHasFixedSize(false);
         mRecyclerView.setItemViewCacheSize(8);
 
-        // Dynamic Header titles & Icon
-        TextView tvTitle = view.findViewById(R.id.settings_title);
-        ImageView ivHeaderIcon = view.findViewById(R.id.settings_header_icon);
+        mHeaderTitle = view.findViewById(R.id.settings_title);
+        mHeaderSubtitle = view.findViewById(R.id.settings_subtitle);
+        mHeaderBadge = view.findViewById(R.id.settings_live_badge);
+        mHeaderIcon = view.findViewById(R.id.settings_header_icon);
+        mCategoryRail = view.findViewById(R.id.settings_category_rail);
+        mCategoryRailScroll = view.findViewById(R.id.settings_category_rail_scroll);
 
-        if (tvTitle != null) {
-            tvTitle.setText(mCategoryName != null ? mCategoryName : "Control Center");
-        }
-        if (ivHeaderIcon != null) {
-            ivHeaderIcon.setImageResource(mCategoryName != null ? resolveCategoryIconByName(mCategoryName) : R.drawable.ic_menu_settings);
-        }
+        setupHeaderUi();
+        setupCategoryRail();
 
-        // Header Back Navigation
         View backButton = view.findViewById(R.id.settings_back_button);
         if (backButton != null) {
             backButton.setOnClickListener(v -> {
@@ -134,7 +138,6 @@ public class LauncherPreferenceFragment extends Fragment {
             });
         }
 
-        // Float Save Changes Bar Click Handler
         Button saveBtn = view.findViewById(R.id.btn_save_settings);
         if (saveBtn != null) {
             saveBtn.setOnClickListener(v -> {
@@ -166,6 +169,134 @@ public class LauncherPreferenceFragment extends Fragment {
             case "Miscellaneous": return R.drawable.ic_settings_misc;
             default: return R.drawable.ic_menu_settings;
         }
+    }
+
+
+    private void setupHeaderUi() {
+        if (mHeaderTitle != null) {
+            mHeaderTitle.setText(mCategoryName != null ? mCategoryName : "Settings Command Center");
+        }
+        if (mHeaderSubtitle != null) {
+            mHeaderSubtitle.setText(mCategoryName != null
+                    ? resolveCategorySubtitleByName(mCategoryName)
+                    : "Swipe through categories, tune performance, and shape a premium mobile Minecraft launcher.");
+        }
+        if (mHeaderBadge != null) {
+            mHeaderBadge.setText(mCategoryName == null ? "9 PANELS" : resolveCategoryBadgeByName(mCategoryName));
+        }
+        if (mHeaderIcon != null) {
+            mHeaderIcon.setImageResource(mCategoryName != null ? resolveCategoryIconByName(mCategoryName) : R.drawable.ic_menu_settings);
+            mHeaderIcon.startAnimation(AnimationUtils.loadAnimation(requireContext(), R.anim.fade_scale_in));
+        }
+    }
+
+    private void setupCategoryRail() {
+        if (mCategoryRail == null || mCategoryRailScroll == null) return;
+        mCategoryRail.removeAllViews();
+
+        if (mCategoryName == null) {
+            mCategoryRailScroll.setVisibility(View.GONE);
+            return;
+        }
+
+        LayoutInflater inflater = LayoutInflater.from(requireContext());
+        for (SettingItem item : buildRootCategoryItems()) {
+            if (item.type != SettingItem.TYPE_CATEGORY_LINK || item.categoryLinkTarget == null) continue;
+            View chipView = inflater.inflate(R.layout.item_settings_nav_chip, mCategoryRail, false);
+            TextView chipText = chipView.findViewById(R.id.settings_nav_chip_text);
+            boolean selected = Objects.equals(item.categoryLinkTarget, mCategoryName);
+            chipText.setText(shortenCategoryLabel(item.title));
+            chipText.setBackgroundResource(selected ? R.drawable.bg_settings_chip_active : R.drawable.bg_settings_chip);
+            chipText.setTextColor(Color.parseColor(selected ? "#EFFFFF" : "#DDE9F7"));
+            chipText.setOnClickListener(v -> {
+                if (!selected) openCategoryPage(item.categoryLinkTarget);
+            });
+            mCategoryRail.addView(chipView);
+        }
+        mCategoryRailScroll.setVisibility(View.VISIBLE);
+        mCategoryRailScroll.startAnimation(AnimationUtils.loadAnimation(requireContext(), R.anim.fade_in_slide_up));
+    }
+
+    private void openCategoryPage(@NonNull String categoryName) {
+        Bundle bundle = new Bundle();
+        bundle.putString("category", categoryName);
+        Tools.swapFragment(
+                requireActivity(),
+                LauncherPreferenceFragment.class,
+                "SETTINGS_" + categoryName,
+                bundle,
+                R.anim.slide_in_right,
+                R.anim.slide_out_left,
+                R.anim.slide_in_left,
+                R.anim.slide_out_right
+        );
+    }
+
+    private String shortenCategoryLabel(@NonNull String fullName) {
+        switch (fullName) {
+            case "Launcher Settings": return "Launcher";
+            case "Video & Graphics": return "Graphics";
+            case "Java Runtime": return "Java";
+            case "Miscellaneous": return "Misc";
+            default: return fullName;
+        }
+    }
+
+    private String resolveCategorySubtitleByName(@Nullable String catName) {
+        if (catName == null) return "";
+        switch (catName) {
+            case "Launcher Settings":
+                return "Language, downloads, permissions, and launcher-side behavior in one quick deck.";
+            case "Video & Graphics":
+                return "Renderer, resolution, VSync, and display behavior for smooth Minecraft sessions.";
+            case "Controls":
+                return "Touch, gyro, mouse, controller, and gesture tuning built for landscape play.";
+            case "Java Runtime":
+                return "Memory, runtimes, sandboxing, and advanced JVM launch parameters.";
+            case "Audio":
+                return "Master audio behavior, backend selection, and sound quality controls.";
+            case "Account":
+                return "Profile visibility and account-related launcher status panels.";
+            case "Experimental":
+                return "Visual experiments, background personalization, and power-user toggles.";
+            case "Advanced":
+                return "Cache management, reset tools, and maintenance actions for the launcher.";
+            case "Miscellaneous":
+                return "Verification, capes, and extra compatibility switches that support special cases.";
+            default:
+                return "Premium launcher settings tailored for a mobile Minecraft experience.";
+        }
+    }
+
+    private String resolveCategoryBadgeByName(@Nullable String catName) {
+        if (catName == null) return "HUB";
+        switch (catName) {
+            case "Launcher Settings": return "CORE";
+            case "Video & Graphics": return "GPU";
+            case "Controls": return "INPUT";
+            case "Java Runtime": return "JVM";
+            case "Audio": return "AUDIO";
+            case "Account": return "PROFILE";
+            case "Experimental": return "LAB";
+            case "Advanced": return "TOOLS";
+            case "Miscellaneous": return "EXTRA";
+            default: return "PAGE";
+        }
+    }
+
+    private List<SettingItem> buildRootCategoryItems() {
+        List<SettingItem> rootItems = new ArrayList<>();
+        rootItems.add(new SettingItem("theme_picker", SettingItem.TYPE_THEME_SELECTOR, "Theme & Accent Color", "Pick your favorite launcher color theme", null));
+        rootItems.add(new SettingItem("cat_launcher", SettingItem.TYPE_CATEGORY_LINK, "Launcher Settings", "Configure language, updates, and downloads", "Launcher Settings"));
+        rootItems.add(new SettingItem("cat_video", SettingItem.TYPE_CATEGORY_LINK, "Video & Graphics", "Configure renderers, resolution, and VSync options", "Video & Graphics"));
+        rootItems.add(new SettingItem("cat_controls", SettingItem.TYPE_CATEGORY_LINK, "Controls", "Customize touch overlays, cursors, and gyroscope controls", "Controls"));
+        rootItems.add(new SettingItem("cat_java", SettingItem.TYPE_CATEGORY_LINK, "Java Runtime", "Manage memory allocations, JREs, and Java options", "Java Runtime"));
+        rootItems.add(new SettingItem("cat_audio", SettingItem.TYPE_CATEGORY_LINK, "Audio", "Adjust volume levels and sound output parameters", "Audio"));
+        rootItems.add(new SettingItem("cat_account", SettingItem.TYPE_CATEGORY_LINK, "Account", "Check active profile accounts and skin logs", "Account"));
+        rootItems.add(new SettingItem("cat_experimental", SettingItem.TYPE_CATEGORY_LINK, "Experimental", "Test launcher orientations, wall-papers, and colors", "Experimental"));
+        rootItems.add(new SettingItem("cat_advanced", SettingItem.TYPE_CATEGORY_LINK, "Advanced", "Perform debug clears and database resets", "Advanced"));
+        rootItems.add(new SettingItem("cat_misc", SettingItem.TYPE_CATEGORY_LINK, "Miscellaneous", "Library verifications, system drivers, and in-game capes", "Miscellaneous"));
+        return rootItems;
     }
 
     @Override
@@ -217,19 +348,7 @@ public class LauncherPreferenceFragment extends Fragment {
         List<SettingCategory> categories = new ArrayList<>();
 
         if (mCategoryName == null) {
-            // Root Menu Categories List with Top Theme Color Picker Card
-            List<SettingItem> rootItems = new ArrayList<>();
-            rootItems.add(new SettingItem("theme_picker", SettingItem.TYPE_THEME_SELECTOR, "Theme & Accent Color", "Pick your favorite launcher color theme", null));
-            rootItems.add(new SettingItem("cat_launcher", SettingItem.TYPE_CATEGORY_LINK, "Launcher Settings", "Configure language, updates, and downloads", "Launcher Settings"));
-            rootItems.add(new SettingItem("cat_video", SettingItem.TYPE_CATEGORY_LINK, "Video & Graphics", "Configure renderers, resolution, and VSync options", "Video & Graphics"));
-            rootItems.add(new SettingItem("cat_controls", SettingItem.TYPE_CATEGORY_LINK, "Controls", "Customize touch overlays, cursors, and gyroscope controls", "Controls"));
-            rootItems.add(new SettingItem("cat_java", SettingItem.TYPE_CATEGORY_LINK, "Java Runtime", "Manage memory allocations, JREs, and Java options", "Java Runtime"));
-            rootItems.add(new SettingItem("cat_audio", SettingItem.TYPE_CATEGORY_LINK, "Audio", "Adjust volume levels and sound output parameters", "Audio"));
-            rootItems.add(new SettingItem("cat_account", SettingItem.TYPE_CATEGORY_LINK, "Account", "Check active profile accounts and skin logs", "Account"));
-            rootItems.add(new SettingItem("cat_experimental", SettingItem.TYPE_CATEGORY_LINK, "Experimental", "Test launcher orientations, wall-papers, and colors", "Experimental"));
-            rootItems.add(new SettingItem("cat_advanced", SettingItem.TYPE_CATEGORY_LINK, "Advanced", "Perform debug clears and database resets", "Advanced"));
-            rootItems.add(new SettingItem("cat_misc", SettingItem.TYPE_CATEGORY_LINK, "Miscellaneous", "Library verifications, system drivers, and in-game capes", "Miscellaneous"));
-            categories.add(new SettingCategory("Settings Categories", rootItems));
+            categories.add(new SettingCategory("Settings Categories", buildRootCategoryItems()));
         } else {
             // Subcategory Pages Detail (100% Real Authentic Launcher Options)
             switch (mCategoryName) {
@@ -641,6 +760,11 @@ public class LauncherPreferenceFragment extends Fragment {
             int visibleCount = 0;
             LayoutInflater inflater = LayoutInflater.from(holder.itemView.getContext());
 
+            if (mCategoryName == null && "Settings Categories".equals(cat.title)) {
+                bindDashboardHolder(holder, cat, inflater);
+                return;
+            }
+
             for (SettingItem item : cat.items) {
                 if (!isItemVisible(item, mPrefs)) {
                     continue;
@@ -651,38 +775,7 @@ public class LauncherPreferenceFragment extends Fragment {
                 View itemView;
                 if (item.type == SettingItem.TYPE_THEME_SELECTOR) {
                     itemView = inflater.inflate(R.layout.item_setting_theme_selector, holder.container, false);
-                    LinearLayout swatchesContainer = itemView.findViewById(R.id.theme_swatches_container);
-                    if (swatchesContainer != null) {
-                        swatchesContainer.removeAllViews();
-                        ThemeManager.Preset[] presets = ThemeManager.PRESETS;
-                        String[] colors = new String[]{"#00E5FF", "#3B82F6", "#10B981", "#EF4444", "#A855F7", "#06B6D4"};
-
-                        for (int i = 0; i < presets.length; i++) {
-                            ThemeManager.Preset p = presets[i];
-                            View swatchView = inflater.inflate(R.layout.item_theme_color_swatch, swatchesContainer, false);
-                            View colorCircle = swatchView.findViewById(R.id.swatch_color_circle);
-                            TextView nameTv = swatchView.findViewById(R.id.swatch_name);
-
-                            if (nameTv != null) nameTv.setText(p.name.split(" ")[0]);
-                            if (colorCircle != null) {
-                                int hexColor = Color.parseColor(colors[i % colors.length]);
-                                colorCircle.setBackgroundColor(hexColor);
-                            }
-
-                            final ThemeManager.Preset targetPreset = p;
-                            swatchView.setOnClickListener(v -> {
-                                v.animate().scaleX(0.92f).scaleY(0.92f).setDuration(80)
-                                        .withEndAction(() -> {
-                                            v.animate().scaleX(1f).scaleY(1f).setDuration(100).start();
-                                            ThemeManager.applyPreset(targetPreset);
-                                            Toast.makeText(requireContext(), "Applied " + targetPreset.name, Toast.LENGTH_SHORT).show();
-                                            requireActivity().recreate();
-                                        }).start();
-                            });
-
-                            swatchesContainer.addView(swatchView);
-                        }
-                    }
+                    populateThemeSelector(itemView, inflater);
 
                 } else if (item.type == SettingItem.TYPE_CUSTOM_FASTCLIENT) {
                     itemView = inflater.inflate(R.layout.fragment_settings_fastclient, holder.container, false);
@@ -932,6 +1025,212 @@ public class LauncherPreferenceFragment extends Fragment {
                 params.bottomMargin = (int) (8 * holder.itemView.getResources().getDisplayMetrics().density);
                 holder.itemView.setLayoutParams(params);
             }
+        }
+
+
+        private void bindDashboardHolder(@NonNull CategoryViewHolder holder, @NonNull SettingCategory cat, @NonNull LayoutInflater inflater) {
+            holder.categoryTitle.setText("SETTINGS DECK");
+            holder.categoryCount.setVisibility(View.VISIBLE);
+            holder.categoryCount.setText(String.valueOf(cat.items.size() - 1));
+            holder.container.removeAllViews();
+
+            View themeCard = inflater.inflate(R.layout.item_setting_theme_selector, holder.container, false);
+            populateThemeSelector(themeCard, inflater);
+            holder.container.addView(themeCard);
+
+            holder.container.addView(createDashboardSectionHeader(
+                    holder.itemView.getContext(),
+                    "QUICK OVERVIEW",
+                    "Launcher tuning at a glance",
+                    "A horizontal control hub built for landscape mobile play."
+            ));
+
+            LinearLayout statRow = new LinearLayout(holder.itemView.getContext());
+            statRow.setOrientation(LinearLayout.HORIZONTAL);
+            statRow.setLayoutParams(new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            ));
+            statRow.setPadding(0, 0, 0, dp(8));
+
+            ThemeManager.Preset[] presets = ThemeManager.PRESETS;
+            String activeProfile = PojavProfile.getCurrentProfileContent(requireContext(), null) != null
+                    ? PojavProfile.getCurrentProfileContent(requireContext(), null).username
+                    : "Guest";
+            statRow.addView(createDashboardStat(inflater, statRow, String.valueOf(cat.items.size() - 1), "Settings pages"));
+            statRow.addView(createDashboardStat(inflater, statRow, String.valueOf(presets.length), "Theme presets"));
+            statRow.addView(createDashboardStat(inflater, statRow, activeProfile, "Live profile"));
+            holder.container.addView(statRow);
+
+            holder.container.addView(createDashboardSectionHeader(
+                    holder.itemView.getContext(),
+                    "SWIPE CATEGORIES",
+                    "Open a settings page",
+                    "Jump directly into the part of the launcher you want to tune."
+            ));
+
+            android.widget.HorizontalScrollView categoryScroller = new android.widget.HorizontalScrollView(holder.itemView.getContext());
+            categoryScroller.setHorizontalScrollBarEnabled(false);
+            categoryScroller.setOverScrollMode(View.OVER_SCROLL_NEVER);
+            categoryScroller.setLayoutParams(new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            ));
+
+            LinearLayout categoryRow = new LinearLayout(holder.itemView.getContext());
+            categoryRow.setOrientation(LinearLayout.HORIZONTAL);
+            categoryScroller.addView(categoryRow);
+
+            for (SettingItem item : cat.items) {
+                if (item.type == SettingItem.TYPE_THEME_SELECTOR) continue;
+                View card = inflater.inflate(R.layout.item_setting_category_card, categoryRow, false);
+                ImageView icon = card.findViewById(R.id.category_card_icon);
+                TextView title = card.findViewById(R.id.category_card_title);
+                TextView summary = card.findViewById(R.id.category_card_summary);
+                TextView badge = card.findViewById(R.id.category_card_badge);
+
+                if (icon != null) icon.setImageResource(resolveCategoryIconByName(item.categoryLinkTarget));
+                if (title != null) title.setText(item.title);
+                if (summary != null) summary.setText(item.summary);
+                if (badge != null) badge.setText(resolveCategoryBadgeByName(item.categoryLinkTarget));
+
+                card.setOnClickListener(v -> {
+                    v.animate().scaleX(0.97f).scaleY(0.97f).setDuration(80)
+                            .withEndAction(() -> {
+                                v.animate().scaleX(1f).scaleY(1f).setDuration(100).start();
+                                openCategoryPage(item.categoryLinkTarget);
+                            }).start();
+                });
+                categoryRow.addView(card);
+            }
+            holder.container.addView(categoryScroller);
+
+            holder.container.addView(createDashboardSectionHeader(
+                    holder.itemView.getContext(),
+                    "QUICK ACTIONS",
+                    "One-tap launcher tools",
+                    "Use premium shortcuts for theme, runtime, and cleanup."
+            ));
+
+            android.widget.HorizontalScrollView actionScroller = new android.widget.HorizontalScrollView(holder.itemView.getContext());
+            actionScroller.setHorizontalScrollBarEnabled(false);
+            actionScroller.setOverScrollMode(View.OVER_SCROLL_NEVER);
+            actionScroller.setLayoutParams(new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            ));
+            LinearLayout actionRow = new LinearLayout(holder.itemView.getContext());
+            actionRow.setOrientation(LinearLayout.HORIZONTAL);
+            actionScroller.addView(actionRow);
+            actionRow.addView(createQuickActionChip(inflater, actionRow, "Color Presets", () -> LauncherPreferenceFragment.this.showPresetDialog()));
+            actionRow.addView(createQuickActionChip(inflater, actionRow, "Runtime Manager", () -> LauncherPreferenceFragment.this.openMultiRTDialog()));
+            actionRow.addView(createQuickActionChip(inflater, actionRow, "Clear Cache", () -> {
+                clearCacheLocal(requireContext());
+                Toast.makeText(requireContext(), "Caches cleared successfully", Toast.LENGTH_SHORT).show();
+            }));
+            holder.container.addView(actionScroller);
+
+            holder.itemView.setVisibility(View.VISIBLE);
+            RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) holder.itemView.getLayoutParams();
+            if (params != null) {
+                params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                params.topMargin = (int) (6 * holder.itemView.getResources().getDisplayMetrics().density);
+                params.bottomMargin = (int) (10 * holder.itemView.getResources().getDisplayMetrics().density);
+                holder.itemView.setLayoutParams(params);
+            }
+        }
+
+        private void populateThemeSelector(@NonNull View itemView, @NonNull LayoutInflater inflater) {
+            LinearLayout swatchesContainer = itemView.findViewById(R.id.theme_swatches_container);
+            if (swatchesContainer == null) return;
+            swatchesContainer.removeAllViews();
+            ThemeManager.Preset[] presets = ThemeManager.PRESETS;
+            String[] colors = new String[]{"#00E5FF", "#3B82F6", "#10B981", "#EF4444", "#A855F7", "#06B6D4"};
+
+            for (int i = 0; i < presets.length; i++) {
+                ThemeManager.Preset p = presets[i];
+                View swatchView = inflater.inflate(R.layout.item_theme_color_swatch, swatchesContainer, false);
+                View colorCircle = swatchView.findViewById(R.id.swatch_color_circle);
+                TextView nameTv = swatchView.findViewById(R.id.swatch_name);
+
+                if (nameTv != null) nameTv.setText(p.name.split(" ")[0]);
+                if (colorCircle != null) {
+                    int hexColor = Color.parseColor(colors[i % colors.length]);
+                    colorCircle.setBackgroundColor(hexColor);
+                }
+
+                final ThemeManager.Preset targetPreset = p;
+                swatchView.setOnClickListener(v -> {
+                    v.animate().scaleX(0.92f).scaleY(0.92f).setDuration(80)
+                            .withEndAction(() -> {
+                                v.animate().scaleX(1f).scaleY(1f).setDuration(100).start();
+                                ThemeManager.applyPreset(targetPreset);
+                                Toast.makeText(requireContext(), "Applied " + targetPreset.name, Toast.LENGTH_SHORT).show();
+                                requireActivity().recreate();
+                            }).start();
+                });
+
+                swatchesContainer.addView(swatchView);
+            }
+        }
+
+        private View createDashboardSectionHeader(@NonNull Context context, @NonNull String overline, @NonNull String title, @NonNull String summary) {
+            LinearLayout shell = new LinearLayout(context);
+            shell.setOrientation(LinearLayout.VERTICAL);
+            shell.setPadding(dp(2), dp(8), dp(2), dp(10));
+
+            TextView overlineView = new TextView(context);
+            overlineView.setText(overline);
+            overlineView.setTextColor(Color.parseColor("#66D9FF"));
+            overlineView.setTextSize(10);
+            overlineView.setTypeface(overlineView.getTypeface(), android.graphics.Typeface.BOLD);
+            overlineView.setLetterSpacing(0.12f);
+
+            TextView titleView = new TextView(context);
+            titleView.setText(title);
+            titleView.setTextColor(Color.parseColor("#F4F8FF"));
+            titleView.setTextSize(16);
+            titleView.setTypeface(titleView.getTypeface(), android.graphics.Typeface.BOLD);
+            titleView.setPadding(0, dp(4), 0, 0);
+
+            TextView summaryView = new TextView(context);
+            summaryView.setText(summary);
+            summaryView.setTextColor(Color.parseColor("#8FA3BC"));
+            summaryView.setTextSize(12);
+            summaryView.setPadding(0, dp(4), 0, 0);
+
+            shell.addView(overlineView);
+            shell.addView(titleView);
+            shell.addView(summaryView);
+            return shell;
+        }
+
+        private View createDashboardStat(@NonNull LayoutInflater inflater, @NonNull LinearLayout parent, @NonNull String value, @NonNull String label) {
+            View view = inflater.inflate(R.layout.item_settings_dashboard_stat, parent, false);
+            TextView valueText = view.findViewById(R.id.dashboard_stat_value);
+            TextView labelText = view.findViewById(R.id.dashboard_stat_label);
+            valueText.setText(value);
+            labelText.setText(label);
+            return view;
+        }
+
+        private View createQuickActionChip(@NonNull LayoutInflater inflater, @NonNull LinearLayout parent, @NonNull String text, @NonNull Runnable action) {
+            View view = inflater.inflate(R.layout.item_settings_nav_chip, parent, false);
+            TextView chipText = view.findViewById(R.id.settings_nav_chip_text);
+            chipText.setText(text);
+            chipText.setBackgroundResource(R.drawable.bg_settings_chip);
+            chipText.setOnClickListener(v -> {
+                v.animate().scaleX(0.96f).scaleY(0.96f).setDuration(80)
+                        .withEndAction(() -> {
+                            v.animate().scaleX(1f).scaleY(1f).setDuration(100).start();
+                            action.run();
+                        }).start();
+            });
+            return view;
+        }
+
+        private int dp(int value) {
+            return (int) (value * requireContext().getResources().getDisplayMetrics().density);
         }
 
         @Override
