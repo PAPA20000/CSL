@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="96dp"
+    android:layout_height="64dp"
+    android:layout_marginEnd="10dp"
+    android:background="@drawable/bg_settings_row"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="6dp">
+
+    <View
+        android:id="@+id/swatch_color_circle"
+        android:layout_width="26dp"
+        android:layout_height="26dp"
+        android:background="@drawable/bg_settings_live_badge" />
+
+    <TextView
+        android:id="@+id/swatch_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="#E8F7FF"
+        android:textSize="10sp"
+        android:textStyle="bold" />
+</LinearLayout>

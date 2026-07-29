@@ -2,11 +2,8 @@ package net.kdt.pojavlaunch.prefs.screens;
 
 import static android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;
 import static android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
-import static net.kdt.pojavlaunch.Tools.getTotalDeviceMemory;
 
 import android.app.Activity;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -19,6 +16,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -35,7 +34,6 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import net.kdt.pojavlaunch.Architecture;
 import net.kdt.pojavlaunch.FastClientHelper;
 import net.kdt.pojavlaunch.LauncherActivity;
 import net.kdt.pojavlaunch.PojavProfile;
@@ -92,7 +90,6 @@ public class LauncherPreferenceFragment extends Fragment {
             mCategoryName = args.getString("category", null);
         }
 
-        // Copy main preferences into draft preference storage on root page load
         if (savedInstanceState == null && mCategoryName == null) {
             initializeDraft(requireContext());
         }
@@ -117,14 +114,10 @@ public class LauncherPreferenceFragment extends Fragment {
 
         // Dynamic Header titles & Icon
         TextView tvTitle = view.findViewById(R.id.settings_title);
-        TextView tvSubtitle = view.findViewById(R.id.settings_subtitle);
         ImageView ivHeaderIcon = view.findViewById(R.id.settings_header_icon);
 
         if (tvTitle != null) {
             tvTitle.setText(mCategoryName != null ? mCategoryName : "Control Center");
-        }
-        if (tvSubtitle != null) {
-            tvSubtitle.setText(mCategoryName != null ? getCategorySubtitle(mCategoryName) : "Horizontal launcher control center");
         }
         if (ivHeaderIcon != null) {
             ivHeaderIcon.setImageResource(mCategoryName != null ? resolveCategoryIconByName(mCategoryName) : R.drawable.ic_menu_settings);
@@ -140,9 +133,6 @@ public class LauncherPreferenceFragment extends Fragment {
                 }
             });
         }
-
-        // Populate left navigation rail category items in landscape mode
-        populateLeftRailCategories(view);
 
         // Float Save Changes Bar Click Handler
         Button saveBtn = view.findViewById(R.id.btn_save_settings);
@@ -162,65 +152,6 @@ public class LauncherPreferenceFragment extends Fragment {
         updateSaveBar();
     }
 
-    private void populateLeftRailCategories(View view) {
-        LinearLayout railContainer = view.findViewById(R.id.settings_rail_categories_container);
-        if (railContainer == null) return;
-        railContainer.removeAllViews();
-
-        String[] categoryNames = new String[]{
-                "Launcher Settings", "Video & Graphics", "Controls", "Java Runtime",
-                "Audio", "Account", "Mods & Addons", "Network & Connectivity",
-                "Performance & Thermal", "Display & HUD", "Security & Privacy",
-                "Storage & Backup", "Experimental", "Advanced", "Miscellaneous"
-        };
-
-        String activeCategory = mCategoryName != null ? mCategoryName : "Launcher Settings";
-
-        LayoutInflater inflater = LayoutInflater.from(requireContext());
-        for (String catName : categoryNames) {
-            View item = inflater.inflate(R.layout.item_settings_rail_category, railContainer, false);
-            ImageView icon = item.findViewById(R.id.rail_item_icon);
-            TextView title = item.findViewById(R.id.rail_item_title);
-            View indicator = item.findViewById(R.id.rail_item_indicator);
-
-            title.setText(catName);
-            if (icon != null) {
-                icon.setImageResource(resolveCategoryIconByName(catName));
-            }
-
-            boolean isSelected = catName.equalsIgnoreCase(activeCategory) || (mCategoryName == null && catName.equals("Launcher Settings"));
-            item.setSelected(isSelected);
-
-            if (isSelected) {
-                title.setTextColor(Color.parseColor("#00E5FF"));
-                if (icon != null) icon.setColorFilter(Color.parseColor("#00E5FF"));
-                if (indicator != null) indicator.setVisibility(View.VISIBLE);
-            } else {
-                title.setTextColor(Color.parseColor("#C9D7EA"));
-                if (icon != null) icon.setColorFilter(Color.parseColor("#8FA3BC"));
-                if (indicator != null) indicator.setVisibility(View.GONE);
-            }
-
-            item.setOnClickListener(v -> {
-                if (catName.equals(mCategoryName)) return;
-                Bundle bundle = new Bundle();
-                bundle.putString("category", catName);
-                Tools.swapFragment(
-                        requireActivity(),
-                        LauncherPreferenceFragment.class,
-                        "SETTINGS_" + catName,
-                        bundle,
-                        R.anim.slide_in_right,
-                        R.anim.slide_out_left,
-                        R.anim.slide_in_left,
-                        R.anim.slide_out_right
-                );
-            });
-
-            railContainer.addView(item);
-        }
-    }
-
     private int resolveCategoryIconByName(String catName) {
         if (catName == null) return R.drawable.ic_menu_settings;
         switch (catName) {
@@ -230,12 +161,6 @@ public class LauncherPreferenceFragment extends Fragment {
             case "Java Runtime": return R.drawable.ic_settings_java;
             case "Audio": return R.drawable.ic_settings_audio;
             case "Account": return R.drawable.ic_settings_account;
-            case "Mods & Addons": return R.drawable.ic_settings_mods;
-            case "Network & Connectivity": return R.drawable.ic_settings_network;
-            case "Performance & Thermal": return R.drawable.ic_settings_performance;
-            case "Display & HUD": return R.drawable.ic_settings_display;
-            case "Security & Privacy": return R.drawable.ic_settings_security;
-            case "Storage & Backup": return R.drawable.ic_settings_storage;
             case "Experimental": return R.drawable.ic_settings_experimental;
             case "Advanced": return R.drawable.ic_settings_advanced;
             case "Miscellaneous": return R.drawable.ic_settings_misc;
@@ -288,51 +213,25 @@ public class LauncherPreferenceFragment extends Fragment {
         editor.commit();
     }
 
-    private String getCategorySubtitle(String category) {
-        switch (category) {
-            case "Launcher Settings": return "Configure language, updates, and downloads";
-            case "Video & Graphics": return "Configure renderers, resolution, and VSync options";
-            case "Controls": return "Customize touch overlays, cursors, and gyroscope controls";
-            case "Java Runtime": return "Manage memory allocations, JREs, and Java options";
-            case "Audio": return "Adjust volume levels and sound output parameters";
-            case "Account": return "Check active profile accounts and skin logs";
-            case "Mods & Addons": return "Manage modpack auto-updates, mirrors, and dependencies";
-            case "Network & Connectivity": return "Configure DNS injection, server timeouts, and keepalive";
-            case "Performance & Thermal": return "Tune FPS caps, thread pool cores, and memory cleaner";
-            case "Display & HUD": return "Immersive fullscreen, notch padding, and HUD opacity";
-            case "Security & Privacy": return "Configure telemetry, lock settings, and token security";
-            case "Storage & Backup": return "Auto world backups, log trimming, and cache limits";
-            case "Experimental": return "Test launcher orientations, wall-papers, and colors";
-            case "Advanced": return "Perform debug clears and database resets";
-            case "Miscellaneous": return "Library verifications, system drivers, and in-game capes";
-            default: return "Settings options";
-        }
-    }
-
     private void setupSettingsList() {
         List<SettingCategory> categories = new ArrayList<>();
 
         if (mCategoryName == null) {
-            // Root Menu Categories List
+            // Root Menu Categories List with Top Theme Color Picker Card
             List<SettingItem> rootItems = new ArrayList<>();
+            rootItems.add(new SettingItem("theme_picker", SettingItem.TYPE_THEME_SELECTOR, "Theme & Accent Color", "Pick your favorite launcher color theme", null));
             rootItems.add(new SettingItem("cat_launcher", SettingItem.TYPE_CATEGORY_LINK, "Launcher Settings", "Configure language, updates, and downloads", "Launcher Settings"));
             rootItems.add(new SettingItem("cat_video", SettingItem.TYPE_CATEGORY_LINK, "Video & Graphics", "Configure renderers, resolution, and VSync options", "Video & Graphics"));
             rootItems.add(new SettingItem("cat_controls", SettingItem.TYPE_CATEGORY_LINK, "Controls", "Customize touch overlays, cursors, and gyroscope controls", "Controls"));
             rootItems.add(new SettingItem("cat_java", SettingItem.TYPE_CATEGORY_LINK, "Java Runtime", "Manage memory allocations, JREs, and Java options", "Java Runtime"));
             rootItems.add(new SettingItem("cat_audio", SettingItem.TYPE_CATEGORY_LINK, "Audio", "Adjust volume levels and sound output parameters", "Audio"));
             rootItems.add(new SettingItem("cat_account", SettingItem.TYPE_CATEGORY_LINK, "Account", "Check active profile accounts and skin logs", "Account"));
-            rootItems.add(new SettingItem("cat_mods", SettingItem.TYPE_CATEGORY_LINK, "Mods & Addons", "Manage modpack auto-updates, mirrors, and dependencies", "Mods & Addons"));
-            rootItems.add(new SettingItem("cat_network", SettingItem.TYPE_CATEGORY_LINK, "Network & Connectivity", "Configure DNS injection, server timeouts, and keepalive", "Network & Connectivity"));
-            rootItems.add(new SettingItem("cat_performance", SettingItem.TYPE_CATEGORY_LINK, "Performance & Thermal", "Tune FPS caps, thread pool cores, and memory cleaner", "Performance & Thermal"));
-            rootItems.add(new SettingItem("cat_display", SettingItem.TYPE_CATEGORY_LINK, "Display & HUD", "Immersive fullscreen, notch padding, and HUD opacity", "Display & HUD"));
-            rootItems.add(new SettingItem("cat_security", SettingItem.TYPE_CATEGORY_LINK, "Security & Privacy", "Configure telemetry, lock settings, and token security", "Security & Privacy"));
-            rootItems.add(new SettingItem("cat_storage", SettingItem.TYPE_CATEGORY_LINK, "Storage & Backup", "Auto world backups, log trimming, and cache limits", "Storage & Backup"));
             rootItems.add(new SettingItem("cat_experimental", SettingItem.TYPE_CATEGORY_LINK, "Experimental", "Test launcher orientations, wall-papers, and colors", "Experimental"));
             rootItems.add(new SettingItem("cat_advanced", SettingItem.TYPE_CATEGORY_LINK, "Advanced", "Perform debug clears and database resets", "Advanced"));
             rootItems.add(new SettingItem("cat_misc", SettingItem.TYPE_CATEGORY_LINK, "Miscellaneous", "Library verifications, system drivers, and in-game capes", "Miscellaneous"));
-            categories.add(new SettingCategory("Control Hub Categories", rootItems));
+            categories.add(new SettingCategory("Settings Categories", rootItems));
         } else {
-            // Subcategory Pages Detail
+            // Subcategory Pages Detail (100% Real Authentic Launcher Options)
             switch (mCategoryName) {
                 case "Launcher Settings":
                     List<SettingItem> launcherItems = new ArrayList<>();
@@ -422,71 +321,6 @@ public class LauncherPreferenceFragment extends Fragment {
                     String accountName = activeAccount != null ? activeAccount.username : "None";
                     accountItems.add(new SettingItem("active_profile_info", SettingItem.TYPE_INFO, "Active Account Profile", accountName, null));
                     categories.add(new SettingCategory("Account Configurations", accountItems));
-                    break;
-
-                case "Mods & Addons":
-                    List<SettingItem> modsItems = new ArrayList<>();
-                    modsItems.add(new SettingItem("mods_auto_update", SettingItem.TYPE_SWITCH, "Auto-Update Installed Mods", "Automatically check and update installed modpacks on launch", false));
-                    modsItems.add(new SettingItem("mods_repo_source", SettingItem.TYPE_DROPDOWN, "Preferred Mod Repository", "Select primary API source for mod downloads", "modrinth").setDropdownOptions(new String[]{"Modrinth API", "CurseForge API", "Both (Combined)"}, new String[]{"modrinth", "curseforge", "both"}));
-                    modsItems.add(new SettingItem("mods_jvm_compat_flags", SettingItem.TYPE_SWITCH, "Inject Mod Compatibility JVM Flags", "Automatically add JVM arguments for Fabric/Forge compatibility", true));
-                    modsItems.add(new SettingItem("mods_dependency_checker", SettingItem.TYPE_SWITCH, "Fast Dependency Resolver", "Verify required library dependencies before launching game", true));
-                    modsItems.add(new SettingItem("mods_folder_action", SettingItem.TYPE_ACTION, "Open Mods Folder Path", "View installed mod jar files directory", null).setAction(() -> {
-                        Toast.makeText(getContext(), "Mods path: " + Tools.DIR_GAME_HOME + "/mods", Toast.LENGTH_LONG).show();
-                    }));
-                    categories.add(new SettingCategory("Mods & Addons Engine", modsItems));
-                    break;
-
-                case "Network & Connectivity":
-                    List<SettingItem> netItems = new ArrayList<>();
-                    netItems.add(new SettingItem("net_custom_dns", SettingItem.TYPE_SWITCH, "Custom DNS Injector", "Use fast Cloudflare/Google DNS for multiplayer servers", true));
-                    netItems.add(new SettingItem("net_auth_refresh", SettingItem.TYPE_DROPDOWN, "Microsoft Token Refresh Interval", "Frequency for background token validation", "30").setDropdownOptions(new String[]{"15 Minutes", "30 Minutes", "1 Hour"}, new String[]{"15", "30", "60"}));
-                    netItems.add(new SettingItem("net_keepalive", SettingItem.TYPE_SWITCH, "Anti-Disconnect Keepalive", "Send periodic keepalive pings to avoid server dropouts", true));
-                    netItems.add(new SettingItem("net_ping_timeout", SettingItem.TYPE_SLIDER, "Server Ping Timeout", "Maximum wait time for multiplayer server ping", 10).setSliderConfig(5, 30, 1, " sec"));
-                    netItems.add(new SettingItem("net_offline_mode", SettingItem.TYPE_SWITCH, "Allow Offline Session Fallback", "Enable playing without active internet connection", true));
-                    categories.add(new SettingCategory("Network & Connectivity", netItems));
-                    break;
-
-                case "Performance & Thermal":
-                    List<SettingItem> perfItems = new ArrayList<>();
-                    perfItems.add(new SettingItem("perf_fps_limit", SettingItem.TYPE_SLIDER, "Dynamic FPS Cap", "Limit rendering framerate to reduce heating", 60).setSliderConfig(30, 120, 10, " FPS"));
-                    perfItems.add(new SettingItem("perf_battery_saver", SettingItem.TYPE_SWITCH, "Low Power Battery Saver", "Throttle non-critical background services during gameplay", false));
-                    perfItems.add(new SettingItem("perf_thread_cores", SettingItem.TYPE_DROPDOWN, "Thread Pool Core Allocation", "Max CPU worker threads assigned to Java engine", "max").setDropdownOptions(new String[]{"Auto (Recommended)", "2 CPU Cores", "4 CPU Cores", "Maximum Available"}, new String[]{"auto", "2", "4", "max"}));
-                    perfItems.add(new SettingItem("perf_mem_cleaner", SettingItem.TYPE_SLIDER, "Auto Memory Clean Interval", "Periodic JVM garbage collection trigger", 15).setSliderConfig(0, 60, 5, " min"));
-                    perfItems.add(new SettingItem("perf_surface_opt", SettingItem.TYPE_SWITCH, "Hardware Surface Optimization", "Optimize SurfaceView buffer swapping for lower latency", true));
-                    categories.add(new SettingCategory("Performance & Thermal Tuning", perfItems));
-                    break;
-
-                case "Display & HUD":
-                    List<SettingItem> dispItems = new ArrayList<>();
-                    dispItems.add(new SettingItem("disp_fullscreen", SettingItem.TYPE_SWITCH, "Fullscreen Immersive Mode", "Hide Android status bar and navigation gestures", true));
-                    dispItems.add(new SettingItem("disp_notch_padding", SettingItem.TYPE_SLIDER, "Notch Cutout Safe Padding", "Adjust side margin inset for camera hole cutouts", 12).setSliderConfig(0, 48, 4, " dp"));
-                    dispItems.add(new SettingItem("disp_hud_opacity", SettingItem.TYPE_SLIDER, "HUD & Overlay Opacity", "Set transparency for touch buttons and virtual joysticks", 85).setSliderConfig(10, 100, 5, " %"));
-                    dispItems.add(new SettingItem("disp_fps_counter", SettingItem.TYPE_SWITCH, "In-Game FPS Counter Overlay", "Show live FPS and frame time stats in screen corner", false));
-                    dispItems.add(new SettingItem("disp_orientation_mode", SettingItem.TYPE_DROPDOWN, "Screen Orientation Lock", "Select preferred device screen rotation lock", "sensor_land").setDropdownOptions(new String[]{"Sensor Landscape", "Landscape Fixed", "System Default"}, new String[]{"sensor_land", "land", "default"}));
-                    categories.add(new SettingCategory("Display & HUD Customization", dispItems));
-                    break;
-
-                case "Security & Privacy":
-                    List<SettingItem> secItems = new ArrayList<>();
-                    secItems.add(new SettingItem("sec_telemetry_optout", SettingItem.TYPE_SWITCH, "Opt-Out of Anonymous Analytics", "Do not send crash reports or launcher metrics", false));
-                    secItems.add(new SettingItem("sec_pin_lock", SettingItem.TYPE_SWITCH, "Lock Settings with Device PIN", "Require biometric/PIN verification to open launcher settings", false));
-                    secItems.add(new SettingItem("sec_token_encrypt", SettingItem.TYPE_SWITCH, "Encrypt Local Auth Tokens", "Use Android KeyStore to secure stored login tokens", true));
-                    secItems.add(new SettingItem("sec_clear_tokens_action", SettingItem.TYPE_ACTION, "Clear Stored Login Credentials", "Sign out of all Microsoft accounts and purge tokens", null).setAction(() -> {
-                        Toast.makeText(getContext(), "Account tokens cleared", Toast.LENGTH_SHORT).show();
-                    }));
-                    categories.add(new SettingCategory("Security & Privacy", secItems));
-                    break;
-
-                case "Storage & Backup":
-                    List<SettingItem> storItems = new ArrayList<>();
-                    storItems.add(new SettingItem("stor_auto_backup_world", SettingItem.TYPE_SWITCH, "Auto-Backup Minecraft Worlds", "Automatically create zip backups of save worlds", true));
-                    storItems.add(new SettingItem("stor_max_backups", SettingItem.TYPE_SLIDER, "Max World Backups Retained", "Maximum number of backup archives to keep", 5).setSliderConfig(1, 20, 1, " archives"));
-                    storItems.add(new SettingItem("stor_log_trim", SettingItem.TYPE_SWITCH, "Automatic Log Trimming", "Delete game logs older than 7 days", true));
-                    storItems.add(new SettingItem("stor_max_cache_mb", SettingItem.TYPE_SLIDER, "Maximum Cache Limit", "Storage quota for launcher cache and shader dumps", 500).setSliderConfig(100, 2000, 100, " MB"));
-                    storItems.add(new SettingItem("stor_open_dir_action", SettingItem.TYPE_ACTION, "Show .minecraft Directory", "Display root game files storage path", null).setAction(() -> {
-                        Toast.makeText(getContext(), ".minecraft path: " + Tools.DIR_GAME_NEW, Toast.LENGTH_LONG).show();
-                    }));
-                    categories.add(new SettingCategory("Storage & Backup Management", storItems));
                     break;
 
                 case "Experimental":
@@ -674,7 +508,7 @@ public class LauncherPreferenceFragment extends Fragment {
         for (Map.Entry<String, ?> entry : draftMap.entrySet()) {
             String key = entry.getKey();
             Object draftVal = entry.getValue();
-            if (key.startsWith("cat_") || key.endsWith("_action") || "gamepad_remap_action".equals(key) || "gamepad_wipe_action".equals(key) || "clear_cache_files".equals(key) || "reset_all_settings".equals(key) || "active_profile_info".equals(key) || "install_jre".equals(key) || "fastclient_preference".equals(key)) {
+            if (key.startsWith("cat_") || "theme_picker".equals(key) || key.endsWith("_action") || "gamepad_remap_action".equals(key) || "gamepad_wipe_action".equals(key) || "clear_cache_files".equals(key) || "reset_all_settings".equals(key) || "active_profile_info".equals(key) || "install_jre".equals(key) || "fastclient_preference".equals(key)) {
                 continue;
             }
             if (!mainMap.containsKey(key)) {
@@ -815,14 +649,48 @@ public class LauncherPreferenceFragment extends Fragment {
                 visibleCount++;
 
                 View itemView;
-                if (item.type == SettingItem.TYPE_CUSTOM_FASTCLIENT) {
+                if (item.type == SettingItem.TYPE_THEME_SELECTOR) {
+                    itemView = inflater.inflate(R.layout.item_setting_theme_selector, holder.container, false);
+                    LinearLayout swatchesContainer = itemView.findViewById(R.id.theme_swatches_container);
+                    if (swatchesContainer != null) {
+                        swatchesContainer.removeAllViews();
+                        ThemeManager.Preset[] presets = ThemeManager.PRESETS;
+                        String[] colors = new String[]{"#00E5FF", "#3B82F6", "#10B981", "#EF4444", "#A855F7", "#06B6D4"};
+
+                        for (int i = 0; i < presets.length; i++) {
+                            ThemeManager.Preset p = presets[i];
+                            View swatchView = inflater.inflate(R.layout.item_theme_color_swatch, swatchesContainer, false);
+                            View colorCircle = swatchView.findViewById(R.id.swatch_color_circle);
+                            TextView nameTv = swatchView.findViewById(R.id.swatch_name);
+
+                            if (nameTv != null) nameTv.setText(p.name.split(" ")[0]);
+                            if (colorCircle != null) {
+                                int hexColor = Color.parseColor(colors[i % colors.length]);
+                                colorCircle.setBackgroundColor(hexColor);
+                            }
+
+                            final ThemeManager.Preset targetPreset = p;
+                            swatchView.setOnClickListener(v -> {
+                                v.animate().scaleX(0.92f).scaleY(0.92f).setDuration(80)
+                                        .withEndAction(() -> {
+                                            v.animate().scaleX(1f).scaleY(1f).setDuration(100).start();
+                                            ThemeManager.applyPreset(targetPreset);
+                                            Toast.makeText(requireContext(), "Applied " + targetPreset.name, Toast.LENGTH_SHORT).show();
+                                            requireActivity().recreate();
+                                        }).start();
+                            });
+
+                            swatchesContainer.addView(swatchView);
+                        }
+                    }
+
+                } else if (item.type == SettingItem.TYPE_CUSTOM_FASTCLIENT) {
                     itemView = inflater.inflate(R.layout.fragment_settings_fastclient, holder.container, false);
                     FastClientHelper.setup(itemView, holder.itemView.getContext(), getChildFragmentManager());
                     holder.container.addView(itemView);
                     continue;
-                }
 
-                if (item.type == SettingItem.TYPE_CATEGORY_LINK) {
+                } else if (item.type == SettingItem.TYPE_CATEGORY_LINK) {
                     itemView = inflater.inflate(R.layout.item_setting_button, holder.container, false);
                     TextView tvTitle = itemView.findViewById(R.id.setting_title);
                     TextView tvSummary = itemView.findViewById(R.id.setting_summary);
@@ -832,18 +700,22 @@ public class LauncherPreferenceFragment extends Fragment {
                     tvSummary.setText(item.summary);
 
                     itemView.setOnClickListener(v -> {
-                        Bundle bundle = new Bundle();
-                        bundle.putString("category", item.categoryLinkTarget);
-                        Tools.swapFragment(
-                                requireActivity(),
-                                LauncherPreferenceFragment.class,
-                                "SETTINGS_" + item.categoryLinkTarget,
-                                bundle,
-                                R.anim.slide_in_right,
-                                R.anim.slide_out_left,
-                                R.anim.slide_in_left,
-                                R.anim.slide_out_right
-                        );
+                        v.animate().scaleX(0.97f).scaleY(0.97f).setDuration(80)
+                                .withEndAction(() -> {
+                                    v.animate().scaleX(1f).scaleY(1f).setDuration(100).start();
+                                    Bundle bundle = new Bundle();
+                                    bundle.putString("category", item.categoryLinkTarget);
+                                    Tools.swapFragment(
+                                            requireActivity(),
+                                            LauncherPreferenceFragment.class,
+                                            "SETTINGS_" + item.categoryLinkTarget,
+                                            bundle,
+                                            R.anim.slide_in_right,
+                                            R.anim.slide_out_left,
+                                            R.anim.slide_in_left,
+                                            R.anim.slide_out_right
+                                    );
+                                }).start();
                     });
 
                 } else if (item.type == SettingItem.TYPE_SWITCH) {
@@ -1008,9 +880,13 @@ public class LauncherPreferenceFragment extends Fragment {
                     tvSummary.setText(item.summary);
 
                     itemView.setOnClickListener(v -> {
-                        if (item.action != null) {
-                            item.action.run();
-                        }
+                        v.animate().scaleX(0.97f).scaleY(0.97f).setDuration(80)
+                                .withEndAction(() -> {
+                                    v.animate().scaleX(1f).scaleY(1f).setDuration(100).start();
+                                    if (item.action != null) {
+                                        item.action.run();
+                                    }
+                                }).start();
                     });
 
                 } else if (item.type == SettingItem.TYPE_INFO) {
@@ -1077,7 +953,6 @@ public class LauncherPreferenceFragment extends Fragment {
         }
     }
 
-    /** Bind a contextual icon for the redesigned Control Center rows. */
     private void bindSettingIcon(@NonNull View itemView, @NonNull SettingItem item) {
         ImageView icon = itemView.findViewById(R.id.setting_icon);
         if (icon == null) return;
@@ -1145,47 +1020,6 @@ public class LauncherPreferenceFragment extends Fragment {
             case "cat_account":
             case "active_profile_info":
                 return R.drawable.ic_settings_account;
-            case "cat_mods":
-            case "mods_auto_update":
-            case "mods_repo_source":
-            case "mods_jvm_compat_flags":
-            case "mods_dependency_checker":
-            case "mods_folder_action":
-                return R.drawable.ic_settings_mods;
-            case "cat_network":
-            case "net_custom_dns":
-            case "net_auth_refresh":
-            case "net_keepalive":
-            case "net_ping_timeout":
-            case "net_offline_mode":
-                return R.drawable.ic_settings_network;
-            case "cat_performance":
-            case "perf_fps_limit":
-            case "perf_battery_saver":
-            case "perf_thread_cores":
-            case "perf_mem_cleaner":
-            case "perf_surface_opt":
-                return R.drawable.ic_settings_performance;
-            case "cat_display":
-            case "disp_fullscreen":
-            case "disp_notch_padding":
-            case "disp_hud_opacity":
-            case "disp_fps_counter":
-            case "disp_orientation_mode":
-                return R.drawable.ic_settings_display;
-            case "cat_security":
-            case "sec_telemetry_optout":
-            case "sec_pin_lock":
-            case "sec_token_encrypt":
-            case "sec_clear_tokens_action":
-                return R.drawable.ic_settings_security;
-            case "cat_storage":
-            case "stor_auto_backup_world":
-            case "stor_max_backups":
-            case "stor_log_trim":
-            case "stor_max_cache_mb":
-            case "stor_open_dir_action":
-                return R.drawable.ic_settings_storage;
             case "cat_experimental":
             case "bigCoreAffinity":
             case "force_landscape":
@@ -1238,6 +1072,7 @@ public class LauncherPreferenceFragment extends Fragment {
         public static final int TYPE_INPUT = 6;
         public static final int TYPE_CUSTOM_FASTCLIENT = 7;
         public static final int TYPE_CATEGORY_LINK = 8;
+        public static final int TYPE_THEME_SELECTOR = 9;
 
         String key;
         int type;
