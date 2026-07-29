@@ -1,528 +1,567 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Horizontal Cursor Studio — left live stage + right controls workspace -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_studio_page"
-    android:animateLayoutChanges="true">
+    android:animateLayoutChanges="true"
+    android:background="@drawable/bg_cursor_studio_page">
 
-    <!-- ═══════════════════════════════════════ -->
-    <!-- ✦ TOP BAR / HEADER                     -->
-    <!-- ═══════════════════════════════════════ -->
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:id="@+id/cursor_top_bar"
         android:layout_width="match_parent"
-        android:layout_height="68dp"
-        android:background="@drawable/bg_studio_header"
-        android:paddingHorizontal="12dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_cursor_header"
         android:elevation="8dp"
+        android:gravity="center_vertical"
+        android:minHeight="64dp"
+        android:orientation="horizontal"
+        android:paddingStart="14dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="8dp"
         app:layout_constraintTop_toTopOf="parent">
 
-        <ImageButton
+        <LinearLayout
             android:id="@+id/cursor_back_button"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:background="@drawable/bg_icon_button_round"
-            android:src="@drawable/ic_arrow_back_white"
-            android:padding="10dp"
-            app:tint="#39FF14"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:layout_width="wrap_content"
+            android:layout_height="42dp"
+            android:background="@drawable/bg_cursor_back_chip"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingEnd="14dp">
 
-        <TextView
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="#00E5FF" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:letterSpacing="0.04"
+                android:text="EXIT"
+                android:textColor="#E8F7FF"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="CURSOR STUDIO"
-            android:textColor="#FFFFFF"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.1"
-            android:gravity="center"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/cursor_studio_status"
-            app:layout_constraintStart_toEndOf="@+id/cursor_back_button"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:layout_marginStart="14dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.14"
+                android:text="HORIZONTAL LAUNCHER STUDIO"
+                android:textColor="#66D9FF"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Cursor Customization"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/cursor_studio_status"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="30dp"
+            android:background="@drawable/bg_cursor_chip"
+            android:gravity="center"
+            android:letterSpacing="0.1"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
             android:text="LIVE PREVIEW"
             android:textColor="#00E5FF"
             android:textSize="10sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.1"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            android:textStyle="bold" />
+    </LinearLayout>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    <View
+        android:id="@+id/cursor_header_line"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@drawable/bg_cursor_divider"
+        app:layout_constraintTop_toBottomOf="@id/cursor_top_bar" />
 
-    <!-- ═══════════════════════════════════════ -->
-    <!-- ✦ SCROLLABLE MAIN LAYOUT               -->
-    <!-- ═══════════════════════════════════════ -->
-    <androidx.core.widget.NestedScrollView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:fillViewport="true"
-        android:overScrollMode="never"
-        android:clipToPadding="false"
-        android:paddingBottom="16dp"
+        android:orientation="horizontal"
+        android:padding="12dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/cursor_top_bar">
+        app:layout_constraintTop_toBottomOf="@id/cursor_header_line">
 
-        <!-- Wrapped in ConstraintLayout to properly enforce maxWidth on large screens -->
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+        <!-- LEFT: Live stage + styles -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="10dp"
+            android:layout_weight="0.92"
+            android:background="@drawable/bg_settings_content_panel"
+            android:orientation="vertical"
+            android:padding="14dp">
 
-            <LinearLayout
-                android:layout_width="0dp"
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingHorizontal="30dp"
-                android:paddingVertical="18dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintWidth_default="spread">
+                android:letterSpacing="0.12"
+                android:text="LIVE STAGE"
+                android:textColor="#66D9FF"
+                android:textSize="10sp"
+                android:textStyle="bold" />
 
-                <!-- ═══════════════════════════════════════ -->
-                <!-- ✦ SECTION: CURSOR LIVE PREVIEW        -->
-                <!-- ═══════════════════════════════════════ -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="LIVE PREVIEW"
-                    android:textColor="#8E8E93"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.1"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginBottom="12dp"/>
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/cursor_preview_container"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="10dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_cursor_preview_stage"
+                android:minHeight="180dp">
 
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:id="@+id/cursor_preview_container"
-                    android:layout_width="match_parent"
-                    android:layout_height="180dp"
-                    android:background="@drawable/bg_cursor_preview"
-                    android:layout_marginBottom="28dp">
+                <FrameLayout
+                    android:layout_width="110dp"
+                    android:layout_height="110dp"
+                    android:background="@drawable/bg_cursor_preview_frame"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
 
                     <ImageView
                         android:id="@+id/cursor_preview_image"
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:scaleType="centerInside"
-                        android:src="@drawable/ic_mouse_pointer"
-                        android:padding="6dp"
-                        android:background="@drawable/bg_preview_box"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"
+                        android:layout_gravity="center"
                         android:contentDescription="Current cursor preview"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent"/>
+                        android:padding="6dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_mouse_pointer" />
+                </FrameLayout>
 
-                    <TextView
-                        android:id="@+id/cursor_preview_label"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="DEFAULT"
-                        android:textColor="#39FF14"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:background="@drawable/bg_size_chip"
-                        android:paddingHorizontal="10dp"
-                        android:paddingVertical="4dp"
-                        android:layout_margin="16dp"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"/>
-
-                    <TextView
-                        android:id="@+id/cursor_preview_status"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Scale: 100% | Opacity: 100%"
-                        android:textColor="#8E8E93"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:layout_margin="16dp"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"/>
-
-                </androidx.constraintlayout.widget.ConstraintLayout>
-
-                <!-- ═══════════════════════════════════════ -->
-                <!-- ✦ SECTION: CURSOR STYLE SELECTOR       -->
-                <!-- ═══════════════════════════════════════ -->
                 <TextView
+                    android:id="@+id/cursor_preview_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="CURSOR STYLE"
-                    android:textColor="#8E8E93"
-                    android:textSize="12sp"
+                    android:layout_margin="14dp"
+                    android:background="@drawable/bg_cursor_chip"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="5dp"
+                    android:text="DEFAULT"
+                    android:textColor="#7AFFFF"
+                    android:textSize="10sp"
                     android:textStyle="bold"
-                    android:letterSpacing="0.1"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginBottom="12dp"/>
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <TextView
+                    android:id="@+id/cursor_preview_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="14dp"
+                    android:text="Scale: 100% | Opacity: 100%"
+                    android:textColor="#8FA3BC"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="8dp"
+                android:letterSpacing="0.12"
+                android:text="CURSOR STYLE"
+                android:textColor="#66D9FF"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="3">
 
                 <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="28dp"
-                    android:weightSum="3">
+                    android:id="@+id/style_classic"
+                    android:layout_width="0dp"
+                    android:layout_height="86dp"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_cursor_style_card_selected"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="8dp">
 
-                    <!-- Classic Style Card -->
-                    <LinearLayout
-                        android:id="@+id/style_classic"
-                        android:layout_width="0dp"
+                    <ImageView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:layout_marginBottom="6dp"
+                        android:src="@drawable/ic_mouse_pointer" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="8dp"
-                        android:orientation="vertical"
-                        android:gravity="center"
-                        android:padding="16dp"
-                        android:background="@drawable/background_card_neon"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:foreground="?attr/selectableItemBackground">
-
-                        <ImageView
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:src="@drawable/ic_mouse_pointer"
-                            android:layout_marginBottom="8dp"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Classic"
-                            android:textColor="#FFFFFF"
-                            android:textSize="12sp"
-                            android:textStyle="bold"/>
-                    </LinearLayout>
-
-                    <!-- Gamepad Style Card -->
-                    <LinearLayout
-                        android:id="@+id/style_gamepad"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginHorizontal="4dp"
-                        android:orientation="vertical"
-                        android:gravity="center"
-                        android:padding="16dp"
-                        android:background="@drawable/background_card"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:foreground="?attr/selectableItemBackground">
-
-                        <ImageView
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:src="@drawable/ic_gamepad_pointer"
-                            android:layout_marginBottom="8dp"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Gamepad"
-                            android:textColor="#FFFFFF"
-                            android:textSize="12sp"
-                            android:textStyle="bold"/>
-                    </LinearLayout>
-
-                    <!-- Custom Style Card -->
-                    <LinearLayout
-                        android:id="@+id/style_custom"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="8dp"
-                        android:orientation="vertical"
-                        android:gravity="center"
-                        android:padding="16dp"
-                        android:background="@drawable/background_card"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:foreground="?attr/selectableItemBackground">
-
-                        <ImageView
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:src="@drawable/ic_upload"
-                            app:tint="#39FF14"
-                            android:layout_marginBottom="8dp"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Custom File"
-                            android:textColor="#FFFFFF"
-                            android:textSize="12sp"
-                            android:textStyle="bold"/>
-                    </LinearLayout>
-
+                        android:text="Classic"
+                        android:textColor="#FFFFFF"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
 
-                <!-- ═══════════════════════════════════════ -->
-                <!-- ✦ SECTION: CURSOR SIZE & POSITION      -->
-                <!-- ═══════════════════════════════════════ -->
+                <LinearLayout
+                    android:id="@+id/style_gamepad"
+                    android:layout_width="0dp"
+                    android:layout_height="86dp"
+                    android:layout_marginHorizontal="3dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_cursor_style_card"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="8dp">
+
+                    <ImageView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:layout_marginBottom="6dp"
+                        android:src="@drawable/ic_gamepad_pointer" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Gamepad"
+                        android:textColor="#FFFFFF"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/style_custom"
+                    android:layout_width="0dp"
+                    android:layout_height="86dp"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_cursor_style_card"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="8dp">
+
+                    <ImageView
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:layout_marginBottom="6dp"
+                        android:src="@drawable/ic_upload"
+                        app:tint="#00E5FF" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Custom"
+                        android:textColor="#FFFFFF"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- RIGHT: Controls workspace -->
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1.18"
+            android:background="@drawable/bg_settings_content_panel"
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            android:overScrollMode="never"
+            android:padding="14dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="CURSOR SIZE &amp; POSITION"
-                    android:textColor="#8E8E93"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.1"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginBottom="12dp"/>
+                    android:letterSpacing="0.12"
+                    android:text="SIZE &amp; POSITION"
+                    android:textColor="#66D9FF"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/background_card"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="14dp"
+                    android:background="@drawable/bg_cursor_panel"
                     android:orientation="vertical"
-                    android:padding="20dp"
-                    android:layout_marginBottom="28dp">
+                    android:padding="14dp">
 
-                    <!-- Scale -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="4dp">
+                        android:orientation="horizontal">
 
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="CURSOR SCALE"
-                            android:textColor="#FFFFFF"
+                            android:textColor="#F4F8FF"
                             android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:letterSpacing="0.05"/>
+                            android:textStyle="bold" />
 
                         <TextView
                             android:id="@+id/scale_value_text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:background="@drawable/bg_settings_value_chip"
+                            android:paddingHorizontal="10dp"
+                            android:paddingVertical="4dp"
                             android:text="100%"
-                            android:textColor="#39FF14"
-                            android:textSize="13sp"
-                            android:textStyle="bold"/>
+                            android:textColor="#7AFFFF"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
 
                     <SeekBar
                         android:id="@+id/seek_cursor_size"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginVertical="6dp"
+                        android:layout_marginTop="6dp"
                         android:max="300"
+                        android:maxHeight="6dp"
+                        android:minHeight="6dp"
                         android:progress="100"
-                        android:progressTint="#39FF14"
-                        android:thumbTint="#39FF14"
-                        android:progressBackgroundTint="#2C2C2E"/>
+                        android:progressDrawable="@drawable/bg_settings_seekbar_progress"
+                        android:splitTrack="false"
+                        android:thumb="@drawable/bg_settings_seekbar_thumb"
+                        android:thumbOffset="0dp" />
 
-                    <!-- Hotspot X -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
+                        android:layout_marginTop="12dp"
                         android:gravity="center_vertical"
-                        android:layout_marginTop="16dp"
-                        android:layout_marginBottom="4dp">
+                        android:orientation="horizontal">
 
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="HOTSPOT X"
-                            android:textColor="#FFFFFF"
+                            android:textColor="#F4F8FF"
                             android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:letterSpacing="0.05"/>
+                            android:textStyle="bold" />
 
                         <TextView
                             android:id="@+id/hotspot_x_value_text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:background="@drawable/bg_settings_value_chip"
+                            android:paddingHorizontal="10dp"
+                            android:paddingVertical="4dp"
                             android:text="0 px"
-                            android:textColor="#39FF14"
-                            android:textSize="13sp"
-                            android:textStyle="bold"/>
+                            android:textColor="#7AFFFF"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
 
                     <SeekBar
                         android:id="@+id/seek_hotspot_x"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginVertical="6dp"
+                        android:layout_marginTop="6dp"
                         android:max="128"
+                        android:maxHeight="6dp"
+                        android:minHeight="6dp"
                         android:progress="0"
-                        android:progressTint="#39FF14"
-                        android:thumbTint="#39FF14"
-                        android:progressBackgroundTint="#2C2C2E"/>
+                        android:progressDrawable="@drawable/bg_settings_seekbar_progress"
+                        android:splitTrack="false"
+                        android:thumb="@drawable/bg_settings_seekbar_thumb"
+                        android:thumbOffset="0dp" />
 
-                    <!-- Hotspot Y -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
+                        android:layout_marginTop="12dp"
                         android:gravity="center_vertical"
-                        android:layout_marginTop="16dp"
-                        android:layout_marginBottom="4dp">
+                        android:orientation="horizontal">
 
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="HOTSPOT Y"
-                            android:textColor="#FFFFFF"
+                            android:textColor="#F4F8FF"
                             android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:letterSpacing="0.05"/>
+                            android:textStyle="bold" />
 
                         <TextView
                             android:id="@+id/hotspot_y_value_text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:background="@drawable/bg_settings_value_chip"
+                            android:paddingHorizontal="10dp"
+                            android:paddingVertical="4dp"
                             android:text="0 px"
-                            android:textColor="#39FF14"
-                            android:textSize="13sp"
-                            android:textStyle="bold"/>
+                            android:textColor="#7AFFFF"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
 
                     <SeekBar
                         android:id="@+id/seek_hotspot_y"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginVertical="6dp"
+                        android:layout_marginTop="6dp"
                         android:max="128"
+                        android:maxHeight="6dp"
+                        android:minHeight="6dp"
                         android:progress="0"
-                        android:progressTint="#39FF14"
-                        android:thumbTint="#39FF14"
-                        android:progressBackgroundTint="#2C2C2E"/>
-
+                        android:progressDrawable="@drawable/bg_settings_seekbar_progress"
+                        android:splitTrack="false"
+                        android:thumb="@drawable/bg_settings_seekbar_thumb"
+                        android:thumbOffset="0dp" />
                 </LinearLayout>
 
-                <!-- ═══════════════════════════════════════ -->
-                <!-- ✦ SECTION: CURSOR GLOW & COLOR         -->
-                <!-- ═══════════════════════════════════════ -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="CURSOR GLOW &amp; COLOR"
-                    android:textColor="#8E8E93"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.1"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginBottom="12dp"/>
+                    android:letterSpacing="0.12"
+                    android:text="GLOW &amp; COLOR"
+                    android:textColor="#66D9FF"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/background_card"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="14dp"
+                    android:background="@drawable/bg_cursor_panel"
                     android:orientation="vertical"
-                    android:padding="20dp"
-                    android:layout_marginBottom="28dp">
+                    android:padding="14dp">
 
-                    <!-- Glow Intensity -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="4dp">
+                        android:orientation="horizontal">
 
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="GLOW INTENSITY"
-                            android:textColor="#FFFFFF"
+                            android:textColor="#F4F8FF"
                             android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:letterSpacing="0.05"/>
+                            android:textStyle="bold" />
 
                         <TextView
                             android:id="@+id/glow_value_text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:background="@drawable/bg_settings_value_chip"
+                            android:paddingHorizontal="10dp"
+                            android:paddingVertical="4dp"
                             android:text="0%"
-                            android:textColor="#39FF14"
-                            android:textSize="13sp"
-                            android:textStyle="bold"/>
+                            android:textColor="#7AFFFF"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
 
                     <SeekBar
                         android:id="@+id/seek_glow_strength"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginVertical="6dp"
+                        android:layout_marginTop="6dp"
                         android:max="60"
+                        android:maxHeight="6dp"
+                        android:minHeight="6dp"
                         android:progress="0"
-                        android:progressTint="#39FF14"
-                        android:thumbTint="#39FF14"
-                        android:progressBackgroundTint="#2C2C2E"/>
+                        android:progressDrawable="@drawable/bg_settings_seekbar_progress"
+                        android:splitTrack="false"
+                        android:thumb="@drawable/bg_settings_seekbar_thumb"
+                        android:thumbOffset="0dp" />
 
-                    <!-- Glow Opacity / Cursor Opacity -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
+                        android:layout_marginTop="12dp"
                         android:gravity="center_vertical"
-                        android:layout_marginTop="16dp"
-                        android:layout_marginBottom="4dp">
+                        android:orientation="horizontal">
 
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="CURSOR OPACITY"
-                            android:textColor="#FFFFFF"
+                            android:textColor="#F4F8FF"
                             android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:letterSpacing="0.05"/>
+                            android:textStyle="bold" />
 
                         <TextView
                             android:id="@+id/opacity_value_text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:background="@drawable/bg_settings_value_chip"
+                            android:paddingHorizontal="10dp"
+                            android:paddingVertical="4dp"
                             android:text="100%"
-                            android:textColor="#39FF14"
-                            android:textSize="13sp"
-                            android:textStyle="bold"/>
+                            android:textColor="#7AFFFF"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
 
                     <SeekBar
                         android:id="@+id/seek_cursor_opacity"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginVertical="6dp"
+                        android:layout_marginTop="6dp"
                         android:max="100"
+                        android:maxHeight="6dp"
+                        android:minHeight="6dp"
                         android:progress="100"
-                        android:progressTint="#39FF14"
-                        android:thumbTint="#39FF14"
-                        android:progressBackgroundTint="#2C2C2E"/>
+                        android:progressDrawable="@drawable/bg_settings_seekbar_progress"
+                        android:splitTrack="false"
+                        android:thumb="@drawable/bg_settings_seekbar_thumb"
+                        android:thumbOffset="0dp" />
 
-                    <!-- GLOW COLOR SELECTION -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:layout_marginBottom="10dp"
                         android:text="GLOW COLOR PRESETS"
-                        android:textColor="#8E8E93"
+                        android:textColor="#8FA3BC"
                         android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.05"
-                        android:layout_marginTop="20dp"
-                        android:layout_marginBottom="12dp"/>
+                        android:textStyle="bold" />
 
                     <HorizontalScrollView
                         android:layout_width="match_parent"
@@ -533,147 +572,124 @@
                         <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:paddingVertical="4dp"
-                            android:gravity="center_vertical">
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
 
-                            <!-- Green -->
                             <ImageView
                                 android:id="@+id/color_green"
-                                android:layout_width="36dp"
-                                android:layout_height="36dp"
-                                android:layout_marginEnd="16dp"
-                                android:background="@drawable/bg_color_circle"
+                                android:layout_width="38dp"
+                                android:layout_height="38dp"
+                                android:layout_marginEnd="12dp"
+                                android:background="@drawable/bg_cursor_color_ring"
                                 android:backgroundTint="#A6FF3D"
                                 android:clickable="true"
                                 android:focusable="true"
-                                android:foreground="?attr/selectableItemBackground"
                                 android:padding="2dp"
                                 android:src="@drawable/ic_check_circle"
-                                app:tint="#000000"/>
+                                app:tint="#000000" />
 
-                            <!-- Cyan -->
                             <ImageView
                                 android:id="@+id/color_cyan"
-                                android:layout_width="36dp"
-                                android:layout_height="36dp"
-                                android:layout_marginEnd="16dp"
-                                android:background="@drawable/bg_color_circle"
+                                android:layout_width="38dp"
+                                android:layout_height="38dp"
+                                android:layout_marginEnd="12dp"
+                                android:background="@drawable/bg_cursor_color_ring"
                                 android:backgroundTint="#00E5FF"
                                 android:clickable="true"
                                 android:focusable="true"
-                                android:foreground="?attr/selectableItemBackground"
-                                android:padding="8dp"/>
+                                android:padding="8dp" />
 
-                            <!-- Purple -->
                             <ImageView
                                 android:id="@+id/color_purple"
-                                android:layout_width="36dp"
-                                android:layout_height="36dp"
-                                android:layout_marginEnd="16dp"
-                                android:background="@drawable/bg_color_circle"
+                                android:layout_width="38dp"
+                                android:layout_height="38dp"
+                                android:layout_marginEnd="12dp"
+                                android:background="@drawable/bg_cursor_color_ring"
                                 android:backgroundTint="#D500F9"
                                 android:clickable="true"
                                 android:focusable="true"
-                                android:foreground="?attr/selectableItemBackground"
-                                android:padding="8dp"/>
+                                android:padding="8dp" />
 
-                            <!-- Red -->
                             <ImageView
                                 android:id="@+id/color_red"
-                                android:layout_width="36dp"
-                                android:layout_height="36dp"
-                                android:layout_marginEnd="16dp"
-                                android:background="@drawable/bg_color_circle"
+                                android:layout_width="38dp"
+                                android:layout_height="38dp"
+                                android:layout_marginEnd="12dp"
+                                android:background="@drawable/bg_cursor_color_ring"
                                 android:backgroundTint="#FF3D00"
                                 android:clickable="true"
                                 android:focusable="true"
-                                android:foreground="?attr/selectableItemBackground"
-                                android:padding="8dp"/>
+                                android:padding="8dp" />
 
-                            <!-- Yellow -->
                             <ImageView
                                 android:id="@+id/color_yellow"
-                                android:layout_width="36dp"
-                                android:layout_height="36dp"
-                                android:layout_marginEnd="16dp"
-                                android:background="@drawable/bg_color_circle"
+                                android:layout_width="38dp"
+                                android:layout_height="38dp"
+                                android:layout_marginEnd="12dp"
+                                android:background="@drawable/bg_cursor_color_ring"
                                 android:backgroundTint="#FFEA00"
                                 android:clickable="true"
                                 android:focusable="true"
-                                android:foreground="?attr/selectableItemBackground"
-                                android:padding="8dp"/>
+                                android:padding="8dp" />
 
-                            <!-- White -->
                             <ImageView
                                 android:id="@+id/color_white"
-                                android:layout_width="36dp"
-                                android:layout_height="36dp"
-                                android:background="@drawable/bg_color_circle"
+                                android:layout_width="38dp"
+                                android:layout_height="38dp"
+                                android:background="@drawable/bg_cursor_color_ring"
                                 android:backgroundTint="#FFFFFF"
                                 android:clickable="true"
                                 android:focusable="true"
-                                android:foreground="?attr/selectableItemBackground"
-                                android:padding="8dp"/>
-
+                                android:padding="8dp" />
                         </LinearLayout>
                     </HorizontalScrollView>
-
                 </LinearLayout>
 
-                <!-- ═══════════════════════════════════════ -->
-                <!-- ✦ SECTION: IMPORT &amp; EXPORT             -->
-                <!-- ═══════════════════════════════════════ -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:letterSpacing="0.12"
                     android:text="IMPORT &amp; EXPORT"
-                    android:textColor="#8E8E93"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.1"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginBottom="12dp"/>
+                    android:textColor="#66D9FF"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/background_card"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/bg_cursor_panel"
                     android:orientation="vertical"
-                    android:padding="20dp"
-                    android:layout_marginBottom="32dp">
+                    android:padding="14dp">
 
-                    <!-- Upload Zone -->
                     <LinearLayout
                         android:id="@+id/upload_zone"
                         android:layout_width="match_parent"
-                        android:layout_height="100dp"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:background="@drawable/bg_dashed_border"
+                        android:layout_height="84dp"
+                        android:layout_marginBottom="12dp"
+                        android:background="@drawable/bg_cursor_upload_zone"
                         android:clickable="true"
                         android:focusable="true"
-                        android:foreground="?attr/selectableItemBackground"
-                        android:padding="12dp"
-                        android:layout_marginBottom="16dp">
+                        android:gravity="center"
+                        android:orientation="vertical">
 
                         <ImageView
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_marginBottom="6dp"
                             android:src="@drawable/ic_upload"
-                            app:tint="#39FF14"
-                            android:layout_marginBottom="8dp"/>
+                            app:tint="#00E5FF" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Tap to browse and upload image/GIF"
-                            android:textColor="#8E8E93"
+                            android:text="Tap to browse image or GIF"
+                            android:textColor="#C9D7EA"
                             android:textSize="12sp"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold" />
                     </LinearLayout>
 
-                    <!-- Import & Export Buttons Row -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -683,64 +699,65 @@
                         <com.kdt.mcgui.MineButton
                             android:id="@+id/btn_import_png"
                             android:layout_width="0dp"
-                            android:layout_height="48dp"
-                            android:layout_weight="1"
+                            android:layout_height="46dp"
                             android:layout_marginEnd="8dp"
-                            android:background="@drawable/bg_green_gradient_button"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_cursor_btn_primary"
+                            android:stateListAnimator="@null"
                             android:text="IMPORT FILE"
-                            android:textColor="#000000"
+                            android:textColor="#061018"
                             android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:stateListAnimator="@null"/>
+                            android:textStyle="bold" />
 
                         <com.kdt.mcgui.MineButton
                             android:id="@+id/btn_export_cursor"
                             android:layout_width="0dp"
-                            android:layout_height="48dp"
-                            android:layout_weight="1"
+                            android:layout_height="46dp"
                             android:layout_marginStart="8dp"
-                            android:background="@drawable/background_card_neon"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_cursor_btn_secondary"
+                            android:stateListAnimator="@null"
                             android:text="EXPORT FILE"
-                            android:textColor="#39FF14"
+                            android:textColor="#7AFFFF"
                             android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:stateListAnimator="@null"/>
-
+                            android:textStyle="bold" />
                     </LinearLayout>
-
                 </LinearLayout>
 
-                <!-- ═══════════════════════════════════════ -->
-                <!-- ✦ ACTION BUTTONS (SAVE & RESET)        -->
-                <!-- ═══════════════════════════════════════ -->
-                <com.kdt.mcgui.MineButton
-                    android:id="@+id/btn_save_cursor"
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:background="@drawable/bg_save_button_neon"
-                    android:text="SAVE CHANGES"
-                    android:textColor="#000000"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.08"
-                    android:stateListAnimator="@null"
-                    android:layout_marginBottom="12dp"/>
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:weightSum="2">
 
-                <com.kdt.mcgui.MineButton
-                    android:id="@+id/btn_reset_cursor"
-                    android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:background="@drawable/bg_delete_button"
-                    android:text="RESET TO DEFAULT"
-                    android:textColor="#FFFFFF"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.08"
-                    android:stateListAnimator="@null"
-                    android:layout_marginBottom="20dp"/>
+                    <com.kdt.mcgui.MineButton
+                        android:id="@+id/btn_save_cursor"
+                        android:layout_width="0dp"
+                        android:layout_height="50dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_weight="1.2"
+                        android:background="@drawable/bg_cursor_btn_primary"
+                        android:stateListAnimator="@null"
+                        android:text="SAVE CHANGES"
+                        android:textColor="#061018"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
 
+                    <com.kdt.mcgui.MineButton
+                        android:id="@+id/btn_reset_cursor"
+                        android:layout_width="0dp"
+                        android:layout_height="50dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="0.8"
+                        android:background="@drawable/bg_cursor_btn_danger"
+                        android:stateListAnimator="@null"
+                        android:text="RESET"
+                        android:textColor="#FFCDD2"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
             </LinearLayout>
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </androidx.core.widget.NestedScrollView>
+        </androidx.core.widget.NestedScrollView>
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

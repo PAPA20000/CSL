@@ -107,12 +107,14 @@ public class LauncherPreferenceFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        ThemeManager.applyToPrefView(view);
+        // Keep the premium Control Center background; do not overwrite with theme flat color.
         super.onViewCreated(view, savedInstanceState);
 
         mRecyclerView = view.findViewById(R.id.settings_recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         mRecyclerView.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        mRecyclerView.setHasFixedSize(false);
+        mRecyclerView.setItemViewCacheSize(8);
 
         // Dynamic Header titles
         TextView tvTitle = view.findViewById(R.id.settings_title);
@@ -121,7 +123,7 @@ public class LauncherPreferenceFragment extends Fragment {
             tvTitle.setText(mCategoryName != null ? mCategoryName : "Settings");
         }
         if (tvSubtitle != null) {
-            tvSubtitle.setText(mCategoryName != null ? getCategorySubtitle(mCategoryName) : "Customize your launcher experience");
+            tvSubtitle.setText(mCategoryName != null ? getCategorySubtitle(mCategoryName) : "Horizontal launcher control center");
         }
 
         // Header Back Navigation
@@ -432,7 +434,7 @@ public class LauncherPreferenceFragment extends Fragment {
             }
             if (statusText != null) {
                 statusText.setText("\u25cf Unsaved Changes");
-                statusText.setTextColor(Color.parseColor("#FFA500"));
+                statusText.setTextColor(Color.parseColor("#FFB74D"));
             }
         } else {
             if (bar.getVisibility() == View.VISIBLE) {
@@ -455,7 +457,7 @@ public class LauncherPreferenceFragment extends Fragment {
             }
             if (statusText != null) {
                 statusText.setText("\u2713 Settings Saved");
-                statusText.setTextColor(Color.parseColor("#39FF14"));
+                statusText.setTextColor(Color.parseColor("#00E5FF"));
             }
         }
     }
@@ -650,6 +652,7 @@ public class LauncherPreferenceFragment extends Fragment {
             holder.container.removeAllViews();
 
             boolean hasVisibleItems = false;
+            int visibleCount = 0;
             LayoutInflater inflater = LayoutInflater.from(holder.itemView.getContext());
 
             for (SettingItem item : cat.items) {
@@ -657,6 +660,7 @@ public class LauncherPreferenceFragment extends Fragment {
                     continue;
                 }
                 hasVisibleItems = true;
+                visibleCount++;
 
                 View itemView;
                 if (item.type == SettingItem.TYPE_CUSTOM_FASTCLIENT) {
@@ -670,6 +674,7 @@ public class LauncherPreferenceFragment extends Fragment {
                     itemView = inflater.inflate(R.layout.item_setting_button, holder.container, false);
                     TextView tvTitle = itemView.findViewById(R.id.setting_title);
                     TextView tvSummary = itemView.findViewById(R.id.setting_summary);
+                    bindSettingIcon(itemView, item);
 
                     tvTitle.setText(item.title);
                     tvSummary.setText(item.summary);
@@ -694,6 +699,7 @@ public class LauncherPreferenceFragment extends Fragment {
                     TextView tvTitle = itemView.findViewById(R.id.setting_title);
                     TextView tvSummary = itemView.findViewById(R.id.setting_summary);
                     CustomToggleView toggle = itemView.findViewById(R.id.setting_toggle);
+                    bindSettingIcon(itemView, item);
 
                     tvTitle.setText(item.title);
                     tvSummary.setText(item.summary);
@@ -741,6 +747,7 @@ public class LauncherPreferenceFragment extends Fragment {
                     TextView tvSummary = itemView.findViewById(R.id.setting_summary);
                     TextView tvVal = itemView.findViewById(R.id.setting_value_text);
                     SeekBar seekBar = itemView.findViewById(R.id.setting_seekbar);
+                    bindSettingIcon(itemView, item);
 
                     tvTitle.setText(item.title);
                     tvSummary.setText(item.summary);
@@ -774,6 +781,7 @@ public class LauncherPreferenceFragment extends Fragment {
                     TextView tvTitle = itemView.findViewById(R.id.setting_title);
                     TextView tvSummary = itemView.findViewById(R.id.setting_summary);
                     TextView tvSpinner = itemView.findViewById(R.id.setting_spinner_text);
+                    bindSettingIcon(itemView, item);
 
                     tvTitle.setText(item.title);
                     tvSummary.setText(item.summary);
@@ -806,6 +814,7 @@ public class LauncherPreferenceFragment extends Fragment {
                     TextView tvTitle = itemView.findViewById(R.id.setting_title);
                     TextView tvSummary = itemView.findViewById(R.id.setting_summary);
                     TextView tvSpinner = itemView.findViewById(R.id.setting_spinner_text);
+                    bindSettingIcon(itemView, item);
 
                     tvTitle.setText(item.title);
                     tvSummary.setText(item.summary);
@@ -836,6 +845,7 @@ public class LauncherPreferenceFragment extends Fragment {
                     itemView = inflater.inflate(R.layout.item_setting_button, holder.container, false);
                     TextView tvTitle = itemView.findViewById(R.id.setting_title);
                     TextView tvSummary = itemView.findViewById(R.id.setting_summary);
+                    bindSettingIcon(itemView, item);
 
                     tvTitle.setText(item.title);
                     tvSummary.setText(item.summary);
@@ -851,11 +861,11 @@ public class LauncherPreferenceFragment extends Fragment {
                     TextView tvTitle = itemView.findViewById(R.id.setting_title);
                     TextView tvSummary = itemView.findViewById(R.id.setting_summary);
                     TextView tvSpinner = itemView.findViewById(R.id.setting_spinner_text);
+                    bindSettingIcon(itemView, item);
 
                     tvTitle.setText(item.title);
-                    tvSummary.setText("");
+                    tvSummary.setText("Currently signed-in launcher profile");
                     tvSpinner.setText(String.valueOf(item.defaultValue));
-                    tvSpinner.setBackground(null);
                     itemView.setClickable(false);
                     itemView.setFocusable(false);
                 } else {
@@ -863,6 +873,15 @@ public class LauncherPreferenceFragment extends Fragment {
                 }
 
                 holder.container.addView(itemView);
+            }
+
+            if (holder.categoryCount != null) {
+                if (visibleCount > 0) {
+                    holder.categoryCount.setVisibility(View.VISIBLE);
+                    holder.categoryCount.setText(String.valueOf(visibleCount));
+                } else {
+                    holder.categoryCount.setVisibility(View.GONE);
+                }
             }
 
             if (!hasVisibleItems) {
@@ -889,13 +908,114 @@ public class LauncherPreferenceFragment extends Fragment {
 
         public class CategoryViewHolder extends RecyclerView.ViewHolder {
             TextView categoryTitle;
+            TextView categoryCount;
             LinearLayout container;
 
             public CategoryViewHolder(@NonNull View itemView) {
                 super(itemView);
                 categoryTitle = itemView.findViewById(R.id.category_title);
+                categoryCount = itemView.findViewById(R.id.category_count);
                 container = itemView.findViewById(R.id.settings_list_container);
             }
+        }
+    }
+
+    /** Bind a contextual icon for the redesigned Control Center rows. */
+    private void bindSettingIcon(@NonNull View itemView, @NonNull SettingItem item) {
+        ImageView icon = itemView.findViewById(R.id.setting_icon);
+        if (icon == null) return;
+        icon.setImageResource(resolveSettingIcon(item.key));
+    }
+
+    private int resolveSettingIcon(@Nullable String key) {
+        if (key == null) return R.drawable.ic_menu_settings;
+        switch (key) {
+            case "cat_launcher":
+                return R.drawable.ic_settings_launcher;
+            case "cat_video":
+            case "mg_renderer_setting_angle":
+            case "mg_renderer_setting_multidraw":
+            case "mg_renderer_setting_fsr":
+            case "mg_renderer_setting_errorSetting":
+            case "mg_renderer_setting_timerQueryExt":
+            case "mg_renderer_setting_angleDepthClearFixMode":
+            case "mg_renderer_setting_gl43exts":
+            case "mg_renderer_computeShaderext":
+            case "mg_renderer_dsaExt":
+            case "mg_renderer_multidrawCompute":
+            case "mg_renderer_setting_glsl_cache_size":
+            case "resolutionRatio":
+            case "alternate_surface":
+            case "force_vsync":
+            case "vsync_in_zink":
+            case "dump_shaders":
+                return R.drawable.ic_settings_video;
+            case "cat_controls":
+            case "buttonscale":
+            case "mousescale":
+            case "mousespeed":
+            case "disableGestures":
+            case "timeLongPressTrigger":
+            case "disableDoubleTap":
+            case "mouse_start":
+            case "always_grab_mouse":
+            case "enableGyro":
+            case "gyroSensitivity":
+            case "gyroSampleRate":
+            case "gyroSmoothing":
+            case "gyroInvertX":
+            case "gyroInvertY":
+            case "gamepad_deadzone_scale":
+            case "gamepadPassthru":
+            case "gamepadPassthruForced":
+            case "forceEnableTouchController":
+            case "touchControllerVibrateLength":
+            case "gamepad_remap_action":
+            case "gamepad_wipe_action":
+                return R.drawable.ic_settings_control;
+            case "cat_java":
+            case "install_jre":
+            case "javaArgs":
+            case "allocation":
+            case "disable_autojre_select":
+            case "java_sandbox":
+                return R.drawable.ic_settings_java;
+            case "cat_audio":
+            case "enable_audio":
+            case "launcher_volume":
+            case "use_opensles":
+                return R.drawable.ic_settings_audio;
+            case "cat_account":
+            case "active_profile_info":
+                return R.drawable.ic_settings_account;
+            case "cat_experimental":
+            case "bigCoreAffinity":
+            case "force_landscape":
+            case "enable_bg_gradient":
+            case "set_custom_launcher_bg":
+            case "remove_custom_launcher_bg":
+            case "colour_theme_presets":
+                return R.drawable.ic_settings_experimental;
+            case "cat_advanced":
+            case "clear_cache_files":
+            case "reset_all_settings":
+                return R.drawable.ic_settings_advanced;
+            case "cat_misc":
+            case "checkLibraries":
+            case "arc_capes":
+            case "zinkPreferSystemDriver":
+            case "ignoreNotch":
+            case "sustainedPerformance":
+            case "verifyManifest":
+            case "downloadSource":
+            case "force_english":
+                return R.drawable.ic_settings_misc;
+            case "notification_permission_request":
+                return R.drawable.ic_settings_notification;
+            case "microphone_permission_request":
+                return R.drawable.ic_settings_microphone;
+            default:
+                return R.drawable.ic_menu_settings;
         }
     }
 
