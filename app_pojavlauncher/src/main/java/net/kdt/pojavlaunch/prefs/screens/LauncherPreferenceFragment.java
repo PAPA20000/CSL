@@ -284,7 +284,6 @@ public class LauncherPreferenceFragment extends Fragment {
 
     private List<SettingItem> buildRootCategoryItems() {
         List<SettingItem> rootItems = new ArrayList<>();
-        rootItems.add(new SettingItem("theme_picker", SettingItem.TYPE_THEME_SELECTOR, "Theme & Accent Color", "Pick your favorite launcher color theme", null));
         rootItems.add(new SettingItem("cat_launcher", SettingItem.TYPE_CATEGORY_LINK, "Launcher Settings", "Configure language, updates, and downloads", "Launcher Settings"));
         rootItems.add(new SettingItem("cat_video", SettingItem.TYPE_CATEGORY_LINK, "Video & Graphics", "Configure renderers, resolution, and VSync options", "Video & Graphics"));
         rootItems.add(new SettingItem("cat_controls", SettingItem.TYPE_CATEGORY_LINK, "Controls", "Customize touch overlays, cursors, and gyroscope controls", "Controls"));
@@ -453,7 +452,6 @@ public class LauncherPreferenceFragment extends Fragment {
                         notifyHomeFragmentBgChanged();
                         Toast.makeText(requireContext(), R.string.preference_custom_bg_removed, Toast.LENGTH_SHORT).show();
                     }));
-                    expItems.add(new SettingItem("colour_theme_presets", SettingItem.TYPE_ACTION, getString(R.string.preference_colour_presets_title), getString(R.string.preference_colour_presets_summary), null).setAction(this::showPresetDialog));
                     categories.add(new SettingCategory("Experimental Settings", expItems));
                     break;
 
@@ -1029,12 +1027,8 @@ public class LauncherPreferenceFragment extends Fragment {
         private void bindDashboardHolder(@NonNull CategoryViewHolder holder, @NonNull SettingCategory cat, @NonNull LayoutInflater inflater) {
             holder.categoryTitle.setText("SETTINGS DECK");
             holder.categoryCount.setVisibility(View.VISIBLE);
-            holder.categoryCount.setText(String.valueOf(cat.items.size() - 1));
+            holder.categoryCount.setText(String.valueOf(cat.items.size()));
             holder.container.removeAllViews();
-
-            View themeCard = inflater.inflate(R.layout.item_setting_theme_selector, holder.container, false);
-            populateThemeSelector(themeCard, inflater);
-            holder.container.addView(themeCard);
 
             holder.container.addView(createDashboardSectionHeader(
                     holder.itemView.getContext(),
@@ -1051,12 +1045,11 @@ public class LauncherPreferenceFragment extends Fragment {
             ));
             statRow.setPadding(0, 0, 0, dp(8));
 
-            ThemeManager.Preset[] presets = ThemeManager.PRESETS;
             String activeProfile = PojavProfile.getCurrentProfileContent(requireContext(), null) != null
                     ? PojavProfile.getCurrentProfileContent(requireContext(), null).username
                     : "Guest";
-            statRow.addView(createDashboardStat(inflater, statRow, String.valueOf(cat.items.size() - 1), "Settings pages"));
-            statRow.addView(createDashboardStat(inflater, statRow, String.valueOf(presets.length), "Theme presets"));
+            statRow.addView(createDashboardStat(inflater, statRow, String.valueOf(cat.items.size()), "Settings pages"));
+            statRow.addView(createDashboardStat(inflater, statRow, "Dark", "Launcher theme"));
             statRow.addView(createDashboardStat(inflater, statRow, activeProfile, "Live profile"));
             holder.container.addView(statRow);
 
@@ -1080,7 +1073,6 @@ public class LauncherPreferenceFragment extends Fragment {
             categoryScroller.addView(categoryRow);
 
             for (SettingItem item : cat.items) {
-                if (item.type == SettingItem.TYPE_THEME_SELECTOR) continue;
                 View card = inflater.inflate(R.layout.item_setting_category_card, categoryRow, false);
                 ImageView icon = card.findViewById(R.id.category_card_icon);
                 TextView title = card.findViewById(R.id.category_card_title);
@@ -1107,7 +1099,7 @@ public class LauncherPreferenceFragment extends Fragment {
                     holder.itemView.getContext(),
                     "QUICK ACTIONS",
                     "One-tap launcher tools",
-                    "Use premium shortcuts for theme, runtime, and cleanup."
+                    "Use premium shortcuts for runtime, controls, and cleanup."
             ));
 
             android.widget.HorizontalScrollView actionScroller = new android.widget.HorizontalScrollView(holder.itemView.getContext());
@@ -1120,8 +1112,8 @@ public class LauncherPreferenceFragment extends Fragment {
             LinearLayout actionRow = new LinearLayout(holder.itemView.getContext());
             actionRow.setOrientation(LinearLayout.HORIZONTAL);
             actionScroller.addView(actionRow);
-            actionRow.addView(createQuickActionChip(inflater, actionRow, "Color Presets", () -> LauncherPreferenceFragment.this.showPresetDialog()));
             actionRow.addView(createQuickActionChip(inflater, actionRow, "Runtime Manager", () -> LauncherPreferenceFragment.this.openMultiRTDialog()));
+            actionRow.addView(createQuickActionChip(inflater, actionRow, "Controls", () -> openCategoryPage("Controls")));
             actionRow.addView(createQuickActionChip(inflater, actionRow, "Clear Cache", () -> {
                 clearCacheLocal(requireContext());
                 Toast.makeText(requireContext(), "Caches cleared successfully", Toast.LENGTH_SHORT).show();

@@ -312,19 +312,21 @@ public class JREUtils {
     public static void launchJavaVM(final AppCompatActivity activity, final Runtime runtime, File gameDirectory, final List<String> JVMArgs, final String userArgsString) throws Throwable {
         // Local Yggdrasil Server integration for offline accounts
         MinecraftAccount activeAccount = PojavProfile.getCurrentProfileContent(activity, null);
+        boolean shouldStopLocalSkinServerAfterLaunch = false;
         if (activeAccount != null && !activeAccount.isMicrosoft) {
             String username = activeAccount.username;
             String uuid = activeAccount.profileId;
-            
+
             String skinPath = Tools.DIR_DATA + "/skins/" + username + "_skin.png";
             String capePath = Tools.DIR_DATA + "/capes/" + username + "_cape.png";
-            
+
             File skinFile = new File(skinPath);
             File capeFile = new File(capePath);
-            
+
             String finalSkinPath = skinFile.exists() ? skinFile.getAbsolutePath() : null;
             String finalCapePath = capeFile.exists() ? capeFile.getAbsolutePath() : null;
-            
+            boolean hasCustomTextures = finalSkinPath != null || finalCapePath != null;
+
             boolean isSlim = false;
             File skinMeta = new File(Tools.DIR_DATA + "/skins/" + username + "_metadata.json");
             if (skinMeta.exists()) {
@@ -338,7 +340,6 @@ public class JREUtils {
                 }
             }
 
-            // === STEP 1: Pre-launch diagnostics ===
             Logger.appendToLog("=== OFFLINE SKIN SYSTEM: PRE-LAUNCH ===");
             Logger.appendToLog("Username: " + username);
             Logger.appendToLog("UUID (from account): " + uuid);
@@ -351,19 +352,23 @@ public class JREUtils {
             if (capeFile.exists()) Logger.appendToLog("Cape file size: " + capeFile.length() + " bytes");
             Logger.appendToLog("Skin model: " + (isSlim ? "ALEX (slim)" : "STEVE (default)"));
             Logger.appendToLog("Metadata file exists: " + skinMeta.exists());
+            Logger.appendToLog("Has custom textures: " + hasCustomTextures);
 
-            // === STEP 2 & 3: Start server and register profile ===
-            net.kdt.pojavlaunch.yggdrasil.LocalYggdrasilServer.start();
-            int serverPort = net.kdt.pojavlaunch.yggdrasil.LocalYggdrasilServer.getPort();
-            Logger.appendToLog("Yggdrasil server port: " + serverPort);
-            
-            net.kdt.pojavlaunch.yggdrasil.LocalYggdrasilServer.registerProfile(username, uuid, finalSkinPath, finalCapePath, isSlim);
-            Logger.appendToLog("Profile registered for: " + username);
+            if (hasCustomTextures) {
+                net.kdt.pojavlaunch.yggdrasil.LocalYggdrasilServer.start();
+                int serverPort = net.kdt.pojavlaunch.yggdrasil.LocalYggdrasilServer.getPort();
+                Logger.appendToLog("Yggdrasil server port: " + serverPort);
 
-            // Check authlib-injector.jar existence
-            File authlibJar = new File(Tools.DIR_DATA, "authlib-injector/authlib-injector.jar");
-            Logger.appendToLog("authlib-injector.jar exists: " + authlibJar.exists());
-            if (authlibJar.exists()) Logger.appendToLog("authlib-injector.jar size: " + authlibJar.length() + " bytes");
+                net.kdt.pojavlaunch.yggdrasil.LocalYggdrasilServer.registerProfile(username, uuid, finalSkinPath, finalCapePath, isSlim);
+                Logger.appendToLog("Profile registered for: " + username);
+
+                File authlibJar = new File(Tools.DIR_DATA, "authlib-injector/authlib-injector.jar");
+                Logger.appendToLog("authlib-injector.jar exists: " + authlibJar.exists());
+                if (authlibJar.exists()) Logger.appendToLog("authlib-injector.jar size: " + authlibJar.length() + " bytes");
+                shouldStopLocalSkinServerAfterLaunch = true;
+            } else {
+                Logger.appendToLog("No custom skin/cape active, skipping local Yggdrasil server startup.");
+            }
             Logger.appendToLog("=== OFFLINE SKIN SYSTEM: PRE-LAUNCH COMPLETE ===");
         }
 
@@ -467,7 +472,9 @@ public class JREUtils {
                 net.kdt.pojavlaunch.Tools.routeToCrashScreen(activity, exitCode);
             }
         } finally {
-            net.kdt.pojavlaunch.yggdrasil.LocalYggdrasilServer.stop();
+            if (shouldStopLocalSkinServerAfterLaunch && net.kdt.pojavlaunch.yggdrasil.LocalYggdrasilServer.getPort() > 0) {
+                net.kdt.pojavlaunch.yggdrasil.LocalYggdrasilServer.stop();
+            }
         }
         // Only hard-exit when the game closed cleanly; crashes are routed to the
         // dedicated crash screen so the user stays inside the launcher.

@@ -60,20 +60,8 @@ public class ThemeManager {
      */
     @StyleRes
     public static int getSavedTheme() {
-        int base = LauncherPreferences.DEFAULT_PREF.getInt(KEY_THEME, R.style.AppTheme);
         boolean gradient = LauncherPreferences.DEFAULT_PREF.getBoolean(KEY_GRADIENT, false);
-
-        // Normalise: always find the matching flat preset style
-        // (guards against an old gradient style ID being stored in prefs)
-        Preset matched = PRESETS[0];
-        for (Preset p : PRESETS) {
-            if (p.styleRes == base || p.gradientStyleRes == base) {
-                matched = p;
-                break;
-            }
-        }
-
-        return gradient ? matched.gradientStyleRes : matched.styleRes;
+        return gradient ? R.style.AppTheme_Gradient : R.style.AppTheme;
     }
 
     /**

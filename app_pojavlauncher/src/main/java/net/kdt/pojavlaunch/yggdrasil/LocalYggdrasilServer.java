@@ -31,6 +31,10 @@ public class LocalYggdrasilServer {
 
     public static synchronized void registerProfile(String username, String uuid, String skinPath, String capePath, boolean isSlim) {
         try {
+            if ((skinPath == null || skinPath.trim().isEmpty()) && (capePath == null || capePath.trim().isEmpty())) {
+                Log.i(TAG, "Skipping profile registration because no custom skin/cape is active");
+                return;
+            }
             File skinFile = skinPath != null ? new File(skinPath) : null;
             File capeFile = capePath != null ? new File(capePath) : null;
             SkinModelType modelOverride = isSlim ? SkinModelType.ALEX : SkinModelType.STEVE;

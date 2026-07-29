@@ -129,6 +129,7 @@ public class SkinManager {
 
     public void stopServer() {
         server.stop();
+        port = 0;
     }
 
     public String getAuthlibUrl() {

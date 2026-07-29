@@ -56,7 +56,11 @@ public class SkinManagerFragment extends Fragment {
     private SwitchCompat mSwitchModelType;
     private TextView mTvSkinPath;
     private TextView mTvCapePath;
-
+    private TextView mTvSkinStatusChip;
+    private TextView mTvCapeStatusChip;
+    private TextView mTvModelStatusChip;
+    private TextView mTvServerStatusChip;
+    private TextView mTvPreviewHint;
 
     private String mPendingSkinUri;
     private String mPendingCapeUri;
@@ -95,6 +99,11 @@ public class SkinManagerFragment extends Fragment {
         mSwitchModelType = view.findViewById(R.id.switch_model_type);
         mTvSkinPath = view.findViewById(R.id.tv_skin_path);
         mTvCapePath = view.findViewById(R.id.tv_cape_path);
+        mTvSkinStatusChip = view.findViewById(R.id.tv_skin_status_chip);
+        mTvCapeStatusChip = view.findViewById(R.id.tv_cape_status_chip);
+        mTvModelStatusChip = view.findViewById(R.id.tv_model_status_chip);
+        mTvServerStatusChip = view.findViewById(R.id.tv_server_status_chip);
+        mTvPreviewHint = view.findViewById(R.id.tv_preview_hint);
 
         View backButton = view.findViewById(R.id.skin_back_button);
         if (backButton != null) {
@@ -240,13 +249,20 @@ public class SkinManagerFragment extends Fragment {
                 boolean isSlimModel = mSwitchModelType.isChecked();
                 String finalSkin = mPendingSkinUri != null ? new File(Tools.DIR_DATA + "/skins/" + acc.username + "_skin.png").getAbsolutePath() : null;
                 String finalCape = mPendingCapeUri != null ? new File(Tools.DIR_DATA + "/capes/" + acc.username + "_cape.png").getAbsolutePath() : null;
+                boolean hasCustomTextures = finalSkin != null || finalCape != null;
                 String accUuid = LocalUuidUtils.generateProfileId(acc.username, isSlimModel ? SkinModelType.ALEX : SkinModelType.STEVE);
-                
-                LocalYggdrasilServer.registerProfile(acc.username, accUuid, finalSkin, finalCape, isSlimModel);
+
+                if (hasCustomTextures && LocalYggdrasilServer.getPort() > 0) {
+                    LocalYggdrasilServer.registerProfile(acc.username, accUuid, finalSkin, finalCape, isSlimModel);
+                } else if (!hasCustomTextures && LocalYggdrasilServer.getPort() > 0) {
+                    LocalYggdrasilServer.stop();
+                }
 
                 acc.clearFaceCache();
 
-                Toast.makeText(requireContext(), "Textures Saved Successfully!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), hasCustomTextures
+                        ? "Skin setup saved successfully!"
+                        : "Default appearance restored successfully!", Toast.LENGTH_SHORT).show();
                 updateAccountInfo();
 
                 // Refresh account spinner to update the skin head beside username
@@ -321,6 +337,7 @@ public class SkinManagerFragment extends Fragment {
         int[] ids = new int[]{
                 R.id.skin_top_bar,
                 R.id.skin_preview_card,
+                R.id.skin_status_card,
                 R.id.skin_skin_card,
                 R.id.skin_cape_card,
                 R.id.skin_action_card
@@ -394,7 +411,53 @@ public class SkinManagerFragment extends Fragment {
     }
 
     private void updateAccountInfo() {
-        // Obsolete detail TextViews removed from layout
+        boolean hasSkin = mPendingSkinUri != null;
+        boolean hasCape = mPendingCapeUri != null;
+        boolean isSlim = mSwitchModelType != null && mSwitchModelType.isChecked();
+        boolean serverWillRun = hasSkin || hasCape;
+
+        updateStatusChip(mTvSkinStatusChip,
+                hasSkin ? "CUSTOM SKIN" : "DEFAULT SKIN",
+                hasSkin,
+                hasSkin ? "Custom skin active in preview" : "Using default Minecraft skin");
+
+        updateStatusChip(mTvCapeStatusChip,
+                hasCape ? "CUSTOM CAPE" : "NO CAPE",
+                hasCape,
+                hasCape ? "Custom cape active in preview" : "No custom cape loaded");
+
+        updateStatusChip(mTvModelStatusChip,
+                isSlim ? "MODEL: ALEX" : "MODEL: STEVE",
+                true,
+                isSlim ? "Slim arm model selected" : "Default wide arm model selected");
+
+        updateStatusChip(mTvServerStatusChip,
+                serverWillRun ? "SERVER AUTO ON" : "SERVER OFF",
+                serverWillRun,
+                serverWillRun
+                        ? "Local server will start only when launching with these custom textures"
+                        : "No custom textures detected. Default Minecraft look will be used.");
+
+        if (mTvPreviewHint != null) {
+            mTvPreviewHint.setText(serverWillRun
+                    ? "Drag to rotate • Custom textures ready for live launch"
+                    : "Drag to rotate • Default Minecraft look will be used");
+        }
+    }
+
+    private void updateStatusChip(@Nullable TextView view, @NonNull String text, boolean active, @Nullable String contentDescription) {
+        if (view == null) return;
+        view.setText(text);
+        view.setBackgroundResource(active ? R.drawable.bg_skin_status_chip_active : R.drawable.bg_skin_status_chip_inactive);
+        view.setTextColor(active ? 0xFFEFFFFF : 0xFFBFD1E6);
+        if (contentDescription != null) {
+            view.setContentDescription(contentDescription);
+        }
+        view.animate().cancel();
+        view.setScaleX(0.96f);
+        view.setScaleY(0.96f);
+        view.setAlpha(0.78f);
+        view.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(170).start();
     }
 
     private void copyUriToFile(Uri uri, File destFile) throws Exception {
