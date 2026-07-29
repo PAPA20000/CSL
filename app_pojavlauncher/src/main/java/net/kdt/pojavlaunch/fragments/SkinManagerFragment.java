@@ -51,6 +51,9 @@ public class SkinManagerFragment extends Fragment {
     public static final String TAG = "SKIN_MANAGER_FRAGMENT";
     private static final int REQUEST_CODE_SKIN = 1001;
     private static final int REQUEST_CODE_CAPE = 1002;
+    private static final float DEFAULT_PREVIEW_ZOOM = 1.20f;
+    private static final float DEFAULT_PREVIEW_YAW = 18f;
+    private static final float DEFAULT_PREVIEW_PITCH = -4f;
 
     private GLSurfaceView mSkinPreviewSurface;
     private SwitchCompat mSwitchModelType;
@@ -66,6 +69,8 @@ public class SkinManagerFragment extends Fragment {
     private String mPendingCapeUri;
 
     private SkinRenderer mSkinRenderer;
+    private ScaleGestureDetector mScaleGestureDetector;
+    private GestureDetector mGestureDetector;
     private final Handler mAutoRotateHandler = new Handler(Looper.getMainLooper());
     private final Runnable mAutoRotateRunnable = new Runnable() {
         @Override
@@ -304,10 +309,6 @@ public class SkinManagerFragment extends Fragment {
         for (int id : animatedButtons) {
             View target = root.findViewById(id);
             applyPressAnimation(target);
-        }
-
-        if (mSwitchModelType != null) {
-            mSwitchModelType.setOnation(target);
         }
 
         if (mSwitchModelType != null) {
