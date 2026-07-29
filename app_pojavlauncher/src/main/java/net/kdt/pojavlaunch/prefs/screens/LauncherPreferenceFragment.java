@@ -174,15 +174,13 @@ public class LauncherPreferenceFragment extends Fragment {
 
     private void setupHeaderUi() {
         if (mHeaderTitle != null) {
-            mHeaderTitle.setText(mCategoryName != null ? mCategoryName : "Settings Command Center");
+            mHeaderTitle.setText("Settings");
         }
         if (mHeaderSubtitle != null) {
-            mHeaderSubtitle.setText(mCategoryName != null
-                    ? resolveCategorySubtitleByName(mCategoryName)
-                    : "Swipe through categories, tune performance, and shape a premium mobile Minecraft launcher.");
+            mHeaderSubtitle.setVisibility(View.GONE);
         }
         if (mHeaderBadge != null) {
-            mHeaderBadge.setText(mCategoryName == null ? "9 PANELS" : resolveCategoryBadgeByName(mCategoryName));
+            mHeaderBadge.setVisibility(View.GONE);
         }
         if (mHeaderIcon != null) {
             mHeaderIcon.setImageResource(mCategoryName != null ? resolveCategoryIconByName(mCategoryName) : R.drawable.ic_menu_settings);
