@@ -40,7 +40,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="LAUNCHER THEME & ACCENT COLOR"
+                android:text="LAUNCHER THEME &amp; ACCENT COLOR"
                 android:textColor="#F4F8FF"
                 android:textSize="14sp"
                 android:textStyle="bold" />
