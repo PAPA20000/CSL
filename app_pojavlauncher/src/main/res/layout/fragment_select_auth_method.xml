@@ -22,7 +22,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="CS Launcher V3"
-            android:textColor="#A6FF3D"
+            android:textColor="#00E5FF"
             android:textSize="@dimen/_18ssp"
             android:textStyle="bold"
             android:letterSpacing="0.04" />

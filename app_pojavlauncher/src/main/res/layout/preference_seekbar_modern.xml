@@ -59,7 +59,7 @@
             android:id="@+id/seekbar_value"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/neon_green"
+            android:textColor="#00E5FF"
             android:textSize="14sp"
             android:textStyle="bold"
             android:layout_marginStart="8dp" />
