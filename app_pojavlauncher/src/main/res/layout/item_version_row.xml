@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Phase-5 version row: name + MC / compat / recommended badges (Req-16) -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -6,6 +7,7 @@
     android:layout_marginHorizontal="@dimen/_12sdp"
     android:layout_marginVertical="@dimen/_3sdp"
     android:background="@drawable/background_card"
+    android:stateListAnimator="@animator/card_press_anim"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?android:attr/selectableItemBackground">
@@ -23,12 +25,41 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="#FFFFFF"
+            android:textColor="#F0F0F3"
             android:textSize="@dimen/_13ssp"
             android:textStyle="bold"
             android:maxLines="1"
             android:ellipsize="end"
             tools:text="sodium-fabric-0.6.0-beta.1" />
+
+        <!-- Recommended badge (best compatible pick) -->
+        <TextView
+            android:id="@+id/version_recommended_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_8sdp"
+            android:text="★ RECOMMENDED"
+            android:textColor="#E4E4EA"
+            android:textSize="9sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.08"
+            android:background="@drawable/bg_badge_recommended"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <!-- Compatibility badge vs selected profile -->
+        <TextView
+            android:id="@+id/version_compat_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_6sdp"
+            android:text="✓ Compatible"
+            android:textSize="9sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.05"
+            android:background="@drawable/bg_badge_compat_ok"
+            android:textColor="#9FD6AC"
+            tools:text="✓ Compatible" />
 
         <!-- MC version badge -->
         <TextView

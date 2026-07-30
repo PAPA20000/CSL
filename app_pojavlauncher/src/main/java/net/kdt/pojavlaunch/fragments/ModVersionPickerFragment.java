@@ -26,6 +26,9 @@ import net.kdt.pojavlaunch.modloaders.modpacks.api.ModrinthApi;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.ModDetail;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.ModItem;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.Constants;
+import net.kdt.pojavlaunch.prefs.LauncherPreferences;
+import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
+import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,6 +46,8 @@ public class ModVersionPickerFragment extends Fragment {
     private ModItem mModItem;
     private ModDetail mModDetail;
     private String mContentType;
+    /** MC version of the selected profile — drives green/red compat badges (Req-16). */
+    private String mTargetMcVersion;
     private String mProfileKey;
 
     // Views
@@ -119,7 +124,41 @@ public class ModVersionPickerFragment extends Fragment {
         mPrevButton.setOnClickListener(v -> goToPage(mCurrentPage - 1));
         mNextButton.setOnClickListener(v -> goToPage(mCurrentPage + 1));
 
+        // Analyze the selected profile once — badges + recommended pin depend on it
+        mTargetMcVersion = resolveTargetMcVersion();
+
         loadVersions();
+    }
+
+    /** Extracts the plain MC version (e.g. "1.20.1") from the selected profile. */
+    @Nullable
+    private String resolveTargetMcVersion() {
+        try {
+            String key = mProfileKey != null ? mProfileKey
+                    : LauncherPreferences.DEFAULT_PREF.getString(
+                            LauncherPreferences.PREF_KEY_CURRENT_PROFILE, null);
+            if (key == null || key.isEmpty()) return null;
+            LauncherProfiles.load();
+            MinecraftProfile profile = LauncherProfiles.mainProfileJson.profiles.get(key);
+            String vid = profile != null ? profile.lastVersionId : null;
+            if (vid == null) return null;
+            // Handles raw ("1.20.1") and loader-suffixed ("fabric-loader-0.15.7-1.20.1") ids
+            java.util.regex.Matcher m = java.util.regex.Pattern
+                    .compile("(\\d+\\.\\d+(?:\\.\\d+)?)").matcher(vid);
+            return m.find() ? m.group(1) : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /** True when the entry's MC-version list contains the profile's version. */
+    private boolean isEntryCompatible(VersionEntry entry) {
+        if (mTargetMcVersion == null) return true; // nothing to judge against → treat as compatible
+        if (entry.mcVersion == null || entry.mcVersion.isEmpty()) return false;
+        for (String token : entry.mcVersion.split(",")) {
+            if (token.trim().equals(mTargetMcVersion)) return true;
+        }
+        return false;
     }
 
     private void loadVersions() {
@@ -203,6 +242,28 @@ public class ModVersionPickerFragment extends Fragment {
         // Sort: latest MC version first
         java.util.Collections.sort(mAllVersions, sLatestFirst);
 
+        // Req-16: judge compatibility against the selected profile, then present
+        // compatible entries first (stable partition) and crown the top one as
+        // the Recommended pick.
+        boolean recommendedCrowned = false;
+        for (VersionEntry entry : mAllVersions) {
+            entry.compatible = isEntryCompatible(entry);
+        }
+        List<VersionEntry> compatible = new ArrayList<>();
+        List<VersionEntry> incompatible = new ArrayList<>();
+        for (VersionEntry entry : mAllVersions) {
+            (entry.compatible ? compatible : incompatible).add(entry);
+        }
+        for (VersionEntry entry : compatible) {
+            if (!recommendedCrowned) {
+                entry.recommended = true;
+                recommendedCrowned = true;
+            }
+        }
+        mAllVersions.clear();
+        mAllVersions.addAll(compatible);
+        mAllVersions.addAll(incompatible);
+
         mTotalPages = (int) Math.ceil((double) mAllVersions.size() / PAGE_SIZE);
         if (mTotalPages < 1) mTotalPages = 1;
 
@@ -271,6 +332,8 @@ public class ModVersionPickerFragment extends Fragment {
         final String hash;
         final String[] depIds;
         final String[] depTypes;
+        boolean compatible = true;   // vs selected profile (Req-16)
+        boolean recommended = false; // best compatible pick, pinned at top
 
         VersionEntry(String name, String mcVersion, String url, int index,
                      String hash, String[] depIds, String[] depTypes) {
@@ -313,6 +376,24 @@ public class ModVersionPickerFragment extends Fragment {
             } else {
                 holder.mcBadge.setVisibility(View.GONE);
             }
+
+            // Req-16 compat badge: green ✓ or red ✕ against the selected profile
+            holder.compatBadge.setVisibility(mTargetMcVersion != null ? View.VISIBLE : View.GONE);
+            if (entry.compatible) {
+                holder.compatBadge.setText("✓ Compatible");
+                holder.compatBadge.setTextColor(0xFF9FD6AC); // muted success
+                holder.compatBadge.setBackgroundResource(R.drawable.bg_badge_compat_ok);
+                holder.itemView.setAlpha(1f);
+            } else {
+                holder.compatBadge.setText("✕ Incompatible");
+                holder.compatBadge.setTextColor(0xFFE5A0A6); // muted rose
+                holder.compatBadge.setBackgroundResource(R.drawable.bg_badge_compat_bad);
+                holder.itemView.setAlpha(0.62f); // visually de-emphasize
+            }
+
+            // Recommended crown for the best compatible pick
+            holder.recBadge.setVisibility(entry.recommended ? View.VISIBLE : View.GONE);
+
             holder.itemView.setOnClickListener(v -> openInstallScreen(entry));
         }
 
@@ -324,11 +405,15 @@ public class ModVersionPickerFragment extends Fragment {
         class VH extends RecyclerView.ViewHolder {
             final TextView nameView;
             final TextView mcBadge;
+            final TextView compatBadge;
+            final TextView recBadge;
 
             VH(View itemView) {
                 super(itemView);
                 nameView = itemView.findViewById(R.id.version_name);
                 mcBadge = itemView.findViewById(R.id.version_mc_badge);
+                compatBadge = itemView.findViewById(R.id.version_compat_badge);
+                recBadge = itemView.findViewById(R.id.version_recommended_badge);
             }
         }
     }
