@@ -343,8 +343,29 @@ public class LauncherActivity extends BaseActivity {
         mProgressLayout.observe(ProgressLayout.AUTHENTICATE_MICROSOFT);
         mProgressLayout.observe(ProgressLayout.DOWNLOAD_VERSION_LIST);
 
-        // Official partner welcome — shown exactly once, after first launch settles
-        maybeShowInfrawireWelcome();
+        // First-launch runtime wizard comes first; the partner welcome
+        // chains after the wizard is finished/skipped so dialogs never stack.
+        if (!maybeShowRuntimeWizard()) {
+            // Official partner welcome — shown exactly once, after first launch settles
+            maybeShowInfrawireWelcome();
+        }
+    }
+
+    /**
+     * First-launch runtime onboarding wizard (Java 8/17/21/25, multi-select,
+     * recommended picks, skip allowed). Returns true when it will be shown.
+     */
+    private boolean maybeShowRuntimeWizard() {
+        if (net.kdt.pojavlaunch.multirt.RuntimeWizardDialog.wasShown()) return false;
+        View root = findViewById(android.R.id.content);
+        if (root == null) return false;
+        root.postDelayed(() -> {
+            if (isFinishing() || isDestroyed()) return;
+            if (net.kdt.pojavlaunch.multirt.RuntimeWizardDialog.wasShown()) return;
+            net.kdt.pojavlaunch.multirt.RuntimeWizardDialog.show(
+                    this, () -> maybeShowInfrawireWelcome());
+        }, 1200);
+        return true;
     }
 
     /**
