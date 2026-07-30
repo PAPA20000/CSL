@@ -2,7 +2,9 @@ package net.kdt.pojavlaunch.modloaders.modpacks.api;
 
 import androidx.annotation.Nullable;
 
+import com.kdt.mcgui.ProgressLayout;
 import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.utils.DownloadControl;
 import net.kdt.pojavlaunch.utils.DownloadUtils;
 
 import java.io.File;
@@ -103,7 +105,7 @@ public class ModDownloader {
         }
     }
 
-    class DownloadTask implements Runnable, Tools.DownloaderFeedback {
+    class DownloadTask implements Runnable, Tools.DownloaderFeedback, DownloadControl.KeyedFeedback {
         private final String[] mDownloadUrls;
         private final File mDestination;
         private final String mSha1;
@@ -114,6 +116,12 @@ public class ModDownloader {
             this.mDownloadUrls = downloadurls;
             this.mDestination = downloadDestination;
             this.mSha1 = downloadHash;
+        }
+
+        /** Lets the monitored copy loop apply deck pause/stop to modpack file transfers. */
+        @Override
+        public String getControlKey() {
+            return ProgressLayout.INSTALL_MODPACK;
         }
 
         @Override
@@ -144,6 +152,10 @@ public class ModDownloader {
                 } catch (InterruptedIOException e) {
                     throw new InterruptedException();
                 } catch (IOException e) {
+                    if (DownloadControl.isCancellation(e)) {
+                        // User stopped the transfer — no retries, fail the pool at once.
+                        return e;
+                    }
                     e.printStackTrace();
                     exception = e;
                 }

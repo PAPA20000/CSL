@@ -824,7 +824,12 @@ public class ModInstallFragment extends Fragment {
                     if (!isAdded()) return;
                     mInstallButton.setEnabled(true);
                     mInstallButton.setText(R.string.mod_install_now);
-                    Tools.showErrorRemote(ctx, R.string.modpack_install_download_failed, e);
+                    if (net.kdt.pojavlaunch.utils.DownloadControl.isCancellation(e)) {
+                        // User pressed STOP on the download console — no error dialog.
+                        Toast.makeText(ctx, R.string.download_console_stopped, Toast.LENGTH_SHORT).show();
+                    } else {
+                        Tools.showErrorRemote(ctx, R.string.modpack_install_download_failed, e);
+                    }
                 });
             }
         });

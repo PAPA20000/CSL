@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.widget.ProgressBar;
@@ -15,6 +16,7 @@ import android.graphics.Color;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import net.kdt.pojavlaunch.modloaders.modpacks.imagecache.ModIconCache;
+import net.kdt.pojavlaunch.utils.DownloadControl;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -36,6 +38,11 @@ import java.util.ArrayList;
  * Since progress is posted in a specific way, The packing/unpacking is handheld by the class
  *
  * This class relies on ExtraCore for its behavior.
+ *
+ * v3 — bottom-anchored "Download Console": big tabular %, luminous beam,
+ * size/speed/ETA stats, and PAUSE / STOP / HIDE controls with a collapsed
+ * mini-pill state. Pause & stop are delivered to the copy loop through
+ * DownloadControl; HIDE collapses the deck into the pill.
  */
 public class ProgressLayout extends ConstraintLayout implements View.OnClickListener, TaskCountListener{
     public static final String UNPACK_RUNTIME = "unpack_runtime";
@@ -45,6 +52,11 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
     public static final String INSTALL_MODPACK = "install_modpack";
     public static final String EXTRACT_COMPONENTS = "extract_components";
     public static final String EXTRACT_SINGLE_FILES = "extract_single_files";
+
+    private static final int COLOR_TEXT_PRIMARY = 0xFFF0F0F3;
+    private static final int COLOR_TEXT_SECONDARY = 0xFFE4E4EA;
+    private static final int COLOR_SUCCESS = 0xFF9FD6AC;
+    private static final int COLOR_AMBER = 0xFFD8C79A;
 
     public ProgressLayout(@NonNull Context context) {
         super(context);
@@ -81,23 +93,64 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
     private View mDownloadCard;
     private ImageView mProgressIcon;
     private boolean mIsFinishing = false;
+    /** true after the user pressed STOP — the next count-drop must exit quietly, no "✓" flash */
+    private boolean mExpectingQuietEnd = false;
+
+    // ── Download Console v3 controls ────────────────────────────────────
+    private View mControlsRow;
+    private View mBtnPause;
+    private ImageView mBtnPauseIcon;
+    private TextView mBtnPauseText;
+    private View mBtnStop;
+    private View mBtnHide;
+    private View mPausedBadge;
+    private View mConsolePill;
+    private TextView mPillPercent;
+    private boolean mIsCollapsed = false;
+
+    private float dp(float v) {
+        return v * getResources().getDisplayMetrics().density;
+    }
+
     private final Runnable mFadeOutRunnable = new Runnable() {
         @Override
         public void run() {
-            // Exit upward — the deck returns to where it dropped from
+            // Exit downward — the console sinks back off the bottom edge
             ProgressLayout.this.animate()
                 .alpha(0f)
-                .translationY(-ProgressLayout.this.getHeight() - 24f)
+                .translationY(ProgressLayout.this.getHeight() + dp(24f))
                 .setDuration(420)
                 .withEndAction(() -> {
-                    ProgressLayout.this.setVisibility(GONE);
-                    ProgressLayout.this.setAlpha(1f);
-                    ProgressLayout.this.setTranslationY(0f);
-                    mIsFinishing = false;
+                    hideChromeImmediately();
                 })
                 .start();
         }
     };
+
+    /** Instantly parks the whole console off-screen and resets transient state. */
+    private void hideChromeImmediately() {
+        removeCallbacks(mFadeOutRunnable);
+        ProgressLayout.this.animate().cancel();
+        if (mDownloadCard != null) {
+            mDownloadCard.animate().cancel();
+        }
+        if (mConsolePill != null) {
+            mConsolePill.animate().cancel();
+            mConsolePill.setVisibility(GONE);
+            mConsolePill.setAlpha(1f);
+            mConsolePill.setTranslationY(0f);
+        }
+        mIsCollapsed = false;
+        if (mDownloadCard != null) {
+            mDownloadCard.setVisibility(VISIBLE);
+            mDownloadCard.setAlpha(1f);
+            mDownloadCard.setTranslationY(0f);
+        }
+        ProgressLayout.this.setVisibility(GONE);
+        ProgressLayout.this.setAlpha(1f);
+        ProgressLayout.this.setTranslationY(0f);
+        mIsFinishing = false;
+    }
 
 
     public void observe(String progressKey){
@@ -112,6 +165,13 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
 
     public boolean hasProcesses(){
         return ProgressKeeper.getTaskCount() > 0;
+    }
+
+    /** Records that flow through DownloadUtils' monitored loop and honor pause/stop. */
+    private static boolean isCancellableKey(String key) {
+        return INSTALL_MODPACK.equals(key)
+                || DOWNLOAD_MINECRAFT.equals(key)
+                || UNPACK_RUNTIME.equals(key);
     }
 
 
@@ -131,24 +191,142 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
         mDownloadCard = findViewById(R.id.download_card);
         mProgressIcon = findViewById(R.id.progress_icon);
 
+        mControlsRow = findViewById(R.id.progress_controls_row);
+        mBtnPause = findViewById(R.id.progress_btn_pause);
+        mBtnPauseIcon = findViewById(R.id.progress_btn_pause_icon);
+        mBtnPauseText = findViewById(R.id.progress_btn_pause_text);
+        mBtnStop = findViewById(R.id.progress_btn_stop);
+        mBtnHide = findViewById(R.id.progress_btn_hide);
+        mPausedBadge = findViewById(R.id.progress_paused_badge);
+        mConsolePill = findViewById(R.id.console_pill);
+        mPillPercent = findViewById(R.id.console_pill_percent);
+
         if (mDownloadCard != null) {
             mDownloadCard.setOnClickListener(v -> {
                 if (mIsFinishing || ProgressKeeper.getTaskCount() == 0) {
-                    removeCallbacks(mFadeOutRunnable);
-                    ProgressLayout.this.animate().cancel();
-                    ProgressLayout.this.setAlpha(0f);
-                    ProgressLayout.this.setVisibility(GONE);
-                    ProgressLayout.this.setAlpha(1f);
-                    ProgressLayout.this.setTranslationY(0f);
-                    mIsFinishing = false;
+                    mExpectingQuietEnd = false;
+                    hideChromeImmediately();
                 } else {
                     ProgressLayout.this.onClick(ProgressLayout.this);
                 }
             });
         }
 
+        // ── PAUSE / RESUME ──────────────────────────────────────────────
+        if (mBtnPause != null) {
+            mBtnPause.setOnClickListener(v -> {
+                String key = mLastProgressingKey;
+                if (key == null) return;
+                boolean nowPaused = !DownloadControl.isPaused(key);
+                DownloadControl.requestPause(key, nowPaused);
+                updatePauseUi(nowPaused);
+            });
+        }
+
+        // ── STOP ────────────────────────────────────────────────────────
+        if (mBtnStop != null) {
+            mBtnStop.setOnClickListener(v -> {
+                String key = mLastProgressingKey;
+                if (key == null) return;
+                DownloadControl.requestPause(key, false); // clear pause so the loop can see the cancel
+                DownloadControl.requestCancel(key);
+                updatePauseUi(false);
+                mExpectingQuietEnd = true;
+                Toast.makeText(getContext(), R.string.download_console_stopped, Toast.LENGTH_SHORT).show();
+                hideChromeImmediately(); // deck leaves right away; the task winds down quietly
+            });
+        }
+
+        // ── HIDE (collapse to mini pill) ────────────────────────────────
+        if (mBtnHide != null) {
+            mBtnHide.setOnClickListener(v -> collapseToPill());
+        }
+
+        // ── Mini pill → expand back to full console ─────────────────────
+        if (mConsolePill != null) {
+            mConsolePill.setOnClickListener(v -> expandFromPill());
+        }
+
         setBackgroundColor(Color.TRANSPARENT);
         setOnClickListener(this);
+    }
+
+    /** Collapse the console into the corner mini-pill (download keeps running). */
+    private void collapseToPill() {
+        if (mIsCollapsed || mIsFinishing || getVisibility() != VISIBLE) return;
+        mIsCollapsed = true;
+
+        if (mPillPercent != null) mPillPercent.setText(mLastProgress + "%");
+        if (mConsolePill != null) {
+            mConsolePill.setVisibility(VISIBLE);
+            mConsolePill.setAlpha(0f);
+            mConsolePill.setTranslationY(dp(12f));
+            mConsolePill.animate()
+                    .alpha(1f)
+                    .translationY(0f)
+                    .setDuration(280)
+                    .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                    .start();
+        }
+        if (mDownloadCard != null) {
+            mDownloadCard.animate().cancel();
+            mDownloadCard.animate()
+                    .alpha(0f)
+                    .translationY(dp(26f))
+                    .setDuration(230)
+                    .setInterpolator(new android.view.animation.AccelerateInterpolator())
+                    .withEndAction(() -> {
+                        mDownloadCard.setVisibility(GONE);
+                        mDownloadCard.setTranslationY(0f);
+                    })
+                    .start();
+        }
+    }
+
+    /** Restore the full console from the mini-pill. */
+    private void expandFromPill() {
+        if (!mIsCollapsed) return;
+        mIsCollapsed = false;
+
+        if (mDownloadCard != null) {
+            mDownloadCard.setVisibility(VISIBLE);
+            mDownloadCard.setAlpha(0f);
+            mDownloadCard.setTranslationY(dp(18f));
+            mDownloadCard.animate()
+                    .alpha(1f)
+                    .translationY(0f)
+                    .setDuration(300)
+                    .setInterpolator(new android.view.animation.OvershootInterpolator(0.5f))
+                    .start();
+        }
+        if (mConsolePill != null) {
+            mConsolePill.animate().cancel();
+            mConsolePill.animate()
+                    .alpha(0f)
+                    .translationY(dp(8f))
+                    .setDuration(190)
+                    .setInterpolator(new android.view.animation.AccelerateInterpolator())
+                    .withEndAction(() -> {
+                        mConsolePill.setVisibility(GONE);
+                        mConsolePill.setAlpha(1f);
+                        mConsolePill.setTranslationY(0f);
+                    })
+                    .start();
+        }
+    }
+
+    /** Reflect the paused/running state across badge, button and beam tint. */
+    private void updatePauseUi(boolean paused) {
+        if (mPausedBadge != null) mPausedBadge.setVisibility(paused ? VISIBLE : GONE);
+        if (mBtnPauseIcon != null) mBtnPauseIcon.setImageResource(paused ? R.drawable.ic_play_arrow : R.drawable.ic_pause);
+        if (mBtnPauseText != null) mBtnPauseText.setText(paused ? R.string.download_console_resume : R.string.download_console_pause);
+        if (mProgressBar != null && !mIsFinishing) {
+            mProgressBar.setProgressTintList(paused ? ColorStateList.valueOf(COLOR_AMBER) : null);
+        }
+        if (paused) {
+            if (mSpeedText != null) mSpeedText.setVisibility(GONE);
+            if (mEtaText != null) mEtaText.setVisibility(GONE);
+        }
     }
 
     public static void setProgress(String progressKey, int progress){
@@ -173,13 +351,8 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
     @Override
     public void onClick(View v) {
         if (mIsFinishing || ProgressKeeper.getTaskCount() == 0) {
-            removeCallbacks(mFadeOutRunnable);
-            this.animate().cancel();
-            this.setAlpha(0f);
-            this.setVisibility(GONE);
-            this.setAlpha(1f);
-            this.setTranslationY(0f);
-            mIsFinishing = false;
+            mExpectingQuietEnd = false;
+            hideChromeImmediately();
         } else {
             mLinearLayout.setVisibility(mLinearLayout.getVisibility() == GONE ? VISIBLE : GONE);
             mFlipArrow.setRotation(mLinearLayout.getVisibility() == GONE? 0 : 180);
@@ -193,28 +366,47 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
                 removeCallbacks(mFadeOutRunnable);
                 boolean becameVisible = getVisibility() != VISIBLE;
                 mIsFinishing = false;
+                mExpectingQuietEnd = false;
                 setAlpha(1f);
                 setTranslationY(0f);
+                // fresh task: console starts expanded, chrome reset
+                mIsCollapsed = false;
+                if (mConsolePill != null) {
+                    mConsolePill.animate().cancel();
+                    mConsolePill.setVisibility(GONE);
+                    mConsolePill.setAlpha(1f);
+                    mConsolePill.setTranslationY(0f);
+                }
+                if (mDownloadCard != null) {
+                    mDownloadCard.animate().cancel();
+                    mDownloadCard.setVisibility(VISIBLE);
+                    mDownloadCard.setAlpha(1f);
+                    mDownloadCard.setTranslationY(0f);
+                }
                 if (mProgressBar != null) {
                     mProgressBar.setProgressTintList(null);
                 }
                 if (mStatusText != null) {
-                    mStatusText.setTextColor(0xFFF0F0F3);
+                    mStatusText.setTextColor(COLOR_TEXT_PRIMARY);
                 }
                 if (mPercentageText != null) {
-                    mPercentageText.setTextColor(0xFFE4E4EA);
+                    mPercentageText.setTextColor(COLOR_TEXT_SECONDARY);
                 }
                 if (mProgressIcon != null) {
                     mProgressIcon.setAlpha(1f);
                     mProgressIcon.setVisibility(VISIBLE);
                 }
+                updatePauseUi(false);
+                if (mControlsRow != null) {
+                    mControlsRow.setVisibility(isCancellableKey(mLastProgressingKey) ? VISIBLE : GONE);
+                }
                 mTaskNumberDisplayer.setText(getContext().getString(R.string.progresslayout_tasks_in_progress, tc));
                 setVisibility(VISIBLE);
-                // Premium entrance: deck drops in from above with a soft land
+                // Premium entrance: console rises from the bottom edge with a soft land
                 if (becameVisible) {
                     animate().cancel();
                     setAlpha(0f);
-                    setTranslationY(-getResources().getDisplayMetrics().density * 120f);
+                    setTranslationY(dp(120f));
                     animate().alpha(1f).translationY(0f)
                             .setDuration(460)
                             .setInterpolator(new android.view.animation.OvershootInterpolator(0.65f))
@@ -222,6 +414,12 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
                 }
             } else {
                 if (getVisibility() == VISIBLE && !mIsFinishing) {
+                    if (mExpectingQuietEnd) {
+                        // User stopped this download — no success flash, just leave quietly.
+                        mExpectingQuietEnd = false;
+                        hideChromeImmediately();
+                        return;
+                    }
                     mIsFinishing = true;
                     // Completion choreography: beam flash + success palette
                     if (mPulseOrbit != null) {
@@ -233,21 +431,27 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
                     }
                     if (mStatusText != null) {
                         mStatusText.setText("✓ Download Complete");
-                        mStatusText.setTextColor(0xFF9FD6AC); // muted premium success
+                        mStatusText.setTextColor(COLOR_SUCCESS);
                     }
                     if (mPercentageText != null) {
                         mPercentageText.setText("100%");
-                        mPercentageText.setTextColor(0xFF9FD6AC);
+                        mPercentageText.setTextColor(COLOR_SUCCESS);
                     }
                     if (mProgressBar != null) {
                         mProgressBar.setProgress(100);
-                        mProgressBar.setProgressTintList(ColorStateList.valueOf(0xFF9FD6AC));
+                        mProgressBar.setProgressTintList(ColorStateList.valueOf(COLOR_SUCCESS));
                         // one-shot beam flash to signal completion
                         mProgressBar.animate().cancel();
                         mProgressBar.setAlpha(0.3f);
                         mProgressBar.animate().alpha(1f).setDuration(480)
                                 .setInterpolator(new android.view.animation.DecelerateInterpolator())
                                 .start();
+                    }
+                    if (mPausedBadge != null) {
+                        mPausedBadge.setVisibility(GONE);
+                    }
+                    if (mControlsRow != null) {
+                        mControlsRow.setVisibility(GONE);
                     }
                     if (mDetailText != null) {
                         mDetailText.setVisibility(GONE);
@@ -258,10 +462,15 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
                     if (mEtaText != null) {
                         mEtaText.setVisibility(GONE);
                     }
+                    // The collapse pill mirrors the success moment, then leaves with the deck
+                    if (mIsCollapsed && mPillPercent != null) {
+                        mPillPercent.setText("✓");
+                    }
                     removeCallbacks(mFadeOutRunnable);
                     postDelayed(mFadeOutRunnable, 2600);
                 } else if (getVisibility() != VISIBLE) {
-                    setVisibility(GONE);
+                    mExpectingQuietEnd = false;
+                    hideChromeImmediately();
                 }
             }
         });
@@ -297,6 +506,8 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
         }
         @Override
         public void onProgressStarted() {
+            // Fresh attempt for this record: clear stale pause/stop flags & notes
+            DownloadControl.reset(progressKey);
             post(()-> {
                 Log.i("ProgressLayout", "onProgressStarted");
                 mLinearLayout.addView(textView, params);
@@ -325,7 +536,20 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
                     mPulseOrbit.setProgress(progress);
                     mLastProgress = progress;
                 }
+                boolean keyChanged = !this.progressKey.equals(mLastProgressingKey);
                 mLastProgressingKey = this.progressKey;
+                // Collapsed pill always mirrors the live percentage
+                if (mIsCollapsed && mPillPercent != null && progress >= 0 && !mIsFinishing) {
+                    mPillPercent.setText(progress + "%");
+                }
+                // Controls only exist for transfers that honor them
+                if (mControlsRow != null && !mIsFinishing) {
+                    mControlsRow.setVisibility(isCancellableKey(this.progressKey) ? VISIBLE : GONE);
+                }
+                if (keyChanged && !mIsFinishing) {
+                    // Pause UI must reflect the newly-active record, not the previous one
+                    updatePauseUi(DownloadControl.isPaused(this.progressKey));
+                }
 
                 // --- NEW COMPACT VIEW UPDATES ---
                 if (mProgressBar != null && progress >= 0) {
@@ -522,7 +746,7 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
                 }
 
                 if (mStatusText != null) {
-                    mStatusText.setTextColor(0xFFF0F0F3); // Keep status bright during progress
+                    mStatusText.setTextColor(COLOR_TEXT_PRIMARY); // Keep status bright during progress
                     CharSequence prev = mStatusText.getText();
                     boolean titleChanged = prev == null || !prev.toString().contentEquals(statusTitle);
                     mStatusText.setText(statusTitle);
@@ -545,8 +769,9 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
                         mDetailText.setVisibility(GONE);
                     }
                 }
+                boolean isPausedNow = DownloadControl.isPaused(this.progressKey);
                 if (mSpeedText != null) {
-                    if (speed >= 0) {
+                    if (speed >= 0 && !isPausedNow) {
                         mSpeedText.setText(String.format(java.util.Locale.US, "%.1f MB/s", speed));
                         mSpeedText.setVisibility(VISIBLE);
                     } else {
@@ -554,7 +779,7 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
                     }
                 }
                 if (mEtaText != null) {
-                    if (!etaStr.isEmpty()) {
+                    if (!etaStr.isEmpty() && !isPausedNow) {
                         mEtaText.setText("• " + etaStr);
                         mEtaText.setVisibility(VISIBLE);
                     } else {

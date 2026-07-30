@@ -78,6 +78,14 @@ public class DownloadUtils {
         conn.setConnectTimeout(TIME_OUT);
         conn.setReadTimeout(TIME_OUT);
         InputStream readStr = conn.getInputStream();
+        String controlKey;
+        if (monitor instanceof net.kdt.pojavlaunch.progresskeeper.DownloaderProgressWrapper) {
+            controlKey = ((net.kdt.pojavlaunch.progresskeeper.DownloaderProgressWrapper) monitor).getRecord();
+        } else if (monitor instanceof DownloadControl.KeyedFeedback) {
+            controlKey = ((DownloadControl.KeyedFeedback) monitor).getControlKey();
+        } else {
+            controlKey = null;
+        }
         try (FileOutputStream fos = new FileOutputStream(outputFile)) {
             int current;
             int overall = 0;
@@ -86,11 +94,17 @@ public class DownloadUtils {
             if (buffer == null) buffer = new byte[65535];
 
             while ((current = readStr.read(buffer)) != -1) {
+                // Pause/stop control from the download deck lives here
+                DownloadControl.checkpoint(controlKey);
                 overall += current;
                 fos.write(buffer, 0, current);
                 monitor.updateProgress(overall, length);
             }
             conn.disconnect();
+        } catch (DownloadControl.DownloadCancelledException e) {
+            conn.disconnect();
+            outputFile.delete(); // never keep a half-written file after user stop
+            throw e;
         } catch (IOException e) {
             throw new IOException("Unable to download from " + urlInput, e);
         }

@@ -30,6 +30,11 @@ public class DownloaderProgressWrapper implements Tools.DownloaderFeedback {
         this.mProgressRecord = progressRecord;
     }
 
+    /** ProgressKeeper record this wrapper reports to (used by pause/stop controls). */
+    public String getRecord() {
+        return mProgressRecord;
+    }
+
     public DownloaderProgressWrapper(int progressString, String progressRecord, String modName, String modVersion, String modIconUrl, String contentType) {
         this.mProgressString = progressString;
         this.mProgressRecord = progressRecord;

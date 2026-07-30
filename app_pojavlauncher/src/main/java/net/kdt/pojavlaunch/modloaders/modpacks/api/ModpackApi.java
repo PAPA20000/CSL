@@ -63,7 +63,13 @@ public interface ModpackApi {
                 if (loaderInfo == null) return;
                 loaderInfo.getDownloadTask(new NotificationDownloadListener(context, loaderInfo)).run();
             }catch (IOException e) {
-                Tools.showErrorRemote(context, R.string.modpack_install_download_failed, e);
+                if (net.kdt.pojavlaunch.utils.DownloadControl.isCancellation(e)) {
+                    // User pressed STOP on the download console — no error dialog.
+                    Tools.runOnUiThread(() ->
+                            android.widget.Toast.makeText(context, R.string.download_console_stopped, android.widget.Toast.LENGTH_SHORT).show());
+                } else {
+                    Tools.showErrorRemote(context, R.string.modpack_install_download_failed, e);
+                }
             }
         });
     }

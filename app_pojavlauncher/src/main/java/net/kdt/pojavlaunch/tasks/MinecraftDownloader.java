@@ -25,6 +25,7 @@ import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.mirrors.DownloadMirror;
 import net.kdt.pojavlaunch.mirrors.MirrorTamperedException;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
+import net.kdt.pojavlaunch.utils.DownloadControl;
 import net.kdt.pojavlaunch.utils.DownloadUtils;
 import net.kdt.pojavlaunch.utils.FileUtils;
 import net.kdt.pojavlaunch.value.DependentLibrary;
@@ -116,7 +117,12 @@ public class MinecraftDownloader {
                 listener.onDownloadDone();
                 }
             }catch (Exception e) {
-                listener.onDownloadFailed(e);
+                if (DownloadControl.isCancellation(e)) {
+                    // User pressed STOP on the download console — wind down quietly.
+                    Log.i("MinecraftDownloader", "Download stopped by user");
+                } else {
+                    listener.onDownloadFailed(e);
+                }
             }
             ProgressLayout.clearProgress(ProgressLayout.DOWNLOAD_MINECRAFT);
         });
@@ -166,6 +172,10 @@ public class MinecraftDownloader {
             Exception thrownException = mDownloaderThreadException.get();
             if(thrownException != null) {
                 throw thrownException;
+            } else if (DownloadControl.consumeCancelledNote(ProgressLayout.DOWNLOAD_MINECRAFT)) {
+                // Every cancelled pool thread swallowed its exception (skippable files),
+                // but the user still stopped this transfer — never continue to launch.
+                throw new DownloadControl.DownloadCancelledException(ProgressLayout.DOWNLOAD_MINECRAFT);
             } else {
                 ensureJarFileCopy();
                 extractNatives(versionName);
@@ -486,7 +496,7 @@ public class MinecraftDownloader {
         return tlb;
     }
 
-    private final class DownloaderTask implements Runnable, Tools.DownloaderFeedback {
+    private final class DownloaderTask implements Runnable, Tools.DownloaderFeedback, DownloadControl.KeyedFeedback {
         private final File mTargetPath;
         private final String mTargetUrl;
         private String mTargetSha1;
@@ -494,6 +504,12 @@ public class MinecraftDownloader {
         private final boolean mSkipIfFailed;
         private int mLastCurr;
         private final long mDownloadSize;
+
+        /** Lets the monitored copy loop apply deck pause/stop to game-file transfers. */
+        @Override
+        public String getControlKey() {
+            return ProgressLayout.DOWNLOAD_MINECRAFT;
+        }
 
         DownloaderTask(File targetPath, int downloadClass, String targetUrl, String targetSha1,
                        long downloadSize, boolean skipIfFailed) {

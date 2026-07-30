@@ -266,6 +266,14 @@
     <string name="use_global_default">(Use global default)</string>
     <string name="default_control">Default controlmap</string>
     <string name="progresslayout_tasks_in_progress">%d tasks in progress</string>
+    <!-- Download Console (v3) — pause / stop / hide controls -->
+    <string name="download_console_pause">PAUSE</string>
+    <string name="download_console_resume">RESUME</string>
+    <string name="download_console_stop">STOP</string>
+    <string name="download_console_hide">HIDE</string>
+    <string name="download_console_paused">PAUSED</string>
+    <string name="download_console_stopped">Download stopped</string>
+    <string name="download_console_cancelled_clean">Stopped by user</string>
     <string name="notification_terminate">Terminate</string>
     <string name="notification_game_runs">The game is running!</string>
     <string name="folder_dialog_create">Create</string>
