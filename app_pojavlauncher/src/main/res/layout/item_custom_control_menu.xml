@@ -5,19 +5,20 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:padding="14dp"
+    android:paddingHorizontal="14dp"
+    android:paddingVertical="13dp"
     android:layout_marginHorizontal="12dp"
     android:layout_marginVertical="5dp"
     android:background="@drawable/bg_fastclient_card"
+    android:stateListAnimator="@animator/card_press_anim"
     android:clickable="false"
     android:focusable="false"
     android:minHeight="56dp">
 
     <ImageView
         android:id="@+id/menu_item_icon"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:tint="#E4E4EA"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
         android:scaleType="fitCenter"
         android:contentDescription="@null" />
 
@@ -25,10 +26,11 @@
         android:id="@+id/menu_item_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
-        android:textStyle="bold"
+        android:layout_marginStart="14dp"
+        android:textColor="#F0F0F3"
+        android:textSize="13.5sp"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="0.01"
         android:maxLines="1"
         android:ellipsize="end" />
 

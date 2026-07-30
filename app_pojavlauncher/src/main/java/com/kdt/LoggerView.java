@@ -60,6 +60,13 @@ public class LoggerView extends ConstraintLayout {
                 (compoundButton, isChecked) -> {
                     mLogTextView.setVisibility(isChecked ? VISIBLE : GONE);
                     if(isChecked) {
+                        // Premium empty state while the game warms up (Req-3)
+                        if (mLogTextView.length() == 0) {
+                            android.text.SpannableString hint = new android.text.SpannableString("› Waiting for game output…");
+                            hint.setSpan(new android.text.style.ForegroundColorSpan(0xFF7C7C88), 0, hint.length(),
+                                    android.text.SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            mLogTextView.setText(hint);
+                        }
                         Logger.addLogListener(mLogListener);
                     }else{
                         mLogTextView.setText("");
@@ -86,15 +93,58 @@ public class LoggerView extends ConstraintLayout {
         );
         autoscrollToggle.setChecked(true);
 
-        // Listen to logs
+        // Listen to logs — Phase-5 premium stream (Req-3):
+        // level-tinted lines + glide-to-bottom instead of a hard jump
         mLogListener = text -> {
             if(mLogTextView.getVisibility() != VISIBLE) return;
             post(() -> {
-                mLogTextView.append(text + '\n');
-                if(mScrollView.isKeepFocusing()) mScrollView.fullScroll(View.FOCUS_DOWN);
+                mLogTextView.append(colorizeLine(text) + "\n");
+                if(mScrollView.isKeepFocusing()) {
+                    mScrollView.post(() -> {
+                        // Smooth glide: the newest line slips softly into view
+                        int max = Math.max(0, mLogTextView.getBottom() - mScrollView.getHeight()
+                                + mScrollView.getPaddingBottom() + mLogTextView.getPaddingBottom());
+                        mScrollView.smoothScrollTo(0, Math.min(max, mScrollView.getScrollY() + dp(56)));
+                    });
+                }
             });
 
         };
+
+        // Soft pulse on the live indicator while the view is streaming
+        View liveDot = findViewById(R.id.log_live_dot);
+        if (liveDot != null) {
+            android.animation.ValueAnimator pulse = android.animation.ValueAnimator.ofFloat(1f, 0.35f);
+            pulse.setDuration(900);
+            pulse.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+            pulse.setRepeatMode(android.animation.ValueAnimator.REVERSE);
+            pulse.addUpdateListener(a -> liveDot.setAlpha((Float) a.getAnimatedValue()));
+            pulse.start();
+        }
+    }
+
+    private int dp(int v) {
+        return (int) (v * getResources().getDisplayMetrics().density);
+    }
+
+    /** Tints a log line by severity (terminal-appropriate muted tones). */
+    private CharSequence colorizeLine(String line) {
+        android.text.SpannableString span = new android.text.SpannableString(line);
+        int color = 0xFFC9CBD6; // default body tone
+        String up = line.toUpperCase(java.util.Locale.US);
+        if (up.contains("ERROR") || up.contains("FATAL") || up.contains("EXCEPTION")
+                || up.contains("CAUSED BY")) {
+            color = 0xFFE5A0A6; // muted rose
+        } else if (up.contains("WARN")) {
+            color = 0xFFD8C79A; // muted amber
+        } else if (up.startsWith("[INFO]") || up.contains(" INFO ")) {
+            color = 0xFFE4E4EA; // silver
+        } else if (up.contains("DEBUG")) {
+            color = 0xFF7C7C88; // dim
+        }
+        span.setSpan(new android.text.style.ForegroundColorSpan(color), 0, line.length(),
+                android.text.SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return span;
     }
 
 }

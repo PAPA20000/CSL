@@ -1,34 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- PHASE-5 PREMIUM GAME LOG TERMINAL (Req-3)           -->
+<!-- Charcoal toolbar · live dot · chip toggles ·        -->
+<!-- near-black terminal body with soft line spacing.    -->
+<!-- ═══════════════════════════════════════════════════ -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <!-- ── Premium toolbar ── -->
     <View
         android:id="@+id/top_log_view"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:background="#555555"
+        android:layout_height="48dp"
+        android:background="@drawable/bg_log_toolbar"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/log_live_dot"
+        android:layout_width="8dp"
+        android:layout_height="8dp"
+        android:background="@drawable/bg_log_dot"
+        android:layout_marginStart="16dp"
+        app:layout_constraintBottom_toBottomOf="@+id/top_log_view"
+        app:layout_constraintStart_toStartOf="@+id/top_log_view"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/log_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="25dp"
+        android:layout_marginStart="10dp"
         android:text="@string/log_view_label_log_output"
-        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textColor="#F0F0F3"
+        android:textSize="12.5sp"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="0.06"
         app:layout_constraintBottom_toBottomOf="@+id/top_log_view"
-        app:layout_constraintStart_toStartOf="@+id/top_log_view"
+        app:layout_constraintStart_toEndOf="@+id/log_live_dot"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ToggleButton
         android:id="@+id/content_log_toggle_autoscroll"
         android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_marginHorizontal="10dp"
+        android:layout_height="30dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/bg_log_toggle"
         android:textOff="@string/log_view_button_scroll_off"
         android:textOn="@string/log_view_button_scroll_on"
+        android:textColor="#C9CBD6"
+        android:textSize="9.5sp"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="0.05"
+        android:paddingHorizontal="9dp"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
         app:layout_constraintBottom_toBottomOf="@+id/top_log_view"
         app:layout_constraintEnd_toStartOf="@+id/content_log_toggle_log"
         app:layout_constraintTop_toTopOf="parent"/>
@@ -36,30 +63,42 @@
     <ToggleButton
         android:id="@+id/content_log_toggle_log"
         android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_marginHorizontal="10dp"
+        android:layout_height="30dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/bg_log_toggle"
         android:textOff="@string/log_view_button_output_off"
         android:textOn="@string/log_view_button_output_on"
+        android:textColor="#C9CBD6"
+        android:textSize="9.5sp"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="0.05"
+        android:paddingHorizontal="9dp"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
         app:layout_constraintBottom_toBottomOf="@+id/top_log_view"
         app:layout_constraintEnd_toStartOf="@+id/log_view_cancel"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageButton
         android:id="@+id/log_view_cancel"
-        android:layout_width="70dp"
-        android:layout_height="70dp"
-        android:scaleType="centerCrop"
-        android:src="@android:drawable/ic_delete"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginEnd="8dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_log_close"
+        android:background="@drawable/bg_log_toggle"
+        android:contentDescription="@string/log_view_button_output_off"
         app:layout_constraintBottom_toBottomOf="@+id/top_log_view"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- ── Terminal body ── -->
     <com.kdt.DefocusableScrollView
         android:id="@+id/content_log_scroll"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:alpha="0.8"
-        android:background="#000000"
+        android:background="#0B0B0E"
+        android:overScrollMode="never"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/top_log_view">
 
@@ -67,7 +106,12 @@
             android:id="@+id/content_log_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textIsSelectable="true"/>
+            android:textIsSelectable="true"
+            android:textColor="#C9CBD6"
+            android:textSize="10.5sp"
+            android:lineSpacingMultiplier="1.18"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="10dp" />
 
     </com.kdt.DefocusableScrollView>
 

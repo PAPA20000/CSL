@@ -47,7 +47,7 @@
                 android:layout_marginStart="6dp"
                 android:letterSpacing="0.04"
                 android:text="BACK"
-                android:textColor="#E8F7FF"
+                android:textColor="#F0F0F3"
                 android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -65,7 +65,7 @@
                 android:letterSpacing="0.14"
                 android:text="CURSOR STUDIO"
                 android:textAllCaps="true"
-                android:textColor="#66D9FF"
+                android:textColor="#DADDE5"
                 android:textSize="10sp"
                 android:textStyle="bold" />
 
@@ -127,14 +127,14 @@
                 android:layout_marginBottom="10dp"
                 android:letterSpacing="0.12"
                 android:text="LIVE PREVIEW"
-                android:textColor="#66D9FF"
+                android:textColor="#DADDE5"
                 android:textSize="11sp"
                 android:textStyle="bold" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/cursor_preview_container"
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
+                android:layout_height="228dp"
                 android:layout_marginBottom="22dp"
                 android:background="@drawable/bg_cursor_preview_stage"
                 android:elevation="4dp">
@@ -168,7 +168,7 @@
                     android:paddingHorizontal="12dp"
                     android:paddingVertical="5dp"
                     android:text="DEFAULT"
-                    android:textColor="#7AFFFF"
+                    android:textColor="#E4E4EA"
                     android:textSize="10sp"
                     android:textStyle="bold"
                     app:layout_constraintBottom_toBottomOf="parent"
@@ -180,7 +180,7 @@
                     android:layout_height="wrap_content"
                     android:layout_margin="14dp"
                     android:text="Scale: 100% | Opacity: 100%"
-                    android:textColor="#8FA3BC"
+                    android:textColor="#9C9CA8"
                     android:textSize="11sp"
                     android:textStyle="bold"
                     app:layout_constraintBottom_toBottomOf="parent"
@@ -195,7 +195,7 @@
                 android:layout_marginBottom="10dp"
                 android:letterSpacing="0.12"
                 android:text="CURSOR STYLE"
-                android:textColor="#66D9FF"
+                android:textColor="#DADDE5"
                 android:textSize="11sp"
                 android:textStyle="bold" />
 
@@ -213,6 +213,7 @@
                     android:layout_marginEnd="8dp"
                     android:layout_weight="1"
                     android:background="@drawable/bg_cursor_style_card_selected"
+                    android:stateListAnimator="@animator/card_press_anim"
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="center"
@@ -248,6 +249,7 @@
                     android:layout_marginHorizontal="4dp"
                     android:layout_weight="1"
                     android:background="@drawable/bg_cursor_style_card"
+                    android:stateListAnimator="@animator/card_press_anim"
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="center"
@@ -283,6 +285,7 @@
                     android:layout_marginStart="8dp"
                     android:layout_weight="1"
                     android:background="@drawable/bg_cursor_style_card"
+                    android:stateListAnimator="@animator/card_press_anim"
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="center"
@@ -321,7 +324,7 @@
                 android:layout_marginBottom="10dp"
                 android:letterSpacing="0.12"
                 android:text="SIZE"
-                android:textColor="#66D9FF"
+                android:textColor="#DADDE5"
                 android:textSize="11sp"
                 android:textStyle="bold" />
 
@@ -345,7 +348,7 @@
                         android:layout_weight="1"
                         android:letterSpacing="0.04"
                         android:text="CURSOR SCALE"
-                        android:textColor="#F4F8FF"
+                        android:textColor="#F0F0F3"
                         android:textSize="12sp"
                         android:textStyle="bold" />
 
@@ -357,7 +360,7 @@
                         android:paddingHorizontal="10dp"
                         android:paddingVertical="4dp"
                         android:text="100%"
-                        android:textColor="#7AFFFF"
+                        android:textColor="#E4E4EA"
                         android:textSize="12sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -382,7 +385,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
                     android:text="Cursor hotspot is now auto-managed for a cleaner setup."
-                    android:textColor="#8FA3BC"
+                    android:textColor="#9C9CA8"
                     android:textSize="11sp" />
             </LinearLayout>
 
@@ -394,7 +397,7 @@
                 android:layout_marginBottom="10dp"
                 android:letterSpacing="0.12"
                 android:text="GLOW &amp; COLOR"
-                android:textColor="#66D9FF"
+                android:textColor="#DADDE5"
                 android:textSize="11sp"
                 android:textStyle="bold" />
 
@@ -418,7 +421,7 @@
                         android:layout_weight="1"
                         android:letterSpacing="0.04"
                         android:text="GLOW INTENSITY"
-                        android:textColor="#F4F8FF"
+                        android:textColor="#F0F0F3"
                         android:textSize="12sp"
                         android:textStyle="bold" />
 
@@ -430,7 +433,7 @@
                         android:paddingHorizontal="10dp"
                         android:paddingVertical="4dp"
                         android:text="0%"
-                        android:textColor="#7AFFFF"
+                        android:textColor="#E4E4EA"
                         android:textSize="12sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -463,7 +466,7 @@
                         android:layout_weight="1"
                         android:letterSpacing="0.04"
                         android:text="CURSOR OPACITY"
-                        android:textColor="#F4F8FF"
+                        android:textColor="#F0F0F3"
                         android:textSize="12sp"
                         android:textStyle="bold" />
 
@@ -475,7 +478,7 @@
                         android:paddingHorizontal="10dp"
                         android:paddingVertical="4dp"
                         android:text="100%"
-                        android:textColor="#7AFFFF"
+                        android:textColor="#E4E4EA"
                         android:textSize="12sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -502,7 +505,7 @@
                     android:layout_marginBottom="12dp"
                     android:letterSpacing="0.08"
                     android:text="GLOW COLOR PRESETS"
-                    android:textColor="#8FA3BC"
+                    android:textColor="#9C9CA8"
                     android:textSize="11sp"
                     android:textStyle="bold" />
 
@@ -597,7 +600,7 @@
                 android:layout_marginBottom="10dp"
                 android:letterSpacing="0.12"
                 android:text="IMPORT &amp; EXPORT"
-                android:textColor="#66D9FF"
+                android:textColor="#DADDE5"
                 android:textSize="11sp"
                 android:textStyle="bold" />
 
@@ -615,6 +618,7 @@
                     android:layout_height="108dp"
                     android:layout_marginBottom="14dp"
                     android:background="@drawable/bg_cursor_upload_zone"
+                    android:stateListAnimator="@animator/card_press_anim"
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="center"
@@ -632,7 +636,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Tap to add cursor image"
-                        android:textColor="#C9D7EA"
+                        android:textColor="#F0F0F3"
                         android:textSize="13sp"
                         android:textStyle="bold" />
 
@@ -641,7 +645,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="PNG · WEBP · JPG supported"
-                        android:textColor="#8FA3BC"
+                        android:textColor="#9C9CA8"
                         android:textSize="11sp" />
                 </LinearLayout>
 
@@ -673,7 +677,7 @@
                         android:background="@drawable/bg_cursor_btn_secondary"
                         android:stateListAnimator="@null"
                         android:text="EXPORT FILE"
-                        android:textColor="#7AFFFF"
+                        android:textColor="#E4E4EA"
                         android:textSize="12sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -702,7 +706,7 @@
                 android:letterSpacing="0.06"
                 android:stateListAnimator="@null"
                 android:text="RESET TO DEFAULT"
-                android:textColor="#FFCDD2"
+                android:textColor="#E5A0A6"
                 android:textSize="13sp"
                 android:textStyle="bold" />
         </LinearLayout>

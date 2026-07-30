@@ -42,15 +42,16 @@ public class CustomControlsActivity extends BaseActivity implements EditorExitab
 		mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
 
 		String[] menuItems = getResources().getStringArray(R.array.menu_customcontrol_customactivity);
+		// Phase-5 premium silver icon set (Req-11) — no more framework glyphs
 		int[] menuIcons = new int[]{
-				android.R.drawable.ic_menu_add, // Add Button
-				android.R.drawable.ic_menu_gallery, // Add Drawer
-				android.R.drawable.ic_menu_compass, // Add Joystick
-				android.R.drawable.ic_menu_send, // Add Command Button
-				android.R.drawable.ic_menu_upload, // Load
-				android.R.drawable.ic_menu_save, // Save
-				android.R.drawable.ic_menu_myplaces, // Default
-				android.R.drawable.ic_menu_share // Export
+				R.drawable.ic_ctrl_add_button,   // Add Button
+				R.drawable.ic_ctrl_add_drawer,   // Add Drawer
+				R.drawable.ic_ctrl_add_joystick, // Add Joystick
+				R.drawable.ic_ctrl_add_command,  // Add Command Button
+				R.drawable.ic_ctrl_load,         // Load
+				R.drawable.ic_ctrl_save,         // Save
+				R.drawable.ic_ctrl_default,      // Default
+				R.drawable.ic_ctrl_export        // Export
 		};
 		mDrawerNavigationView.setAdapter(new ArrayAdapter<String>(this, R.layout.item_custom_control_menu, R.id.menu_item_text, menuItems) {
 			@androidx.annotation.NonNull

@@ -425,11 +425,11 @@
     <string name="cropper_lock_horizontal">H. lock</string>
     <string name="cropper_reset">Reset</string>
     <string name="cropper_select_cancelled">Selection cancelled</string>
-    <string name="log_view_button_scroll_off">Autoscroll\nOFF</string>
-    <string name="log_view_button_scroll_on">Autoscroll\nON</string>
-    <string name="log_view_button_output_off">Output\nOFF</string>
-    <string name="log_view_button_output_on">Output\nON</string>
-    <string name="log_view_label_log_output">Log output:</string>
+    <string name="log_view_button_scroll_off">SCROLL</string>
+    <string name="log_view_button_scroll_on">SCROLL</string>
+    <string name="log_view_button_output_off">LOG</string>
+    <string name="log_view_button_output_on">LOG</string>
+    <string name="log_view_label_log_output">LIVE LOG</string>
     <string name="execute_jar_failed_to_read_file">Failed to read the .jar file</string>
     <string name="execute_jar_incompatible_runtime">Execute .jar feature is not compatible with Java %d</string>
     <string name="controller_button_a">A</string>

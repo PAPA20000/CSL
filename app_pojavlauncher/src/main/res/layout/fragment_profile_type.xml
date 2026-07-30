@@ -2,7 +2,7 @@
 <com.kdt.DefocusableScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#060A14"
+    android:background="#0B0B0E"
     android:fillViewport="true"
     android:scrollbarSize="3dp"
     android:fadeScrollbars="true"
@@ -53,7 +53,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Choose how you want to play"
-                    android:textColor="#888888"
+                    android:textColor="#9C9CA8"
                     android:textSize="12sp"
                     android:layout_marginTop="2dp" />
             </LinearLayout>
@@ -76,7 +76,7 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingHorizontal="16dp"
-            android:background="@drawable/bg_glass_card_premium"
+            android:background="@drawable/bg_glass_card_premium" android:stateListAnimator="@animator/card_press_anim"
             android:clickable="true"
             android:focusable="true"
             android:layout_marginBottom="10dp">
@@ -91,7 +91,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Vanilla Profile"
-                android:textColor="#FFFFFF"
+                android:textColor="#F0F0F3"
                 android:textSize="14sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -103,7 +103,7 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingHorizontal="16dp"
-            android:background="@drawable/bg_glass_card_premium"
+            android:background="@drawable/bg_glass_card_premium" android:stateListAnimator="@animator/card_press_anim"
             android:clickable="true"
             android:focusable="true">
 
@@ -111,14 +111,14 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_menu_settings"
-                android:tint="#AAAAAA"
+                android:tint="#9C9CA8"
                 android:layout_marginEnd="12dp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="OptiFine Profile"
-                android:textColor="#FFFFFF"
+                android:textColor="#F0F0F3"
                 android:textSize="14sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -141,7 +141,7 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingHorizontal="16dp"
-            android:background="@drawable/bg_glass_card_premium"
+            android:background="@drawable/bg_glass_card_premium" android:stateListAnimator="@animator/card_press_anim"
             android:clickable="true"
             android:focusable="true"
             android:layout_marginBottom="10dp">
@@ -156,7 +156,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Fabric Loader"
-                android:textColor="#FFFFFF"
+                android:textColor="#F0F0F3"
                 android:textSize="14sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -168,7 +168,7 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingHorizontal="16dp"
-            android:background="@drawable/bg_glass_card_premium"
+            android:background="@drawable/bg_glass_card_premium" android:stateListAnimator="@animator/card_press_anim"
             android:clickable="true"
             android:focusable="true"
             android:layout_marginBottom="10dp">
@@ -183,7 +183,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Quilt Loader"
-                android:textColor="#FFFFFF"
+                android:textColor="#F0F0F3"
                 android:textSize="14sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -195,7 +195,7 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingHorizontal="16dp"
-            android:background="@drawable/bg_glass_card_premium"
+            android:background="@drawable/bg_glass_card_premium" android:stateListAnimator="@animator/card_press_anim"
             android:clickable="true"
             android:focusable="true"
             android:layout_marginBottom="10dp">
@@ -204,14 +204,14 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_pojav_full"
-                android:tint="#AAAAAA"
+                android:tint="#9C9CA8"
                 android:layout_marginEnd="12dp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Forge Loader"
-                android:textColor="#FFFFFF"
+                android:textColor="#F0F0F3"
                 android:textSize="14sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -223,7 +223,7 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingHorizontal="16dp"
-            android:background="@drawable/bg_glass_card_premium"
+            android:background="@drawable/bg_glass_card_premium" android:stateListAnimator="@animator/card_press_anim"
             android:clickable="true"
             android:focusable="true">
 
@@ -231,14 +231,14 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_pojav_full"
-                android:tint="#AAAAAA"
+                android:tint="#9C9CA8"
                 android:layout_marginEnd="12dp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="NeoForge Loader"
-                android:textColor="#FFFFFF"
+                android:textColor="#F0F0F3"
                 android:textSize="14sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -261,7 +261,7 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingHorizontal="16dp"
-            android:background="@drawable/bg_glass_card_premium"
+            android:background="@drawable/bg_glass_card_premium" android:stateListAnimator="@animator/card_press_anim"
             android:clickable="true"
             android:focusable="true"
             android:layout_marginBottom="10dp">
@@ -289,7 +289,7 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:paddingHorizontal="16dp"
-            android:background="@drawable/bg_glass_card_premium"
+            android:background="@drawable/bg_glass_card_premium" android:stateListAnimator="@animator/card_press_anim"
             android:clickable="true"
             android:focusable="true">
 
@@ -303,7 +303,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Better Than Adventure"
-                android:textColor="#FFFFFF"
+                android:textColor="#F0F0F3"
                 android:textSize="14sp"
                 android:textStyle="bold" />
         </LinearLayout>
