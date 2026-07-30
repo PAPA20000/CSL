@@ -13,8 +13,12 @@ public class MinecraftProfile {
 	public String created;
 	public String lastUsed;
 	public String icon;
-	/** Profile background banner image (separate from the profile icon). Stored as a data URI. */
-	public String background;
+	/**
+	 * Profile background banner image (separate from the profile icon).
+	 * May be a data URI (PNG/WEBP/GIF) or an http(s) URL. New profiles default
+	 * to the official animated CS Launcher GIF — it animates on the home cards.
+	 */
+	public String background = net.kdt.pojavlaunch.profiles.ProfileGifSupport.DEFAULT_PROFILE_BG_URL;
 	public String lastVersionId;
 	/** Per-profile RAM allocation in megabytes. Null means "use the global launcher setting". */
 	public Integer ramAllocationMB;
@@ -34,7 +38,6 @@ public class MinecraftProfile {
 		TEMPLATE.lastVersionId = LATEST_RELEASE;
 		TEMPLATE.icon = "default";
 		TEMPLATE.type = "custom";
-		TEMPLATE.background = null;
 		TEMPLATE.ramAllocationMB = null;
 		return TEMPLATE;
 	}

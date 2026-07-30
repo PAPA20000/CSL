@@ -35,7 +35,7 @@
                 android:layout_height="18dp"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_arrow_back"
-                app:tint="#00E5FF" />
+                app:tint="#C9CBD6" />
         </LinearLayout>
 
         <FrameLayout
@@ -50,7 +50,7 @@
                 android:layout_gravity="center"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_manage_skin"
-                app:tint="#00E5FF" />
+                app:tint="#C9CBD6" />
         </FrameLayout>
 
         <LinearLayout
@@ -66,7 +66,7 @@
                 android:layout_height="wrap_content"
                 android:letterSpacing="0.12"
                 android:text="SKIN LAB"
-                android:textColor="#66D9FF"
+                android:textColor="#DADDE5"
                 android:textSize="9sp"
                 android:textStyle="bold" />
 
@@ -74,7 +74,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Skin Customization"
-                android:textColor="#FFFFFF"
+                android:textColor="#F0F0F3"
                 android:textSize="18sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -89,7 +89,7 @@
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
             android:text="SERVER OFF"
-            android:textColor="#BFD1E6"
+            android:textColor="#9C9CA8"
             android:textSize="10sp"
             android:textStyle="bold" />
     </LinearLayout>
@@ -142,7 +142,7 @@
                     android:paddingStart="10dp"
                     android:paddingEnd="10dp"
                     android:text="DEFAULT SKIN"
-                    android:textColor="#BFD1E6"
+                    android:textColor="#9C9CA8"
                     android:textSize="10sp"
                     android:textStyle="bold" />
 
@@ -156,25 +156,10 @@
                     android:paddingStart="10dp"
                     android:paddingEnd="10dp"
                     android:text="NO CAPE"
-                    android:textColor="#BFD1E6"
+                    android:textColor="#9C9CA8"
                     android:textSize="10sp"
                     android:textStyle="bold" />
             </LinearLayout>
-
-            <TextView
-                android:id="@+id/tv_model_status_chip"
-                android:layout_width="wrap_content"
-                android:layout_height="28dp"
-                android:layout_gravity="top|end"
-                android:layout_margin="12dp"
-                android:background="@drawable/bg_skin_status_chip_active"
-                android:gravity="center"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:text="MODEL: STEVE"
-                android:textColor="#EFFFFF"
-                android:textSize="10sp"
-                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tv_preview_hint"
@@ -187,7 +172,7 @@
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:text="DRAG TO ROTATE  •  PINCH TO ZOOM  •  DOUBLE TAP TO RESET"
-                android:textColor="#DFF7FF"
+                android:textColor="#F0F0F3"
                 android:textSize="10sp"
                 android:textStyle="bold" />
         </FrameLayout>
@@ -219,7 +204,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="SKIN"
-                        android:textColor="#66D9FF"
+                        android:textColor="#DADDE5"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -228,35 +213,8 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="Import a static PNG skin and preview it live on the model."
-                        android:textColor="#8FA3BC"
+                        android:textColor="#9C9CA8"
                         android:textSize="12sp" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="14dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Model Type"
-                            android:textColor="#FFFFFF"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
-                        <androidx.appcompat.widget.SwitchCompat
-                            android:id="@+id/switch_model_type"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Alex"
-                            android:textColor="#C0D1E4"
-                            android:textSize="13sp"
-                            android:thumbTint="#39FF14"
-                            android:trackTint="#2A3749" />
-                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/tv_skin_path"
@@ -271,7 +229,7 @@
                         android:paddingEnd="12dp"
                         android:paddingBottom="10dp"
                         android:text="No custom skin selected"
-                        android:textColor="#E4F7FF"
+                        android:textColor="#F0F0F3"
                         android:textSize="12sp" />
 
                     <LinearLayout
@@ -289,7 +247,7 @@
                             android:layout_weight="1"
                             android:background="@drawable/bg_skin_button_primary"
                             android:text="UPLOAD SKIN"
-                            android:textColor="#061018"
+                            android:textColor="#0E0E11"
                             android:textSize="12sp"
                             android:textStyle="bold" />
 
@@ -301,7 +259,7 @@
                             android:layout_weight="1"
                             android:background="@drawable/bg_skin_button_danger"
                             android:text="REMOVE SKIN"
-                            android:textColor="#FFD6DB"
+                            android:textColor="#E5A0A6"
                             android:textSize="12sp"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -320,7 +278,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="CAPE"
-                        android:textColor="#66D9FF"
+                        android:textColor="#DADDE5"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -329,7 +287,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="Add or remove a cape with instant preview updates."
-                        android:textColor="#8FA3BC"
+                        android:textColor="#9C9CA8"
                         android:textSize="12sp" />
 
                     <TextView
@@ -345,7 +303,7 @@
                         android:paddingEnd="12dp"
                         android:paddingBottom="10dp"
                         android:text="No custom cape selected"
-                        android:textColor="#E4F7FF"
+                        android:textColor="#F0F0F3"
                         android:textSize="12sp" />
 
                     <LinearLayout
@@ -363,7 +321,7 @@
                             android:layout_weight="1"
                             android:background="@drawable/bg_skin_button_primary"
                             android:text="UPLOAD CAPE"
-                            android:textColor="#061018"
+                            android:textColor="#0E0E11"
                             android:textSize="12sp"
                             android:textStyle="bold" />
 
@@ -375,7 +333,7 @@
                             android:layout_weight="1"
                             android:background="@drawable/bg_skin_button_danger"
                             android:text="REMOVE CAPE"
-                            android:textColor="#FFD6DB"
+                            android:textColor="#E5A0A6"
                             android:textSize="12sp"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -394,7 +352,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="APPLY"
-                        android:textColor="#66D9FF"
+                        android:textColor="#DADDE5"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -403,7 +361,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="Save your active skin, cape, and model choice or instantly go back to the default look."
-                        android:textColor="#8FA3BC"
+                        android:textColor="#9C9CA8"
                         android:textSize="12sp" />
 
                     <LinearLayout
@@ -421,7 +379,7 @@
                             android:layout_weight="0.9"
                             android:background="@drawable/bg_skin_button_secondary"
                             android:text="RESET ALL"
-                            android:textColor="#DFF7FF"
+                            android:textColor="#F0F0F3"
                             android:textSize="12sp"
                             android:textStyle="bold" />
 
@@ -433,7 +391,7 @@
                             android:layout_weight="1.1"
                             android:background="@drawable/bg_skin_button_primary"
                             android:text="SAVE &amp; APPLY"
-                            android:textColor="#061018"
+                            android:textColor="#0E0E11"
                             android:textSize="13sp"
                             android:textStyle="bold" />
                     </LinearLayout>

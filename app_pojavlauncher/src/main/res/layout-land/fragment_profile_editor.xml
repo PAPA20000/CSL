@@ -18,12 +18,12 @@
         android:gravity="center_vertical"
         android:paddingHorizontal="24dp"
         android:background="@drawable/bg_studio_header">
-        <ImageView android:layout_width="28dp" android:layout_height="28dp" android:src="@drawable/ic_edit_profile" android:tint="#00E5FF" />
+        <ImageView android:layout_width="28dp" android:layout_height="28dp" android:src="@drawable/ic_edit_profile" android:tint="#C9CBD6" />
         <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:orientation="vertical">
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="PROFILE STUDIO" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="18sp" android:letterSpacing="0.08" />
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Configure game, runtime and resources" android:textColor="#8EA0B9" android:textSize="11sp" />
         </LinearLayout>
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="EDIT MODE" android:textColor="#00E5FF" android:textStyle="bold" android:textSize="10sp" android:letterSpacing="0.1" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="EDIT MODE" android:textColor="#C9CBD6" android:textStyle="bold" android:textSize="10sp" android:letterSpacing="0.1" />
     </LinearLayout>
 
     <androidx.core.widget.NestedScrollView

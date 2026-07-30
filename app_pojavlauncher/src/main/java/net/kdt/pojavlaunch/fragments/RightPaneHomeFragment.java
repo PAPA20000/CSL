@@ -216,22 +216,47 @@ public class RightPaneHomeFragment extends Fragment {
         ImageView wallpaper = view.findViewById(R.id.right_pane_wallpaper);
         File bgFile = new File(CUSTOM_BG_PATH);
         if (bgFile.exists()) {
-            Drawable d = Drawable.createFromPath(bgFile.getAbsolutePath());
-            if (d != null) {
-                wallpaper.setImageDrawable(d);
-                wallpaper.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                wallpaper.setBackground(null);
-                if (wallpaper.getVisibility() != View.VISIBLE) {
-                    wallpaper.setAlpha(0f);
-                    wallpaper.setVisibility(View.VISIBLE);
-                    wallpaper.animate().alpha(1f).setDuration(400).start();
+            // Animated GIF wallpapers decode on a worker thread, then loop smoothly
+            final String path = bgFile.getAbsolutePath();
+            net.kdt.pojavlaunch.PojavApplication.sExecutorService.execute(() -> {
+                Drawable d;
+                try {
+                    byte[] head = new byte[6];
+                    try (java.io.FileInputStream fis = new java.io.FileInputStream(path)) {
+                        //noinspection ResultOfMethodCallIgnored
+                        fis.read(head);
+                    }
+                    if (head[0] == 'G' && head[1] == 'I' && head[2] == 'F') {
+                        d = new pl.droidsonroids.gif.GifDrawable(path);
+                    } else {
+                        d = Drawable.createFromPath(path);
+                    }
+                } catch (Throwable t) {
+                    d = Drawable.createFromPath(path);
                 }
-                return;
-            }
+                final Drawable finalDrawable = d;
+                if (getActivity() != null) {
+                    Tools.runOnUiThread(() -> applyWallpaper(wallpaper, finalDrawable));
+                }
+            });
+            return;
         }
         if (wallpaper.getVisibility() == View.VISIBLE) {
             wallpaper.animate().alpha(0f).setDuration(300)
                     .withEndAction(() -> wallpaper.setVisibility(View.GONE)).start();
+        }
+    }
+
+    private void applyWallpaper(@NonNull ImageView wallpaper, @Nullable Drawable d) {
+        if (d == null) return;
+        net.kdt.pojavlaunch.profiles.ProfileGifSupport.stopDrawable(wallpaper.getDrawable());
+        wallpaper.setImageDrawable(d);
+        wallpaper.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        wallpaper.setBackground(null);
+        if (wallpaper.getVisibility() != View.VISIBLE) {
+            wallpaper.setAlpha(0f);
+            wallpaper.setVisibility(View.VISIBLE);
+            wallpaper.animate().alpha(1f).setDuration(400).start();
         }
     }
 }

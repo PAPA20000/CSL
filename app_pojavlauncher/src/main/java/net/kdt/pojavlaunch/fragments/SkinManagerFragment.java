@@ -25,7 +25,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
 
 import net.kdt.pojavlaunch.R;
@@ -64,12 +63,10 @@ public class SkinManagerFragment extends Fragment {
     private static final float MAX_PREVIEW_ZOOM = 1.60f;
 
     private GLSurfaceView mSkinPreviewSurface;
-    private SwitchCompat mSwitchModelType;
     private TextView mTvSkinPath;
     private TextView mTvCapePath;
     private TextView mTvSkinStatusChip;
     private TextView mTvCapeStatusChip;
-    private TextView mTvModelStatusChip;
     private TextView mTvServerStatusChip;
     private TextView mTvPreviewHint;
 
@@ -109,12 +106,10 @@ public class SkinManagerFragment extends Fragment {
         }
 
         mSkinPreviewSurface = view.findViewById(R.id.skin_preview_surface);
-        mSwitchModelType = view.findViewById(R.id.switch_model_type);
         mTvSkinPath = view.findViewById(R.id.tv_skin_path);
         mTvCapePath = view.findViewById(R.id.tv_cape_path);
         mTvSkinStatusChip = view.findViewById(R.id.tv_skin_status_chip);
         mTvCapeStatusChip = view.findViewById(R.id.tv_cape_status_chip);
-        mTvModelStatusChip = view.findViewById(R.id.tv_model_status_chip);
         mTvServerStatusChip = view.findViewById(R.id.tv_server_status_chip);
         mTvPreviewHint = view.findViewById(R.id.tv_preview_hint);
 
@@ -146,31 +141,9 @@ public class SkinManagerFragment extends Fragment {
         mPendingSkinUri = localSkinFile.exists() ? Uri.fromFile(localSkinFile).toString() : null;
         mPendingCapeUri = localCapeFile.exists() ? Uri.fromFile(localCapeFile).toString() : null;
 
-        boolean isSlim = false;
-        if (localSkinMetadata.exists()) {
-            try {
-                String metaContent = Tools.read(localSkinMetadata.getAbsolutePath());
-                if (metaContent.contains("slim")) {
-                    isSlim = true;
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        mSwitchModelType.setChecked(isSlim);
-
-
-
         updatePathText(mTvSkinPath, mPendingSkinUri, "No custom skin selected");
         updatePathText(mTvCapePath, mPendingCapeUri, "No custom cape selected");
         updateAccountInfo();
-
-        // Model Type Toggle
-        mSwitchModelType.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            updateAccountInfo();
-            updatePreview();
-        });
 
         // Change Skin Button
         view.findViewById(R.id.btn_change_skin).setOnClickListener(v -> openFilePicker(REQUEST_CODE_SKIN));
@@ -187,7 +160,6 @@ public class SkinManagerFragment extends Fragment {
         view.findViewById(R.id.btn_reset_default).setOnClickListener(v -> {
             mPendingSkinUri = null;
             mPendingCapeUri = null;
-            mSwitchModelType.setChecked(false);
             updatePathText(mTvSkinPath, null, "No custom skin selected");
             updatePathText(mTvCapePath, null, "No custom cape selected");
             updateAccountInfo();
@@ -218,9 +190,9 @@ public class SkinManagerFragment extends Fragment {
                         copyUriToFile(Uri.parse(mPendingSkinUri), destSkin);
                     }
 
+                    // Model is always the default (Steve) — Alex toggle removed
                     File destSkinMeta = new File(Tools.DIR_DATA + "/skins/" + acc.username + "_metadata.json");
-                    String model = mSwitchModelType.isChecked() ? "slim" : "default";
-                    String metaContent = "{\n  \"model\": \"" + model + "\"\n}";
+                    String metaContent = "{\n  \"model\": \"default\"\n}";
                     Tools.write(destSkinMeta.getAbsolutePath(), metaContent);
                 } else {
                     new File(Tools.DIR_DATA + "/skins/" + acc.username + "_skin.png").delete();
@@ -238,11 +210,11 @@ public class SkinManagerFragment extends Fragment {
                 }
 
                 // Update Yggdrasil server state immediately if active
-                boolean isSlimModel = mSwitchModelType.isChecked();
+                boolean isSlimModel = false; // Alex model system removed — default only
                 String finalSkin = mPendingSkinUri != null ? new File(Tools.DIR_DATA + "/skins/" + acc.username + "_skin.png").getAbsolutePath() : null;
                 String finalCape = mPendingCapeUri != null ? new File(Tools.DIR_DATA + "/capes/" + acc.username + "_cape.png").getAbsolutePath() : null;
                 boolean hasCustomTextures = finalSkin != null || finalCape != null;
-                String accUuid = LocalUuidUtils.generateProfileId(acc.username, isSlimModel ? SkinModelType.ALEX : SkinModelType.STEVE);
+                String accUuid = LocalUuidUtils.generateProfileId(acc.username, SkinModelType.STEVE);
 
                 if (hasCustomTextures && LocalYggdrasilServer.getPort() > 0) {
                     LocalYggdrasilServer.registerProfile(acc.username, accUuid, finalSkin, finalCape, isSlimModel);
@@ -319,20 +291,6 @@ public class SkinManagerFragment extends Fragment {
             applyPressAnimation(target);
         }
 
-        if (mSwitchModelType != null) {
-            mSwitchModelType.setOnTouchListener((v, event) -> {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        v.animate().scaleX(0.97f).scaleY(0.97f).setDuration(80).start();
-                        break;
-                    case MotionEvent.ACTION_UP:
-                    case MotionEvent.ACTION_CANCEL:
-                        v.animate().scaleX(1f).scaleY(1f).setDuration(120).start();
-                        break;
-                }
-                return false;
-            });
-        }
     }
 
     private void applyPressAnimation(@Nullable View target) {
@@ -432,7 +390,6 @@ public class SkinManagerFragment extends Fragment {
     private void updateAccountInfo() {
         boolean hasSkin = mPendingSkinUri != null;
         boolean hasCape = mPendingCapeUri != null;
-        boolean isSlim = mSwitchModelType != null && mSwitchModelType.isChecked();
         boolean serverWillRun = hasSkin || hasCape;
 
         updateStatusChip(mTvSkinStatusChip,
@@ -444,11 +401,6 @@ public class SkinManagerFragment extends Fragment {
                 hasCape ? "CUSTOM CAPE" : "NO CAPE",
                 hasCape,
                 hasCape ? "Custom cape active in preview" : "No custom cape loaded");
-
-        updateStatusChip(mTvModelStatusChip,
-                isSlim ? "MODEL: ALEX" : "MODEL: STEVE",
-                true,
-                isSlim ? "Slim arm model selected" : "Default wide arm model selected");
 
         updateStatusChip(mTvServerStatusChip,
                 serverWillRun ? "SERVER AUTO ON" : "SERVER OFF",
@@ -517,7 +469,6 @@ public class SkinManagerFragment extends Fragment {
                     return;
                 }
                 mPendingSkinUri = uri.toString();
-                mSwitchModelType.setChecked(prep.getModel() == SkinModelType.ALEX);
                 updatePathText(mTvSkinPath, mPendingSkinUri, "No custom skin selected");
             } else if (requestCode == REQUEST_CODE_CAPE) {
                 PlayerCape prep = SkinAnalyzer.prepareCape(bytes);
@@ -571,7 +522,7 @@ public class SkinManagerFragment extends Fragment {
         Bitmap capeBitmap = loadBitmapFromUri(mPendingCapeUri);
 
         if (mSkinRenderer != null) {
-            mSkinRenderer.mIsSlim = mSwitchModelType.isChecked();
+            mSkinRenderer.mIsSlim = false; // default (Steve) model only
             mSkinRenderer.setTexture(skinBitmap, capeBitmap);
             mSkinPreviewSurface.requestRender();
         }

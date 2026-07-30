@@ -124,7 +124,7 @@ public class CustomToggleView extends View {
 
         // Off: deep slate · On: cyan → mint for Control Center look
         int darkBg = 0xFF1A2436;
-        int activeBg = 0xFF00E5FF;
+        int activeBg = 0xFFC9CBD6;
         int trackColor = blendColors(darkBg, activeBg, mAnimProgress);
 
         mPaint.setStyle(Paint.Style.FILL);
@@ -134,7 +134,7 @@ public class CustomToggleView extends View {
         // Subtle border on the track
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeWidth(Math.max(1f, getResources().getDisplayMetrics().density));
-        mPaint.setColor(blendColors(0x33FFFFFF, 0x6600E5FF, mAnimProgress));
+        mPaint.setColor(blendColors(0x33FFFFFF, 0x66C9CBD6, mAnimProgress));
         canvas.drawRoundRect(mTrackRect, radius, radius, mPaint);
         mPaint.setStyle(Paint.Style.FILL);
 
@@ -150,7 +150,7 @@ public class CustomToggleView extends View {
 
         // Soft cyan glow when enabled
         if (mAnimProgress > 0.05f) {
-            mPaint.setColor(blendColors(0x0000E5FF, 0x5500E5FF, mAnimProgress));
+            mPaint.setColor(blendColors(0x00C9CBD6, 0x55C9CBD6, mAnimProgress));
             canvas.drawCircle(thumbX, thumbY, thumbRadius + padding * 0.7f, mPaint);
         }
 

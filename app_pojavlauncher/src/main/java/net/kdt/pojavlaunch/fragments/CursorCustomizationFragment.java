@@ -189,7 +189,7 @@ public class CursorCustomizationFragment extends Fragment {
 
         // Color circle preset click listeners
         imgGreen.setOnClickListener(v -> selectGlowColor(0xFFA6FF3D, imgGreen));
-        imgCyan.setOnClickListener(v -> selectGlowColor(0xFF00E5FF, imgCyan));
+        imgCyan.setOnClickListener(v -> selectGlowColor(0xFFC9CBD6, imgCyan));
         imgPurple.setOnClickListener(v -> selectGlowColor(0xFFD500F9, imgPurple));
         imgRed.setOnClickListener(v -> selectGlowColor(0xFFFF3D00, imgRed));
         imgYellow.setOnClickListener(v -> selectGlowColor(0xFFFFEA00, imgYellow));
@@ -320,7 +320,7 @@ public class CursorCustomizationFragment extends Fragment {
 
     private void initColorSelection(int color, ImageView... views) {
         ImageView selectView = views[0]; // Default green
-        if (color == 0xFF00E5FF) selectView = views[1];
+        if (color == 0xFFC9CBD6) selectView = views[1];
         else if (color == 0xFFD500F9) selectView = views[2];
         else if (color == 0xFFFF3D00) selectView = views[3];
         else if (color == 0xFFFFEA00) selectView = views[4];

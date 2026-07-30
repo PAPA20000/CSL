@@ -204,7 +204,7 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
                     mStatusText.setTextColor(0xFFFFFFFF);
                 }
                 if (mPercentageText != null) {
-                    mPercentageText.setTextColor(0xFF39FF14);
+                    mPercentageText.setTextColor(0xFFE4E4EA);
                 }
                 mTaskNumberDisplayer.setText(getContext().getString(R.string.progresslayout_tasks_in_progress, tc));
                 setVisibility(VISIBLE);
@@ -213,15 +213,15 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
                     mIsFinishing = true;
                     if (mStatusText != null) {
                         mStatusText.setText("✓ Download Complete");
-                        mStatusText.setTextColor(0xFF39FF14); // neon green
+                        mStatusText.setTextColor(0xFFE4E4EA); // neon green
                     }
                     if (mPercentageText != null) {
                         mPercentageText.setText("100%");
-                        mPercentageText.setTextColor(0xFF39FF14); // neon green
+                        mPercentageText.setTextColor(0xFFE4E4EA); // neon green
                     }
                     if (mProgressBar != null) {
                         mProgressBar.setProgress(100);
-                        mProgressBar.setProgressTintList(ColorStateList.valueOf(0xFF39FF14));
+                        mProgressBar.setProgressTintList(ColorStateList.valueOf(0xFFE4E4EA));
                     }
                     if (mDetailText != null) {
                         mDetailText.setVisibility(GONE);

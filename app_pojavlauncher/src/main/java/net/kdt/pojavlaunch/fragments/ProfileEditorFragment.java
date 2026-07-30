@@ -561,9 +561,68 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
         mResourcePacksImport = view.findViewById(R.id.vprof_editor_resource_packs_import);
         mShaderPacksImport = view.findViewById(R.id.vprof_editor_shader_packs_import);
 
-        // Background image change (separate from the profile icon)
+        // Background image change (separate from the profile icon) — GIF-aware:
+        // animated GIFs bypass the cropper so their frames survive.
         view.findViewById(R.id.vprof_editor_background_button)
-                .setOnClickListener(v -> CropperUtils.startCropper(mBackgroundCropperLauncher));
+                .setOnClickListener(v -> mBackgroundImagePicker.launch(new String[]{"image/*"}));
+    }
+
+    /** GIF-aware background picker: GIFs stay animated, everything else is cropped. */
+    private final ActivityResultLauncher<String[]> mBackgroundImagePicker = registerForActivityResult(
+            new ActivityResultContracts.OpenDocument(), uri -> {
+                android.content.Context context = getContext();
+                if (context == null) return;
+                if (uri == null) {
+                    Toast.makeText(context, R.string.cropper_select_cancelled, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (isGifDocument(context, uri)) {
+                    applyAnimatedBackground(context, uri);
+                } else {
+                    CropperUtils.openCropperDialog(context, uri, mBackgroundCropperListener);
+                }
+            });
+
+    private static boolean isGifDocument(android.content.Context context, android.net.Uri uri) {
+        try (InputStream in = context.getContentResolver().openInputStream(uri)) {
+            byte[] head = new byte[3];
+            if (in == null || in.read(head) < 3) return false;
+            return head[0] == 'G' && head[1] == 'I' && head[2] == 'F';
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /** Store the raw GIF as a data URI (no re-encode) and preview it animating. */
+    private void applyAnimatedBackground(android.content.Context context, android.net.Uri uri) {
+        mBgExecutor.execute(() -> {
+            try (InputStream in = context.getContentResolver().openInputStream(uri);
+                 java.io.ByteArrayOutputStream raw = new java.io.ByteArrayOutputStream()) {
+                byte[] buf = new byte[8192];
+                int read;
+                long total = 0;
+                while ((read = in.read(buf)) != -1) {
+                    raw.write(buf, 0, read);
+                    total += read;
+                    if (total > 15L * 1024 * 1024) throw new java.io.IOException("GIF too large");
+                }
+                byte[] gifBytes = raw.toByteArray();
+                String dataUri = "data:image/gif;base64,"
+                        + android.util.Base64.encodeToString(gifBytes, android.util.Base64.NO_WRAP);
+                android.graphics.drawable.Drawable preview =
+                        net.kdt.pojavlaunch.profiles.ProfileGifSupport.buildGifDrawable(gifBytes);
+                mEncodedBackgroundUri = dataUri;
+                mMainHandler.post(() -> {
+                    if (mTempProfile != null) mTempProfile.background = dataUri;
+                    if (preview != null && mProfileBackground != null) {
+                        net.kdt.pojavlaunch.profiles.ProfileGifSupport.stopDrawable(mProfileBackground.getDrawable());
+                        mProfileBackground.setImageDrawable(preview);
+                    }
+                });
+            } catch (Exception e) {
+                mMainHandler.post(() -> Tools.showErrorRemote(e));
+            }
+        });
     }
 
     private void readInputsFromUi() {

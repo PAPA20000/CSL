@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="#3300E5FF">
+    android:color="#33C9CBD6">
     <item android:id="@android:id/mask">
         <shape android:shape="rectangle">
             <solid android:color="#FFFFFF" />
@@ -11,13 +11,13 @@
         <shape android:shape="rectangle">
             <gradient
                 android:angle="135"
-                android:startColor="#1A00E5FF"
-                android:endColor="#1439FF14"
+                android:startColor="#1AC9CBD6"
+                android:endColor="#14E4E4EA"
                 android:type="linear" />
             <corners android:radius="16dp" />
             <stroke
                 android:width="1.5dp"
-                android:color="#8800E5FF" />
+                android:color="#88C9CBD6" />
         </shape>
     </item>
 </ripple>

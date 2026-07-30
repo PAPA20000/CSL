@@ -24,7 +24,7 @@
         <View
             android:layout_width="3dp"
             android:layout_height="14dp"
-            android:background="#00E5FF" />
+            android:background="#C9CBD6" />
 
         <TextView
             android:id="@+id/category_title"

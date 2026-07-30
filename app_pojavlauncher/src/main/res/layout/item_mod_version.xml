@@ -94,7 +94,7 @@
                     android:id="@+id/tv_badge_stable"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="#39FF14"
+                    android:textColor="#E4E4EA"
                     android:textSize="9sp"
                     android:textStyle="bold"
                     android:background="@drawable/bg_stable_pill"

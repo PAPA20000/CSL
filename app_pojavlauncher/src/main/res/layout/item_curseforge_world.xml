@@ -72,13 +72,13 @@
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:src="@drawable/ic_download"
-                android:tint="#39FF14" />
+                android:tint="#E4E4EA" />
 
             <TextView
                 android:id="@+id/world_downloads"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#39FF14"
+                android:textColor="#E4E4EA"
                 android:textSize="11sp"
                 android:layout_marginTop="2dp" />
 

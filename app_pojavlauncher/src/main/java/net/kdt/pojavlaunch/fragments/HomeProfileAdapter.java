@@ -12,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -175,27 +176,71 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
     @Override
     public void onViewRecycled(@NonNull ViewHolder holder) {
         super.onViewRecycled(holder);
+        // Pause GIF render threads promptly when cards leave the screen
+        net.kdt.pojavlaunch.profiles.ProfileGifSupport.stopDrawable(holder.imgIcon.getDrawable());
+        net.kdt.pojavlaunch.profiles.ProfileGifSupport.stopDrawable(holder.imgBackground.getDrawable());
         holder.imgIcon.setImageDrawable(null);
         holder.imgBackground.setImageDrawable(null);
     }
+
+    @Override
+    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        // Rebind when a remotely-cached asset (e.g. the default animated GIF)
+        // finishes downloading so it fades in without user action.
+        net.kdt.pojavlaunch.profiles.ProfileGifSupport.addAssetReadyListener(mAssetReadyListener);
+    }
+
+    @Override
+    public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
+        net.kdt.pojavlaunch.profiles.ProfileGifSupport.removeAssetReadyListener(mAssetReadyListener);
+        super.onDetachedFromRecyclerView(recyclerView);
+    }
+
+    private final net.kdt.pojavlaunch.profiles.ProfileGifSupport.OnAssetReadyListener mAssetReadyListener =
+            assetKey -> Tools.runOnUiThread(this::notifyDataSetChanged);
 
     private void bindIcon(ImageView target, String profileKey, MinecraftProfile profile) {
         String icon = profile.icon;
         Drawable drawable = null;
 
-        try {
-            drawable = ProfileIconCache.fetchIcon(target.getResources(), profileKey, icon);
-        } catch (Exception e) {
-            Log.w(TAG, "Icon load failed for " + profileKey, e);
+        // 1) Custom user icon / modpack artwork (data URI) or named loader icons
+        boolean hasCustomOrNamedIcon = icon != null
+                && (icon.startsWith("data:") || icon.equals("fabric") || icon.equals("quilt"));
+        if (hasCustomOrNamedIcon) {
+            try {
+                drawable = ProfileIconCache.fetchIcon(target.getResources(), profileKey, icon);
+            } catch (Exception e) {
+                Log.w(TAG, "Icon load failed for " + profileKey, e);
+            }
         }
 
+        // 2) Loader-specific artwork when the version names a mod loader
         if (drawable == null) {
             drawable = resolveTypeFallback(target, profile.lastVersionId);
         }
+
+        // 3) Intelligent defaults: Vanilla → vanilla tile, modded → modpack tile
         if (drawable == null) {
-            drawable = ContextCompat.getDrawable(target.getContext(), R.drawable.ic_pojav_full);
+            drawable = ContextCompat.getDrawable(target.getContext(),
+                    isVanillaVersion(profile.lastVersionId)
+                            ? R.drawable.ic_profile_vanilla
+                            : R.drawable.ic_profile_modpack);
+        }
+
+        // 4) Absolute safety net: the official CS Launcher logo
+        if (drawable == null) {
+            drawable = ContextCompat.getDrawable(target.getContext(), R.drawable.ic_cs_logo_placeholder);
         }
         target.setImageDrawable(drawable);
+    }
+
+    /** Filesystem-free vanilla heuristic for scroll-safe binding. */
+    private static boolean isVanillaVersion(@Nullable String lastVersionId) {
+        if (lastVersionId == null) return true;
+        String lower = lastVersionId.toLowerCase();
+        return !(lower.contains("fabric") || lower.contains("forge") || lower.contains("neoforge")
+                || lower.contains("quilt") || lower.contains("liteloader") || lower.contains("optifine"));
     }
 
     private void bindBackground(ImageView target, String profileKey, MinecraftProfile profile) {
@@ -225,8 +270,8 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         int resId = -1;
         if (lower.contains("fabric")) resId = R.drawable.ic_fabric;
         else if (lower.contains("quilt")) resId = R.drawable.ic_quilt;
-        else if (lower.contains("forge")) resId = R.drawable.ic_pojav_full;
-        else if (lower.contains("neoforge")) resId = R.drawable.ic_pojav_full;
+        else if (lower.contains("neoforge") || lower.contains("forge") || lower.contains("liteloader"))
+            resId = R.drawable.ic_profile_modpack; // loader found, no brand art → modpack tile
         if (resId == -1) return null;
         return ContextCompat.getDrawable(target.getContext(), resId);
     }

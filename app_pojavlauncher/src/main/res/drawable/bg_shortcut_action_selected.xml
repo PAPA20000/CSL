@@ -2,7 +2,7 @@
 <!-- Selected state for an action row in the shortcut editor. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="#2600E5FF" />
+    <solid android:color="#26C9CBD6" />
     <stroke
         android:width="1.5dp"
         android:color="@color/premium_cyan" />

@@ -677,7 +677,7 @@ public class LauncherActivity extends BaseActivity {
         } else {
             btn.setText("✦");
             btn.setBackgroundResource(R.drawable.bg_client_features_btn);
-            btn.setTextColor(0xFF39FF14);
+            btn.setTextColor(0xFFE4E4EA);
         }
     }
 

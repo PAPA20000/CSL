@@ -591,8 +591,8 @@ public class ModDetailFragment extends Fragment {
                 if (isCompatible) anyCompatible = true;
 
                 String displayName = (p.name != null && !p.name.isEmpty()) ? p.name : entry.getKey();
-                String chipColor = isCompatible ? "#39FF14" : "#666666";
-                String bgColor = isCompatible ? "#1A39FF14" : "#1A666666";
+                String chipColor = isCompatible ? "#E4E4EA" : "#666666";
+                String bgColor = isCompatible ? "#1AE4E4EA" : "#1A666666";
                 String icon = isCompatible ? "🟢" : "⚪";
                 addCompatibilityChip(icon + " " + displayName, chipColor, bgColor);
             }

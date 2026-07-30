@@ -116,7 +116,7 @@ public class ClientFeaturesFragment extends Fragment {
 
         if (mManager.isEnabled()) {
             tvStatus.setText("ACTIVE");
-            tvStatus.setTextColor(0xFF39FF14); // neon green
+            tvStatus.setTextColor(0xFFE4E4EA); // neon green
             String filename = requireActivity().getSharedPreferences("cs_client_features", Context.MODE_PRIVATE)
                     .getString(ClientFeaturesManager.KEY_FILENAME, "--");
             tvVersion.setText("Active: " + filename);
@@ -358,7 +358,7 @@ public class ClientFeaturesFragment extends Fragment {
                     requireActivity().runOnUiThread(() -> {
                         pb.setProgress(100);
                         tvSub.setText("Done");
-                        tvSub.setTextColor(0xFF39FF14);
+                        tvSub.setTextColor(0xFFE4E4EA);
                         
                         playSuccessAnimation(view);
                     });
@@ -398,7 +398,7 @@ public class ClientFeaturesFragment extends Fragment {
             }
             if (tvTitle != null) {
                 tvTitle.setText("Client Features Enabled");
-                tvTitle.setTextColor(0xFF39FF14);
+                tvTitle.setTextColor(0xFFE4E4EA);
             }
 
             // Pop back stack after 1.5 seconds to return to Main Menu

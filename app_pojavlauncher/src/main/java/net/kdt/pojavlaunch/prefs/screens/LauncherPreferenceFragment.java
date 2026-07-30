@@ -167,7 +167,7 @@ public class LauncherPreferenceFragment extends Fragment {
             case "Experimental": return R.drawable.ic_settings_experimental;
             case "Advanced": return R.drawable.ic_settings_advanced;
             case "Miscellaneous": return R.drawable.ic_settings_misc;
-            case "Sponsors": return R.drawable.ic_infrawire_logo;
+            case "Sponsors": return R.drawable.ic_infrawire_mark_white;
             default: return R.drawable.ic_menu_settings;
         }
     }
@@ -1176,7 +1176,7 @@ public class LauncherPreferenceFragment extends Fragment {
             if (swatchesContainer == null) return;
             swatchesContainer.removeAllViews();
             ThemeManager.Preset[] presets = ThemeManager.PRESETS;
-            String[] colors = new String[]{"#00E5FF", "#3B82F6", "#10B981", "#EF4444", "#A855F7", "#06B6D4"};
+            String[] colors = new String[]{"#C9CBD6", "#3B82F6", "#10B981", "#EF4444", "#A855F7", "#06B6D4"};
 
             for (int i = 0; i < presets.length; i++) {
                 ThemeManager.Preset p = presets[i];
@@ -1385,7 +1385,7 @@ public class LauncherPreferenceFragment extends Fragment {
             case "infrawire_promotions":
             case "infrawire_documentation":
             case "infrawire_support":
-                return R.drawable.ic_infrawire_logo;
+                return R.drawable.ic_infrawire_mark_white;
             default:
                 return R.drawable.ic_menu_settings;
         }

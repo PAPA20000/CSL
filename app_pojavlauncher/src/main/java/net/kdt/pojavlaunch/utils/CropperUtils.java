@@ -42,7 +42,8 @@ public class CropperUtils {
         });
     }
 
-    private static void openCropperDialog(Context context, Uri selectedUri,
+    /** Public so GIF-aware pickers can delegate non-animated images to the cropper. */
+    public static void openCropperDialog(Context context, Uri selectedUri,
                                           final CropperListener cropperListener) {
         ContentResolver contentResolver = context.getContentResolver();
         AlertDialog dialog = new AlertDialog.Builder(context)

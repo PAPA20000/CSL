@@ -37,7 +37,7 @@
                     android:layout_width="@dimen/_28sdp"
                     android:layout_height="@dimen/_28sdp"
                     android:src="@drawable/ic_menu_settings"
-                    app:tint="#00E5FF"
+                    app:tint="#C9CBD6"
                     android:scaleType="fitCenter"
                     android:contentDescription="FastClient" />
 
@@ -73,7 +73,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:checked="false"
-                    app:thumbTint="#00E5FF"
+                    app:thumbTint="#C9CBD6"
                     app:trackTint="#162E4A" />
 
             </LinearLayout>
@@ -84,7 +84,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="⚡ FastClient v1.6.2 — Active"
-                android:textColor="#00E5FF"
+                android:textColor="#C9CBD6"
                 android:textSize="@dimen/_11ssp"
                 android:textStyle="bold"
                 android:paddingStart="@dimen/_54sdp"

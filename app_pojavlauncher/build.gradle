@@ -212,6 +212,8 @@ dependencies {
     // https://github.com/PojavLauncherTeam/exp4j
     implementation 'net.sourceforge.htmlcleaner:htmlcleaner:2.6.1'
     implementation 'com.bytedance:bytehook:1.0.9'
+    // Animated GIF support for profile backgrounds (native decoder, memory-efficient)
+    implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.28'
 
     // implementation 'net.sourceforge.streamsupport:streamsupport-cfuture:1.7.0'
 

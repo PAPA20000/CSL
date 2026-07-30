@@ -68,6 +68,7 @@ public class ProfileIconCache {
         if (key == null) return;
         sIconCache.remove(key);
         sIconCache.remove(key + "_bg");
+        sIconCache.remove(key + "_bg_remote");
     }
 
     /**
@@ -79,10 +80,34 @@ public class ProfileIconCache {
      * @return a decoded drawable, or null if none is set / decode failed
      */
     public static @Nullable Drawable fetchBackground(Resources resources, @Nullable String key, @Nullable String background) {
-        if (background == null || !background.startsWith(DATA_HEADER)) return null;
+        if (background == null) return null;
+
         String cacheKey = (key != null ? key : "bg") + "_bg";
+
+        // ── Remote URL backgrounds (e.g. the default animated GIF) ──
+        if (ProfileGifSupport.isRemoteUrl(background)) {
+            String remoteKey = cacheKey + "_remote";
+            Drawable cachedRemote = sIconCache.get(remoteKey);
+            if (cachedRemote != null) return cachedRemote;
+            Drawable remote = ProfileGifSupport.loadRemoteSync(resources, background);
+            if (remote != null) sIconCache.put(remoteKey, remote);
+            return remote; // null while the async download is still in flight
+        }
+
+        if (!background.startsWith(DATA_HEADER)) return null;
         Drawable cached = sIconCache.get(cacheKey);
         if (cached != null) return cached;
+
+        // ── Animated GIF data URIs keep their frames (no flattening) ──
+        if (ProfileGifSupport.isGifDataUri(background)) {
+            byte[] gifData = extractIconData(background);
+            if (gifData == null) return null;
+            Drawable gif = ProfileGifSupport.buildGifDrawable(gifData);
+            if (gif == null) gif = ProfileGifSupport.buildStaticFallback(resources, gifData);
+            if (gif != null) sIconCache.put(cacheKey, gif);
+            return gif;
+        }
+
         byte[] data = extractIconData(background);
         if (data == null) return null;
         BitmapFactory.Options opts = new BitmapFactory.Options();
@@ -146,7 +171,7 @@ public class ProfileIconCache {
 
     private static int getStaticIconResource(String icon) {
         switch (icon) {
-            case "default": return R.drawable.ic_pojav_full;
+            case "default": return R.drawable.ic_cs_logo_placeholder; // official CS Launcher logo
             case "fabric": return R.drawable.ic_fabric;
             case "quilt": return R.drawable.ic_quilt;
             default: return -1;

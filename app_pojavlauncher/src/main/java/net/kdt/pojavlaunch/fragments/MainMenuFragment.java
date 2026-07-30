@@ -504,7 +504,7 @@ public class MainMenuFragment extends Fragment {
         } else {
             btn.setText("✦ Enable Client Features");
             btn.setBackgroundResource(R.drawable.bg_client_features_btn);
-            btn.setTextColor(0xFF39FF14);
+            btn.setTextColor(0xFFE4E4EA);
         }
     }
 

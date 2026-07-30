@@ -30,7 +30,7 @@
                 android:layout_gravity="center"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_setting_ram"
-                app:tint="#00E5FF" />
+                app:tint="#C9CBD6" />
         </FrameLayout>
 
         <LinearLayout

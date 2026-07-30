@@ -120,13 +120,13 @@ public class FastClientHomeFragment extends Fragment {
             if (head != null) {
                 ivPlayerHead.setImageBitmap(head);
             } else {
-                ivPlayerHead.setImageResource(R.drawable.ic_pojav_full);
+                ivPlayerHead.setImageResource(R.drawable.ic_cs_logo_placeholder);
             }
             
             boolean isOnline = account.accessToken != null && !account.accessToken.equals("0");
             tvPlayerStatus.setText(isOnline ? "Online" : "Offline");
             tvPlayerStatus.setBackgroundResource(isOnline ? R.drawable.bg_badge_online : R.drawable.bg_chip_dark);
-            tvPlayerStatus.setTextColor(isOnline ? 0xFF00CC44 : 0xFFAAAAAA);
+            tvPlayerStatus.setTextColor(isOnline ? 0xFF7FA98C : 0xFFAAAAAA);
         }
     }
 

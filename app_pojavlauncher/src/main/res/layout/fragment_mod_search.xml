@@ -31,7 +31,7 @@
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_arrow_back_white"
                 android:contentDescription="@string/global_back"
-                android:tint="#39FF14" />
+                android:tint="#E4E4EA" />
 
             <TextView
                 android:id="@+id/mod_store_title"
@@ -95,7 +95,7 @@
                 android:background="@drawable/background_card"
                 android:padding="7dp"
                 android:src="@drawable/ic_filter"
-                android:tint="#39FF14" />
+                android:tint="#E4E4EA" />
 
         </LinearLayout>
 
@@ -108,7 +108,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:indeterminate="true"
-        android:progressTint="#39FF14"
+        android:progressTint="#E4E4EA"
         android:visibility="gone" />
 
     <!-- Mod list -->

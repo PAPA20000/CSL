@@ -29,7 +29,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Benefit"
-            android:textColor="#FFFFFF"
+            android:textColor="#F0F0F3"
             android:textSize="11.5sp"
             android:textStyle="bold" />
 
@@ -38,7 +38,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Sub"
-            android:textColor="#7A8DAB"
+            android:textColor="#7C7C88"
             android:textSize="10sp"
             android:layout_marginTop="1dp" />
     </LinearLayout>

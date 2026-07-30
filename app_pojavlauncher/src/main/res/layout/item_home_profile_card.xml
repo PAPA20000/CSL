@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- ✦ Premium profile card — layered charcoal, GIF banner, ring icon, refined type -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/card_profile_root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="4dp"
-    android:layout_marginVertical="4dp"
+    android:layout_marginHorizontal="5dp"
+    android:layout_marginVertical="5dp"
     android:background="@drawable/bg_profile_card"
     android:stateListAnimator="@animator/card_press_anim"
     android:clipChildren="true"
     android:clickable="true"
     android:focusable="true">
 
-    <!-- Background Image fills entire card -->
+    <!-- Background image / animated GIF fills the card -->
     <ImageView
         android:id="@+id/img_profile_background"
         android:layout_width="match_parent"
@@ -19,40 +20,41 @@
         android:scaleType="centerCrop"
         android:visibility="gone" />
 
-    <!-- Dark scrim over full card background -->
+    <!-- Gradient scrim: lets the banner breathe, content stays readable -->
     <View
         android:id="@+id/img_profile_background_scrim"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#70000000"
+        android:background="@drawable/bg_profile_card_scrim"
         android:visibility="gone" />
 
-    <!-- Main content: vertical layout -->
+    <!-- Main content -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Top area: horizontal layout with icon on left, text on right -->
+        <!-- Identity row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingHorizontal="10dp"
-            android:paddingTop="12dp"
-            android:paddingBottom="6dp">
+            android:paddingHorizontal="12dp"
+            android:paddingTop="13dp"
+            android:paddingBottom="7dp">
 
-            <!-- Profile Icon (small, left side) -->
+            <!-- Profile icon with luminous ring -->
             <ImageView
                 android:id="@+id/img_profile_icon"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_marginEnd="10dp"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_marginEnd="11dp"
+                android:padding="4dp"
                 android:scaleType="fitCenter"
                 android:background="@drawable/bg_profile_icon_rounded" />
 
-            <!-- Profile name and info -->
+            <!-- Profile text stack -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -63,9 +65,10 @@
                     android:id="@+id/tv_profile_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="#FFFFFF"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
+                    android:textColor="#F2F2F5"
+                    android:textSize="14.5sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:letterSpacing="0.01"
                     android:ellipsize="end"
                     android:maxLines="1" />
 
@@ -73,49 +76,71 @@
                     android:id="@+id/tv_profile_version"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="#CCCCCC"
+                    android:textColor="#9C9CA8"
                     android:textSize="10sp"
+                    android:letterSpacing="0.02"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:layout_marginTop="1dp" />
+                    android:layout_marginTop="2dp" />
 
-                <TextView
-                    android:id="@+id/tv_profile_mod_count"
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/accent_primary"
-                    android:textSize="9sp"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:layout_marginTop="1dp" />
+                    android:orientation="horizontal"
+                    android:layout_marginTop="3dp">
 
-                <TextView
-                    android:id="@+id/tv_profile_ram"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="#AAAAAA"
-                    android:textSize="9sp"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:layout_marginTop="1dp" />
+                    <TextView
+                        android:id="@+id/tv_profile_mod_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/accent_primary"
+                        android:textSize="9.5sp"
+                        android:fontFamily="sans-serif-medium"
+                        android:ellipsize="end"
+                        android:maxLines="1" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="  •  "
+                        android:textColor="#4A4A54"
+                        android:textSize="9.5sp" />
+
+                    <TextView
+                        android:id="@+id/tv_profile_ram"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#7C7C88"
+                        android:textSize="9.5sp"
+                        android:ellipsize="end"
+                        android:maxLines="1" />
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Action buttons row -->
+        <!-- Hairline divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.8dp"
+            android:background="#1FFFFFFF"
+            android:layout_marginHorizontal="12dp" />
+
+        <!-- Action row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:paddingHorizontal="6dp"
-            android:paddingBottom="8dp">
+            android:paddingHorizontal="10dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="10dp">
 
             <!-- Add to Home Screen -->
             <FrameLayout
                 android:id="@+id/btn_profile_shortcut"
-                android:layout_width="34dp"
-                android:layout_height="34dp"
-                android:layout_marginEnd="4dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="5dp"
                 android:background="@drawable/bg_browse_button"
                 android:stateListAnimator="@animator/card_press_anim"
                 android:clickable="true"
@@ -130,13 +155,13 @@
                     android:tint="@color/premium_cyan" />
             </FrameLayout>
 
-            <!-- Browse Resources Button -->
+            <!-- Browse Resources -->
             <FrameLayout
                 android:id="@+id/btn_profile_browse"
                 android:layout_width="0dp"
-                android:layout_height="34dp"
+                android:layout_height="36dp"
                 android:layout_weight="1"
-                android:layout_marginEnd="4dp"
+                android:layout_marginEnd="5dp"
                 android:background="@drawable/bg_browse_button"
                 android:stateListAnimator="@animator/card_press_anim"
                 android:clickable="true"
@@ -147,27 +172,27 @@
                     android:layout_height="16dp"
                     android:layout_gravity="center"
                     android:src="@drawable/ic_browse_resources"
-                    android:tint="#39FF14" />
+                    android:tint="#D9DAE0" />
             </FrameLayout>
 
-            <!-- Play Button -->
+            <!-- Play — premium white pill -->
             <FrameLayout
                 android:id="@+id/btn_profile_play"
                 android:layout_width="0dp"
-                android:layout_height="34dp"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
+                android:layout_height="36dp"
+                android:layout_weight="1.1"
+                android:layout_marginStart="5dp"
                 android:background="@drawable/bg_play_button_green"
                 android:stateListAnimator="@animator/card_press_anim"
                 android:clickable="true"
                 android:focusable="true">
 
                 <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
+                    android:layout_width="17dp"
+                    android:layout_height="17dp"
                     android:layout_gravity="center"
                     android:src="@drawable/ic_play_arrow"
-                    android:tint="#121212" />
+                    android:tint="#0E0E11" />
             </FrameLayout>
         </LinearLayout>
 

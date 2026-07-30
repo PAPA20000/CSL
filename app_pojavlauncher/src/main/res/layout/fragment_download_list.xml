@@ -48,7 +48,7 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:indeterminate="true"
-            android:indeterminateTint="#8BCF9E" />
+            android:indeterminateTint="#A9B6AD" />
 
         <TextView
             android:layout_width="wrap_content"

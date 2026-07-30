@@ -27,7 +27,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Back"
-            android:textColor="#00E5FF"
+            android:textColor="#C9CBD6"
             android:textSize="16sp"
             android:layout_marginStart="8dp" />
     </LinearLayout>

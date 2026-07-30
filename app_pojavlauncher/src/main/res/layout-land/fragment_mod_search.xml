@@ -31,7 +31,7 @@
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_arrow_back_white"
                 android:contentDescription="@string/global_back"
-                android:tint="#39FF14" />
+                android:tint="#E4E4EA" />
 
             <TextView
                 android:id="@+id/mod_store_title"
@@ -48,7 +48,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="RESOURCE HUB"
-                android:textColor="#00E5FF"
+                android:textColor="#C9CBD6"
                 android:textSize="10sp"
                 android:textStyle="bold"
                 android:letterSpacing="0.1" />
@@ -104,7 +104,7 @@
                 android:background="@drawable/background_card"
                 android:padding="7dp"
                 android:src="@drawable/ic_filter"
-                android:tint="#39FF14" />
+                android:tint="#E4E4EA" />
 
         </LinearLayout>
 
@@ -117,7 +117,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:indeterminate="true"
-        android:progressTint="#39FF14"
+        android:progressTint="#E4E4EA"
         android:visibility="gone" />
 
     <!-- Mod list -->

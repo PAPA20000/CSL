@@ -456,13 +456,13 @@ public final class ProfileShortcutHelper {
 
     /** Pick a loader badge drawable from a version id such as "1.20.1-fabric". */
     public static int resolveLoaderIcon(@Nullable String lastVersionId) {
-        if (lastVersionId == null) return R.drawable.ic_pojav_full;
+        if (lastVersionId == null) return R.drawable.ic_cs_logo_placeholder;
         String lower = lastVersionId.toLowerCase();
         if (lower.contains("fabric")) return R.drawable.ic_fabric;
         if (lower.contains("quilt")) return R.drawable.ic_quilt;
         if (lower.contains("neoforge") || lower.contains("forge")) return R.drawable.ic_forge;
         if (lower.contains("optifine")) return R.drawable.ic_optifine;
-        return R.drawable.ic_pojav_full;
+        return R.drawable.ic_cs_logo_placeholder;
     }
 
     /** Accent colour used behind action badges. */
@@ -471,7 +471,7 @@ public final class ProfileShortcutHelper {
         try {
             return context.getResources().getColor(R.color.premium_cyan);
         } catch (Exception e) {
-            return Color.parseColor("#00E5FF");
+            return Color.parseColor("#C9CBD6");
         }
     }
 
