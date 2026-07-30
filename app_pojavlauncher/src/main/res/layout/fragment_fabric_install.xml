@@ -77,19 +77,29 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:letterSpacing="0.2"
+                            android:text="LOADER SETUP"
+                            android:textColor="#7C7C88"
+                            android:textSize="9.5sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/fabric_banner_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:fontFamily="sans-serif-light"
                             android:text="Fabric Installer"
-                            android:textColor="#F0F0F3"
-                            android:textSize="20sp"
-                            android:textStyle="bold"
-                            android:letterSpacing="0.02" />
+                            android:textColor="#F2F2F5"
+                            android:textSize="24sp" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
+                            android:layout_marginTop="3dp"
                             android:text="Select your Minecraft version"
-                            android:textColor="#B0E4E4EA"
-                            android:textSize="13sp" />
+                            android:textColor="#9C9CA8"
+                            android:textSize="12sp" />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
@@ -106,18 +116,19 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Minecraft Versions"
-                    android:textColor="?attr/colorTextPrimary"
-                    android:textSize="16sp"
+                    android:letterSpacing="0.12"
+                    android:text="MINECRAFT VERSIONS"
+                    android:textColor="#7C7C88"
+                    android:textSize="10.5sp"
                     android:textStyle="bold" />
 
                 <CheckBox
                     android:id="@+id/fabric_installer_only_stable_checkbox"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Stable Only"
+                    android:text="Stable only"
                     android:textColor="?attr/colorTextSecondary"
-                    android:textSize="13sp"
+                    android:textSize="12sp"
                     android:checked="false"
                     android:buttonTint="@color/accent_primary"
                     android:paddingStart="4dp" />
@@ -165,6 +176,7 @@
                     app:tint="#F0F0F3" />
 
                 <TextView
+                    android:id="@+id/fabric_step2_title"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -178,24 +190,28 @@
                     android:id="@+id/fabric_installer_label_loader_ver"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:background="@drawable/bg_settings_chip"
+                    android:paddingHorizontal="11dp"
+                    android:paddingVertical="4dp"
                     android:text="--"
-                    android:textColor="#E0E4E4EA"
-                    android:textSize="15sp"
+                    android:textColor="#DADDE5"
+                    android:textSize="10.5sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
             <!-- Compact Section Header -->
             <TextView
+                android:id="@+id/fabric_loaders_header"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="4dp"
                 android:text="FABRIC LOADERS"
-                android:textColor="?attr/colorTextSecondary"
-                android:textSize="11sp"
+                android:textColor="#7C7C88"
+                android:textSize="10sp"
                 android:textStyle="bold"
-                android:letterSpacing="0.08" />
+                android:letterSpacing="0.12" />
 
             <!-- Loader List -->
             <ListView

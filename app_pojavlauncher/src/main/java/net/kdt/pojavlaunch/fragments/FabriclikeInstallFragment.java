@@ -147,6 +147,14 @@ public abstract class FabriclikeInstallFragment extends Fragment implements Modl
         mSuccessDoneButton = view.findViewById(R.id.fabric_success_done_button);
         mSuccessDoneButton.setOnClickListener(v -> onSuccessDone());
 
+        // Loader-aware chrome: the same layout serves Fabric AND Quilt
+        String loaderName = mFabriclikeUtils.getName();
+        TextView bannerTitle = view.findViewById(R.id.fabric_banner_title);
+        if (bannerTitle != null) bannerTitle.setText(loaderName + " Installer");
+        TextView loadersHeader = view.findViewById(R.id.fabric_loaders_header);
+        if (loadersHeader != null) loadersHeader.setText((loaderName + " LOADERS").toUpperCase(java.util.Locale.ROOT));
+        if (mStartButton != null) mStartButton.setText("INSTALL " + loaderName.toUpperCase(java.util.Locale.ROOT));
+
         // Game version list click
         mGameVerList.setOnItemClickListener((parent, v, position, id) -> {
             if (!isFragmentUiAvailable()) return;
