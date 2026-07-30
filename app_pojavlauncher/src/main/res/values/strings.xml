@@ -650,6 +650,12 @@
     <string name="rw_download_cta">Download %d selected</string>
     <string name="rw_download_cta_none">Select runtimes above</string>
     <string name="rw_installing_cta">Downloading…</string>
+    <string name="loader_installer_eyebrow">LOADER INSTALLER</string>
+    <string name="loader_installer_sub">Pick a Minecraft version to continue</string>
+    <string name="loader_installer_ready_title">Ready to install</string>
+    <string name="loader_installer_summary_title">Version selected</string>
+    <string name="loader_installer_summary_sub">The loader will be downloaded and patched into a new profile automatically.</string>
+    <string name="loader_installer_start">INSTALL</string>
     <string name="download">Download</string>
     <string name="mod_description_label">Description</string>
 
