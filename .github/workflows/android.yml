@@ -161,12 +161,15 @@ jobs:
           done
 
       # ── Upload all artifacts ─────────────────────────────────────────────────
+      # Kept short-lived on purpose: every push also attaches the APKs to the
+      # GitHub Release below, and ~529 MB x 30 days of artifacts blows the
+      # storage quota and fails the whole workflow at this step.
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: cs-launcher-v3-build-${{ github.run_number }}
           path: out/*
-          retention-days: 30
+          retention-days: 2
 
       # ── GitHub Release (manual only) ─────────────────────────────────────────
       - name: Create GitHub Release
