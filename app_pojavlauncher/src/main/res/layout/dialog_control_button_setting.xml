@@ -14,6 +14,7 @@
 
     <!-- EDIT NAME SECTION -->
     <TextView
+        android:textColor="#DADDE5"
         android:id="@+id/editName_textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -25,6 +26,11 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
+        android:background="@drawable/bg_input_premium"
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="10dp"
+        android:textColor="#F0F0F3"
+        android:textColorHint="#7C7C88"
         android:id="@+id/editName_editText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -39,6 +45,7 @@
 
     <!-- CHAT COMMAND SECTION (only relevant for the "Command" special button) -->
     <TextView
+        android:textColor="#DADDE5"
         android:id="@+id/editCommand_textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -52,6 +59,11 @@
         app:layout_constraintTop_toBottomOf="@id/editName_editText" />
 
     <EditText
+        android:background="@drawable/bg_input_premium"
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="10dp"
+        android:textColor="#F0F0F3"
+        android:textColorHint="#7C7C88"
         android:id="@+id/editCommand_editText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -67,6 +79,7 @@
 
     <!--  SIZE SECTION -->
     <TextView
+        android:textColor="#DADDE5"
         android:id="@+id/editSize_textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -79,6 +92,11 @@
         tools:visibility="visible" />
 
     <EditText
+        android:background="@drawable/bg_input_premium"
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="10dp"
+        android:textColor="#F0F0F3"
+        android:textColorHint="#7C7C88"
         android:id="@+id/editSize_editTextX"
         android:layout_width="@dimen/_134sdp"
         android:layout_height="wrap_content"
@@ -90,6 +108,11 @@
         app:layout_constraintTop_toBottomOf="@+id/editSize_textView" />
 
     <EditText
+        android:background="@drawable/bg_input_premium"
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="10dp"
+        android:textColor="#F0F0F3"
+        android:textColorHint="#7C7C88"
         android:id="@+id/editSize_editTextY"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -103,6 +126,7 @@
         app:layout_constraintTop_toTopOf="@+id/editSize_editTextX" />
 
     <TextView
+        android:textColor="#DADDE5"
         android:id="@+id/editSize_x_textView"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
@@ -116,6 +140,7 @@
 
     <!-- MAPPING SECTION -->
     <TextView
+        android:textColor="#DADDE5"
         android:id="@+id/editMapping_textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -298,6 +323,7 @@
 
     <!-- ORIENTATION SECTION -->
     <TextView
+        android:textColor="#DADDE5"
         android:id="@+id/editOrientation_textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -409,6 +435,7 @@
 
     <!-- STROKE WIDTH -->
     <TextView
+        android:textColor="#DADDE5"
         android:id="@+id/editStrokeWidth_textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -432,6 +459,7 @@
         app:layout_constraintTop_toBottomOf="@+id/editStrokeWidth_textView" />
 
     <TextView
+        android:textColor="#DADDE5"
         android:id="@+id/editStrokeWidth_textView_percent"
         android:layout_width="50dp"
         android:layout_height="0dp"
@@ -462,6 +490,7 @@
 
     <!-- CORNER RADIUS SECTION -->
     <TextView
+        android:textColor="#DADDE5"
         android:id="@+id/editCornerRadius_textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -484,6 +513,7 @@
         app:layout_constraintTop_toBottomOf="@+id/editCornerRadius_textView" />
 
     <TextView
+        android:textColor="#DADDE5"
         android:id="@+id/editCornerRadius_textView_percent"
         android:layout_width="50dp"
         android:layout_height="0dp"
@@ -496,6 +526,7 @@
 
     <!-- BUTTON OPACITY SECTION -->
     <TextView
+        android:textColor="#DADDE5"
         android:id="@+id/editButtonOpacity_textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -517,6 +548,7 @@
         app:layout_constraintTop_toBottomOf="@id/editButtonOpacity_textView" />
 
     <TextView
+        android:textColor="#DADDE5"
         android:id="@+id/editButtonOpacity_textView_percent"
         android:layout_width="50dp"
         android:layout_height="0dp"

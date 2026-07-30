@@ -8,7 +8,7 @@
     android:paddingHorizontal="14dp"
     android:paddingVertical="13dp"
     android:layout_marginHorizontal="12dp"
-    android:layout_marginVertical="5dp"
+    android:layout_marginVertical="7dp"
     android:background="@drawable/bg_fastclient_card"
     android:stateListAnimator="@animator/card_press_anim"
     android:clickable="false"

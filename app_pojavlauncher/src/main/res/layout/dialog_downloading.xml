@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:padding="24dp"
     android:gravity="center"
-    android:background="@color/bg_client_features_card">
+    android:background="@drawable/bg_dialog_premium">
 
     <ImageView
         android:id="@+id/iv_download_anim"

@@ -7,7 +7,8 @@
     android:layout_height="wrap_content"
     android:paddingHorizontal="@dimen/padding_moderate"
     android:paddingVertical="@dimen/padding_moderate"
-    app:layout_optimizationLevel="standard|dimensions|chains">
+    app:layout_optimizationLevel="standard|dimensions|chains"
+    android:background="@drawable/bg_dialog_premium">
 
     <!-- Resolution settings -->
     <TextView
