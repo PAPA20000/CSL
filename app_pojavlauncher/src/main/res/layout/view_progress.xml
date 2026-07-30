@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- ════════════════════════════════════════════════════════════════
+     DOWNLOAD DECK (ground-up redo — Req: progress bar redesign)
+     Top-anchored floating banner. Icon tile + big tabular percentage,
+     meta line, full-width luminous beam. NOT the old bottom pill.
+═════════════════════════════════════════════════════════════════ -->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -6,154 +11,158 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@android:color/transparent"
-    android:padding="6dp">
+    android:paddingHorizontal="12dp"
+    android:paddingTop="8dp">
 
-    <!-- ═══════════════════════════════════════ -->
-    <!-- ✦ SLIM PREMIUM DOWNLOAD PILL           -->
-    <!-- ═══════════════════════════════════════ -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/download_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_download_card"
+        android:background="@drawable/bg_download_deck"
+        android:elevation="12dp"
         android:paddingHorizontal="14dp"
-        android:paddingVertical="11dp"
-        app:layout_constraintWidth_max="480dp"
+        android:paddingTop="13dp"
+        android:paddingBottom="13dp"
+        app:layout_constraintWidth_max="520dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <!-- Phase-5 Pulse-Orbit animation dial + task icon -->
-        <FrameLayout
-            android:id="@+id/progress_indicator_container"
-            android:layout_width="46dp"
-            android:layout_height="46dp"
+        <!-- Content icon tile (mod icon swaps in during mod downloads) -->
+        <ImageView
+            android:id="@+id/progress_icon"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_deck_icon_tile"
+            android:clipToOutline="true"
+            android:padding="11dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_download"
+            android:tint="#E4E4EA"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent">
+            app:layout_constraintBottom_toTopOf="@id/progress_horizontal_bar"
+            tools:ignore="UseAppTint" />
 
-            <com.kdt.mcgui.PulseOrbitView
-                android:id="@+id/pulse_orbit"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-
-            <ImageView
-                android:id="@+id/progress_icon"
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:layout_gravity="center"
-                android:scaleType="centerInside"
-                android:src="@drawable/ic_download"
-                android:tint="#C9CBD6"
-                tools:ignore="UseAppTint" />
-        </FrameLayout>
-
-        <!-- Status / Title -->
+        <!-- Task title -->
         <TextView
             android:id="@+id/progress_status_text"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Downloading Minecraft"
-            android:textColor="#F0F0F3"
-            android:textSize="12.5sp"
-            android:fontFamily="sans-serif-medium"
             android:ellipsize="end"
-            android:maxLines="1"
+            android:fontFamily="sans-serif-medium"
             android:letterSpacing="0.01"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="8dp"
-            app:layout_constraintStart_toEndOf="@id/progress_indicator_container"
-            app:layout_constraintEnd_toStartOf="@+id/progress_percentage_text"
+            android:maxLines="1"
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="10dp"
+            android:textColor="#F0F0F3"
+            android:textSize="13.5sp"
+            app:layout_constraintStart_toEndOf="@id/progress_icon"
+            app:layout_constraintEnd_toStartOf="@id/progress_percentage_text"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="Downloading Minecraft"/>
+            tools:text="Downloading Sodium" />
 
-        <!-- Percentage — refined tabular display -->
+        <!-- Big tabular percentage — the design signature -->
         <TextView
             android:id="@+id/progress_percentage_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="0%"
-            android:textColor="#E4E4EA"
-            android:textSize="15sp"
-            android:fontFamily="sans-serif-medium"
-            android:letterSpacing="-0.01"
+            android:fontFamily="sans-serif-light"
+            android:letterSpacing="-0.02"
+            android:textColor="#F2F2F5"
+            android:textSize="30sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="26%"/>
+            app:layout_constraintTop_toTopOf="@id/progress_status_text"
+            app:layout_constraintBottom_toBottomOf="@id/progress_meta_row"
+            tools:text="42%" />
 
-        <!-- Phase-5 premium fill bar (separate system from the Pulse-Orbit dial) -->
-        <ProgressBar
-            android:id="@+id/progress_horizontal_bar"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="0dp"
-            android:layout_height="4dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginStart="12dp"
-            android:max="100"
-            android:progress="0"
-            android:progressDrawable="@drawable/bg_progress_premium"
-            app:layout_constraintStart_toEndOf="@id/progress_indicator_container"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/progress_status_text"/>
-
-        <!-- Details row: muted metric + SPEED / ETA stat chips -->
+        <!-- Sub metric -->
         <TextView
             android:id="@+id/progress_detail_text"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text=""
-            android:textColor="#7C7C88"
-            android:textSize="10sp"
-            android:layout_marginTop="7dp"
-            android:layout_marginStart="12dp"
             android:ellipsize="end"
             android:maxLines="1"
-            app:layout_constraintStart_toEndOf="@id/progress_indicator_container"
-            app:layout_constraintEnd_toStartOf="@+id/progress_speed_text"
-            app:layout_constraintTop_toBottomOf="@id/progress_horizontal_bar"
-            app:layout_constraintBottom_toBottomOf="parent"
-            tools:text="141 MB / 513 MB"/>
-
-        <TextView
-            android:id="@+id/progress_speed_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textColor="#C9CBD6"
-            android:textSize="9.5sp"
-            android:fontFamily="sans-serif-medium"
-            android:letterSpacing="0.02"
-            android:background="@drawable/bg_stat_chip"
-            android:layout_marginTop="6dp"
-            android:layout_marginHorizontal="4dp"
-            app:layout_constraintStart_toEndOf="@id/progress_detail_text"
-            app:layout_constraintEnd_toStartOf="@+id/progress_eta_text"
-            app:layout_constraintTop_toBottomOf="@id/progress_horizontal_bar"
-            app:layout_constraintBottom_toBottomOf="parent"
-            tools:text="↓ 2.5 MB/s"/>
-
-        <TextView
-            android:id="@+id/progress_eta_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
+            android:layout_marginTop="2dp"
+            android:layout_marginEnd="10dp"
             android:textColor="#9C9CA8"
-            android:textSize="9.5sp"
-            android:fontFamily="sans-serif-medium"
-            android:letterSpacing="0.02"
-            android:background="@drawable/bg_stat_chip"
-            android:layout_marginTop="6dp"
+            android:textSize="10.5sp"
+            app:layout_constraintStart_toStartOf="@id/progress_status_text"
+            app:layout_constraintEnd_toStartOf="@id/progress_percentage_text"
+            app:layout_constraintTop_toBottomOf="@id/progress_status_text"
+            tools:text="141 MB / 513 MB" />
+
+        <!-- Meta row: speed • eta -->
+        <LinearLayout
+            android:id="@+id/progress_meta_row"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="5dp"
+            app:layout_constraintStart_toStartOf="@id/progress_status_text"
+            app:layout_constraintEnd_toStartOf="@id/progress_percentage_text"
+            app:layout_constraintTop_toBottomOf="@id/progress_detail_text">
+
+            <TextView
+                android:id="@+id/progress_speed_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.02"
+                android:textColor="#DADDE5"
+                android:textSize="10sp"
+                android:visibility="gone"
+                tools:text="2.5 MB/s"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/progress_eta_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:letterSpacing="0.02"
+                android:textColor="#7C7C88"
+                android:textSize="10sp"
+                android:visibility="gone"
+                tools:text="• 1m 20s remaining"
+                tools:visibility="visible" />
+        </LinearLayout>
+
+        <!-- Luminous full-width beam -->
+        <ProgressBar
+            android:id="@+id/progress_horizontal_bar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="5dp"
+            android:layout_marginTop="12dp"
+            android:max="100"
+            android:progress="0"
+            android:progressDrawable="@drawable/bg_progress_beam"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/progress_horizontal_bar"
-            app:layout_constraintBottom_toBottomOf="parent"
-            tools:text="1m 20s"/>
+            app:layout_constraintTop_toBottomOf="@id/progress_meta_row"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- ═══════════════════════════════════════ -->
     <!-- ✦ LEGACY COMPATIBILITY VIEWS (HIDDEN)  -->
     <!-- ═══════════════════════════════════════ -->
+    <FrameLayout
+        android:id="@+id/progress_indicator_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.kdt.mcgui.PulseOrbitView
+            android:id="@+id/pulse_orbit"
+            android:layout_width="0dp"
+            android:layout_height="0dp" />
+    </FrameLayout>
+
     <com.kdt.mcgui.KineticProgressView
         android:id="@+id/kinetic_progress_legacy"
         android:layout_width="0dp"

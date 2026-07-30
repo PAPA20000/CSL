@@ -84,10 +84,11 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
     private final Runnable mFadeOutRunnable = new Runnable() {
         @Override
         public void run() {
+            // Exit upward — the deck returns to where it dropped from
             ProgressLayout.this.animate()
                 .alpha(0f)
-                .translationY(ProgressLayout.this.getHeight())
-                .setDuration(500)
+                .translationY(-ProgressLayout.this.getHeight() - 24f)
+                .setDuration(420)
                 .withEndAction(() -> {
                     ProgressLayout.this.setVisibility(GONE);
                     ProgressLayout.this.setAlpha(1f);
@@ -209,25 +210,26 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
                 }
                 mTaskNumberDisplayer.setText(getContext().getString(R.string.progresslayout_tasks_in_progress, tc));
                 setVisibility(VISIBLE);
-                // Premium entrance: card glides up with a soft fade
+                // Premium entrance: deck drops in from above with a soft land
                 if (becameVisible) {
                     animate().cancel();
                     setAlpha(0f);
-                    setTranslationY(getResources().getDisplayMetrics().density * 24f);
+                    setTranslationY(-getResources().getDisplayMetrics().density * 120f);
                     animate().alpha(1f).translationY(0f)
-                            .setDuration(380)
-                            .setInterpolator(new android.view.animation.DecelerateInterpolator(1.8f))
+                            .setDuration(460)
+                            .setInterpolator(new android.view.animation.OvershootInterpolator(0.65f))
                             .start();
                 }
             } else {
                 if (getVisibility() == VISIBLE && !mIsFinishing) {
                     mIsFinishing = true;
-                    // Phase-5 completion choreography: orbit morphs into a check
+                    // Completion choreography: beam flash + success palette
                     if (mPulseOrbit != null) {
                         mPulseOrbit.showCompleted();
                     }
                     if (mProgressIcon != null) {
-                        mProgressIcon.animate().alpha(0f).setDuration(280).start();
+                        mProgressIcon.setImageResource(R.drawable.ic_download);
+                        mProgressIcon.animate().alpha(0.35f).setDuration(280).start();
                     }
                     if (mStatusText != null) {
                         mStatusText.setText("✓ Download Complete");
@@ -240,6 +242,12 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
                     if (mProgressBar != null) {
                         mProgressBar.setProgress(100);
                         mProgressBar.setProgressTintList(ColorStateList.valueOf(0xFF9FD6AC));
+                        // one-shot beam flash to signal completion
+                        mProgressBar.animate().cancel();
+                        mProgressBar.setAlpha(0.3f);
+                        mProgressBar.animate().alpha(1f).setDuration(480)
+                                .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                                .start();
                     }
                     if (mDetailText != null) {
                         mDetailText.setVisibility(GONE);
@@ -346,14 +354,6 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
                         mPercentageAnimator.start();
                     }
 
-                    // Gently pulse the card on update to feel alive
-                    if (mDownloadCard != null) {
-                        mDownloadCard.animate().scaleX(1.015f).scaleY(1.015f).setDuration(120).withEndAction(() -> {
-                            if (mDownloadCard != null) {
-                                mDownloadCard.animate().scaleX(1.0f).scaleY(1.0f).setDuration(120).start();
-                            }
-                        }).start();
-                    }
                 }
 
                 // Determine formatted values
@@ -396,11 +396,18 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
                         ModIconCache.getInstance().getImage(bitmap -> {
                             post(() -> {
                                 if (mProgressIcon != null && bitmap != null) {
+                                    int pad = (int) (getResources().getDisplayMetrics().density * 6);
+                                    mProgressIcon.setPadding(pad, pad, pad, pad);
+                                    mProgressIcon.setScaleType(ImageView.ScaleType.CENTER_CROP);
                                     mProgressIcon.setImageBitmap(bitmap);
+                                    mProgressIcon.setAlpha(1f);
                                 }
                             });
                         }, cacheTag, modIconUrl);
                     } else {
+                        int pad = (int) (getResources().getDisplayMetrics().density * 11);
+                        mProgressIcon.setPadding(pad, pad, pad, pad);
+                        mProgressIcon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
                         mProgressIcon.setImageResource(R.drawable.ic_download);
                     }
                 }
@@ -515,8 +522,20 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
                 }
 
                 if (mStatusText != null) {
-                    mStatusText.setTextColor(0xFFFFFFFF); // Keep status white during progress
+                    mStatusText.setTextColor(0xFFF0F0F3); // Keep status bright during progress
+                    CharSequence prev = mStatusText.getText();
+                    boolean titleChanged = prev == null || !prev.toString().contentEquals(statusTitle);
                     mStatusText.setText(statusTitle);
+                    if (titleChanged && !statusTitle.isEmpty()) {
+                        // task swap: quick fade+slide so transitions feel intentional
+                        mStatusText.animate().cancel();
+                        mStatusText.setAlpha(0f);
+                        mStatusText.setTranslationX(8f);
+                        mStatusText.animate().alpha(1f).translationX(0f)
+                                .setDuration(220)
+                                .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                                .start();
+                    }
                 }
                 if (mDetailText != null) {
                     if (!detailStr.isEmpty()) {
@@ -536,7 +555,7 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
                 }
                 if (mEtaText != null) {
                     if (!etaStr.isEmpty()) {
-                        mEtaText.setText(etaStr);
+                        mEtaText.setText("• " + etaStr);
                         mEtaText.setVisibility(VISIBLE);
                     } else {
                         mEtaText.setVisibility(GONE);
