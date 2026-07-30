@@ -16,6 +16,18 @@ public class AsyncMinecraftDownloader {
 
     public static JMinecraftVersionList.Version getListedVersion(String normalizedVersionString) {
         JMinecraftVersionList versionList = (JMinecraftVersionList) ExtraCore.getValue(ExtraConstants.RELEASE_TABLE);
+        return getListedVersion(versionList, normalizedVersionString);
+    }
+
+    /**
+     * Look a version id up in an explicitly supplied version list instead of the
+     * in-memory release table. Used by the downloader's self-healing path, which
+     * may have just fetched a fresher manifest than the one currently published.
+     * @param versionList the list to search, may be null
+     * @param normalizedVersionString exact version id to find
+     * @return the matching manifest entry, or null when absent / no list available
+     */
+    public static JMinecraftVersionList.Version getListedVersion(JMinecraftVersionList versionList, String normalizedVersionString) {
         if(versionList == null || versionList.versions == null) return null; // can't have listed versions if there's no list
         for(JMinecraftVersionList.Version version : versionList.versions) {
             if(version.id.equals(normalizedVersionString)) return version;

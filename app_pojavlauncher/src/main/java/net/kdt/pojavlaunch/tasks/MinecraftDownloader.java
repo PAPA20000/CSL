@@ -14,6 +14,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.gson.JsonSyntaxException;
 import com.kdt.mcgui.ProgressLayout;
 
 import net.kdt.pojavlaunch.JAssetInfo;
@@ -51,6 +52,10 @@ public class MinecraftDownloader {
     private static final double ONE_MEGABYTE = (1024d * 1024d);
     public static final String MINECRAFT_RES = "https://resources.download.minecraft.net/";
     private static final String MAVEN_CENTRAL_REPO1 = "https://repo1.maven.org/maven2/";
+    // Metadata files (version JSON / asset index) are tiny, so retrying them a few
+    // times on transient network errors is cheap and saves the whole installation.
+    private static final int METADATA_DOWNLOAD_ATTEMPTS = 3;
+    private static final long METADATA_RETRY_DELAY_MS = 750L;
     private AtomicReference<Exception> mDownloaderThreadException;
     private ArrayList<DownloaderTask> mScheduledDownloadTasks;
     private ArrayList<File> mDeclaredNatives;
@@ -247,6 +252,14 @@ public class MinecraftDownloader {
 
     private File downloadGameJson(JMinecraftVersionList.Version verInfo) throws IOException, MirrorTamperedException {
         File targetFile = createGameJsonPath(verInfo.id);
+        // A 0-byte / unreadable leftover from an interrupted download must never be
+        // treated as "already on disk": it used to poison every future install of the
+        // version (ensureSha1 with an unknown hash skips existing files). Purge it.
+        if(targetFile.exists() && !isVersionJsonUsable(targetFile)) {
+            Log.w("MinecraftDownloader", "Deleting damaged cached metadata: " + targetFile.getAbsolutePath());
+            if(!targetFile.delete())
+                Log.w("MinecraftDownloader", "Could not delete damaged metadata file, download will overwrite it");
+        }
         if(verInfo.sha1 == null && targetFile.canRead() && targetFile.isFile())
             return targetFile;
         FileUtils.ensureParentDirectory(targetFile);
@@ -254,13 +267,17 @@ public class MinecraftDownloader {
             DownloadUtils.ensureSha1(targetFile, LauncherPreferences.PREF_VERIFY_MANIFEST ? verInfo.sha1 : null, () -> {
                 ProgressLayout.setProgress(ProgressLayout.DOWNLOAD_MINECRAFT, 0,
                         R.string.newdl_downloading_metadata, targetFile.getName());
-                DownloadMirror.downloadFileMirrored(DownloadMirror.DOWNLOAD_CLASS_METADATA, verInfo.url, targetFile);
+                downloadMetadataWithRetry(DownloadMirror.DOWNLOAD_CLASS_METADATA, verInfo.url, targetFile);
                 return null;
             });
         }catch (DownloadUtils.SHA1VerificationException e) {
             if(DownloadMirror.isMirrored()) throw new MirrorTamperedException();
             else throw e;
         }
+        // Guarantee the contract of this method: callers get a usable file, or an exception.
+        if(!isVersionJsonUsable(targetFile))
+            throw new IOException("Metadata for version " + verInfo.id
+                    + " is missing or empty after download (source: " + verInfo.url + ")");
         return targetFile;
     }
 
@@ -272,10 +289,47 @@ public class MinecraftDownloader {
         DownloadUtils.ensureSha1(targetFile, assetIndex.sha1, ()-> {
             ProgressLayout.setProgress(ProgressLayout.DOWNLOAD_MINECRAFT, 0,
                     R.string.newdl_downloading_metadata, targetFile.getName());
-            DownloadMirror.downloadFileMirrored(DownloadMirror.DOWNLOAD_CLASS_METADATA, assetIndex.url, targetFile);
+            downloadMetadataWithRetry(DownloadMirror.DOWNLOAD_CLASS_METADATA, assetIndex.url, targetFile);
             return null;
         });
-        return Tools.GLOBAL_GSON.fromJson(Tools.read(targetFile), JAssets.class);
+        try {
+            return Tools.GLOBAL_GSON.fromJson(Tools.read(targetFile), JAssets.class);
+        }catch (IOException | JsonSyntaxException e) {
+            // The cached asset index is corrupt - re-fetch it once instead of
+            // crashing the whole installation with an unchecked exception.
+            Log.w("MinecraftDownloader", "Asset index " + targetFile.getName() + " is corrupt, re-downloading", e);
+            targetFile.delete();
+            downloadMetadataWithRetry(DownloadMirror.DOWNLOAD_CLASS_METADATA, assetIndex.url, targetFile);
+            return Tools.GLOBAL_GSON.fromJson(Tools.read(targetFile), JAssets.class);
+        }
+    }
+
+    /**
+     * Download a small metadata document, retrying transient failures a few times
+     * before giving up. The mirrored helper already fails over from the mirror to the
+     * official source per call, so one full retry round still stays cheap.
+     */
+    private void downloadMetadataWithRetry(int downloadClass, String url, File outputFile) throws IOException {
+        IOException lastFailure = null;
+        for(int attempt = 1; attempt <= METADATA_DOWNLOAD_ATTEMPTS; attempt++) {
+            try {
+                DownloadMirror.downloadFileMirrored(downloadClass, url, outputFile);
+                return;
+            }catch (IOException e) {
+                lastFailure = e;
+                Log.w("MinecraftDownloader", "Metadata download attempt " + attempt + "/"
+                        + METADATA_DOWNLOAD_ATTEMPTS + " failed for " + url + " (" + e + ")");
+                if(attempt < METADATA_DOWNLOAD_ATTEMPTS) {
+                    try {
+                        Thread.sleep(METADATA_RETRY_DELAY_MS);
+                    }catch (InterruptedException interruptedException) {
+                        Thread.currentThread().interrupt();
+                        throw new IOException("Interrupted while downloading " + url, lastFailure);
+                    }
+                }
+            }
+        }
+        throw lastFailure != null ? lastFailure : new IOException("Unable to download from " + url);
     }
     
     private MinecraftClientInfo getClientInfo(JMinecraftVersionList.Version verInfo) {
@@ -295,19 +349,39 @@ public class MinecraftDownloader {
      */
     private boolean downloadAndProcessMetadata(Activity activity, JMinecraftVersionList.Version verInfo, String versionName) throws IOException, MirrorTamperedException {
         File versionJsonFile;
-        if(verInfo != null) {
-            versionJsonFile = downloadGameJson(verInfo);
+        JMinecraftVersionList.Version manifestEntry = verInfo;
+        if(manifestEntry != null) {
+            versionJsonFile = downloadGameJson(manifestEntry);
         } else {
-            JMinecraftVersionList.Version listedVersion = AsyncMinecraftDownloader.getListedVersion(versionName);
-            if(listedVersion != null) {
-                versionJsonFile = downloadGameJson(listedVersion);
+            manifestEntry = AsyncMinecraftDownloader.getListedVersion(versionName);
+            if(manifestEntry == null) {
+                // The in-memory copy of the version list can legitimately miss this
+                // version: cold shortcut starts skip the refresh entirely, the on-disk
+                // cache is refreshed only once a day, and a same-day release is absent
+                // from any cache written before it. Self-heal via a forced manifest
+                // refresh instead of declaring the version "not installed".
+                manifestEntry = refreshVersionListAndFind(versionName);
+            }
+            if(manifestEntry != null) {
+                versionJsonFile = downloadGameJson(manifestEntry);
             } else {
+                // Not an official version - treat it as a locally installed
+                // custom/modded one and look at its on-disk metadata.
                 versionJsonFile = createGameJsonPath(versionName);
             }
         }
         Log.d("CS_LAUNCHER", "Version JSON path: " + versionJsonFile.getAbsolutePath());
-        if(!versionJsonFile.exists() || versionJsonFile.length() == 0) {
-            String message = "Failed to load version: " + versionName + ". Please re-install the version.";
+        if(!isVersionJsonUsable(versionJsonFile)) {
+            // Explain the real reason instead of the blanket "re-install" advice.
+            String detail;
+            if(manifestEntry != null) {
+                detail = "the metadata download failed despite retries - check your internet connection";
+            } else if(!isOnline) {
+                detail = "no internet connection and no local installation found";
+            } else {
+                detail = "it was not found in Mojang's version list and has no valid local installation - please re-install the version";
+            }
+            String message = "Failed to load version: " + versionName + " (" + detail + ").";
             Log.e("CS_LAUNCHER", message);
             new Handler(Looper.getMainLooper()).post(() -> {
                 if(activity != null && !activity.isFinishing()) {
@@ -316,15 +390,9 @@ public class MinecraftDownloader {
             });
             throw new IOException(message);
         }
-        if(versionJsonFile.canRead())  {
-            String rawJson = Tools.read(versionJsonFile.getAbsolutePath());
-            if(rawJson.trim().isEmpty()) {
-                throw new IOException("Version JSON is empty for: " + versionName);
-            }
-            verInfo = Tools.GLOBAL_GSON.fromJson(rawJson, JMinecraftVersionList.Version.class);
-        } else {
-            throw new IOException("Unable to read Version JSON for version " + versionName);
-        }
+        // Parse the metadata, transparently re-downloading the document once if the
+        // cached copy turns out to be damaged (truncated write, killed process...).
+        verInfo = readVersionJson(versionJsonFile, versionName, manifestEntry);
 
         if(activity != null && !NewJREUtil.installNewJreIfNeeded(activity, verInfo)){
             throw new RuntimeException(activity.getString(R.string.exception_failed_to_unpack_jre17));
@@ -347,6 +415,96 @@ public class MinecraftDownloader {
             return downloadAndProcessMetadata(activity, inheritedVersion, verInfo.inheritsFrom);
         }
         return true;
+    }
+
+    /**
+     * @return true when the file looks like a usable cached metadata document
+     * (present, readable, non-empty). Zero-byte leftovers from interrupted
+     * downloads fail this check on purpose.
+     */
+    private static boolean isVersionJsonUsable(File file) {
+        return file != null && file.isFile() && file.canRead() && file.length() > 0;
+    }
+
+    /**
+     * Force-refresh the version manifest and look the given version up in the fresh
+     * copy. This is the self-healing counterpart of the throttled/occasionally
+     * absent cached list.
+     * <p>
+     * The refresh is deliberately skipped when the device is offline, or when the
+     * version already has usable local metadata: custom/modded versions always
+     * carry their own JSON and are never part of Mojang's manifest, so a refresh
+     * would only waste a network round-trip on a guaranteed miss.
+     *
+     * @return the manifest entry for the version, or null when unavailable
+     */
+    @Nullable
+    private JMinecraftVersionList.Version refreshVersionListAndFind(String versionName) {
+        if(!isOnline) return null;
+        if(isVersionJsonUsable(createGameJsonPath(versionName))) return null;
+        Log.i("MinecraftDownloader", "Version " + versionName
+                + " not found in the cached version list - refreshing the manifest");
+        JMinecraftVersionList freshList = AsyncVersionList.fetchFreshVersionListBlocking();
+        if(freshList == null) {
+            Log.w("MinecraftDownloader", "Version list refresh failed; cannot resolve " + versionName);
+            return null;
+        }
+        return AsyncMinecraftDownloader.getListedVersion(freshList, versionName);
+    }
+
+    /**
+     * Parse a version JSON document from disk. Every corruption flavour (truncated
+     * document, empty file, missing id...) surfaces as a JsonSyntaxException so
+     * callers can handle all of them with a single recovery path.
+     */
+    @NonNull
+    private static JMinecraftVersionList.Version parseVersionJson(File versionJsonFile) throws IOException {
+        String rawJson = Tools.read(versionJsonFile.getAbsolutePath());
+        if(rawJson.trim().isEmpty())
+            throw new JsonSyntaxException("Version JSON is empty: " + versionJsonFile.getAbsolutePath());
+        JMinecraftVersionList.Version parsed = Tools.GLOBAL_GSON.fromJson(rawJson, JMinecraftVersionList.Version.class);
+        if(parsed == null || !Tools.isValidString(parsed.id))
+            throw new JsonSyntaxException("Version JSON has no valid id: " + versionJsonFile.getAbsolutePath());
+        return parsed;
+    }
+
+    /**
+     * Read and parse the version JSON, healing a damaged on-disk copy by deleting
+     * and re-downloading it once. An IOException carrying the actual reason is only
+     * thrown when the freshly downloaded document fails as well (or no official
+     * download source exists for this version at all).
+     */
+    @NonNull
+    private JMinecraftVersionList.Version readVersionJson(File versionJsonFile, String versionName,
+                                                          @Nullable JMinecraftVersionList.Version manifestEntry)
+            throws IOException, MirrorTamperedException {
+        try {
+            return parseVersionJson(versionJsonFile);
+        }catch (IOException | JsonSyntaxException firstFailure) {
+            Log.w("MinecraftDownloader", "Cached version JSON for " + versionName
+                    + " is unreadable/corrupt; deleting and re-downloading it", firstFailure);
+            if(!versionJsonFile.delete())
+                Log.w("MinecraftDownloader", "Could not delete the corrupt JSON: " + versionJsonFile.getAbsolutePath());
+            // Find a source to re-download from: the manifest entry we already have,
+            // the in-memory release table, or as a last resort a fresh manifest.
+            JMinecraftVersionList.Version source = manifestEntry;
+            if(source == null) source = AsyncMinecraftDownloader.getListedVersion(versionName);
+            if(source == null) source = refreshVersionListAndFind(versionName);
+            if(source == null) {
+                throw new IOException("Failed to load version: " + versionName
+                        + " (the local metadata is damaged and this is not an official"
+                        + " version that can be re-downloaded - please re-install the version).",
+                        firstFailure);
+            }
+            File reDownloadedFile = downloadGameJson(source);
+            try {
+                return parseVersionJson(reDownloadedFile);
+            }catch (IOException | JsonSyntaxException secondFailure) {
+                throw new IOException("Failed to load version: " + versionName
+                        + " (freshly downloaded metadata could not be parsed: "
+                        + secondFailure.getMessage() + ").", secondFailure);
+            }
+        }
     }
 
     private void growDownloadList(int addedElementCount) {
