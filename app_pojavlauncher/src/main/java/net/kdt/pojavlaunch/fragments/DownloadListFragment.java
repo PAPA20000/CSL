@@ -9,6 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Lifecycle;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -58,6 +59,18 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
         super(R.layout.fragment_download_list);
     }
 
+    /** True only while it is safe to touch views/resources/activity. */
+    private boolean isUiReady() {
+        if (!isAdded() || getContext() == null || getActivity() == null) return false;
+        if (getView() == null || mRecyclerView == null) return false;
+        try {
+            return getViewLifecycleOwner().getLifecycle().getCurrentState()
+                    .isAtLeast(Lifecycle.State.INITIALIZED);
+        } catch (IllegalStateException e) {
+            return false;
+        }
+    }
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         mContentType = getArguments() != null ? getArguments().getString(ARG_TYPE, "mod") : "mod";
@@ -81,7 +94,7 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
         mRecyclerView.setAdapter(mAdapter);
 
         mAdapter.setOnItemClickListener(item -> {
-            if (mItemClickListener != null) {
+            if (mItemClickListener != null && isUiReady()) {
                 mItemClickListener.onItemClick(item);
             }
         });
@@ -90,19 +103,40 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
         View poweredBadge = view.findViewById(R.id.infrawire_powered_badge);
         if (poweredBadge != null) {
             net.kdt.pojavlaunch.sponsor.InfrawirePartner.applyPressAnimation(poweredBadge);
-            poweredBadge.setOnClickListener(v ->
-                    net.kdt.pojavlaunch.sponsor.InfrawirePartner.openPartnerPage(requireActivity()));
+            poweredBadge.setOnClickListener(v -> {
+                if (getActivity() != null) {
+                    net.kdt.pojavlaunch.sponsor.InfrawirePartner.openPartnerPage(getActivity());
+                }
+            });
             net.kdt.pojavlaunch.sponsor.InfrawirePartner.fadeIn(poweredBadge, 200);
         }
 
         loadContent();
     }
 
+    @Override
+    public void onDestroyView() {
+        // Cancel every pending animation / callback before views are torn down.
+        if (mLoadingCard != null) mLoadingCard.animate().cancel();
+        if (mStatusText != null) mStatusText.animate().cancel();
+        if (mProgressBar != null) mProgressBar.animate().cancel();
+        if (mRecyclerView != null) {
+            mRecyclerView.setAdapter(null);
+        }
+        mAdapter = null;
+        mRecyclerView = null;
+        mProgressBar = null;
+        mLoadingCard = null;
+        mStatusText = null;
+        super.onDestroyView();
+    }
+
     private void loadContent() {
+        if (!isUiReady()) return;
         SearchFilters filters = buildFilters("");
         showLoadingCapsule();
-        mProgressBar.setVisibility(View.VISIBLE);
-        mAdapter.performSearchQuery(filters);
+        if (mProgressBar != null) mProgressBar.setVisibility(View.VISIBLE);
+        if (mAdapter != null) mAdapter.performSearchQuery(filters);
     }
 
     public void filter(String query) {
@@ -110,22 +144,23 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
     }
 
     public void filter(String query, @Nullable String mcVersion, @Nullable String modLoader) {
+        if (!isUiReady()) return;
         SearchFilters filters = buildFilters(query != null ? query : "");
         filters.mcVersion = mcVersion != null && !mcVersion.isEmpty() ? mcVersion : null;
         filters.modLoader = modLoader != null && !modLoader.isEmpty() ? modLoader : null;
         showLoadingCapsule();
-        mProgressBar.setVisibility(View.VISIBLE);
-        mAdapter.performSearchQuery(filters);
+        if (mProgressBar != null) mProgressBar.setVisibility(View.VISIBLE);
+        if (mAdapter != null) mAdapter.performSearchQuery(filters);
     }
 
     /** Loading capsule drops in softly instead of popping. */
     private void showLoadingCapsule() {
-        if (mLoadingCard == null) return;
+        if (!isUiReady() || mLoadingCard == null) return;
         if (mLoadingCard.getVisibility() == View.VISIBLE) return;
+        float density = mLoadingCard.getContext().getResources().getDisplayMetrics().density;
         mLoadingCard.setVisibility(View.VISIBLE);
         mLoadingCard.setAlpha(0f);
-        mLoadingCard.setTranslationY(-12f *
-                getResources().getDisplayMetrics().density);
+        mLoadingCard.setTranslationY(-12f * density);
         mLoadingCard.animate().alpha(1f).translationY(0f)
                 .setDuration(260)
                 .setInterpolator(new android.view.animation.DecelerateInterpolator())
@@ -133,12 +168,14 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
     }
 
     private void hideLoadingCapsule() {
-        if (mLoadingCard == null || mLoadingCard.getVisibility() != View.VISIBLE) return;
+        if (!isUiReady() || mLoadingCard == null) return;
+        if (mLoadingCard.getVisibility() != View.VISIBLE) return;
         mLoadingCard.animate().cancel();
-        mLoadingCard.animate().alpha(0f).translationY(-8f *
-                getResources().getDisplayMetrics().density)
+        float density = mLoadingCard.getContext().getResources().getDisplayMetrics().density;
+        mLoadingCard.animate().alpha(0f).translationY(-8f * density)
                 .setDuration(180)
                 .withEndAction(() -> {
+                    if (mLoadingCard == null) return;
                     mLoadingCard.setVisibility(View.GONE);
                     mLoadingCard.setAlpha(1f);
                     mLoadingCard.setTranslationY(0f);
@@ -149,6 +186,7 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
     private SearchFilters buildFilters(String query) {
         SearchFilters filters = new SearchFilters();
         filters.name = query;
+        if (mContentType == null) mContentType = "mod";
         if (mContentType.equals("world")) {
             // Modrinth : "world" project type nahi hai — "datapack" type + adventure category use karo
             filters.projectType = "datapack";
@@ -166,15 +204,18 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
 
     @Override
     public void onSearchFinished() {
-        mProgressBar.setVisibility(View.GONE);
+        if (!isUiReady()) return;
+        if (mProgressBar != null) mProgressBar.setVisibility(View.GONE);
         hideLoadingCapsule();
-        mStatusText.setVisibility(View.GONE);
+        if (mStatusText != null) mStatusText.setVisibility(View.GONE);
     }
 
     @Override
     public void onSearchError(int error) {
-        mProgressBar.setVisibility(View.GONE);
+        if (!isUiReady()) return;
+        if (mProgressBar != null) mProgressBar.setVisibility(View.GONE);
         hideLoadingCapsule();
+        if (mStatusText == null) return;
         mStatusText.setVisibility(View.VISIBLE);
         // Status pill fades in rather than popping
         mStatusText.setAlpha(0f);

@@ -184,14 +184,20 @@ public class SearchModFragment extends Fragment implements ModItemAdapter.Search
         ProgressKeeper.removeTaskCountListener(mModItemAdapter);
     }
 
+    private boolean isUiReady() {
+        return isAdded() && getContext() != null && getView() != null;
+    }
+
     @Override
     public void onSearchFinished() {
+        if (!isUiReady()) return;
         mSearchProgressBar.setVisibility(View.GONE);
         mStatusTextView.setVisibility(View.GONE);
     }
 
     @Override
     public void onSearchError(int error) {
+        if (!isUiReady()) return;
         mSearchProgressBar.setVisibility(View.GONE);
         mStatusTextView.setVisibility(View.VISIBLE);
         switch (error) {
