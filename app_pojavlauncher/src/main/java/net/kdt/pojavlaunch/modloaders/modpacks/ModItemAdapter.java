@@ -150,6 +150,7 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         private final ImageView mSourceIconView;
         private final TextView mTitleView;
         private final TextView mInfoView;
+        private final TextView mDownloadsView;
         private final TextView mDescriptionView;
         private final ImageButton mLikeButton;
         private final ImageButton mInstallButton;
@@ -163,6 +164,7 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             mSourceIconView = itemView.findViewById(R.id.mod_source_imageview);
             mTitleView = itemView.findViewById(R.id.mod_title_textview);
             mInfoView = itemView.findViewById(R.id.mod_info_textview);
+            mDownloadsView = itemView.findViewById(R.id.mod_downloads_text);
             mDescriptionView = itemView.findViewById(R.id.mod_body_textview);
             mLikeButton = itemView.findViewById(R.id.btn_like);
             mInstallButton = itemView.findViewById(R.id.btn_install);
@@ -173,16 +175,23 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             mCurrentItem = item;
             mTitleView.setText(item.title);
 
-            // Info line: author + downloads
-            StringBuilder info = new StringBuilder();
+            // Author line (downloads moved to the dedicated chip)
             if (item.author != null && !item.author.isEmpty()) {
-                info.append("by ").append(item.author);
+                mInfoView.setText("by " + item.author);
+                mInfoView.setVisibility(android.view.View.VISIBLE);
+            } else {
+                mInfoView.setVisibility(android.view.View.GONE);
             }
-            if (item.downloads != null && !item.downloads.isEmpty()) {
-                if (info.length() > 0) info.append(" \u2022 ");
-                info.append(formatDownloads(item.downloads)).append(" Downloads");
+
+            // Downloads chip
+            if (mDownloadsView != null) {
+                if (item.downloads != null && !item.downloads.isEmpty()) {
+                    mDownloadsView.setText(formatDownloads(item.downloads));
+                    mDownloadsView.setVisibility(android.view.View.VISIBLE);
+                } else {
+                    mDownloadsView.setVisibility(android.view.View.GONE);
+                }
             }
-            mInfoView.setText(info.toString());
 
             // Description
             if (item.description != null && !item.description.isEmpty()) {
@@ -211,16 +220,24 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     item.imageUrl
             );
 
-            // Like button — restore persisted state
+            // Like button — restore persisted state (muted rose, never neon)
             String modId = item.id;
             boolean isLiked = mLikedPrefs.getBoolean(modId, false);
             mLikeButton.setImageResource(isLiked ? R.drawable.ic_heart_filled : R.drawable.ic_heart_outline);
-            mLikeButton.setColorFilter(isLiked ? Color.parseColor("#FF4444") : Color.parseColor("#9CA3AF"));
+            mLikeButton.setColorFilter(isLiked ? Color.parseColor("#E5A0A6") : Color.parseColor("#7C7C88"));
             mLikeButton.setOnClickListener(v -> {
                 boolean nowLiked = !mLikedPrefs.getBoolean(modId, false);
                 mLikedPrefs.edit().putBoolean(modId, nowLiked).apply();
                 mLikeButton.setImageResource(nowLiked ? R.drawable.ic_heart_filled : R.drawable.ic_heart_outline);
-                mLikeButton.setColorFilter(nowLiked ? Color.parseColor("#FF4444") : Color.parseColor("#9CA3AF"));
+                mLikeButton.setColorFilter(nowLiked ? Color.parseColor("#E5A0A6") : Color.parseColor("#7C7C88"));
+                if (nowLiked) {
+                    v.animate().cancel();
+                    v.setScaleX(0.7f);
+                    v.setScaleY(0.7f);
+                    v.animate().scaleX(1f).scaleY(1f).setDuration(240)
+                            .setInterpolator(new android.view.animation.OvershootInterpolator(2f))
+                            .start();
+                }
             });
 
             // Install button — triggers same navigation as card click

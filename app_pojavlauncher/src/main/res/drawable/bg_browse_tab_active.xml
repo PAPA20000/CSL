@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Active segmented tab: white pill, dark text -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="270"
+        android:startColor="#F2F2F5"
+        android:endColor="#D8D9DF" />
+    <corners android:radius="20dp" />
+</shape>

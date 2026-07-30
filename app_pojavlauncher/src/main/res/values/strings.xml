@@ -614,6 +614,19 @@
     <string name="mod_install_link_discord">Discord</string>
     <string name="mod_install_more_chip">+%d more</string>
     <string name="mod_install_by_author">by %s</string>
+    <string name="browse_eyebrow">RESOURCE HUB</string>
+    <string name="browse_title">Browse Resources</string>
+    <string name="browse_search_hint">Search mods, packs, shaders…</string>
+    <string name="browse_search_hint_typed">Search %s…</string>
+    <string name="browse_filter_cd">Filters</string>
+    <string name="browse_install_cd">View project</string>
+    <string name="browse_like_cd">Like</string>
+    <string name="browse_loading_results">Finding the best results…</string>
+    <string name="browse_no_results">No results found.</string>
+    <string name="browse_filter_eyebrow">REFINE RESULTS</string>
+    <string name="browse_filter_title">Filters</string>
+    <string name="browse_filter_loader_label">MOD LOADER</string>
+    <string name="browse_filter_clear">Clear</string>
     <string name="download">Download</string>
     <string name="mod_description_label">Description</string>
 

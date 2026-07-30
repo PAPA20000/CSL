@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Browse result card: elevated charcoal with press feedback -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#14FFFFFF">
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFF" />
+            <corners android:radius="18dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="#17171D"
+                android:endColor="#141419" />
+            <stroke android:width="1dp" android:color="#26262E" />
+            <corners android:radius="18dp" />
+        </shape>
+    </item>
+</ripple>

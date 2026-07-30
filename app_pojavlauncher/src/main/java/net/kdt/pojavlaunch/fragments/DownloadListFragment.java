@@ -100,7 +100,7 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
 
     private void loadContent() {
         SearchFilters filters = buildFilters("");
-        if (mLoadingCard != null) mLoadingCard.setVisibility(View.VISIBLE);
+        showLoadingCapsule();
         mProgressBar.setVisibility(View.VISIBLE);
         mAdapter.performSearchQuery(filters);
     }
@@ -113,9 +113,37 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
         SearchFilters filters = buildFilters(query != null ? query : "");
         filters.mcVersion = mcVersion != null && !mcVersion.isEmpty() ? mcVersion : null;
         filters.modLoader = modLoader != null && !modLoader.isEmpty() ? modLoader : null;
-        if (mLoadingCard != null) mLoadingCard.setVisibility(View.VISIBLE);
+        showLoadingCapsule();
         mProgressBar.setVisibility(View.VISIBLE);
         mAdapter.performSearchQuery(filters);
+    }
+
+    /** Loading capsule drops in softly instead of popping. */
+    private void showLoadingCapsule() {
+        if (mLoadingCard == null) return;
+        if (mLoadingCard.getVisibility() == View.VISIBLE) return;
+        mLoadingCard.setVisibility(View.VISIBLE);
+        mLoadingCard.setAlpha(0f);
+        mLoadingCard.setTranslationY(-12f *
+                getResources().getDisplayMetrics().density);
+        mLoadingCard.animate().alpha(1f).translationY(0f)
+                .setDuration(260)
+                .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                .start();
+    }
+
+    private void hideLoadingCapsule() {
+        if (mLoadingCard == null || mLoadingCard.getVisibility() != View.VISIBLE) return;
+        mLoadingCard.animate().cancel();
+        mLoadingCard.animate().alpha(0f).translationY(-8f *
+                getResources().getDisplayMetrics().density)
+                .setDuration(180)
+                .withEndAction(() -> {
+                    mLoadingCard.setVisibility(View.GONE);
+                    mLoadingCard.setAlpha(1f);
+                    mLoadingCard.setTranslationY(0f);
+                })
+                .start();
     }
 
     private SearchFilters buildFilters(String query) {
@@ -139,21 +167,25 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
     @Override
     public void onSearchFinished() {
         mProgressBar.setVisibility(View.GONE);
-        if (mLoadingCard != null) mLoadingCard.setVisibility(View.GONE);
+        hideLoadingCapsule();
         mStatusText.setVisibility(View.GONE);
     }
 
     @Override
     public void onSearchError(int error) {
         mProgressBar.setVisibility(View.GONE);
+        hideLoadingCapsule();
         mStatusText.setVisibility(View.VISIBLE);
+        // Status pill fades in rather than popping
+        mStatusText.setAlpha(0f);
+        mStatusText.animate().alpha(1f).setDuration(220).start();
         switch (error) {
             case ERROR_INTERNAL:
-                mStatusText.setTextColor(android.graphics.Color.RED);
+                mStatusText.setTextColor(android.graphics.Color.parseColor("#E5A0A6"));
                 mStatusText.setText(R.string.search_mod_error);
                 break;
             case ERROR_NO_RESULTS:
-                mStatusText.setTextColor(mStatusText.getTextColors().getDefaultColor());
+                mStatusText.setTextColor(android.graphics.Color.parseColor("#9C9CA8"));
                 mStatusText.setText(R.string.search_mod_no_result);
                 break;
         }

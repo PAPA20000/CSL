@@ -47,6 +47,7 @@ public class ModsSearchFragment extends Fragment {
 
     private EditText mSearchEditText;
     private ImageButton mFilterButton;
+    private View mFilterDot;
     private ViewPager2 mViewPager;
     private DownloadTabAdapter mTabAdapter;
     private LinearLayout mTabBar;
@@ -90,6 +91,7 @@ public class ModsSearchFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         mSearchEditText = view.findViewById(R.id.search_mod_edittext);
         mFilterButton = view.findViewById(R.id.search_mod_filter);
+        mFilterDot = view.findViewById(R.id.search_mod_filter_dot);
         mViewPager = view.findViewById(R.id.download_view_pager);
         mTabBar = view.findViewById(R.id.tab_bar);
         mTabIndicator = view.findViewById(R.id.tab_indicator);
@@ -148,7 +150,8 @@ public class ModsSearchFragment extends Fragment {
         });
 
         mFilterButton.setOnClickListener(v -> displayFilterDialog());
-        mSearchEditText.setHint("Search...");
+        mSearchEditText.setHint(getString(R.string.browse_search_hint_typed, "mods"));
+        updateFilterDot();
 
         // Wire up click listeners — handles fragment creation and recreation
         mFragmentLifecycleCallbacks = new FragmentManager.FragmentLifecycleCallbacks() {
@@ -203,25 +206,26 @@ public class ModsSearchFragment extends Fragment {
 
     private void setupTabs() {
         mTabBar.removeAllViews();
+        float d = getResources().getDisplayMetrics().density;
         for (int i = 0; i < TAB_TITLES.length; i++) {
             TextView tab = new TextView(requireContext());
             tab.setText(TAB_TITLES[i]);
-            tab.setTextSize(14);
-            tab.setPadding(28, 12, 28, 12);
+            tab.setTextSize(13);
+            tab.setPadding((int) (d * 26), (int) (d * 9), (int) (d * 26), (int) (d * 9));
             tab.setGravity(android.view.Gravity.CENTER);
-            tab.setBackgroundResource(i == 0 ? R.drawable.bg_resource_tab_active : R.drawable.bg_resource_tab_idle);
-            tab.setTextColor(i == 0 ? Color.parseColor("#DFF7E6") : Color.parseColor("#91A29A"));
+            tab.setBackgroundResource(i == 0 ? R.drawable.bg_browse_tab_active : R.drawable.bg_browse_tab_idle);
+            tab.setTextColor(i == 0 ? Color.parseColor("#0E0E11") : Color.parseColor("#9C9CA8"));
             tab.setTypeface(null, i == 0 ? Typeface.BOLD : Typeface.NORMAL);
             tab.setTag(i);
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT);
-            lp.rightMargin = 12;
+            lp.rightMargin = (int) (d * 4);
             tab.setLayoutParams(lp);
             tab.setOnClickListener(v -> {
-                v.animate().scaleX(0.97f).scaleY(0.97f).setDuration(70)
+                v.animate().scaleX(0.95f).scaleY(0.95f).setDuration(60)
                         .withEndAction(() -> {
-                            v.animate().scaleX(1f).scaleY(1f).setDuration(90).start();
+                            v.animate().scaleX(1f).scaleY(1f).setDuration(110).start();
                             mViewPager.setCurrentItem((int) v.getTag(), true);
                         }).start();
             });
@@ -245,14 +249,26 @@ public class ModsSearchFragment extends Fragment {
         for (int i = 0; i < mTabBar.getChildCount(); i++) {
             TextView tab = (TextView) mTabBar.getChildAt(i);
             boolean active = i == position;
-            tab.setBackgroundResource(active ? R.drawable.bg_resource_tab_active : R.drawable.bg_resource_tab_idle);
-            tab.setTextColor(Color.parseColor(active ? "#E6FFE9" : "#91A29A"));
+            tab.setBackgroundResource(active ? R.drawable.bg_browse_tab_active : R.drawable.bg_browse_tab_idle);
+            tab.setTextColor(Color.parseColor(active ? "#0E0E11" : "#9C9CA8"));
             tab.setTypeface(null, active ? Typeface.BOLD : Typeface.NORMAL);
-            tab.animate().scaleX(active ? 1.03f : 1f).scaleY(active ? 1.03f : 1f).setDuration(150).start();
+            tab.animate().scaleX(active ? 1.02f : 1f).scaleY(active ? 1.02f : 1f).setDuration(140).start();
         }
         View selectedTab = mTabBar.getChildAt(position);
         if (selectedTab != null) {
             mTabScroll.smoothScrollTo(selectedTab.getLeft() - 50, 0);
+        }
+        // Context-aware search hint
+        if (mSearchEditText != null) {
+            String type = TAB_TYPES[position];
+            String noun;
+            switch (type) {
+                case "resourcepack": noun = "resource packs"; break;
+                case "shader": noun = "shaders"; break;
+                case "world": noun = "worlds"; break;
+                default: noun = "mods"; break;
+            }
+            mSearchEditText.setHint(getString(R.string.browse_search_hint_typed, noun));
         }
     }
 
@@ -309,11 +325,26 @@ public class ModsSearchFragment extends Fragment {
             TextView mSelectedVersion = dialog.findViewById(R.id.search_mod_selected_mc_version_textview);
             Button mSelectVersionButton = dialog.findViewById(R.id.search_mod_mc_version_button);
             Button mApplyButton = dialog.findViewById(R.id.search_mod_apply_filters);
+            Button mClearButton = dialog.findViewById(R.id.search_mod_clear_filters);
             Spinner mLoaderSpinner = dialog.findViewById(R.id.search_mod_loader_spinner);
 
             assert mSelectedVersion != null;
             assert mSelectVersionButton != null;
             assert mApplyButton != null;
+
+            // Clear resets both filters and re-runs the current query
+            if (mClearButton != null) {
+                mClearButton.setOnClickListener(v -> {
+                    mSearchFilters.mcVersion = null;
+                    mSearchFilters.modLoader = null;
+                    updateFilterDot();
+                    DownloadListFragment dlf = getListFragment(TAB_TYPES[mCurrentTab]);
+                    if (dlf != null) {
+                        dlf.filter(mSearchEditText.getText().toString(), null, null);
+                    }
+                    dialogInterface.dismiss();
+                });
+            }
 
             if (mLoaderSpinner != null) {
                 android.widget.ArrayAdapter<String> loaderAdapter = new android.widget.ArrayAdapter<>(
@@ -339,6 +370,7 @@ public class ModsSearchFragment extends Fragment {
                     mSearchFilters.mcVersion = mSelectedVersion.getText().toString();
                     int pos = mLoaderSpinner.getSelectedItemPosition();
                     mSearchFilters.modLoader = LOADER_VALUES[pos];
+                    updateFilterDot();
                     DownloadListFragment dlf = getListFragment(TAB_TYPES[mCurrentTab]);
                     if (dlf != null) {
                         dlf.filter(mSearchEditText.getText().toString(),
@@ -355,6 +387,7 @@ public class ModsSearchFragment extends Fragment {
 
                 mApplyButton.setOnClickListener(v -> {
                     mSearchFilters.mcVersion = mSelectedVersion.getText().toString();
+                    updateFilterDot();
                     DownloadListFragment dlf = getListFragment(TAB_TYPES[mCurrentTab]);
                     if (dlf != null) {
                         dlf.filter(mSearchEditText.getText().toString(),
@@ -366,6 +399,14 @@ public class ModsSearchFragment extends Fragment {
         });
 
         dialog.show();
+    }
+
+    /** Silver dot on the filter button while any filter is active. */
+    private void updateFilterDot() {
+        if (mFilterDot == null) return;
+        boolean active = (mSearchFilters.mcVersion != null && !mSearchFilters.mcVersion.isEmpty())
+                || (mSearchFilters.modLoader != null && !mSearchFilters.modLoader.isEmpty());
+        mFilterDot.setVisibility(active ? View.VISIBLE : View.GONE);
     }
 
     @Override
