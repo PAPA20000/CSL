@@ -18,10 +18,10 @@
         android:background="@drawable/bg_browse_header"
         android:orientation="vertical"
         android:elevation="6dp"
-        android:paddingStart="16dp"
-        android:paddingTop="12dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="14dp">
+        android:paddingStart="14dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="8dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -61,7 +61,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/browse_title"
                     android:textColor="#F0F0F3"
-                    android:textSize="19sp"
+                    android:textSize="17.5sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -93,15 +93,15 @@
         <!-- ── Full-width search capsule ─────────────────────────── -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="44dp"
-            android:layout_marginTop="12dp"
+            android:layout_height="38dp"
+            android:layout_marginTop="8dp"
             android:background="@drawable/bg_browse_search_capsule"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
+                android:layout_width="15dp"
+                android:layout_height="15dp"
                 android:layout_marginStart="2dp"
                 android:src="@drawable/ic_search"
                 android:tint="#7C7C88" />
@@ -121,7 +121,7 @@
                 android:singleLine="true"
                 android:textColor="#F0F0F3"
                 android:textColorHint="#7C7C88"
-                android:textSize="13.5sp" />
+                android:textSize="13sp" />
         </LinearLayout>
 
         <!-- ── Segmented tab track ────────────────────────────────── -->
@@ -129,7 +129,7 @@
             android:id="@+id/tab_scroll"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
             android:fillViewport="true"
             android:scrollbars="none">
 

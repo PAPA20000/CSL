@@ -35,6 +35,13 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
 
     private OnModItemClickListener mItemClickListener;
 
+    // Auto-hide sponsor badge state
+    private View mSponsorBadge;
+    private boolean mBadgeHidden = false;
+    private android.animation.ValueAnimator mPadAnimator;
+    private int mPadFullPx;
+    private int mPadMinPx;
+
     public interface OnModItemClickListener {
         void onItemClick(ModItem item);
     }
@@ -81,7 +88,7 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
         mStatusText = view.findViewById(R.id.download_list_status);
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        mRecyclerView.addItemDecoration(new net.kdt.pojavlaunch.modloaders.modpacks.SpacesItemDecoration(12));
+        mRecyclerView.addItemDecoration(new net.kdt.pojavlaunch.modloaders.modpacks.SpacesItemDecoration(10));
 
         // Use ModrinthApi directly for non-standard types (CF doesn't support them)
         if (mContentType.equals("mod")) {
@@ -109,14 +116,84 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
                 }
             });
             net.kdt.pojavlaunch.sponsor.InfrawirePartner.fadeIn(poweredBadge, 200);
+            mSponsorBadge = poweredBadge;
         }
 
+        // Sponsor badge auto-hide: collapses when the user scrolls down so the
+        // list gets the full height back, re-appears at the exact top.
+        float dens = getResources().getDisplayMetrics().density;
+        mPadFullPx = (int) (56 * dens);
+        mPadMinPx = (int) (8 * dens);
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView rv, int dx, int dy) {
+                if (mSponsorBadge == null) return;
+                if (!rv.canScrollVertically(-1)) {
+                    // Back at the very top → bring the badge home
+                    setBadgeHidden(false);
+                } else if (dy > 0 && rv.computeVerticalScrollOffset() > (int) (24 * dens)
+                        && !mBadgeHidden) {
+                    setBadgeHidden(true);
+                }
+            }
+        });
+
         loadContent();
+    }
+
+    /** Smoothly collapses/expands the sponsor badge together with list top padding. */
+    private void setBadgeHidden(boolean hidden) {
+        if (mBadgeHidden == hidden || mSponsorBadge == null) return;
+        mBadgeHidden = hidden;
+        if (mPadAnimator != null) mPadAnimator.cancel();
+        if (!isUiReady()) {
+            // Apply instantly if animations aren't possible right now
+            mSponsorBadge.setVisibility(hidden ? View.GONE : View.VISIBLE);
+            mSponsorBadge.setAlpha(hidden ? 0f : 1f);
+            mSponsorBadge.setTranslationY(hidden ? -mSponsorBadge.getHeight() : 0f);
+            if (mRecyclerView != null) mRecyclerView.setPadding(0, hidden ? mPadMinPx : mPadFullPx, 0, 0);
+            return;
+        }
+        final int fromPad = mRecyclerView.getPaddingTop();
+        final int toPad = hidden ? mPadMinPx : mPadFullPx;
+        final float fromAlpha = mSponsorBadge.getAlpha();
+        final float toAlpha = hidden ? 0f : 1f;
+        final float fromTy = mSponsorBadge.getTranslationY();
+        final float toTy = hidden ? -mSponsorBadge.getHeight() * 0.8f : 0f;
+        if (!hidden) {
+            mSponsorBadge.setVisibility(View.VISIBLE);
+        }
+        mPadAnimator = android.animation.ValueAnimator.ofFloat(0f, 1f);
+        mPadAnimator.setDuration(220);
+        mPadAnimator.setInterpolator(new android.view.animation.DecelerateInterpolator());
+        mPadAnimator.addUpdateListener(anim -> {
+            if (mSponsorBadge == null || mRecyclerView == null) return;
+            float t = (float) anim.getAnimatedValue();
+            mSponsorBadge.setAlpha(fromAlpha + (toAlpha - fromAlpha) * t);
+            mSponsorBadge.setTranslationY(fromTy + (toTy - fromTy) * t);
+            mRecyclerView.setPadding(0, (int) (fromPad + (toPad - fromPad) * t), 0, 0);
+        });
+        mPadAnimator.addListener(new android.animation.AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(android.animation.Animator animation) {
+                if (mSponsorBadge == null) return;
+                if (mBadgeHidden) mSponsorBadge.setVisibility(View.GONE);
+                else {
+                    mSponsorBadge.setAlpha(1f);
+                    mSponsorBadge.setTranslationY(0f);
+                }
+            }
+        });
+        mPadAnimator.start();
     }
 
     @Override
     public void onDestroyView() {
         // Cancel every pending animation / callback before views are torn down.
+        if (mPadAnimator != null) {
+            mPadAnimator.cancel();
+            mPadAnimator = null;
+        }
         if (mLoadingCard != null) mLoadingCard.animate().cancel();
         if (mStatusText != null) mStatusText.animate().cancel();
         if (mProgressBar != null) mProgressBar.animate().cancel();
@@ -128,6 +205,8 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
         mProgressBar = null;
         mLoadingCard = null;
         mStatusText = null;
+        mSponsorBadge = null;
+        mBadgeHidden = false;
         super.onDestroyView();
     }
 

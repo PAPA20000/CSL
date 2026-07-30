@@ -210,8 +210,8 @@ public class ModsSearchFragment extends Fragment {
         for (int i = 0; i < TAB_TITLES.length; i++) {
             TextView tab = new TextView(requireContext());
             tab.setText(TAB_TITLES[i]);
-            tab.setTextSize(13);
-            tab.setPadding((int) (d * 26), (int) (d * 9), (int) (d * 26), (int) (d * 9));
+            tab.setTextSize(12.5f);
+            tab.setPadding((int) (d * 22), (int) (d * 6), (int) (d * 22), (int) (d * 6));
             tab.setGravity(android.view.Gravity.CENTER);
             tab.setBackgroundResource(i == 0 ? R.drawable.bg_browse_tab_active : R.drawable.bg_browse_tab_idle);
             tab.setTextColor(i == 0 ? Color.parseColor("#0E0E11") : Color.parseColor("#9C9CA8"));
