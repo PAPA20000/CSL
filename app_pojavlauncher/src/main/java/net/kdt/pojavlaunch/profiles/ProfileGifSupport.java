@@ -83,7 +83,7 @@ public final class ProfileGifSupport {
     public static GifDrawable buildGifDrawable(@NonNull byte[] data) {
         if (!looksLikeGif(data)) return null;
         try {
-            GifDrawableBuilder builder = new GifDrawableBuilder().bytes(data);
+            GifDrawableBuilder builder = new GifDrawableBuilder().from(data);
             builder.sampleSize(computeGifSampleSize(data));
             GifDrawable drawable = builder.build();
             drawable.setLoopCount(0); // loop forever while the profile is on screen
