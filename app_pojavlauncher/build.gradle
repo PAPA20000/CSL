@@ -223,4 +223,7 @@ dependencies {
 
     implementation "net.java.dev.jna:jna:5.13.0@aar"
     implementation 'com.google.android.material:material:1.12.0'
+    // TEMPORARY (rewarded ad test): latest GMA SDK compatible with minSdk 21 —
+    // v24+/v25+ require minSdk 23, so 23.6.0 is the newest we can ship here.
+    implementation 'com.google.android.gms:play-services-ads:23.6.0'
 }

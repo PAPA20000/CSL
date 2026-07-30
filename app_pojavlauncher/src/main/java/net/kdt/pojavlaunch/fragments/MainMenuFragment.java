@@ -290,6 +290,17 @@ public class MainMenuFragment extends Fragment {
             mDiscordButton.setOnClickListener(
                     v -> Tools.openURL(requireActivity(), getString(R.string.discord_invite)));
 
+        // ═══ TEMPORARY: AdMob rewarded ad test — REMOVE BEFORE RELEASE ═══
+        // Null-guarded because the landscape two-pane layout does not host
+        // this button (and must never crash for it).
+        View mTempRewardedAdButton = view.findViewById(R.id.temp_rewarded_ad_button);
+        if (mTempRewardedAdButton != null) {
+            mTempRewardedAdButton.setOnClickListener(v ->
+                    net.kdt.pojavlaunch.ads.RewardedAdManager
+                            .getInstance(requireContext().getApplicationContext())
+                            .loadAndShow(requireActivity()));
+        }
+
         // Custom controls (always opens as Activity — can't be in the pane)
         if (mCustomControlButton != null) {
             mCustomControlButton.setOnClickListener(v ->
