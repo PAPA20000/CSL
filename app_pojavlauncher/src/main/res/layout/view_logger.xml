@@ -92,27 +92,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- ── Terminal body ── -->
-    <com.kdt.DefocusableScrollView
-        android:id="@+id/content_log_scroll"
+    <!-- ── Terminal body: animated line stream ── -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/content_log_recycler"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:background="#0B0B0E"
         android:overScrollMode="never"
+        android:paddingVertical="8dp"
+        android:clipToPadding="false"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/top_log_view">
-
-        <TextView
-            android:id="@+id/content_log_view"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textIsSelectable="true"
-            android:textColor="#C9CBD6"
-            android:textSize="10.5sp"
-            android:lineSpacingMultiplier="1.18"
-            android:paddingHorizontal="14dp"
-            android:paddingVertical="10dp" />
-
-    </com.kdt.DefocusableScrollView>
+        app:layout_constraintTop_toBottomOf="@+id/top_log_view" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

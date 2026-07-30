@@ -61,6 +61,22 @@
             android:textColor="#9FD6AC"
             tools:text="✓ Compatible" />
 
+        <!-- Loader chip (Fabric/Forge/NeoForge/Quilt...) -->
+        <TextView
+            android:id="@+id/version_loader_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_6sdp"
+            android:text="Fabric"
+            android:textSize="9sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.06"
+            android:background="@drawable/bg_stat_chip"
+            android:textColor="#C9CBD6"
+            android:visibility="gone"
+            tools:text="Fabric"
+            tools:visibility="visible" />
+
         <!-- MC version badge -->
         <TextView
             android:id="@+id/version_mc_badge"

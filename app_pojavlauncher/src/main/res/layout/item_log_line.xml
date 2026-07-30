@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Single terminal line — colored per-line by LoggerView's severity tint -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/item_log_line_text"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:textIsSelectable="false"
+    android:textColor="#C9CBD6"
+    android:textSize="10.5sp"
+    android:lineSpacingMultiplier="1.14"
+    android:paddingHorizontal="14dp"
+    android:paddingVertical="1dp"
+    android:fontFamily="monospace" />

@@ -499,7 +499,7 @@ public class LauncherPreferenceFragment extends Fragment {
                     List<SettingItem> sponsorItems = new ArrayList<>();
                     sponsorItems.add(new SettingItem("infrawire_partner_info", SettingItem.TYPE_INFO,
                             "Infrawire — Official Hosting Partner",
-                            "High-Performance VPS & Cloud Hosting • Official Cloud Hosting Partner of CS Launcher V2", null));
+                            "High-Performance VPS & Cloud Hosting • Official Cloud Hosting Partner of CS Launcher V3", null));
                     sponsorItems.add(new SettingItem("infrawire_about_info", SettingItem.TYPE_INFO,
                             "Official Sponsor",
                             "Infrawire powers CS Launcher with latest-generation VPS & cloud infrastructure — NVMe SSD storage, DDR4 memory, a 10 Gbps independent global network, multi-layer Anti-DDoS protection, hourly billing from €0.007/hour and 24/7 expert support.", null));

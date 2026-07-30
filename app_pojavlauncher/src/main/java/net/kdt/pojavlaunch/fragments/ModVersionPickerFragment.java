@@ -46,8 +46,9 @@ public class ModVersionPickerFragment extends Fragment {
     private ModItem mModItem;
     private ModDetail mModDetail;
     private String mContentType;
-    /** MC version of the selected profile — drives green/red compat badges (Req-16). */
+    /** MC version + loader of the selected profile — drives compat badges (Req: accurate). */
     private String mTargetMcVersion;
+    private String mTargetLoader; // fabric/forge/neoforge/quilt/liteloader or null (vanilla/unknown)
     private String mProfileKey;
 
     // Views
@@ -126,6 +127,7 @@ public class ModVersionPickerFragment extends Fragment {
 
         // Analyze the selected profile once — badges + recommended pin depend on it
         mTargetMcVersion = resolveTargetMcVersion();
+        mTargetLoader = resolveTargetLoader();
 
         loadVersions();
     }
@@ -134,12 +136,7 @@ public class ModVersionPickerFragment extends Fragment {
     @Nullable
     private String resolveTargetMcVersion() {
         try {
-            String key = mProfileKey != null ? mProfileKey
-                    : LauncherPreferences.DEFAULT_PREF.getString(
-                            LauncherPreferences.PREF_KEY_CURRENT_PROFILE, null);
-            if (key == null || key.isEmpty()) return null;
-            LauncherProfiles.load();
-            MinecraftProfile profile = LauncherProfiles.mainProfileJson.profiles.get(key);
+            MinecraftProfile profile = getSelectedProfile();
             String vid = profile != null ? profile.lastVersionId : null;
             if (vid == null) return null;
             // Handles raw ("1.20.1") and loader-suffixed ("fabric-loader-0.15.7-1.20.1") ids
@@ -151,14 +148,77 @@ public class ModVersionPickerFragment extends Fragment {
         }
     }
 
-    /** True when the entry's MC-version list contains the profile's version. */
-    private boolean isEntryCompatible(VersionEntry entry) {
-        if (mTargetMcVersion == null) return true; // nothing to judge against → treat as compatible
-        if (entry.mcVersion == null || entry.mcVersion.isEmpty()) return false;
-        for (String token : entry.mcVersion.split(",")) {
-            if (token.trim().equals(mTargetMcVersion)) return true;
+    /** Detects the mod loader of the selected profile (fabric/forge/neoforge/quilt/...). */
+    @Nullable
+    private String resolveTargetLoader() {
+        try {
+            MinecraftProfile profile = getSelectedProfile();
+            String vid = profile != null && profile.lastVersionId != null
+                    ? profile.lastVersionId.toLowerCase(java.util.Locale.US) : null;
+            if (vid == null) return null;
+            if (vid.contains("neoforge")) return "neoforge";
+            if (vid.contains("fabric")) return "fabric";
+            if (vid.contains("quilt")) return "quilt";
+            if (vid.contains("forge")) return "forge"; // plain forge AFTER neoforge
+            if (vid.contains("liteloader")) return "liteloader";
+            return null; // vanilla / optifine / unknown → loader check not applicable
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    @Nullable
+    private MinecraftProfile getSelectedProfile() {
+        try {
+            String key = mProfileKey != null ? mProfileKey
+                    : LauncherPreferences.DEFAULT_PREF.getString(
+                            LauncherPreferences.PREF_KEY_CURRENT_PROFILE, null);
+            if (key == null || key.isEmpty()) return null;
+            LauncherProfiles.load();
+            return LauncherProfiles.mainProfileJson.profiles.get(key);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /** Same MC release line? ("1.21" ≡ "1.21.1" family; "1.21.1" ≡ "1.21" family). */
+    private static boolean sameMcFamily(String a, String b) {
+        if (a == null || b == null) return false;
+        if (a.equals(b)) return true;
+        return a.startsWith(b + ".") || b.startsWith(a + ".");
+    }
+
+    private boolean mcMatches(VersionEntry entry) {
+        if (mTargetMcVersion == null) return true; // nothing to judge → treat as OK
+        if (entry.mcList != null) {
+            for (String v : entry.mcList) {
+                if (v != null && sameMcFamily(v.trim(), mTargetMcVersion)) return true;
+            }
+        }
+        // Never rely on the single display value alone, but DO accept it as evidence
+        if (entry.mcVersion != null) {
+            for (String token : entry.mcVersion.split(",")) {
+                if (sameMcFamily(token.trim(), mTargetMcVersion)) return true;
+            }
         }
         return false;
+    }
+
+    private boolean loaderMatches(VersionEntry entry) {
+        if (mTargetLoader == null) return true;          // vanilla/unknown profile → no constraint
+        if (entry.loaders == null || entry.loaders.length == 0) return true; // unknown → MC-only verdict
+        for (String l : entry.loaders) {
+            if (l == null) continue;
+            String lower = l.toLowerCase(java.util.Locale.US);
+            if (lower.equals(mTargetLoader)) return true;
+            if ("quilt".equals(mTargetLoader) && lower.equals("fabric")) return true; // Quilt runs Fabric mods
+        }
+        return false;
+    }
+
+    /** Accurate three-state verdict: true-green / false-red. Unknown MC → green-neutral. */
+    private boolean isEntryCompatible(VersionEntry entry) {
+        return mcMatches(entry) && loaderMatches(entry);
     }
 
     private void loadVersions() {
@@ -235,7 +295,9 @@ public class ModVersionPickerFragment extends Fragment {
                     i,
                     (detail.versionHashes != null && i < detail.versionHashes.length) ? detail.versionHashes[i] : null,
                     (detail.versionDependencyIds != null && i < detail.versionDependencyIds.length) ? detail.versionDependencyIds[i] : null,
-                    (detail.versionDependencyTypes != null && i < detail.versionDependencyTypes.length) ? detail.versionDependencyTypes[i] : null
+                    (detail.versionDependencyTypes != null && i < detail.versionDependencyTypes.length) ? detail.versionDependencyTypes[i] : null,
+                    (detail.mcVersionLists != null && i < detail.mcVersionLists.length) ? detail.mcVersionLists[i] : null,
+                    (detail.versionLoaders != null && i < detail.versionLoaders.length) ? detail.versionLoaders[i] : null
             ));
         }
 
@@ -332,11 +394,19 @@ public class ModVersionPickerFragment extends Fragment {
         final String hash;
         final String[] depIds;
         final String[] depTypes;
+        final String[] mcList;   // FULL supported MC versions (accurate compat)
+        final String[] loaders;  // supported loaders for this version
         boolean compatible = true;   // vs selected profile (Req-16)
         boolean recommended = false; // best compatible pick, pinned at top
 
         VersionEntry(String name, String mcVersion, String url, int index,
                      String hash, String[] depIds, String[] depTypes) {
+            this(name, mcVersion, url, index, hash, depIds, depTypes, null, null);
+        }
+
+        VersionEntry(String name, String mcVersion, String url, int index,
+                     String hash, String[] depIds, String[] depTypes,
+                     String[] mcList, String[] loaders) {
             this.name = name;
             this.mcVersion = mcVersion;
             this.url = url;
@@ -344,6 +414,8 @@ public class ModVersionPickerFragment extends Fragment {
             this.hash = hash;
             this.depIds = depIds;
             this.depTypes = depTypes;
+            this.mcList = mcList;
+            this.loaders = loaders;
         }
     }
 
@@ -377,18 +449,40 @@ public class ModVersionPickerFragment extends Fragment {
                 holder.mcBadge.setVisibility(View.GONE);
             }
 
-            // Req-16 compat badge: green ✓ or red ✕ against the selected profile
-            holder.compatBadge.setVisibility(mTargetMcVersion != null ? View.VISIBLE : View.GONE);
-            if (entry.compatible) {
+            // Compat badge: green ✓ / red ✕ / grey Unknown against the selected profile
+            boolean hasMcEvidence = (entry.mcList != null && entry.mcList.length > 0)
+                    || (entry.mcVersion != null && !entry.mcVersion.isEmpty());
+            if (mTargetMcVersion == null || !hasMcEvidence) {
+                holder.compatBadge.setVisibility(View.VISIBLE);
+                holder.compatBadge.setText("? Unknown");
+                holder.compatBadge.setTextColor(0xFF9C9CA8);
+                holder.compatBadge.setBackgroundResource(R.drawable.bg_stat_chip);
+                holder.itemView.setAlpha(1f);
+            } else if (entry.compatible) {
+                holder.compatBadge.setVisibility(View.VISIBLE);
                 holder.compatBadge.setText("✓ Compatible");
                 holder.compatBadge.setTextColor(0xFF9FD6AC); // muted success
                 holder.compatBadge.setBackgroundResource(R.drawable.bg_badge_compat_ok);
                 holder.itemView.setAlpha(1f);
             } else {
+                holder.compatBadge.setVisibility(View.VISIBLE);
                 holder.compatBadge.setText("✕ Incompatible");
                 holder.compatBadge.setTextColor(0xFFE5A0A6); // muted rose
                 holder.compatBadge.setBackgroundResource(R.drawable.bg_badge_compat_bad);
                 holder.itemView.setAlpha(0.62f); // visually de-emphasize
+            }
+
+            // Loader chip(s): first loader, capitalized (Fabric/Forge/NeoForge/Quilt...)
+            if (holder.loaderBadge != null) {
+                String loaderName = (entry.loaders != null && entry.loaders.length > 0 && entry.loaders[0] != null)
+                        ? entry.loaders[0] : null;
+                if (loaderName != null && !loaderName.isEmpty()) {
+                    holder.loaderBadge.setVisibility(View.VISIBLE);
+                    holder.loaderBadge.setText(loaderName.substring(0, 1).toUpperCase(java.util.Locale.US)
+                            + loaderName.substring(1));
+                } else {
+                    holder.loaderBadge.setVisibility(View.GONE);
+                }
             }
 
             // Recommended crown for the best compatible pick
@@ -407,6 +501,7 @@ public class ModVersionPickerFragment extends Fragment {
             final TextView mcBadge;
             final TextView compatBadge;
             final TextView recBadge;
+            final TextView loaderBadge;
 
             VH(View itemView) {
                 super(itemView);
@@ -414,6 +509,7 @@ public class ModVersionPickerFragment extends Fragment {
                 mcBadge = itemView.findViewById(R.id.version_mc_badge);
                 compatBadge = itemView.findViewById(R.id.version_compat_badge);
                 recBadge = itemView.findViewById(R.id.version_recommended_badge);
+                loaderBadge = itemView.findViewById(R.id.version_loader_badge);
             }
         }
     }

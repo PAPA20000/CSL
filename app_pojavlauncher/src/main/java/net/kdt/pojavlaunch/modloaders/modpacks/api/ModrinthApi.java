@@ -146,11 +146,16 @@ public class ModrinthApi implements ModpackApi{
         String[][] depIds   = new String[size][];
         String[][] depTypes = new String[size][];
         String[][] loadersArr = new String[size][];
+        String[][] mcListArr  = new String[size][]; // full game_versions per version (accurate compat)
 
         for (int i = 0; i < size; i++) {
             JsonObject version = versions.get(i);
             names[i]   = version.get("name").getAsString();
-            mcNames[i] = version.get("game_versions").getAsJsonArray().get(0).getAsString();
+            JsonArray gameVersions = version.get("game_versions").getAsJsonArray();
+            mcNames[i] = gameVersions.get(gameVersions.size() - 1).getAsString(); // newest for display
+            java.util.List<String> mcList = new java.util.ArrayList<>();
+            for (int j = 0; j < gameVersions.size(); j++) mcList.add(gameVersions.get(j).getAsString());
+            mcListArr[i] = mcList.toArray(new String[0]); // full support list for compat checks
             urls[i]    = version.get("files").getAsJsonArray().get(0).getAsJsonObject().get("url").getAsString();
 
             JsonObject hashesMap = version.getAsJsonArray("files").get(0).getAsJsonObject()
@@ -189,7 +194,9 @@ public class ModrinthApi implements ModpackApi{
             }
         }
 
-        return new ModDetail(item, names, mcNames, urls, hashes, depIds, depTypes, loadersArr);
+        ModDetail detail = new ModDetail(item, names, mcNames, urls, hashes, depIds, depTypes, loadersArr);
+        detail.mcVersionLists = mcListArr;
+        return detail;
     }
 
     @Override

@@ -3,12 +3,12 @@
     <!-- ── Infrawire Partner branding ── -->
     <string name="infrawire_name">Infrawire</string>
     <string name="infrawire_tagline">High-Performance VPS &amp; Cloud Hosting</string>
-    <string name="infrawire_sub_text">Official Cloud Hosting Partner of CS Launcher V2</string>
+    <string name="infrawire_sub_text">Official Cloud Hosting Partner of CS Launcher V3</string>
     <string name="infrawire_badge_partner">OFFICIAL HOSTING PARTNER</string>
     <string name="infrawire_badge_live">PARTNER</string>
     <string name="infrawire_deploy_vps">Deploy VPS</string>
     <string name="infrawire_learn_more">Learn More</string>
-    <string name="infrawire_description">Infrawire is the Official Hosting Partner of CS Launcher V2 — high-performance VPS and cloud infrastructure on latest-generation hardware with NVMe SSD storage, DDR4 memory and an independent 10 Gbps global network. Enterprise-grade security with multi-layer Anti-DDoS protection, hourly billing and worldwide datacenters.</string>
+    <string name="infrawire_description">Infrawire is the Official Hosting Partner of CS Launcher V3 — high-performance VPS and cloud infrastructure on latest-generation hardware with NVMe SSD storage, DDR4 memory and an independent 10 Gbps global network. Enterprise-grade security with multi-layer Anti-DDoS protection, hourly billing and worldwide datacenters.</string>
 
     <!-- Chips -->
     <string name="infrawire_chip_uptime">✓ 99.99% Uptime</string>
@@ -30,7 +30,7 @@
     <string name="infrawire_link_cloud">Cloud</string>
     <string name="infrawire_link_docs">Docs</string>
     <string name="infrawire_link_support">Support</string>
-    <string name="infrawire_footer_note">Infrawire is the Official Cloud Hosting Partner of CS Launcher V2.\nLinks open in your browser — never inside the game.</string>
+    <string name="infrawire_footer_note">Infrawire is the Official Cloud Hosting Partner of CS Launcher V3.\nLinks open in your browser — never inside the game.</string>
 
     <!-- Downloads badge -->
     <string name="infrawire_powered_badge">⚡ Powered by Infrawire Cloud Infrastructure</string>
@@ -39,7 +39,7 @@
     <string name="infrawire_settings_title">Sponsors</string>
 
     <!-- First-launch welcome -->
-    <string name="infrawire_welcome_title">Welcome to CS Launcher V2</string>
+    <string name="infrawire_welcome_title">Welcome to CS Launcher V3</string>
     <string name="infrawire_welcome_body">We\'re proudly partnered with</string>
     <string name="infrawire_welcome_partner_sub">High Performance Cloud Hosting</string>
     <string name="infrawire_welcome_explore">Explore</string>

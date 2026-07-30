@@ -198,6 +198,8 @@ public class CurseforgeApi implements ModpackApi{
         String[] mcVersionNames = new String[length];
         String[] versionUrls = new String[length];
         String[] hashes = new String[length];
+        String[][] mcListArr = new String[length][]; // full support list (accurate compat)
+        String[][] loadersArr = new String[length][]; // loader names recovered from gameVersions
         for(int i = 0; i < allModDetails.size(); i++) {
             JsonObject modDetail = allModDetails.get(i);
             versionNames[i] = modDetail.get("displayName").getAsString();
@@ -210,18 +212,28 @@ public class CurseforgeApi implements ModpackApi{
             }
 
             JsonArray gameVersions = modDetail.getAsJsonArray("gameVersions");
+            java.util.List<String> mcList = new java.util.ArrayList<>();
+            java.util.List<String> loaderList = new java.util.ArrayList<>();
             for(JsonElement jsonElement : gameVersions) {
                 String gameVersion = jsonElement.getAsString();
                 if(!sMcVersionPattern.matcher(gameVersion).matches()) {
+                    // Curseforge interleaves loader names ("Fabric", "Forge"...) with MC versions
+                    if (gameVersion != null && !gameVersion.isEmpty() && !"Java".equals(gameVersion)) {
+                        loaderList.add(gameVersion);
+                    }
                     continue;
                 }
-                mcVersionNames[i] = gameVersion;
-                break;
+                mcList.add(gameVersion);
             }
+            mcListArr[i] = mcList.toArray(new String[0]);
+            if (!mcList.isEmpty()) mcVersionNames[i] = mcList.get(mcList.size() - 1); // newest for display
+            loadersArr[i] = loaderList.toArray(new String[0]);
 
             hashes[i] = getSha1FromModData(modDetail);
         }
-        return new ModDetail(item, versionNames, mcVersionNames, versionUrls, hashes);
+        ModDetail detail = new ModDetail(item, versionNames, mcVersionNames, versionUrls, hashes, null, null, loadersArr);
+        detail.mcVersionLists = mcListArr;
+        return detail;
     }
 
     @Override
