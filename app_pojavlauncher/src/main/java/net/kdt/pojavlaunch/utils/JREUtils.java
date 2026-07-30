@@ -233,8 +233,8 @@ public class JREUtils {
                 envMap.put("MG_DIR_PATH", Tools.DIR_DATA + "/MobileGlues");
                 envMap.put("POJAVEXEC_EGL","libmobileglues.so");
             }
-            if(LOCAL_RENDERER.equals("opengles2")){
-                envMap.put("LIBGL_ES", "2"); // Krypton Wrapper crashes with 1
+            if(LOCAL_RENDERER.equals("opengles2") || LOCAL_RENDERER.equals("opengles3_KW")){
+                envMap.put("LIBGL_ES", "2"); // Krypton Wrapper crashes with anything other than 2
             }
             if (LOCAL_RENDERER.equals("opengles3_desktopgl_zink_kopper")){
                 envMap.put("POJAVEXEC_EGL","libEGL_mesa.so"); // Use Mesa EGL
@@ -610,16 +610,19 @@ public class JREUtils {
             case "opengles3_ltw" : renderLibrary = "libltw.so"; break;
             case "opengles3_KW" : renderLibrary = "libng_gl4es.so"; break;
             default:
-                Log.w("RENDER_LIBRARY", "No renderer selected, defaulting to opengles2");
-                renderLibrary = "libgl4es_115.so";
+                Log.w("RENDER_LIBRARY", "No renderer selected, defaulting to Krypton Wrapper");
+                renderLibrary = "libng_gl4es.so";
                 break;
         }
 
         if (!dlopen(renderLibrary) && !dlopen(findInLdLibPath(renderLibrary))) {
-            Log.e("RENDER_LIBRARY","Failed to load renderer " + renderLibrary + ". Falling back to GL4ES 1.1.4");
-            LOCAL_RENDERER = "opengles2";
-            renderLibrary = "libgl4es_115.so";
-            dlopen(NATIVE_LIB_DIR + "/libgl4es_115.so");
+            // Never strand the user on legacy GL4ES 1.1.4 — it cannot run Sodium on
+            // modern Minecraft (invisible chunks/blocks). Krypton Wrapper is the
+            // maintained GL4ES successor and is bundled with the launcher.
+            Log.e("RENDER_LIBRARY","Failed to load renderer " + renderLibrary + ". Falling back to Krypton Wrapper");
+            LOCAL_RENDERER = "opengles3_KW";
+            renderLibrary = "libng_gl4es.so";
+            dlopen(NATIVE_LIB_DIR + "/libng_gl4es.so");
         }
         return renderLibrary;
     }
