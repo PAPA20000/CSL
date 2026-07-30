@@ -134,10 +134,8 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         int modCount = mModCountsReady ? mModCountCache[position] : 0;
         holder.tvModCount.setText("Installed Mods: " + modCount);
 
-        // RAM allocation
-        int ramMB = (profile.ramAllocationMB != null) ?
-                profile.ramAllocationMB : net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_RAM_ALLOCATION;
-        holder.tvRam.setText("RAM: " + ramMB + " MB");
+        // RAM chip shows the effective global allocation (per-profile RAM was removed)
+        holder.tvRam.setText("RAM: " + net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_RAM_ALLOCATION + " MB");
 
         bindIcon(holder.imgIcon, profileKey, profile);
         bindBackground(holder.imgBackground, profileKey, profile);
@@ -233,6 +231,8 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
             drawable = ContextCompat.getDrawable(target.getContext(), R.drawable.ic_cs_logo_placeholder);
         }
         target.setImageDrawable(drawable);
+        // GIF icons survive refresh/rebinds (Req-4 lifecycle): resume if paused
+        net.kdt.pojavlaunch.profiles.ProfileGifSupport.resumeDrawable(drawable);
     }
 
     /** Filesystem-free vanilla heuristic for scroll-safe binding. */
@@ -252,6 +252,8 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         }
         if (drawable != null) {
             target.setImageDrawable(drawable);
+            // Cache-hit GIFs paused by recycling keep playing after a refresh
+            net.kdt.pojavlaunch.profiles.ProfileGifSupport.resumeDrawable(drawable);
             target.setVisibility(View.VISIBLE);
             // Show scrim when background is present
             View scrim = ((ViewGroup) target.getParent()).findViewById(R.id.img_profile_background_scrim);

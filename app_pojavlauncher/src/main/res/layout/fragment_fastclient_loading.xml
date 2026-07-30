@@ -50,7 +50,7 @@
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="@dimen/_10sdp"
+            android:layout_height="@dimen/_5sdp"
             android:background="@drawable/bg_progress_track"
             android:layout_marginBottom="@dimen/_10sdp">
 
@@ -61,8 +61,7 @@
                 android:layout_height="match_parent"
                 android:max="100"
                 android:progress="0"
-                android:progressTint="#E4E4EA"
-                android:progressBackgroundTint="#1A1A1A" />
+                android:progressDrawable="@drawable/bg_progress_premium" />
 
         </FrameLayout>
 

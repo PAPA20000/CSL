@@ -80,7 +80,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/profiles_profile_name"
-                android:textColor="#00FF41"
+                android:textColor="#E4E4EA"
                 android:textSize="11sp"
                 android:textAllCaps="true"
                 android:letterSpacing="0.1"
@@ -111,7 +111,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:text="@string/profile_background"
-                android:textColor="#00FF41"
+                android:textColor="#E4E4EA"
                 android:textSize="11sp"
                 android:textAllCaps="true"
                 android:letterSpacing="0.1"
@@ -147,14 +147,14 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/vprof_editor_background_preview" />
 
-            <!-- Per-Profile RAM Allocation -->
+            <!-- Version (per-profile RAM section removed in Phase 5) -->
             <TextView
-                android:id="@+id/vprof_editor_ram_sub"
+                android:id="@+id/textView4"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:text="@string/per_profile_ram"
-                android:textColor="#00FF41"
+                android:text="@string/profiles_profile_version"
+                android:textColor="#E4E4EA"
                 android:textSize="11sp"
                 android:textAllCaps="true"
                 android:letterSpacing="0.1"
@@ -162,41 +162,11 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/vprof_editor_background_preview" />
 
-            <EditText
-                android:id="@+id/vprof_editor_ram_input"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/background_line_new"
-                android:gravity="center_vertical"
-                android:hint="@string/use_global_ram"
-                android:inputType="number"
-                android:paddingHorizontal="14dp"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#555555"
-                android:textSize="14sp"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_ram_sub" />
-
-            <!-- Version -->
-            <TextView
-                android:id="@+id/textView4"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/profiles_profile_version"
-                android:textColor="#00FF41"
-                android:textSize="11sp"
-                android:textAllCaps="true"
-                android:letterSpacing="0.1"
-                android:fontFamily="sans-serif-medium"
-                android:layout_marginBottom="6dp"
-                app:layout_constraintBottom_toTopOf="@+id/vprof_editor_ram_input"
-                app:layout_constraintStart_toStartOf="@+id/vprof_editor_ram_input" />
-
             <TextView
                 android:id="@+id/vprof_editor_version_spinner"
                 android:layout_width="0dp"
                 android:layout_height="48dp"
-                android:layout_marginTop="28dp"
+                android:layout_marginTop="6dp"
                 android:layout_marginEnd="10dp"
                 android:background="@drawable/background_line_new"
                 android:hint="@string/version_select_hint"
@@ -207,7 +177,7 @@
                 android:textSize="14sp"
                 app:layout_constraintEnd_toStartOf="@+id/vprof_editor_version_button"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_ram_input" />
+                app:layout_constraintTop_toBottomOf="@+id/textView4" />
 
             <Button
                 android:id="@+id/vprof_editor_version_button"
@@ -233,7 +203,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:text="Custom Path"
-                android:textColor="#00FF41"
+                android:textColor="#E4E4EA"
                 android:textSize="11sp"
                 android:textAllCaps="true"
                 android:letterSpacing="0.1"
@@ -292,7 +262,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:text="@string/pedit_java_runtime"
-                android:textColor="#00FF41"
+                android:textColor="#E4E4EA"
                 android:textSize="11sp"
                 android:textAllCaps="true"
                 android:letterSpacing="0.1"
@@ -316,7 +286,7 @@
                 android:paddingHorizontal="@dimen/_10sdp"
                 android:rotation="180"
                 android:src="@drawable/spinner_arrow"
-                app:tint="#00FF41"
+                app:tint="#E4E4EA"
                 app:layout_constraintBottom_toBottomOf="@id/vprof_editor_spinner_runtime"
                 app:layout_constraintEnd_toEndOf="@id/vprof_editor_spinner_runtime"
                 app:layout_constraintTop_toTopOf="@id/vprof_editor_spinner_runtime" />
@@ -328,7 +298,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:text="@string/pedit_renderer"
-                android:textColor="#00FF41"
+                android:textColor="#E4E4EA"
                 android:textSize="11sp"
                 android:textAllCaps="true"
                 android:letterSpacing="0.1"
@@ -353,7 +323,7 @@
                 android:paddingHorizontal="@dimen/_10sdp"
                 android:rotation="180"
                 android:src="@drawable/spinner_arrow"
-                app:tint="#00FF41"
+                app:tint="#E4E4EA"
                 app:layout_constraintBottom_toBottomOf="@id/vprof_editor_profile_renderer"
                 app:layout_constraintEnd_toEndOf="@id/vprof_editor_profile_renderer"
                 app:layout_constraintTop_toTopOf="@id/vprof_editor_profile_renderer" />
@@ -365,7 +335,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:text="@string/pvc_jvmArgs"
-                android:textColor="#00FF41"
+                android:textColor="#E4E4EA"
                 android:textSize="11sp"
                 android:textAllCaps="true"
                 android:letterSpacing="0.1"
@@ -395,7 +365,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:text="@string/default_control"
-                android:textColor="#00FF41"
+                android:textColor="#E4E4EA"
                 android:textSize="11sp"
                 android:textAllCaps="true"
                 android:letterSpacing="0.1"
@@ -453,7 +423,7 @@
                 android:text="Mods"
                 android:textAllCaps="true"
                 android:textSize="13sp"
-                android:textColor="#00FF41"
+                android:textColor="#E4E4EA"
                 android:textStyle="bold"
                 android:letterSpacing="0.12"
                 android:fontFamily="sans-serif-medium"
@@ -468,7 +438,7 @@
                 android:background="@drawable/bg_icon_button_neon"
                 android:src="@drawable/ic_add"
                 android:padding="6dp"
-                app:tint="#00FF41"
+                app:tint="#E4E4EA"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/vprof_editor_mods_header"
                 app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_mods_header" />
@@ -519,7 +489,7 @@
                 android:text="@string/mcl_button_resource_packs"
                 android:textAllCaps="true"
                 android:textSize="13sp"
-                android:textColor="#00FF41"
+                android:textColor="#E4E4EA"
                 android:textStyle="bold"
                 android:letterSpacing="0.12"
                 android:fontFamily="sans-serif-medium"
@@ -534,7 +504,7 @@
                 android:background="@drawable/bg_icon_button_neon"
                 android:src="@drawable/ic_add"
                 android:padding="6dp"
-                app:tint="#00FF41"
+                app:tint="#E4E4EA"
                 app:layout_constraintEnd_toStartOf="@+id/vprof_editor_resource_packs_folder"
                 app:layout_constraintTop_toTopOf="@+id/vprof_editor_resource_packs_header"
                 app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_resource_packs_header" />
@@ -546,7 +516,7 @@
                 android:background="@drawable/bg_icon_button_neon"
                 android:src="@drawable/ic_folder"
                 android:padding="6dp"
-                app:tint="#00FF41"
+                app:tint="#E4E4EA"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/vprof_editor_resource_packs_header"
                 app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_resource_packs_header" />
@@ -597,7 +567,7 @@
                 android:text="@string/mcl_button_shader_packs"
                 android:textAllCaps="true"
                 android:textSize="13sp"
-                android:textColor="#00FF41"
+                android:textColor="#E4E4EA"
                 android:textStyle="bold"
                 android:letterSpacing="0.12"
                 android:fontFamily="sans-serif-medium"
@@ -612,7 +582,7 @@
                 android:background="@drawable/bg_icon_button_neon"
                 android:src="@drawable/ic_add"
                 android:padding="6dp"
-                app:tint="#00FF41"
+                app:tint="#E4E4EA"
                 app:layout_constraintEnd_toStartOf="@+id/vprof_editor_shader_packs_folder"
                 app:layout_constraintTop_toTopOf="@+id/vprof_editor_shader_packs_header"
                 app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_shader_packs_header" />
@@ -624,7 +594,7 @@
                 android:background="@drawable/bg_icon_button_neon"
                 android:src="@drawable/ic_folder"
                 android:padding="6dp"
-                app:tint="#00FF41"
+                app:tint="#E4E4EA"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/vprof_editor_shader_packs_header"
                 app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_shader_packs_header" />

@@ -82,7 +82,6 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
     private TextView mDefaultPath, mDefaultVersion, mDefaultControl;
     private ImageView mProfileIcon;
     private ImageView mProfileBackground;
-    private EditText mRamInput;
     private final CropperUtils.CropperListener mBackgroundCropperListener = new CropperUtils.CropperListener() {
         @Override
         public void onCropped(Bitmap contentBitmap) {
@@ -411,18 +410,6 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
             if (bg != null) mProfileBackground.setImageDrawable(bg);
         }
 
-        // Per-profile RAM uses exactly the same safe limits and 128 MB steps as
-        // Launcher Settings. Empty intentionally means "use global allocation".
-        if (mTempProfile.ramAllocationMB != null) {
-            int safeRam = Tools.sanitizeRamAllocation(requireContext(), mTempProfile.ramAllocationMB);
-            mTempProfile.ramAllocationMB = safeRam;
-            mRamInput.setText(String.valueOf(safeRam));
-            mRamInput.setHint("256–" + Tools.getMaximumRamAllocation(requireContext()) + " MB (global if empty)");
-        } else {
-            mRamInput.setText("");
-            mRamInput.setHint("Global: " + LauncherPreferences.PREF_RAM_ALLOCATION + " MB");
-        }
-
         // TODO: Remove this jank when it's not relevant anymore
         if ("vulkan_zink".equals(mTempProfile.pojavRendererName)) {
             mTempProfile.pojavRendererName = "opengles3_desktopgl_zink_kopper";
@@ -547,7 +534,6 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
         mGameDirButton = view.findViewById(R.id.vprof_editor_path_button);
         mProfileIcon = view.findViewById(R.id.vprof_editor_profile_icon);
         mProfileBackground = view.findViewById(R.id.vprof_editor_background_preview);
-        mRamInput = view.findViewById(R.id.vprof_editor_ram_input);
 
         mModsHeader = view.findViewById(R.id.vprof_editor_mods_header);
         mResourcePacksFolder = view.findViewById(R.id.vprof_editor_resource_packs_folder);
@@ -634,26 +620,6 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
                 .replaceAll("[\r\n]+", " ")
                 .trim();
         mTempProfile.gameDir = mDefaultPath.getText().toString();
-
-        // Per-profile RAM allocation (empty = global setting). The value is
-        // normalized with the same policy used by the Java Runtime settings page,
-        // so the saved value is the value the game will actually receive.
-        String ramText = mRamInput.getText().toString().trim();
-        if (ramText.isEmpty()) {
-            mTempProfile.ramAllocationMB = null;
-        } else {
-            try {
-                int requested = Integer.parseInt(ramText);
-                int safeRam = Tools.sanitizeRamAllocation(requireContext(), requested);
-                mTempProfile.ramAllocationMB = safeRam;
-                if (safeRam != requested) {
-                    mRamInput.setText(String.valueOf(safeRam));
-                    Toast.makeText(requireContext(), "RAM adjusted to " + safeRam + " MB for this device", Toast.LENGTH_SHORT).show();
-                }
-            } catch (NumberFormatException e) {
-                mTempProfile.ramAllocationMB = null;
-            }
-        }
 
         if(mTempProfile.controlFile != null && mTempProfile.controlFile.isEmpty()) mTempProfile.controlFile = null;
         if(mTempProfile.javaArgs != null && mTempProfile.javaArgs.isEmpty()) mTempProfile.javaArgs = null;

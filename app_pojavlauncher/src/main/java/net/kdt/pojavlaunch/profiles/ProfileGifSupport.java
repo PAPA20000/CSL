@@ -231,6 +231,21 @@ public final class ProfileGifSupport {
         }
     }
 
+    /**
+     * Resume a cached GifDrawable that was paused by {@link #stopDrawable} when its
+     * view got recycled. Orchestrates Req-4 behaviour:
+     * - keeps playing after a profile refresh (cache-hit instance is restarted),
+     * - never restarts unexpectedly (start() is only issued when NOT running),
+     * - never starts a recycled drawable.
+     * Call right after binding a drawable to an ImageView.
+     */
+    public static void resumeDrawable(@Nullable Drawable drawable) {
+        if (drawable instanceof GifDrawable) {
+            GifDrawable gif = (GifDrawable) drawable;
+            if (!gif.isRecycled() && !gif.isRunning()) gif.start();
+        }
+    }
+
     private static byte[] readAllBytes(@NonNull File file) throws Exception {
         byte[] data = new byte[(int) file.length()];
         try (InputStream in = new java.io.FileInputStream(file)) {

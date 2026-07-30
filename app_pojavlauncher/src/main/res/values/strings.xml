@@ -254,8 +254,6 @@
     <string name="profile_background">Profile Background</string>
     <string name="change_background">Change Background</string>
     <string name="allocated_ram">Allocated RAM</string>
-    <string name="per_profile_ram">RAM Allocation (MB)</string>
-    <string name="use_global_ram">Use global RAM</string>
     <string name="pedit_java_runtime">Java Runtime</string>
     <string name="pedit_renderer">Renderer</string>
     <string name="arc_capes_title">Cosmetica Capes</string>

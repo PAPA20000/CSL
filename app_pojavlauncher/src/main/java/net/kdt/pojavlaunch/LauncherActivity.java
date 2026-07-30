@@ -179,8 +179,8 @@ public class LauncherActivity extends BaseActivity {
         LauncherPreferences.DEFAULT_PREF.edit()
                 .putString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE, selectedProfile)
                 .commit();
-        Log.i("ProfileLaunch", "Launching " + selectedProfile + " with profile RAM="
-                + (prof.ramAllocationMB == null ? "global" : prof.ramAllocationMB + "MB"));
+        Log.i("ProfileLaunch", "Launching " + selectedProfile + " with global RAM="
+                + LauncherPreferences.PREF_RAM_ALLOCATION + "MB");
 
         if(mAccountSpinner.getSelectedAccount() == null){
             Toast.makeText(this, R.string.no_saved_accounts, Toast.LENGTH_LONG).show();

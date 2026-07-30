@@ -20,8 +20,6 @@ public class MinecraftProfile {
 	 */
 	public String background = net.kdt.pojavlaunch.profiles.ProfileGifSupport.DEFAULT_PROFILE_BG_URL;
 	public String lastVersionId;
-	/** Per-profile RAM allocation in megabytes. Null means "use the global launcher setting". */
-	public Integer ramAllocationMB;
 	public String gameDir;
 	public String javaDir;
 	public String javaArgs;
@@ -38,7 +36,6 @@ public class MinecraftProfile {
 		TEMPLATE.lastVersionId = LATEST_RELEASE;
 		TEMPLATE.icon = "default";
 		TEMPLATE.type = "custom";
-		TEMPLATE.ramAllocationMB = null;
 		return TEMPLATE;
 	}
 
@@ -60,7 +57,6 @@ public class MinecraftProfile {
 		lastUsed = profile.lastUsed;
 		icon = profile.icon;
 		background = profile.background;
-		ramAllocationMB = profile.ramAllocationMB;
 		lastVersionId = profile.lastVersionId;
 		gameDir = profile.gameDir;
 		javaDir = profile.javaDir;

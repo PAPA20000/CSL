@@ -397,18 +397,9 @@ public class JREUtils {
         purgeArg(userArgs, "-XX:ActiveProcessorCount");
 
         //Add automatically generated args
-        // Per-profile RAM overrides the global launcher setting when configured.
+        // Per-profile RAM was removed (Phase 5) — the global launcher setting rules.
         int effectiveRam = LauncherPreferences.PREF_RAM_ALLOCATION;
-        try {
-            net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile currentProfile =
-                    net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles.getCurrentProfile();
-            if (currentProfile != null && currentProfile.ramAllocationMB != null) {
-                effectiveRam = currentProfile.ramAllocationMB;
-            }
-        } catch (Throwable ignored) {}
-        // Apply the same safety policy used when the profile was edited. This
-        // also protects existing/legacy profiles that may contain an invalid RAM
-        // number, so the launched JVM always receives the displayed safe value.
+        // Safety policy: the launched JVM always receives a device-safe value.
         effectiveRam = Tools.sanitizeRamAllocation(activity, effectiveRam);
         userArgs.add("-Xms" + effectiveRam + "M");
         userArgs.add("-Xmx" + effectiveRam + "M");

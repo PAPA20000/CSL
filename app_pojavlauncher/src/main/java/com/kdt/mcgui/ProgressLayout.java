@@ -67,7 +67,7 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
     private LinearLayout mLinearLayout;
     private TextView mTaskNumberDisplayer;
     private ImageView mFlipArrow;
-    private KineticProgressView mKineticProgress;
+    private PulseOrbitView mPulseOrbit; // Phase-5 premium download animation system (Req-1)
     private TextView mStatusText;
     private TextView mDetailText;
     private TextView mSpeedText;
@@ -119,7 +119,7 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
         mLinearLayout = findViewById(R.id.progress_linear_layout);
         mTaskNumberDisplayer = findViewById(R.id.progress_textview);
         mFlipArrow = findViewById(R.id.progress_flip_arrow);
-        mKineticProgress = findViewById(R.id.kinetic_progress);
+        mPulseOrbit = findViewById(R.id.pulse_orbit);
         mStatusText = findViewById(R.id.progress_status_text);
         mDetailText = findViewById(R.id.progress_detail_text);
         mSpeedText = findViewById(R.id.progress_speed_text);
@@ -129,10 +129,6 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
         mEtaText = findViewById(R.id.progress_eta_text);
         mDownloadCard = findViewById(R.id.download_card);
         mProgressIcon = findViewById(R.id.progress_icon);
-
-        if (mKineticProgress != null) {
-            mKineticProgress.setHideText(true);
-        }
 
         if (mDownloadCard != null) {
             mDownloadCard.setOnClickListener(v -> {
@@ -194,6 +190,7 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
         post(()->{
             if(tc > 0) {
                 removeCallbacks(mFadeOutRunnable);
+                boolean becameVisible = getVisibility() != VISIBLE;
                 mIsFinishing = false;
                 setAlpha(1f);
                 setTranslationY(0f);
@@ -201,27 +198,48 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
                     mProgressBar.setProgressTintList(null);
                 }
                 if (mStatusText != null) {
-                    mStatusText.setTextColor(0xFFFFFFFF);
+                    mStatusText.setTextColor(0xFFF0F0F3);
                 }
                 if (mPercentageText != null) {
                     mPercentageText.setTextColor(0xFFE4E4EA);
                 }
+                if (mProgressIcon != null) {
+                    mProgressIcon.setAlpha(1f);
+                    mProgressIcon.setVisibility(VISIBLE);
+                }
                 mTaskNumberDisplayer.setText(getContext().getString(R.string.progresslayout_tasks_in_progress, tc));
                 setVisibility(VISIBLE);
+                // Premium entrance: card glides up with a soft fade
+                if (becameVisible) {
+                    animate().cancel();
+                    setAlpha(0f);
+                    setTranslationY(getResources().getDisplayMetrics().density * 24f);
+                    animate().alpha(1f).translationY(0f)
+                            .setDuration(380)
+                            .setInterpolator(new android.view.animation.DecelerateInterpolator(1.8f))
+                            .start();
+                }
             } else {
                 if (getVisibility() == VISIBLE && !mIsFinishing) {
                     mIsFinishing = true;
+                    // Phase-5 completion choreography: orbit morphs into a check
+                    if (mPulseOrbit != null) {
+                        mPulseOrbit.showCompleted();
+                    }
+                    if (mProgressIcon != null) {
+                        mProgressIcon.animate().alpha(0f).setDuration(280).start();
+                    }
                     if (mStatusText != null) {
                         mStatusText.setText("✓ Download Complete");
-                        mStatusText.setTextColor(0xFFE4E4EA); // neon green
+                        mStatusText.setTextColor(0xFF9FD6AC); // muted premium success
                     }
                     if (mPercentageText != null) {
                         mPercentageText.setText("100%");
-                        mPercentageText.setTextColor(0xFFE4E4EA); // neon green
+                        mPercentageText.setTextColor(0xFF9FD6AC);
                     }
                     if (mProgressBar != null) {
                         mProgressBar.setProgress(100);
-                        mProgressBar.setProgressTintList(ColorStateList.valueOf(0xFFE4E4EA));
+                        mProgressBar.setProgressTintList(ColorStateList.valueOf(0xFF9FD6AC));
                     }
                     if (mDetailText != null) {
                         mDetailText.setVisibility(GONE);
@@ -233,7 +251,7 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
                         mEtaText.setVisibility(GONE);
                     }
                     removeCallbacks(mFadeOutRunnable);
-                    postDelayed(mFadeOutRunnable, 2500);
+                    postDelayed(mFadeOutRunnable, 2600);
                 } else if (getVisibility() != VISIBLE) {
                     setVisibility(GONE);
                 }
@@ -294,9 +312,9 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
                 else if(va != null && va.length > 0 && va[0] != null)textView.setText((String)va[0]);
                 else textView.setText("");
 
-                // Update the kinetic progress circle and detail texts
-                if (progress >= 0) {
-                    mKineticProgress.setProgress(progress);
+                // Drive the Pulse-Orbit dial and remember the latest value
+                if (progress >= 0 && mPulseOrbit != null) {
+                    mPulseOrbit.setProgress(progress);
                     mLastProgress = progress;
                 }
                 mLastProgressingKey = this.progressKey;
