@@ -141,6 +141,78 @@ public class CurseforgeApi implements ModpackApi{
         return getModDetails(item, null);
     }
 
+    /**
+     * Fetch rich project metadata for the install page (GET /v1/mods/{id}).
+     * Curseforge has no followers/license fields here — those stay unset and
+     * the UI hides the tiles. Returns null on failure so the caller falls
+     * back to the search-hit data.
+     */
+    public net.kdt.pojavlaunch.modloaders.modpacks.models.ModProjectInfo fetchProjectInfo(String projectId) {
+        JsonObject response;
+        try {
+            response = mApiHandler.get("mods/" + projectId, JsonObject.class);
+        } catch (Exception e) {
+            return null;
+        }
+        if (response == null || !response.has("data") || !response.get("data").isJsonObject()) return null;
+        JsonObject d = response.getAsJsonObject("data");
+
+        net.kdt.pojavlaunch.modloaders.modpacks.models.ModProjectInfo info =
+                new net.kdt.pojavlaunch.modloaders.modpacks.models.ModProjectInfo();
+        info.title     = cfString(d, "name");
+        info.tagline   = cfString(d, "summary");
+        info.body      = info.tagline; // CF full body needs a separate HTML endpoint; keep it plain
+        info.downloads = d.has("downloadCount") && !d.get("downloadCount").isJsonNull()
+                ? d.get("downloadCount").getAsLong() : -1;
+        info.updatedIso = cfString(d, "dateModified");
+
+        if (d.has("authors") && d.get("authors").isJsonArray()) {
+            JsonArray authors = d.getAsJsonArray("authors");
+            for (int i = 0; i < authors.size(); i++) {
+                JsonObject a = authors.get(i).getAsJsonObject();
+                String name = cfString(a, "name");
+                if (name != null && !name.isEmpty()) { info.author = name; break; }
+            }
+        }
+
+        if (d.has("links") && d.get("links").isJsonObject()) {
+            JsonObject links = d.getAsJsonObject("links");
+            info.websiteUrl = cfString(links, "websiteUrl");
+            info.sourceUrl  = cfString(links, "sourceUrl");
+            info.issuesUrl  = cfString(links, "issuesUrl");
+            info.wikiUrl    = cfString(links, "wikiUrl");
+        }
+
+        if (d.has("screenshots") && d.get("screenshots").isJsonArray()) {
+            JsonArray shots = d.getAsJsonArray("screenshots");
+            ArrayList<String> urls = new ArrayList<>();
+            for (int i = 0; i < shots.size(); i++) {
+                JsonObject s = shots.get(i).getAsJsonObject();
+                String url = cfString(s, "url");
+                if (url != null && !url.isEmpty()) urls.add(url);
+            }
+            info.galleryUrls = urls.toArray(new String[0]);
+        }
+
+        if (d.has("categories") && d.get("categories").isJsonArray()) {
+            JsonArray cats = d.getAsJsonArray("categories");
+            ArrayList<String> out = new ArrayList<>();
+            for (int i = 0; i < cats.size(); i++) {
+                JsonObject c = cats.get(i).getAsJsonObject();
+                String name = cfString(c, "name");
+                if (name != null && !name.isEmpty()) out.add(name);
+            }
+            info.categories = out.toArray(new String[0]);
+        }
+
+        return info;
+    }
+
+    private static String cfString(JsonObject o, String key) {
+        if (o == null || !o.has(key) || o.get(key).isJsonNull()) return null;
+        try { return o.get(key).getAsString(); } catch (Exception e) { return null; }
+    }
+
     public ModDetail getModDetails(ModItem item, String filterMcVersion) {
         // Short-circuit for restricted mods — no point fetching versions
         if (item.isRestricted) {

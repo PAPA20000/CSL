@@ -58,14 +58,53 @@ public class ModInstallFragment extends Fragment {
     private ImageView mBackButton;
     private ImageView mModIcon;
     private TextView mModTitle;
+    private TextView mModAuthor;
     private TextView mVersionBadge;
     private TextView mFullDescription;
     private Button mInstallButton;
+
+    // Stats row
+    private View mStatsRow;
+    private View mStatDownloads;
+    private View mStatFollowers;
+    private View mStatLicense;
+    private TextView mStatDownloadsValue;
+    private TextView mStatFollowersValue;
+    private TextView mStatLicenseValue;
+
+    // Gallery
+    private View mGallerySection;
+    private android.widget.LinearLayout mGalleryContainer;
+
+    // Details
+    private TextView mDetailVersion;
+    private TextView mDetailUpdated;
+    private View mDetailUpdatedRow;
+    private TextView mDetailSource;
+    private TextView mLoadersLabel;
+    private TextView mMcVersionsLabel;
+    private TextView mCategoriesLabel;
+    private android.view.ViewGroup mLoadersContainer;
+    private android.view.ViewGroup mMcVersionsContainer;
+    private android.view.ViewGroup mCategoriesContainer;
+
+    // Dependencies + changelog + links
+    private View mDepsSection;
+    private TextView mDepsText;
+    private View mChangelogSection;
+    private TextView mChangelog;
+    private View mLinksSection;
+    private TextView mLinkWebsite;
+    private TextView mLinkSource;
+    private TextView mLinkIssues;
+    private TextView mLinkWiki;
+    private TextView mLinkDiscord;
 
     // View references for animations
     private View mTopBar;
     private View mBottomBar;
     private View mScrollContent;
+    private View mHeroCard;
 
     public static ModInstallFragment newInstance(ModItem item, ModDetail detail,
                                                   int versionIndex, String profileKey,
@@ -102,17 +141,56 @@ public class ModInstallFragment extends Fragment {
         // Bind premium ID references
         mTopBar = view.findViewById(R.id.install_top_bar);
         mBackButton = view.findViewById(R.id.install_back_button);
+        mHeroCard = view.findViewById(R.id.install_hero_card);
         mModIcon = view.findViewById(R.id.install_mod_icon);
         mModTitle = view.findViewById(R.id.install_mod_title);
+        mModAuthor = view.findViewById(R.id.install_mod_author);
         mVersionBadge = view.findViewById(R.id.install_selected_version_badge);
         mFullDescription = view.findViewById(R.id.install_full_description);
         mBottomBar = view.findViewById(R.id.install_bottom_bar);
         mInstallButton = view.findViewById(R.id.install_button);
         mScrollContent = view.findViewById(R.id.install_scroll_content);
 
-        // Populate UI
+        mStatsRow = view.findViewById(R.id.install_stats_row);
+        mStatDownloads = view.findViewById(R.id.install_stat_downloads);
+        mStatFollowers = view.findViewById(R.id.install_stat_followers);
+        mStatLicense = view.findViewById(R.id.install_stat_license);
+        mStatDownloadsValue = view.findViewById(R.id.install_stat_downloads_value);
+        mStatFollowersValue = view.findViewById(R.id.install_stat_followers_value);
+        mStatLicenseValue = view.findViewById(R.id.install_stat_license_value);
+
+        mGallerySection = view.findViewById(R.id.install_gallery_section);
+        mGalleryContainer = view.findViewById(R.id.install_gallery_container);
+
+        mDetailVersion = view.findViewById(R.id.install_detail_version);
+        mDetailUpdated = view.findViewById(R.id.install_detail_updated);
+        mDetailUpdatedRow = view.findViewById(R.id.install_detail_updated_row);
+        mDetailSource = view.findViewById(R.id.install_detail_source);
+        mLoadersLabel = view.findViewById(R.id.install_loaders_label);
+        mLoadersContainer = view.findViewById(R.id.install_loaders_container);
+        mMcVersionsLabel = view.findViewById(R.id.install_mcversions_label);
+        mMcVersionsContainer = view.findViewById(R.id.install_mcversions_container);
+        mCategoriesLabel = view.findViewById(R.id.install_categories_label);
+        mCategoriesContainer = view.findViewById(R.id.install_categories_container);
+
+        mDepsSection = view.findViewById(R.id.install_deps_section);
+        mDepsText = view.findViewById(R.id.install_deps_text);
+        mChangelogSection = view.findViewById(R.id.install_changelog_section);
+        mChangelog = view.findViewById(R.id.install_changelog);
+        mLinksSection = view.findViewById(R.id.install_links_section);
+        mLinkWebsite = view.findViewById(R.id.install_link_website);
+        mLinkSource = view.findViewById(R.id.install_link_source);
+        mLinkIssues = view.findViewById(R.id.install_link_issues);
+        mLinkWiki = view.findViewById(R.id.install_link_wiki);
+        mLinkDiscord = view.findViewById(R.id.install_link_discord);
+
+        // Populate immediate UI from the search-hit data
         if (mModItem != null) {
             mModTitle.setText(mModItem.title);
+            if (mModItem.author != null && !mModItem.author.isEmpty()) {
+                mModAuthor.setText(getString(R.string.mod_install_by_author, mModItem.author));
+                mModAuthor.setVisibility(View.VISIBLE);
+            }
 
             // Load icon asynchronously
             ModIconCache iconCache = ModIconCache.getInstance();
@@ -127,17 +205,31 @@ public class ModInstallFragment extends Fragment {
             );
         }
 
+        mDetailSource.setText(mModItem != null && mModItem.apiSource == Constants.SOURCE_MODRINTH
+                ? "Modrinth" : "CurseForge");
+
         if (mModDetail != null) {
-            // Show full description
+            // Show full description (search-hit text until rich info lands)
             if (mModDetail.description != null && !mModDetail.description.isEmpty()) {
                 mFullDescription.setText(mModDetail.description);
             }
 
-            // Show selected version badge
+            // Show selected version badge + details row
             if (mVersionIndex >= 0 && mModDetail.versionNames != null
                     && mVersionIndex < mModDetail.versionNames.length) {
-                mVersionBadge.setText(mModDetail.versionNames[mVersionIndex]);
+                String versionText = mModDetail.versionNames[mVersionIndex];
+                mVersionBadge.setText(versionText);
+                mDetailVersion.setText(versionText);
             }
+
+            // Dependencies summary (data already on hand)
+            bindDependencies();
+
+            // Changelog of the selected version (captured by the API layer)
+            bindChangelog();
+
+            // Rich project info (gallery, stats, links, full body) — async
+            loadProjectInfo();
 
             // Determine the file name from version URL
             String versionUrl = (mModDetail.versionUrls != null
@@ -193,6 +285,333 @@ public class ModInstallFragment extends Fragment {
         });
     }
 
+
+    // ─── Rich project info (gallery • stats • links • body) ─────────
+
+    private void loadProjectInfo() {
+        if (mModItem == null || mModItem.id == null) {
+            bindFallbackInfo();
+            return;
+        }
+        PojavApplication.sExecutorService.execute(() -> {
+            net.kdt.pojavlaunch.modloaders.modpacks.models.ModProjectInfo info = null;
+            try {
+                if (mModItem.apiSource == Constants.SOURCE_MODRINTH) {
+                    info = new ModrinthApi().fetchProjectInfo(mModItem.id);
+                } else {
+                    Context c = getContext();
+                    String key = c != null ? c.getString(R.string.curseforge_api_key) : "";
+                    info = new net.kdt.pojavlaunch.modloaders.modpacks.api.CurseforgeApi(key)
+                            .fetchProjectInfo(mModItem.id);
+                }
+            } catch (Exception ignored) {}
+            final net.kdt.pojavlaunch.modloaders.modpacks.models.ModProjectInfo fInfo = info;
+            Tools.runOnUiThread(() -> {
+                if (!isAdded()) return;
+                if (fInfo != null) bindProjectInfo(fInfo);
+                else bindFallbackInfo();
+            });
+        });
+    }
+
+    private void bindProjectInfo(net.kdt.pojavlaunch.modloaders.modpacks.models.ModProjectInfo info) {
+        // Author from the richer source
+        if (info.author != null && !info.author.isEmpty()) {
+            mModAuthor.setText(getString(R.string.mod_install_by_author, info.author));
+            mModAuthor.setVisibility(View.VISIBLE);
+        }
+
+        // Full markdown body
+        String body = info.body != null && !info.body.isEmpty()
+                ? info.body : (info.tagline != null ? info.tagline : null);
+        if (body != null && !body.isEmpty()) {
+            mFullDescription.setText(stripMarkdown(body));
+        }
+
+        // Stats
+        if (info.downloads >= 0) mStatDownloadsValue.setText(formatCount(info.downloads));
+        else if (mModItem != null && mModItem.downloads != null) {
+            mStatDownloadsValue.setText(formatCount(parseCount(mModItem.downloads)));
+        }
+        if (info.followers >= 0) mStatFollowersValue.setText(formatCount(info.followers));
+        else mStatFollowers.setVisibility(View.GONE);
+        if (info.license != null && !info.license.isEmpty()
+                && !"LicenseRef".equalsIgnoreCase(info.license))  {
+            mStatLicenseValue.setText(info.license);
+        } else mStatLicense.setVisibility(View.GONE);
+        animateSectionIn(mStatsRow);
+
+        // Last updated
+        String updated = formatIsoDate(info.updatedIso);
+        if (updated != null) mDetailUpdated.setText(updated);
+        else mDetailUpdatedRow.setVisibility(View.GONE);
+
+        // Gallery
+        if (info.galleryUrls != null && info.galleryUrls.length > 0) {
+            bindGallery(info.galleryUrls);
+            // keep the detail model in sync for any other consumer
+            if (mModDetail != null) mModDetail.setScreenshotUrls(info.galleryUrls);
+        }
+
+        // Chips
+        bindChips(mLoadersLabel, mLoadersContainer, capitalizeAll(info.loaders));
+        bindMcVersionChips(info.gameVersions);
+        bindChips(mCategoriesLabel, mCategoriesContainer, capitalizeAll(info.categories));
+
+        // Links
+        boolean anyLink = false;
+        anyLink |= bindLink(mLinkWebsite, info.websiteUrl);
+        anyLink |= bindLink(mLinkSource, info.sourceUrl);
+        anyLink |= bindLink(mLinkIssues, info.issuesUrl);
+        anyLink |= bindLink(mLinkWiki, info.wikiUrl);
+        anyLink |= bindLink(mLinkDiscord, info.discordUrl);
+        if (anyLink) {
+            mLinksSection.setVisibility(View.VISIBLE);
+            mLinksSection.setAlpha(0f);
+            animateSectionIn(mLinksSection);
+        }
+    }
+
+    /** No rich info available — build what we can from the search hit + detail model. */
+    private void bindFallbackInfo() {
+        if (mModItem != null && mModItem.downloads != null) {
+            mStatDownloadsValue.setText(formatCount(parseCount(mModItem.downloads)));
+        } else mStatDownloads.setVisibility(View.GONE);
+        mStatFollowers.setVisibility(View.GONE);
+        mStatLicense.setVisibility(View.GONE);
+        mDetailUpdatedRow.setVisibility(View.GONE);
+        animateSectionIn(mStatsRow);
+
+        // Loaders / MC versions of the selected version row (data on hand)
+        if (mModDetail != null && mVersionIndex >= 0) {
+            if (mModDetail.versionLoaders != null && mVersionIndex < mModDetail.versionLoaders.length
+                    && mModDetail.versionLoaders[mVersionIndex] != null) {
+                bindChips(mLoadersLabel, mLoadersContainer,
+                        capitalizeAll(mModDetail.versionLoaders[mVersionIndex]));
+            }
+            if (mModDetail.mcVersionLists != null && mVersionIndex < mModDetail.mcVersionLists.length
+                    && mModDetail.mcVersionLists[mVersionIndex] != null) {
+                bindMcVersionChips(mModDetail.mcVersionLists[mVersionIndex]);
+            } else if (mModDetail.mcVersionNames != null && mVersionIndex < mModDetail.mcVersionNames.length
+                    && mModDetail.mcVersionNames[mVersionIndex] != null) {
+                bindChips(mMcVersionsLabel, mMcVersionsContainer,
+                        new String[]{mModDetail.mcVersionNames[mVersionIndex]});
+            }
+        }
+
+        if (mModItem != null && bindLink(mLinkWebsite, mModItem.websiteUrl)) {
+            mLinksSection.setVisibility(View.VISIBLE);
+            mLinksSection.setAlpha(0f);
+            animateSectionIn(mLinksSection);
+        }
+    }
+
+    private void bindGallery(String[] urls) {
+        float d = getResources().getDisplayMetrics().density;
+        int h = (int) (d * 132);
+        int w = (int) (d * 200);
+        int margin = (int) (d * 10);
+        ModIconCache cache = ModIconCache.getInstance();
+        int shown = 0;
+        for (String url : urls) {
+            if (url == null || url.isEmpty() || shown >= 8) break;
+            ImageView iv = new ImageView(requireContext());
+            android.widget.LinearLayout.LayoutParams lp =
+                    new android.widget.LinearLayout.LayoutParams(w, h);
+            if (shown > 0) lp.setMarginStart(margin);
+            iv.setLayoutParams(lp);
+            iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            iv.setBackgroundResource(R.drawable.bg_gallery_image);
+            iv.setClipToOutline(true);
+            iv.setAlpha(0f);
+            mGalleryContainer.addView(iv);
+            cache.getImage(bitmap -> {
+                if (!isAdded()) return;
+                if (bitmap != null) {
+                    iv.setImageBitmap(bitmap);
+                    iv.animate().alpha(1f).setDuration(280).start();
+                }
+            }, "screenshot_" + url, url);
+            shown++;
+        }
+        if (shown > 0) {
+            mGallerySection.setVisibility(View.VISIBLE);
+            animateSectionIn(mGallerySection);
+        }
+    }
+
+    private boolean bindLink(TextView linkView, String url) {
+        if (url == null || url.isEmpty()) {
+            linkView.setVisibility(View.GONE);
+            return false;
+        }
+        linkView.setVisibility(View.VISIBLE);
+        linkView.setOnClickListener(v -> {
+            android.app.Activity act = getActivity();
+            if (act != null) Tools.openURL(act, url);
+        });
+        return true;
+    }
+
+    private void bindChips(TextView label, android.view.ViewGroup container, String[] values) {
+        container.removeAllViews();
+        if (values == null || values.length == 0) {
+            label.setVisibility(View.GONE);
+            container.setVisibility(View.GONE);
+            return;
+        }
+        label.setVisibility(View.VISIBLE);
+        container.setVisibility(View.VISIBLE);
+        for (String v : values) {
+            if (v == null || v.isEmpty()) continue;
+            container.addView(makeChip(v));
+        }
+    }
+
+    /** Condense a long MC version list: newest 6 + "+N more". */
+    private void bindMcVersionChips(String[] gameVersions) {
+        if (gameVersions == null || gameVersions.length == 0) {
+            bindChips(mMcVersionsLabel, mMcVersionsContainer, (String[]) null);
+            return;
+        }
+        // Filter out snapshots / pre-releases for a clean list
+        List<String> releases = new ArrayList<>();
+        for (String v : gameVersions) {
+            if (v != null && v.matches("\\d+\\.\\d+(\\.\\d+)?")) releases.add(v);
+        }
+        String[] src = releases.isEmpty() ? gameVersions : releases.toArray(new String[0]);
+        int max = 6;
+        int count = Math.min(src.length, max);
+        String[] display = new String[count + (src.length > max ? 1 : 0)];
+        // game_versions arrive oldest→newest; show the NEWEST entries
+        for (int i = 0; i < count; i++) display[i] = src[src.length - 1 - i];
+        if (src.length > max) {
+            display[count] = getString(R.string.mod_install_more_chip, src.length - max);
+        }
+        bindChips(mMcVersionsLabel, mMcVersionsContainer, display);
+    }
+
+    private TextView makeChip(String text) {
+        TextView chip = new TextView(requireContext());
+        chip.setText(text);
+        chip.setTextColor(0xFFDADDE5);
+        chip.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 11.5f);
+        chip.setBackgroundResource(R.drawable.bg_chip_loader);
+        return chip;
+    }
+
+    private void bindDependencies() {
+        if (mModDetail.versionDependencyIds == null
+                || mVersionIndex >= mModDetail.versionDependencyIds.length) return;
+        String[] ids = mModDetail.versionDependencyIds[mVersionIndex];
+        if (ids == null || ids.length == 0) return;
+        int required = 0, optional = 0;
+        String[] types = mModDetail.versionDependencyTypes != null
+                && mVersionIndex < mModDetail.versionDependencyTypes.length
+                ? mModDetail.versionDependencyTypes[mVersionIndex] : null;
+        for (int i = 0; i < ids.length; i++) {
+            String t = types != null && i < types.length ? types[i] : "required";
+            if ("optional".equalsIgnoreCase(t)) optional++;
+            else required++;
+        }
+        mDepsText.setText(optional > 0
+                ? getString(R.string.mod_install_dep_message, required, optional)
+                : getString(R.string.mod_install_dep_message_simple, required));
+        mDepsSection.setVisibility(View.VISIBLE);
+    }
+
+    private void bindChangelog() {
+        if (mModDetail.versionChangelogs == null
+                || mVersionIndex >= mModDetail.versionChangelogs.length) return;
+        String cl = mModDetail.versionChangelogs[mVersionIndex];
+        if (cl == null || cl.trim().isEmpty()) return;
+        mChangelog.setText(stripMarkdown(cl));
+        mChangelogSection.setVisibility(View.VISIBLE);
+    }
+
+    private void animateSectionIn(View v) {
+        if (v == null) return;
+        v.setAlpha(0f);
+        v.setTranslationY(getResources().getDisplayMetrics().density * 14);
+        v.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(320)
+                .setStartDelay(60)
+                .setInterpolator(new AccelerateDecelerateInterpolator())
+                .start();
+    }
+
+    // ─── Text / number formatting helpers ─────────────────────────────
+
+    /** Strip Modrinth markdown into readable plain text. */
+    private static String stripMarkdown(String md) {
+        if (md == null) return "";
+        String s = md;
+        s = s.replaceAll("(?s)```.*?```", " ");              // fenced code
+        s = s.replaceAll("!\\[[^\\]]*]\\([^)]*\\)", "");     // images
+        s = s.replaceAll("<img[^>]*>", "");                  // html images
+        s = s.replaceAll("<br\\s*/?>", "\n");                // html breaks
+        s = s.replaceAll("</?[^>]+>", "");                   // other html tags
+        s = s.replaceAll("\\[([^\\]]+)]\\(([^)]*)\\)", "$1"); // links → text
+        s = s.replaceAll("(?m)^#{1,6}\\s*", "");             // headings
+        s = s.replaceAll("(?m)^\\s*>\\s?", "");              // quotes
+        s = s.replaceAll("\\*\\*([^*]+)\\*\\*", "$1");       // bold
+        s = s.replaceAll("__([^_]+)__", "$1");
+        s = s.replaceAll("(?<!\\*)\\*([^*\\n]+)\\*(?!\\*)", "$1"); // italics
+        s = s.replaceAll("`([^`\\n]*)`", "$1");              // inline code
+        s = s.replaceAll("(?m)^\\s*[-*+]\\s+", "• ");        // bullets
+        s = s.replaceAll("(?m)^\\s*[-_=]{3,}\\s*$", "");     // hr rules
+        s = s.replaceAll("\n{3,}", "\n\n");
+        s = s.trim();
+        if (s.length() > 6000) s = s.substring(0, 6000).trim() + "…";
+        return s;
+    }
+
+    private static String formatCount(long n) {
+        if (n < 0) return "—";
+        if (n >= 1_000_000_000L) return String.format(java.util.Locale.US, "%.1fB", n / 1_000_000_000.0);
+        if (n >= 1_000_000L) return String.format(java.util.Locale.US, "%.1fM", n / 1_000_000.0);
+        if (n >= 1_000L) return String.format(java.util.Locale.US, "%.1fK", n / 1_000.0);
+        return Long.toString(n);
+    }
+
+    private static long parseCount(String s) {
+        if (s == null) return -1;
+        String digits = s.replaceAll("[^0-9]", "");
+        if (digits.isEmpty()) return -1;
+        try {
+            return Long.parseLong(digits);
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    private static String formatIsoDate(String iso) {
+        if (iso == null || iso.length() < 10) return null;
+        try {
+            java.text.SimpleDateFormat in =
+                    new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US);
+            java.util.Date date = in.parse(iso.substring(0, 10));
+            if (date == null) return null;
+            return new java.text.SimpleDateFormat("dd MMM yyyy",
+                    java.util.Locale.US).format(date);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static String capitalize(String s) {
+        if (s == null || s.isEmpty()) return s;
+        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
+    }
+
+    private static String[] capitalizeAll(String[] arr) {
+        if (arr == null) return null;
+        String[] out = new String[arr.length];
+        for (int i = 0; i < arr.length; i++) out[i] = capitalize(arr[i]);
+        return out;
+    }
 
     // ─── Premium Entry Animations ──────────────────────────────────────
 

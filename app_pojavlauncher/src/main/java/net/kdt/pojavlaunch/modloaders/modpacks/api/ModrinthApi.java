@@ -147,6 +147,7 @@ public class ModrinthApi implements ModpackApi{
         String[][] depTypes = new String[size][];
         String[][] loadersArr = new String[size][];
         String[][] mcListArr  = new String[size][]; // full game_versions per version (accurate compat)
+        String[] changelogs   = new String[size];   // per-version changelog for the install page
 
         for (int i = 0; i < size; i++) {
             JsonObject version = versions.get(i);
@@ -192,11 +193,106 @@ public class ModrinthApi implements ModpackApi{
             } else {
                 loadersArr[i] = new String[0];
             }
+
+            // Changelog for the selected version (shown on the install page)
+            if (version.has("changelog") && !version.get("changelog").isJsonNull()) {
+                String cl = version.get("changelog").getAsString();
+                changelogs[i] = (cl == null || cl.trim().isEmpty()) ? null : cl;
+            } else {
+                changelogs[i] = null;
+            }
         }
 
         ModDetail detail = new ModDetail(item, names, mcNames, urls, hashes, depIds, depTypes, loadersArr);
         detail.mcVersionLists = mcListArr;
+        detail.versionChangelogs = changelogs;
         return detail;
+    }
+
+    /**
+     * Fetch rich project metadata for the install page.
+     * Hits /v2/project/{id} plus /v2/project/{id}/members for the owner name.
+     * Returns null on failure — the caller falls back to the search-hit data.
+     */
+    public net.kdt.pojavlaunch.modloaders.modpacks.models.ModProjectInfo fetchProjectInfo(String projectId) {
+        JsonObject p;
+        try {
+            p = mApiHandler.get("project/" + projectId, JsonObject.class);
+        } catch (Exception e) {
+            return null;
+        }
+        if (p == null) return null;
+
+        net.kdt.pojavlaunch.modloaders.modpacks.models.ModProjectInfo info =
+                new net.kdt.pojavlaunch.modloaders.modpacks.models.ModProjectInfo();
+        info.title      = optString(p, "title");
+        info.tagline    = optString(p, "description");
+        info.body       = optString(p, "body");
+        info.downloads  = p.has("downloads") && !p.get("downloads").isJsonNull()
+                ? p.get("downloads").getAsLong() : -1;
+        info.followers  = p.has("followers") && !p.get("followers").isJsonNull()
+                ? p.get("followers").getAsLong() : -1;
+        info.updatedIso = optString(p, "updated");
+        info.sourceUrl  = optString(p, "source_url");
+        info.issuesUrl  = optString(p, "issues_url");
+        info.wikiUrl    = optString(p, "wiki_url");
+        info.discordUrl = optString(p, "discord_url");
+
+        if (p.has("license") && p.get("license").isJsonObject()) {
+            JsonObject lic = p.getAsJsonObject("license");
+            info.license = optString(lic, "id");
+        }
+        info.categories   = jsonStringArray(p, "categories");
+        info.loaders      = jsonStringArray(p, "loaders");
+        info.gameVersions = jsonStringArray(p, "game_versions");
+
+        if (p.has("gallery") && p.get("gallery").isJsonArray()) {
+            JsonArray gallery = p.getAsJsonArray("gallery");
+            java.util.List<String> urls = new java.util.ArrayList<>();
+            for (int i = 0; i < gallery.size(); i++) {
+                JsonObject img = gallery.get(i).getAsJsonObject();
+                String url = optString(img, "url");
+                if (url != null && !url.isEmpty()) urls.add(url);
+            }
+            info.galleryUrls = urls.toArray(new String[0]);
+        }
+
+        // Owner display name (separate endpoint — best effort, never fatal)
+        try {
+            JsonArray members = mApiHandler.get("project/" + projectId + "/members", JsonArray.class);
+            if (members != null) {
+                String owner = null, first = null;
+                for (int i = 0; i < members.size(); i++) {
+                    JsonObject m = members.get(i).getAsJsonObject();
+                    String name = null;
+                    if (m.has("user") && m.get("user").isJsonObject()) {
+                        name = optString(m.getAsJsonObject("user"), "username");
+                    }
+                    if (name == null) continue;
+                    if (first == null) first = name;
+                    String role = optString(m, "role");
+                    if (role != null && role.equalsIgnoreCase("owner")) { owner = name; break; }
+                }
+                info.author = owner != null ? owner : first;
+            }
+        } catch (Exception ignored) {}
+
+        return info;
+    }
+
+    private static String optString(JsonObject o, String key) {
+        if (o == null || !o.has(key) || o.get(key).isJsonNull()) return null;
+        try { return o.get(key).getAsString(); } catch (Exception e) { return null; }
+    }
+
+    private static String[] jsonStringArray(JsonObject o, String key) {
+        if (o == null || !o.has(key) || !o.get(key).isJsonArray()) return null;
+        JsonArray arr = o.getAsJsonArray(key);
+        java.util.List<String> out = new java.util.ArrayList<>();
+        for (int i = 0; i < arr.size(); i++) {
+            if (arr.get(i).isJsonPrimitive()) out.add(arr.get(i).getAsString());
+        }
+        return out.toArray(new String[0]);
     }
 
     @Override

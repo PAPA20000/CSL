@@ -25,6 +25,8 @@ public class ModDetail extends ModItem implements Parcelable {
      * mcVersionNames keeps only the first entry for display; compat must never
      * rely on that single value. */
     public String[][] mcVersionLists;
+    /* Per-version changelog text (Modrinth "changelog"), null when unavailable */
+    public String[] versionChangelogs;
 
     public ModDetail(ModItem item, String[] versionNames, String[] mcVersionNames, String[] versionUrls, String[] hashes) {
         this(item, versionNames, mcVersionNames, versionUrls, hashes, null, null, null);
@@ -112,6 +114,8 @@ public class ModDetail extends ModItem implements Parcelable {
             mcVersionLists = null;
         }
 
+        versionChangelogs = in.createStringArray();
+
         // Re-apply mc version suffix (same logic as main constructor)
         for (int i = 0; i < versionNames.length; i++) {
             if (mcVersionNames[i] != null && !versionNames[i].contains(mcVersionNames[i])) {
@@ -171,6 +175,7 @@ public class ModDetail extends ModItem implements Parcelable {
         if (mcVersionLists != null) {
             for (String[] arr : mcVersionLists) dest.writeStringArray(arr);
         }
+        dest.writeStringArray(versionChangelogs);
     }
 
     @Override
