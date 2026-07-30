@@ -6,13 +6,13 @@
         <item name="windowNoTitle">true</item>
         <item name="windowActionBar">false</item>
         <item name="android:windowContentOverlay">@null</item>
-        <item name="android:statusBarColor">#060A14</item>
-        <item name="android:navigationBarColor">#060A14</item>
+        <item name="android:statusBarColor">#0B0B0E</item>
+        <item name="android:navigationBarColor">#0B0B0E</item>
         <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
         <item name="android:textSize">@dimen/_12ssp</item>
-        <item name="colorBgApp">#060A14</item>
-        <item name="colorBgBottomBar">#060A14</item>
-        <item name="colorBgStatusBar">#060A14</item>
+        <item name="colorBgApp">#0B0B0E</item>
+        <item name="colorBgBottomBar">#0B0B0E</item>
+        <item name="colorBgStatusBar">#0B0B0E</item>
         <item name="colorDivider">#1AFFFFFF</item>
         <item name="themeAccent">@color/premium_cyan</item>
         <item name="colorTextPrimary">@color/text_primary_white</item>
@@ -22,8 +22,8 @@
         <item name="colorAccent">#C9CBD6</item>
         <item name="colorOnSurface">@color/text_primary_white</item>
         <item name="colorOnSurfaceVariant">@color/text_secondary_light</item>
-        <item name="colorSurface">#0D152A</item>
-        <item name="colorSurfaceVariant">#121A28</item>
+        <item name="colorSurface">#141419</item>
+        <item name="colorSurfaceVariant">#1B1B22</item>
     </style>
     <style name="AppTheme.Gradient">
         <item name="bgMainDrawable">@drawable/bg_gradient_default</item>

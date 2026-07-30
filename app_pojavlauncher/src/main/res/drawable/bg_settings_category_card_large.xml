@@ -13,9 +13,9 @@
                 <shape android:shape="rectangle">
                     <gradient
                         android:angle="135"
-                        android:startColor="#18233A"
-                        android:centerColor="#132034"
-                        android:endColor="#0C1728" />
+                        android:startColor="#22222B"
+                        android:centerColor="#1B1B22"
+                        android:endColor="#121216" />
                     <corners android:radius="22dp" />
                     <stroke
                         android:width="1dp"
@@ -26,9 +26,9 @@
                 <shape android:shape="rectangle">
                     <gradient
                         android:angle="135"
-                        android:startColor="#10192B"
-                        android:centerColor="#0D1626"
-                        android:endColor="#09111D" />
+                        android:startColor="#1B1B22"
+                        android:centerColor="#141419"
+                        android:endColor="#101014" />
                     <corners android:radius="22dp" />
                     <stroke
                         android:width="1dp"

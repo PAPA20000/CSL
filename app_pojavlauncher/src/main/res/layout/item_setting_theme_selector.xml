@@ -41,7 +41,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="LAUNCHER THEME &amp; ACCENT COLOR"
-                android:textColor="#F4F8FF"
+                android:textColor="#F0F0F3"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -50,7 +50,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:text="Tap any color swatch below to instantly change launcher theme"
-                android:textColor="#8FA3BC"
+                android:textColor="#9C9CA8"
                 android:textSize="11sp" />
         </LinearLayout>
     </LinearLayout>

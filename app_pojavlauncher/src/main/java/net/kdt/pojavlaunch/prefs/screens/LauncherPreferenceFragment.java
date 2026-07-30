@@ -206,7 +206,7 @@ public class LauncherPreferenceFragment extends Fragment {
             boolean selected = Objects.equals(item.categoryLinkTarget, mCategoryName);
             chipText.setText(shortenCategoryLabel(item.title));
             chipText.setBackgroundResource(selected ? R.drawable.bg_settings_chip_active : R.drawable.bg_settings_chip);
-            chipText.setTextColor(Color.parseColor(selected ? "#EFFFFF" : "#DDE9F7"));
+            chipText.setTextColor(Color.parseColor(selected ? "#0E0E11" : "#9C9CA8"));
             chipText.setOnClickListener(v -> {
                 if (!selected) openCategoryPage(item.categoryLinkTarget);
             });
@@ -585,7 +585,7 @@ public class LauncherPreferenceFragment extends Fragment {
             }
             if (statusText != null) {
                 statusText.setText("\u25cf Unsaved Changes");
-                statusText.setTextColor(Color.parseColor("#FFB74D"));
+                statusText.setTextColor(Color.parseColor("#D8C79A"));
             }
         } else {
             if (bar.getVisibility() == View.VISIBLE) {
@@ -608,7 +608,7 @@ public class LauncherPreferenceFragment extends Fragment {
             }
             if (statusText != null) {
                 statusText.setText("\u25cf Changes Saved");
-                statusText.setTextColor(Color.parseColor("#8FA3BC"));
+                statusText.setTextColor(Color.parseColor("#9C9CA8"));
             }
         }
     }
@@ -1176,7 +1176,7 @@ public class LauncherPreferenceFragment extends Fragment {
             if (swatchesContainer == null) return;
             swatchesContainer.removeAllViews();
             ThemeManager.Preset[] presets = ThemeManager.PRESETS;
-            String[] colors = new String[]{"#C9CBD6", "#3B82F6", "#10B981", "#EF4444", "#A855F7", "#06B6D4"};
+            String[] colors = new String[]{"#C9CBD6", "#7C8AA0", "#3E8E6E", "#B45454", "#8E6AB8", "#4E9AA8"};
 
             for (int i = 0; i < presets.length; i++) {
                 ThemeManager.Preset p = presets[i];
@@ -1212,21 +1212,21 @@ public class LauncherPreferenceFragment extends Fragment {
 
             TextView overlineView = new TextView(context);
             overlineView.setText(overline);
-            overlineView.setTextColor(Color.parseColor("#66D9FF"));
+            overlineView.setTextColor(Color.parseColor("#B9BBC4"));
             overlineView.setTextSize(10);
             overlineView.setTypeface(overlineView.getTypeface(), android.graphics.Typeface.BOLD);
             overlineView.setLetterSpacing(0.12f);
 
             TextView titleView = new TextView(context);
             titleView.setText(title);
-            titleView.setTextColor(Color.parseColor("#F4F8FF"));
+            titleView.setTextColor(Color.parseColor("#F0F0F3"));
             titleView.setTextSize(16);
             titleView.setTypeface(titleView.getTypeface(), android.graphics.Typeface.BOLD);
             titleView.setPadding(0, dp(4), 0, 0);
 
             TextView summaryView = new TextView(context);
             summaryView.setText(summary);
-            summaryView.setTextColor(Color.parseColor("#8FA3BC"));
+            summaryView.setTextColor(Color.parseColor("#9C9CA8"));
             summaryView.setTextSize(12);
             summaryView.setPadding(0, dp(4), 0, 0);
 

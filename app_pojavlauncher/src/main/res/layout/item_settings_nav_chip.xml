@@ -9,6 +9,6 @@
     android:minWidth="84dp"
     android:paddingStart="14dp"
     android:paddingEnd="14dp"
-    android:textColor="#DDE9F7"
+    android:textColor="#9C9CA8"
     android:textSize="12sp"
     android:textStyle="bold" />

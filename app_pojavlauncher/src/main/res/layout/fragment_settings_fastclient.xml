@@ -53,7 +53,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="FastClient Optimization"
-                        android:textColor="#F4F8FF"
+                        android:textColor="#F0F0F3"
                         android:textSize="@dimen/_14ssp"
                         android:textStyle="bold" />
 
@@ -62,7 +62,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Enable fast client acceleration"
-                        android:textColor="#8FA3BC"
+                        android:textColor="#9C9CA8"
                         android:textSize="@dimen/_11ssp"
                         android:layout_marginTop="2dp" />
 
