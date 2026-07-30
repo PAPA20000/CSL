@@ -161,14 +161,20 @@ jobs:
           done
 
       # ── Upload all artifacts ─────────────────────────────────────────────────
-      # Kept short-lived on purpose: every push also attaches the APKs to the
-      # GitHub Release below, and ~529 MB x 30 days of artifacts blows the
-      # storage quota and fails the whole workflow at this step.
+      # Kept short-lived and slim on purpose (~265 MB instead of ~529 MB):
+      # every push attaches BOTH APKs to the GitHub Release below from out/
+      # directly, so run artifacts are a convenience copy only. The step is
+      # non-blocking because account-level artifact quota recalculation lags
+      # deletions by 6-12h and must never fail an otherwise good build.
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: cs-launcher-v3-build-${{ github.run_number }}
-          path: out/*
+          path: |
+            out/CS-LAUNCHER-V3.apk
+            out/CS-LAUNCHER-V3.md5
+            out/CS-LAUNCHER-V3.sha256
           retention-days: 2
 
       # ── GitHub Release (manual only) ─────────────────────────────────────────
