@@ -56,12 +56,46 @@ public class ProfileTypeSelectFragment extends Fragment {
             transition.setInterpolator(LayoutTransition.APPEARING,
                     new DecelerateInterpolator());
             mContent.setLayoutTransition(transition);
-
-            // Staggered entrance animation for buttons
-            mContent.post(() -> animateButtonsEntry(mContent));
         }
 
+        // Cascading entrance: header → section blocks → per-card stagger
+        view.post(() -> animateEntrance(view));
+
         wireButton(view);
+    }
+
+    private void animateEntrance(@NonNull View view) {
+        float rise = 20f * getResources().getDisplayMetrics().density;
+        animateBlock(view.findViewById(R.id.setup_hub_header), 0, rise);
+        // Portrait rails expose section wrappers; the landscape grid does not.
+        animateBlock(view.findViewById(R.id.section_vanilla), 90, rise);
+        animateBlock(view.findViewById(R.id.section_loaders), 170, rise);
+        animateBlock(view.findViewById(R.id.section_more), 250, rise);
+
+        final int[] cards = {
+                R.id.vanilla_profile, R.id.optifine_profile,
+                R.id.modded_profile_fabric, R.id.modded_profile_quilt,
+                R.id.modded_profile_forge, R.id.modded_profile_neoforge,
+                R.id.modded_profile_modpack, R.id.modded_profile_bta
+        };
+        long delay = 150L;
+        for (int id : cards) {
+            animateBlock(view.findViewById(id), delay, rise * 0.7f);
+            delay += 70L;
+        }
+    }
+
+    private void animateBlock(@Nullable View v, long delayMs, float rise) {
+        if (v == null) return;
+        v.setAlpha(0f);
+        v.setTranslationY(rise);
+        v.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setStartDelay(delayMs)
+                .setDuration(360)
+                .setInterpolator(new DecelerateInterpolator(1.5f))
+                .start();
     }
 
     private void wireButton(@NonNull View view) {
@@ -97,24 +131,6 @@ public class ProfileTypeSelectFragment extends Fragment {
         b = view.findViewById(R.id.modded_profile_bta);
         b.setOnClickListener(v -> tryInstall(BTAInstallFragment.class, BTAInstallFragment.TAG));
         setupTouchAnimation(b);
-    }
-
-    /** Staggered entrance animation — buttons appear one by one smoothly */
-    private void animateButtonsEntry(ViewGroup parent) {
-        int delay = 0;
-        for (int i = 0; i < parent.getChildCount(); i++) {
-            View child = parent.getChildAt(i);
-            child.setAlpha(0f);
-            child.setTranslationY(30f);
-            child.animate()
-                    .alpha(1f)
-                    .translationY(0f)
-                    .setDuration(350)
-                    .setStartDelay(delay)
-                    .setInterpolator(new DecelerateInterpolator())
-                    .start();
-            delay += 50;
-        }
     }
 
     /** Scale-press micro-interaction for all interactive buttons */
