@@ -27,15 +27,32 @@ public class SelectAuthFragment extends Fragment {
         View mLocalButton = view.findViewById(R.id.button_local_authentication);
 
         mMicrosoftButton.setOnClickListener(v -> navigateTo(MicrosoftLoginFragment.class, MicrosoftLoginFragment.TAG, null));
-        
+
         mElybyButton.setOnClickListener(v -> navigateTo(ElybyLoginFragment.class, ElybyLoginFragment.TAG, null));
 
         mLocalButton.setOnClickListener(v -> hasNoOnlineProfileDialog(requireActivity(),
                 () -> navigateTo(LocalLoginFragment.class, LocalLoginFragment.TAG, null)));
 
-        view.setAlpha(0f);
-        view.setTranslationY(26f);
-        view.animate().alpha(1f).translationY(0f).setDuration(280).start();
+        // Staggered rise-in: header first, then the three cards, then the note
+        float rise = 18f * getResources().getDisplayMetrics().density;
+        animateIn(view.findViewById(R.id.auth_header), 0, rise);
+        animateIn(mMicrosoftButton, 90, rise);
+        animateIn(mElybyButton, 180, rise);
+        animateIn(mLocalButton, 270, rise);
+        animateIn(view.findViewById(R.id.auth_footnote), 360, rise);
+    }
+
+    private void animateIn(@Nullable View v, long delayMs, float rise) {
+        if (v == null) return;
+        v.setAlpha(0f);
+        v.setTranslationY(rise);
+        v.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setStartDelay(delayMs)
+                .setDuration(380)
+                .setInterpolator(new android.view.animation.DecelerateInterpolator(1.5f))
+                .start();
     }
 
     /** Navigate within right pane if inside MainMenuFragment, otherwise full-screen swap. */

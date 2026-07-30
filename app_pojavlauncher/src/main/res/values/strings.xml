@@ -283,6 +283,20 @@
     <string name="sg_downloading_files">Downloading game files…</string>
     <string name="sg_runtime">Setting up runtime…</string>
     <string name="sg_launching">All set — launching</string>
+    <!-- Account Hub (Add Account) — v3 -->
+    <string name="auth_hub_eyebrow">ACCOUNT HUB</string>
+    <string name="auth_hub_title">Add Account</string>
+    <string name="auth_hub_subtitle">Choose how you want to sign in</string>
+    <string name="auth_ms_title">Microsoft Account</string>
+    <string name="auth_ms_desc">Xbox Live • capes • Realms access</string>
+    <string name="auth_ms_chip">RECOMMENDED</string>
+    <string name="auth_elyby_title">Ely.by Account</string>
+    <string name="auth_elyby_desc">Free skins and capes, no Microsoft needed</string>
+    <string name="auth_elyby_chip">SKINS</string>
+    <string name="auth_offline_title">Offline Account</string>
+    <string name="auth_offline_desc">Play locally — no internet required</string>
+    <string name="auth_offline_chip">LOCAL</string>
+    <string name="auth_offline_note">Offline accounts cannot join online-mode servers</string>
     <string name="notification_terminate">Terminate</string>
     <string name="notification_game_runs">The game is running!</string>
     <string name="folder_dialog_create">Create</string>
