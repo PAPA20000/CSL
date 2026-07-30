@@ -55,6 +55,7 @@ import net.kdt.pojavlaunch.modloaders.modpacks.imagecache.IconCacheJanitor;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.prefs.screens.LauncherPreferenceFragment;
 import net.kdt.pojavlaunch.progresskeeper.ProgressKeeper;
+import net.kdt.pojavlaunch.progresskeeper.ProgressListener;
 import net.kdt.pojavlaunch.progresskeeper.TaskCountListener;
 import net.kdt.pojavlaunch.services.ProgressServiceKeeper;
 import net.kdt.pojavlaunch.tasks.AsyncMinecraftDownloader;
@@ -111,6 +112,28 @@ public class LauncherActivity extends BaseActivity {
     private ModloaderInstallTracker mInstallTracker;
     private NotificationManager mNotificationManager;
     private ClientFeaturesManager mClientFeaturesManager;
+
+    // ── Shortcut boot overlay ("Opening Game…") ─────────────────────────
+    private View mBootOverlay;
+    private android.widget.TextView mBootProfileName;
+    private android.widget.TextView mBootVersionChip;
+    private android.widget.TextView mBootStatus;
+    private android.widget.TextView mBootPercent;
+    private android.widget.ProgressBar mBootBeam;
+    private android.widget.ProgressBar mBootIndeterminate;
+    private View mBootProgressBlock;
+    private boolean mBootActive = false;
+    private boolean mBootSawTasks = false;
+    private final Runnable mBootFailsafe = this::onBootFailsafe;
+    private final Runnable mBootPostTaskHide = () -> hideBootOverlay(false);
+    private final TaskCountListener mBootTaskListener = this::onBootTaskCount;
+    private final ProgressListener mBootProgressListener = new ProgressListener() {
+        @Override public void onProgressStarted() { }
+        @Override public void onProgressUpdated(int progress, int resid, Object... va) {
+            runOnUiThread(() -> onBootProgress(progress, resid));
+        }
+        @Override public void onProgressEnded() { }
+    };
 
     /* Allows to switch from one button "type" to another */
     private final FragmentManager.FragmentLifecycleCallbacks mFragmentCallbackListener = new FragmentManager.FragmentLifecycleCallbacks() {
@@ -225,6 +248,157 @@ public class LauncherActivity extends BaseActivity {
         }
     };
 
+    // ─── Shortcut boot overlay ("Opening Game…") ───────────────────────
+
+    /** True when the intent carries a shortcut instruction for an immediate game launch. */
+    private static boolean isShortcutLaunchRequested(@Nullable Intent intent) {
+        if (intent == null) return false;
+        if (!intent.hasExtra(net.kdt.pojavlaunch.shortcuts.ShortcutActivity.EXTRA_PROFILE_KEY)) return false;
+        String actionId = intent.getStringExtra(net.kdt.pojavlaunch.shortcuts.ShortcutActivity.EXTRA_ACTION);
+        return actionId != null && net.kdt.pojavlaunch.shortcuts.ShortcutType.LAUNCH
+                == net.kdt.pojavlaunch.shortcuts.ShortcutType.fromId(actionId);
+    }
+
+    private void bindBootOverlayViews() {
+        if (mBootOverlay != null) return;
+        mBootOverlay = findViewById(R.id.launch_boot_overlay);
+        if (mBootOverlay == null) return;
+        mBootProfileName = mBootOverlay.findViewById(R.id.sg_profile_name);
+        mBootVersionChip = mBootOverlay.findViewById(R.id.sg_version_chip);
+        mBootStatus = mBootOverlay.findViewById(R.id.sg_status);
+        mBootPercent = mBootOverlay.findViewById(R.id.sg_percent);
+        mBootBeam = mBootOverlay.findViewById(R.id.sg_beam);
+        mBootIndeterminate = mBootOverlay.findViewById(R.id.sg_indeterminate);
+        mBootProgressBlock = mBootOverlay.findViewById(R.id.sg_progress_block);
+    }
+
+    /**
+     * Present the boot overlay instantly — ShortcutActivity already staged the
+     * entrance animation on the identical screen, so we must not replay it.
+     */
+    private void showBootOverlayInstant() {
+        bindBootOverlayViews();
+        if (mBootOverlay == null || mBootActive) return;
+        mBootActive = true;
+        mBootSawTasks = false;
+        mBootOverlay.setAlpha(1f);
+        mBootOverlay.setTranslationY(0f);
+        mBootOverlay.setVisibility(View.VISIBLE);
+        if (mBootIndeterminate != null) mBootIndeterminate.setVisibility(View.VISIBLE);
+        if (mBootProgressBlock != null) {
+            mBootProgressBlock.setVisibility(View.GONE);
+            mBootProgressBlock.setAlpha(1f);
+        }
+        if (mBootStatus != null) mBootStatus.setText(R.string.sg_preparing);
+        if (mBootProfileName != null) mBootProfileName.setText("");
+        if (mBootVersionChip != null) mBootVersionChip.setVisibility(View.GONE);
+        ProgressKeeper.addTaskCountListener(mBootTaskListener);
+        ProgressKeeper.addListener(ProgressLayout.DOWNLOAD_MINECRAFT, mBootProgressListener);
+        ProgressKeeper.addListener(ProgressLayout.UNPACK_RUNTIME, mBootProgressListener);
+        mBootOverlay.removeCallbacks(mBootFailsafe);
+        // If the launch never produces tasks (missing account / bad profile), the
+        // precondition toast must not stay hidden behind the overlay.
+        mBootOverlay.postDelayed(mBootFailsafe, 3400);
+    }
+
+    /** Fill the profile identity once the router has resolved it. */
+    public void showLaunchBoot(@Nullable String profileName, @Nullable String versionId) {
+        runOnUiThread(() -> {
+            if (!mBootActive) showBootOverlayInstant();
+            if (mBootProfileName != null && profileName != null) {
+                mBootProfileName.setText(profileName);
+            }
+            if (mBootVersionChip != null && versionId != null
+                    && !versionId.isEmpty() && !"Unknown".equals(versionId)) {
+                mBootVersionChip.setText(versionId);
+                if (mBootVersionChip.getVisibility() != View.VISIBLE) {
+                    mBootVersionChip.setAlpha(0f);
+                    mBootVersionChip.setVisibility(View.VISIBLE);
+                    mBootVersionChip.animate().alpha(1f).setDuration(220).start();
+                }
+            }
+        });
+    }
+
+    private void onBootTaskCount(int tc) {
+        runOnUiThread(() -> {
+            if (!mBootActive) return;
+            if (tc > 0) {
+                mBootSawTasks = true;
+                if (mBootOverlay != null) {
+                    mBootOverlay.removeCallbacks(mBootFailsafe);
+                    mBootOverlay.removeCallbacks(mBootPostTaskHide);
+                }
+                swapBootShimmerForProgress();
+                if (mBootStatus != null) mBootStatus.setText(R.string.sg_verifying);
+            } else if (mBootSawTasks) {
+                // Tasks drained: MainActivity should cover us within seconds (the
+                // launcher is finished on launch). If that never happens the
+                // download failed — reveal the launcher again.
+                if (mBootStatus != null) mBootStatus.setText(R.string.sg_launching);
+                if (mBootOverlay != null) {
+                    mBootOverlay.removeCallbacks(mBootPostTaskHide);
+                    mBootOverlay.postDelayed(mBootPostTaskHide, 3800);
+                }
+            }
+        });
+    }
+
+    private void onBootProgress(int progress, int resid) {
+        if (!mBootActive) return;
+        if (progress >= 0) {
+            swapBootShimmerForProgress();
+            if (mBootPercent != null) mBootPercent.setText(progress + "%");
+            if (mBootBeam != null) mBootBeam.setProgress(progress);
+        }
+        if (mBootStatus != null) {
+            if (resid == R.string.newdl_downloading_game_files
+                    || resid == R.string.newdl_downloading_game_files_size) {
+                mBootStatus.setText(R.string.sg_downloading_files);
+            } else if (resid == R.string.newdl_downloading_jre_runtime) {
+                mBootStatus.setText(R.string.sg_runtime);
+            } else if (resid == R.string.newdl_starting) {
+                mBootStatus.setText(R.string.sg_preparing);
+            }
+        }
+    }
+
+    private void swapBootShimmerForProgress() {
+        if (mBootIndeterminate != null && mBootIndeterminate.getVisibility() == View.VISIBLE) {
+            mBootIndeterminate.setVisibility(View.GONE);
+            if (mBootProgressBlock != null) {
+                mBootProgressBlock.setAlpha(0f);
+                mBootProgressBlock.setVisibility(View.VISIBLE);
+                mBootProgressBlock.animate().alpha(1f).setDuration(260).start();
+            }
+        }
+    }
+
+    private void onBootFailsafe() {
+        if (mBootActive && !mBootSawTasks) hideBootOverlay(false);
+    }
+
+    private void hideBootOverlay(boolean launching) {
+        if (!mBootActive) return;
+        mBootActive = false;
+        ProgressKeeper.removeTaskCountListener(mBootTaskListener);
+        ProgressKeeper.removeListener(ProgressLayout.DOWNLOAD_MINECRAFT, mBootProgressListener);
+        ProgressKeeper.removeListener(ProgressLayout.UNPACK_RUNTIME, mBootProgressListener);
+        if (!launching) {
+            // The game never started — drop the one-shot log flag as well.
+            net.kdt.pojavlaunch.MainActivity.sAutoShowLogsOnce = false;
+        }
+        if (mBootOverlay != null) {
+            mBootOverlay.removeCallbacks(mBootFailsafe);
+            mBootOverlay.removeCallbacks(mBootPostTaskHide);
+            mBootOverlay.animate().cancel();
+            mBootOverlay.animate().alpha(0f).setDuration(240).withEndAction(() -> {
+                mBootOverlay.setVisibility(View.GONE);
+                mBootOverlay.setAlpha(1f);
+            }).start();
+        }
+    }
+
     private ActivityResultLauncher<String> mRequestNotificationPermissionLauncher;
     private ActivityResultLauncher<String> mRequestMicrophonePermissionLauncher;
     private WeakReference<Runnable> mRequestNotificationPermissionRunnable;
@@ -333,7 +507,12 @@ public class LauncherActivity extends BaseActivity {
 
         ExtraCore.addExtraListener(ExtraConstants.LAUNCH_GAME, mLaunchGameListener);
 
-        new AsyncVersionList().getVersionList(versions -> ExtraCore.setValue(ExtraConstants.RELEASE_TABLE, versions), false);
+        // A shortcut asking for an immediate launch must not trigger work the
+        // game will never need: no version-list refresh, no onboarding dialogs.
+        final boolean shortcutLaunchRequested = isShortcutLaunchRequested(getIntent());
+        if (!shortcutLaunchRequested) {
+            new AsyncVersionList().getVersionList(versions -> ExtraCore.setValue(ExtraConstants.RELEASE_TABLE, versions), false);
+        }
 
         mInstallTracker = new ModloaderInstallTracker(this);
 
@@ -343,9 +522,11 @@ public class LauncherActivity extends BaseActivity {
         mProgressLayout.observe(ProgressLayout.AUTHENTICATE_MICROSOFT);
         mProgressLayout.observe(ProgressLayout.DOWNLOAD_VERSION_LIST);
 
-        // First-launch runtime wizard comes first; the partner welcome
-        // chains after the wizard is finished/skipped so dialogs never stack.
-        if (!maybeShowRuntimeWizard()) {
+        // Shortcut launches stage the identical boot overlay right away so the
+        // home UI never flashes; onboarding dialogs stay out of the way.
+        if (shortcutLaunchRequested) {
+            showBootOverlayInstant();
+        } else if (!maybeShowRuntimeWizard()) {
             // Official partner welcome — shown exactly once, after first launch settles
             maybeShowInfrawireWelcome();
         }
@@ -443,6 +624,11 @@ public class LauncherActivity extends BaseActivity {
         // A shortcut tapped while the launcher is already alive arrives here;
         // swap the stored intent so onResume() sees the fresh extras.
         setIntent(intent);
+        // Warm start: cover the UI with the boot overlay immediately, before
+        // profiles finish loading and the router fills in the details.
+        if (isShortcutLaunchRequested(intent)) {
+            showBootOverlayInstant();
+        }
     }
 
     @Override
@@ -482,6 +668,16 @@ public class LauncherActivity extends BaseActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (mBootOverlay != null) {
+            mBootOverlay.removeCallbacks(mBootFailsafe);
+            mBootOverlay.removeCallbacks(mBootPostTaskHide);
+        }
+        if (mBootActive) {
+            mBootActive = false;
+            ProgressKeeper.removeTaskCountListener(mBootTaskListener);
+            ProgressKeeper.removeListener(ProgressLayout.DOWNLOAD_MINECRAFT, mBootProgressListener);
+            ProgressKeeper.removeListener(ProgressLayout.UNPACK_RUNTIME, mBootProgressListener);
+        }
         mProgressLayout.cleanUpObservers();
         ProgressKeeper.removeTaskCountListener(mProgressLayout);
         ProgressKeeper.removeTaskCountListener(mProgressServiceKeeper);
@@ -495,6 +691,9 @@ public class LauncherActivity extends BaseActivity {
     /** Custom implementation to feel more natural when a backstack isn't present */
     @Override
     public void onBackPressed() {
+        // A game launch is being staged — the boot overlay owns the screen.
+        if (mBootActive) return;
+
         MicrosoftLoginFragment fragment = (MicrosoftLoginFragment) getVisibleFragment(MicrosoftLoginFragment.TAG);
         if(fragment != null){
             if(fragment.canGoBack()){

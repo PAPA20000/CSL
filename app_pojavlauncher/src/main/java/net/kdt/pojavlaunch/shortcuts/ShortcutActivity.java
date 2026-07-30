@@ -79,6 +79,11 @@ public class ShortcutActivity extends Activity {
             }
         }
 
+        // Premium boot interstitial — only real game launches get the visible
+        // "Opening Game…" screen; every other action stays a fast invisible hop.
+        final boolean bootScreen = action == ShortcutType.LAUNCH;
+        if (bootScreen) showBootScreen();
+
         // Profiles live in a JSON file, so loading is off the main thread.
         LauncherProfiles.loadAsync(() -> {
             MinecraftProfile profile = lookupProfile(profileKey);
@@ -102,6 +107,8 @@ public class ShortcutActivity extends Activity {
                     .putString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE, profileKey)
                     .apply();
 
+            if (bootScreen) bindBootProfile(profileKey, profile);
+
             // Opening a folder needs no launcher UI at all.
             if (action == ShortcutType.FOLDER) {
                 if (openGameFolder(profile)) {
@@ -113,6 +120,57 @@ public class ShortcutActivity extends Activity {
 
             openLauncher(profileKey, action);
         });
+    }
+
+    /**
+     * Put the shared boot screen on stage with a short staggered entrance.
+     * LauncherActivity shows the very same layout above its home UI, so the
+     * user never sees a flash between the shortcut and the launch itself.
+     */
+    private void showBootScreen() {
+        setContentView(R.layout.screen_opening_game);
+
+        android.view.View tile = findViewById(R.id.sg_mark_tile);
+        android.view.View eyebrow = findViewById(R.id.sg_eyebrow);
+        android.view.View title = findViewById(R.id.sg_title);
+        android.view.View shimmer = findViewById(R.id.sg_indeterminate);
+
+        animateIn(tile, 0);
+        animateIn(eyebrow, 90);
+        animateIn(title, 170);
+        animateIn(shimmer, 320);
+    }
+
+    private void animateIn(@Nullable android.view.View v, long delayMs) {
+        if (v == null) return;
+        float rise = 16f * getResources().getDisplayMetrics().density;
+        v.setAlpha(0f);
+        v.setTranslationY(rise);
+        v.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setStartDelay(delayMs)
+                .setDuration(430)
+                .setInterpolator(new android.view.animation.DecelerateInterpolator(1.6f))
+                .start();
+    }
+
+    /** Fill the identity of the game being opened once profiles are resolved. */
+    private void bindBootProfile(@NonNull String profileKey, @NonNull MinecraftProfile profile) {
+        android.widget.TextView name = findViewById(R.id.sg_profile_name);
+        android.widget.TextView chip = findViewById(R.id.sg_version_chip);
+
+        if (name != null) {
+            name.setText(profile.name != null && !profile.name.trim().isEmpty()
+                    ? profile.name : profileKey);
+            animateIn(name, 0);
+        }
+        String version = profile.lastVersionId;
+        if (chip != null && version != null && !version.isEmpty() && !"Unknown".equals(version)) {
+            chip.setText(version);
+            chip.setVisibility(android.view.View.VISIBLE);
+            animateIn(chip, 60);
+        }
     }
 
     /**
@@ -155,6 +213,10 @@ public class ShortcutActivity extends Activity {
         }
 
         startActivity(launcherIntent);
+        if (action == ShortcutType.LAUNCH) {
+            // The launcher's identical boot overlay fades in over this screen.
+            overridePendingTransition(android.R.anim.fade_in, 0);
+        }
         finish();
     }
 

@@ -60,11 +60,27 @@ public final class ShortcutRouter {
                 .apply();
 
         switch (action) {
-            case LAUNCH:
+            case LAUNCH: {
+                // Premium boot continuity: ShortcutActivity already showed the
+                // "Opening Game…" screen; the launcher keeps an identical overlay
+                // while its own listener owns download/auth/validation.
+                if (activity instanceof net.kdt.pojavlaunch.LauncherActivity) {
+                    MinecraftProfile profile = null;
+                    if (LauncherProfiles.mainProfileJson != null
+                            && LauncherProfiles.mainProfileJson.profiles != null) {
+                        profile = LauncherProfiles.mainProfileJson.profiles.get(profileKey);
+                    }
+                    // Ask the game activity to open on the launch log screen.
+                    net.kdt.pojavlaunch.MainActivity.sAutoShowLogsOnce = true;
+                    ((net.kdt.pojavlaunch.LauncherActivity) activity).showLaunchBoot(
+                            profile != null && profile.name != null ? profile.name : profileKey,
+                            profile != null ? profile.lastVersionId : null);
+                }
                 // The launcher's own listener owns download/auth/validation, so
                 // just raise the flag it already listens for.
                 ExtraCore.setValue(ExtraConstants.LAUNCH_GAME, true);
                 break;
+            }
 
             case MODS:
                 openMods(activity, profileKey);

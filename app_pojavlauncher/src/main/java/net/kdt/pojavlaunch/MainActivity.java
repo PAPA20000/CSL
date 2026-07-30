@@ -82,6 +82,10 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     public static volatile ClipboardManager GLOBAL_CLIPBOARD;
     public static final String TAG = "MainActivity";
     public static final String INTENT_MINECRAFT_VERSION = "intent_version";
+    /** Extra marking a shortcut-booted launch: open straight onto the launch logs. */
+    public static final String EXTRA_AUTO_SHOW_LOGS = "cs_auto_show_logs";
+    /** One-shot flag armed by the shortcut router for the next game start. */
+    public static volatile boolean sAutoShowLogsOnce = false;
 
     volatile public static boolean isInputStackCall;
 
@@ -209,6 +213,12 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     protected void initLayout(int resId) {
         setContentView(resId);
         bindValues();
+        // Shortcut-booted launches land on the Game Launch Logs screen first;
+        // the normal game start continues right behind it.
+        if (getIntent().getBooleanExtra(EXTRA_AUTO_SHOW_LOGS, false)) {
+            getIntent().removeExtra(EXTRA_AUTO_SHOW_LOGS);
+            loggerView.post(() -> loggerView.setVisibility(View.VISIBLE));
+        }
         mControlLayout.setMenuListener(this);
 
         mDrawerPullButton.setOnClickListener(v -> onClickedMenu());

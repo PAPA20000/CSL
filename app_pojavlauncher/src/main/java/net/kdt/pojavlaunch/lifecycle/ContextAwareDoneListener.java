@@ -28,6 +28,12 @@ public class ContextAwareDoneListener implements AsyncMinecraftDownloader.DoneLi
         Intent mainIntent = new Intent(context, MainActivity.class);
         mainIntent.putExtra(INTENT_MINECRAFT_VERSION, mNormalizedVersionid);
         mainIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        // Shortcut launches asked for the launch-log screen on arrival. The flag
+        // is one-shot and consumed here so manual launches stay unaffected.
+        if (MainActivity.sAutoShowLogsOnce) {
+            MainActivity.sAutoShowLogsOnce = false;
+            mainIntent.putExtra(MainActivity.EXTRA_AUTO_SHOW_LOGS, true);
+        }
         return mainIntent;
     }
 

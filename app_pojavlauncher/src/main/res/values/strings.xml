@@ -274,6 +274,15 @@
     <string name="download_console_paused">PAUSED</string>
     <string name="download_console_stopped">Download stopped</string>
     <string name="download_console_cancelled_clean">Stopped by user</string>
+    <!-- Shortcut boot — premium "Opening Game…" interstitial -->
+    <string name="sg_opening_game">Opening Game…</string>
+    <string name="sg_boot_eyebrow">CS LAUNCHER</string>
+    <string name="sg_resolving_profile">Resolving profile…</string>
+    <string name="sg_preparing">Preparing your game…</string>
+    <string name="sg_verifying">Verifying game files…</string>
+    <string name="sg_downloading_files">Downloading game files…</string>
+    <string name="sg_runtime">Setting up runtime…</string>
+    <string name="sg_launching">All set — launching</string>
     <string name="notification_terminate">Terminate</string>
     <string name="notification_game_runs">The game is running!</string>
     <string name="folder_dialog_create">Create</string>
