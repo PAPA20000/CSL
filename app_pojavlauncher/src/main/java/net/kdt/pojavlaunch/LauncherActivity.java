@@ -352,19 +352,21 @@ public class LauncherActivity extends BaseActivity {
     }
 
     /**
-     * First-launch runtime onboarding wizard (Java 8/17/21/25, multi-select,
-     * recommended picks, skip allowed). Returns true when it will be shown.
+     * First-launch runtime onboarding — dedicated full-screen installer
+     * (Java 8/17/21/25, recommendations, skip, auto-chained downloads).
+     * Returns true when it will be shown.
      */
     private boolean maybeShowRuntimeWizard() {
-        if (net.kdt.pojavlaunch.multirt.RuntimeWizardDialog.wasShown()) return false;
+        if (net.kdt.pojavlaunch.multirt.RuntimeSetupActivity.wasShown()) return false;
         View root = findViewById(android.R.id.content);
         if (root == null) return false;
         root.postDelayed(() -> {
             if (isFinishing() || isDestroyed()) return;
-            if (net.kdt.pojavlaunch.multirt.RuntimeWizardDialog.wasShown()) return;
-            net.kdt.pojavlaunch.multirt.RuntimeWizardDialog.show(
-                    this, () -> maybeShowInfrawireWelcome());
-        }, 1200);
+            if (net.kdt.pojavlaunch.multirt.RuntimeSetupActivity.wasShown()) return;
+            startActivity(new android.content.Intent(this,
+                    net.kdt.pojavlaunch.multirt.RuntimeSetupActivity.class));
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        }, 900);
         return true;
     }
 

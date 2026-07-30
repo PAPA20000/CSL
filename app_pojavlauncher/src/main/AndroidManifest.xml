@@ -42,6 +42,12 @@
             android:name=".MissingStorageActivity"
             android:exported="false" />
 
+        <!-- Full-screen first-launch Java runtime installer -->
+        <activity
+            android:name=".multirt.RuntimeSetupActivity"
+            android:exported="false"
+            android:launchMode="singleTop" />
+
         <meta-data
             android:name="android.max_aspect"
             android:value="ratio_float" />

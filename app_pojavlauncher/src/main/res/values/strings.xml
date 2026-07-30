@@ -635,6 +635,28 @@
     <string name="rw_java21_role">Minecraft 1.20.5 and newer</string>
     <string name="rw_java25_role">Latest JVM — upcoming releases</string>
     <string name="rw_recommended">RECOMMENDED</string>
+
+    <!-- Runtime Setup (full-screen installer) -->
+    <string name="rs_eyebrow">FIRST-LAUNCH SETUP</string>
+    <string name="rs_title">Java Runtimes</string>
+    <string name="rs_summary">Minecraft needs the right Java version to run. Pick the runtimes to install now — recommended ones are pre-selected.</string>
+    <string name="rs_install_cta">Install Selected (%1$d)</string>
+    <string name="rs_continue_cta">Continue</string>
+    <string name="rs_skip">Skip for now</string>
+    <string name="rs_offline_note">You\'re offline — runtime downloads need an internet connection.</string>
+    <string name="rs_install_eyebrow">INSTALLING RUNTIMES</string>
+    <string name="rs_done_cta">Start Playing</string>
+    <string name="rs_step_installing">Installing Java %1$d…</string>
+    <string name="rs_step_done">Setup complete</string>
+    <string name="rs_step_partial">Setup finished with issues</string>
+    <string name="rs_stats_preparing">Contacting download server…</string>
+    <string name="rs_stats_queued">Waiting for earlier runtimes…</string>
+    <string name="rs_stats_ready">Installed and verified</string>
+    <string name="rs_stats_failed">Failed — tap to retry</string>
+    <string name="rs_stats_all_ready">Every selected runtime is ready to use.</string>
+    <string name="rs_stats_partial">Some runtimes failed. Tap a failed card to retry, or finish to continue.</string>
+    <string name="rs_failed_toast">Java %1$d installation failed. Tap the card to retry.</string>
+    <string name="rs_back_locked">Please wait — installation in progress…</string>
     <string name="rw_installed">INSTALLED</string>
     <string name="rw_size_estimate">~%d MB</string>
     <string name="rw_queued">QUEUED</string>

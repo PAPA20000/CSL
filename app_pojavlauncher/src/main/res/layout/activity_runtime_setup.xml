@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ════════════════════════════════════════════════════════════════
+     RUNTIME SETUP — dedicated full-screen first-launch installer.
+     Two states: SELECT (runtime cards) and INSTALL (live deck with
+     aggregate ring + per-runtime progress, MB/speed/ETA stats).
+     Completely separate from the normal download deck.
+═════════════════════════════════════════════════════════════════ -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_runtime_setup_page">
+
+    <!-- ─────────────── STATE 1: SELECTION ─────────────── -->
+    <LinearLayout
+        android:id="@+id/rs_select_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="26dp"
+        android:paddingBottom="18dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:letterSpacing="0.18"
+            android:text="@string/rs_eyebrow"
+            android:textColor="#D8C79A"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/rs_title"
+            android:textColor="#F0F0F3"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/rs_summary"
+            android:textColor="#9C9CA8"
+            android:textSize="12.5sp" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="18dp"
+            android:layout_weight="1"
+            android:overScrollMode="never"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/rs_card_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </ScrollView>
+
+        <TextView
+            android:id="@+id/rs_offline_note"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="@string/rs_offline_note"
+            android:textColor="#E5A0A6"
+            android:textSize="11sp"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <Button
+            android:id="@+id/rs_btn_install"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_install_cta_white"
+            android:letterSpacing="0.08"
+            android:text="@string/rs_install_cta"
+            android:textColor="#0E0E11"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            tools:text="Install Selected (2)" />
+
+        <TextView
+            android:id="@+id/rs_btn_skip"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center"
+            android:paddingHorizontal="20dp"
+            android:text="@string/rs_skip"
+            android:textColor="#7C7C88"
+            android:textSize="12.5sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- ─────────────── STATE 2: INSTALL DECK ─────────────── -->
+    <LinearLayout
+        android:id="@+id/rs_install_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="26dp"
+        android:paddingBottom="18dp"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:letterSpacing="0.18"
+            android:text="@string/rs_install_eyebrow"
+            android:textColor="#D8C79A"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+        <!-- Aggregate ring + status -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:layout_width="104dp"
+                android:layout_height="104dp">
+
+                <net.kdt.pojavlaunch.multirt.RuntimeRingView
+                    android:id="@+id/rs_ring"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <TextView
+                    android:id="@+id/rs_overall_percent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:fontFamily="sans-serif-light"
+                    android:textColor="#F0F0F3"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    tools:text="42%" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/rs_overall_step"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#F0F0F3"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    tools:text="Installing Java 17…" />
+
+                <TextView
+                    android:id="@+id/rs_status_line"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="#9C9CA8"
+                    android:textSize="11.5sp"
+                    tools:text="24.1 / 55 MB • 4.2 MB/s • ~8s left" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="18dp"
+            android:layout_weight="1"
+            android:overScrollMode="never"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/rs_install_rows"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </ScrollView>
+
+        <Button
+            android:id="@+id/rs_btn_done"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_install_cta_white"
+            android:letterSpacing="0.08"
+            android:text="@string/rs_done_cta"
+            android:textColor="#0E0E11"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            tools:visibility="visible" />
+    </LinearLayout>
+
+</FrameLayout>
