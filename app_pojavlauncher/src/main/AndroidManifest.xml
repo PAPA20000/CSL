@@ -52,12 +52,6 @@
             android:name="android.max_aspect"
             android:value="ratio_float" />
 
-        <!-- TEMPORARY (rewarded ad test): AdMob App ID required by the
-             Mobile Ads SDK — remove together with the test button. -->
-        <meta-data
-            android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-1728858169440666~2403751722" />
-
         <activity
             android:name=".TestStorageActivity"
             android:exported="true"

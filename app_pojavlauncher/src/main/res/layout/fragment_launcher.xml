@@ -150,19 +150,6 @@
                 android:drawableStart="@android:drawable/ic_menu_share"
                 android:text="@string/main_share_logs" />
 
-            <!-- ════════════════════════════════════════════════════
-                 TEMPORARY: AdMob rewarded ad TEST button.
-                 REMOVE BEFORE RELEASE — not a permanent home-screen element.
-            ═════════════════════════════════════════════════════ -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/temp_rewarded_ad_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="@dimen/padding_heavy"
-                android:layout_marginTop="@dimen/padding_medium"
-                android:layout_marginBottom="@dimen/padding_large"
-                android:text="Show Rewarded Ad (Test)" />
-
         </LinearLayout>
     </ScrollView>
 
