@@ -7,8 +7,9 @@
     android:id="@+id/edit_layout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingHorizontal="@dimen/padding_moderate"
-    android:paddingVertical="@dimen/padding_moderate"
+    android:paddingHorizontal="18dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="14dp"
     app:layout_optimizationLevel="standard|dimensions|chains">
 
 
@@ -49,7 +50,7 @@
         android:id="@+id/editCommand_textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/_6sdp"
+        android:layout_marginTop="@dimen/_10sdp"
         android:gravity="center"
         android:paddingEnd="5dp"
         android:text="@string/customctrl_command"
@@ -365,7 +366,7 @@
         android:id="@+id/checkboxToggle"
         android:layout_width="match_parent"
         android:layout_height="@dimen/_36sdp"
-        android:layout_marginTop="@dimen/_6sdp"
+        android:layout_marginTop="@dimen/_10sdp"
         android:text="@string/customctrl_toggle"
 
         app:layout_constraintStart_toStartOf="parent"

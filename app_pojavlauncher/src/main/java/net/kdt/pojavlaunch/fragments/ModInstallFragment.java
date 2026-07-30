@@ -247,7 +247,9 @@ public class ModInstallFragment extends Fragment {
 
             final String finalUrl = versionUrl;
 
-            switch (mContentType) {
+            if (mModItem != null && mModItem.isModpack) {
+                mInstallButton.setText("INSTALL PACK");
+            } else switch (mContentType) {
                 case "resourcepack":
                     mInstallButton.setText("DOWNLOAD PACK");
                     break;

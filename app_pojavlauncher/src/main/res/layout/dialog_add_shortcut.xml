@@ -76,7 +76,7 @@
             android:padding="12dp"
             android:background="@drawable/bg_shortcut_warning"
             android:text="@string/shortcut_pin_unsupported"
-            android:textColor="#FFB74D"
+            android:textColor="#D8C79A"
             android:textSize="12sp"
             android:visibility="gone" />
 
