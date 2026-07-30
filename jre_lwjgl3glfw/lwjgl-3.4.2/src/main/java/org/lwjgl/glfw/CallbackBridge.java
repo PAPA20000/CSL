@@ -16,6 +16,11 @@ public class CallbackBridge {
     public static final int EVENT_TYPE_WINDOW_SIZE = 1008;
     
     public static final int ANDROID_TYPE_GRAB_STATE = 0;
+
+    // Notification types
+    public static final int SDL = 0;
+    // Notification actions
+    public static final int INIT = 0;
     
     public static final boolean INPUT_DEBUG_ENABLED;
 
@@ -58,6 +63,7 @@ public class CallbackBridge {
     public static native ByteBuffer nativeCreateGamepadAxisBuffer();
     private static native boolean nativeEnableGamepadDirectInput();
     public static native float nativeGetAndroidDPI();
+    public static native boolean nativeNotifyLauncher(int type, int... action);
     public static void glfwSetCursor(long window, long cursor) {}
 }
 

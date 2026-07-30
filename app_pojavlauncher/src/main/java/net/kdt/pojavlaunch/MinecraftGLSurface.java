@@ -44,8 +44,9 @@ import net.kdt.pojavlaunch.utils.JREUtils;
 import net.kdt.pojavlaunch.utils.MCOptionUtils;
 import net.kdt.pojavlaunch.utils.TouchControllerUtils;
 
+import org.libsdl.app.SDL;
 import org.libsdl.app.SDLActivity;
-import org.libsdl.app.SDLControllerManager;
+import org.libsdl.app.SDLSurface;
 import org.lwjgl.glfw.CallbackBridge;
 
 
@@ -84,6 +85,7 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
     final Object mSurfaceReadyListenerLock = new Object();
     /* View holding the surface, either a SurfaceView or a TextureView */
     View mSurface;
+    Surface mNativeSurface;
     String TAG = "MinecraftGLSurface";
 
     private final InGameEventProcessor mIngameProcessor = new InGameEventProcessor(mSensitivityFactor);
@@ -102,7 +104,6 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
         super(context, attributeSet);
         setFocusable(true);
         CallbackBridge.setDirectGamepadEnableHandler(this);
-        SDLControllerManager.setDirectGamepadEnableHandler(this);
         CallbackBridge.setMinecraftGLSurface(this);
     }
 
@@ -114,6 +115,16 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
     private void setUpPointerCapture(AbstractTouchpad touchpad) {
         if(mPointerCapture != null) mPointerCapture.detach();
         mPointerCapture = new AndroidPointerCapture(touchpad, this);
+    }
+    protected static View.OnGenericMotionListener motionListener = (v, event) -> false;
+    private static void setupSDL(Context ctx, Surface nativeSurface, ViewGroup layout){
+        SDLSurface surface = new SDLSurface(ctx);
+        motionListener = SDLActivity.getMotionListener();
+        // Sets up the Java side, must be done here or else it might run on a non-looper thread
+        // which crashes the SDLCommandHandler
+        org.libsdl.app.SDL.initialize();
+        SDL.setContext((MainActivity) ctx);
+        SDLActivity.externalInitialize(surface, layout, nativeSurface);
     }
 
     /** Initialize the view and all its settings
@@ -132,18 +143,19 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
         if(useSurfaceView){
             SurfaceView surfaceView = new SurfaceView(getContext());
             mSurface = surfaceView;
-
+            mNativeSurface = surfaceView.getHolder().getSurface();
+            setupSDL(getContext(), mNativeSurface, (ViewGroup) getParent());
             surfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
                 private boolean isCalled = isAlreadyRunning;
                 @Override
                 public void surfaceCreated(@NonNull SurfaceHolder holder) {
                     if(isCalled) {
-                        JREUtils.setupBridgeWindow(surfaceView.getHolder().getSurface());
+                        JREUtils.setupBridgeWindow(mNativeSurface);
                         return;
                     }
                     isCalled = true;
 
-                    realStart(surfaceView.getHolder().getSurface());
+                    realStart(mNativeSurface);
                 }
 
                 @Override
@@ -174,14 +186,15 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
                 private boolean isCalled = isAlreadyRunning;
                 @Override
                 public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surface, int width, int height) {
-                    Surface tSurface = new Surface(surface);
+                    mNativeSurface = new Surface(surface);
+                    setupSDL(getContext(), mNativeSurface, (ViewGroup) getParent());
                     if(isCalled) {
-                        JREUtils.setupBridgeWindow(tSurface);
+                        JREUtils.setupBridgeWindow(mNativeSurface);
                         return;
                     }
                     isCalled = true;
 
-                    realStart(tSurface);
+                    realStart(mNativeSurface);
                 }
 
                 @Override
@@ -265,7 +278,7 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
             final MotionEvent copy = MotionEvent.obtain(event);
             PojavApplication.sExecutorService.execute(()->{
                 try {
-                    MainActivity.motionListener.onGenericMotion(this, copy);
+                    motionListener.onGenericMotion(this, copy);
                     copy.recycle();
                 } catch (Throwable ignored) {
                     Log.e(TAG, "SDL failed to send motionevent!");

@@ -28,6 +28,8 @@ jar {
             "lwjgl-openal.jar",
             "lwjgl-stb.jar",
             "lwjgl-tinyfd.jar",
+            "lwjgl-sdl.jar",
+            "lwjgl-spng.jar",
             "lwjgl-shaderc.jar",
             "lwjgl-spvc.jar",
             "lwjgl-vma.jar",

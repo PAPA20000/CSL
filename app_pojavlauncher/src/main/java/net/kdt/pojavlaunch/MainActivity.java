@@ -84,7 +84,6 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     public static final String INTENT_MINECRAFT_VERSION = "intent_version";
 
     volatile public static boolean isInputStackCall;
-    protected static View.OnGenericMotionListener motionListener = (v, event) -> false;
 
     public static TouchCharInput touchCharInput;
     private MinecraftGLSurface minecraftGLView;
@@ -129,14 +128,9 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
                 SDL.setupJNI();
                 SDL.setContext(this);
                 new SDLSurface(this);
-                motionListener = (View.OnGenericMotionListener)
-                        runMethodbyReflection("org.libsdl.app.SDLActivity",
-                                "getMotionListener");
                 if (LauncherPreferences.PREF_GAMEPAD_FORCEDSDL_PASSTHRU) Tools.SDL.initializeControllerSubsystems();
             } catch (UnsatisfiedLinkError ignored) {
                 // Ignore because if SDL.setupJNI(); fails, SDL wasn't loaded.
-            } catch (ReflectiveOperationException e) {
-                Tools.showErrorRemote("SDL did not load properly.", e);
             }
         }
 
@@ -500,6 +494,19 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         try {
             if (Integer.parseInt(assetVersion) <= 12) folder.mkdir();
         } catch (NumberFormatException e) { folder.mkdir(); }
+
+        if (hasMods("sodium"))
+            Logger.appendToLog("WARNING: Sodium is being used. CS Launcher V3 supports it, but if you encounter visual glitches or crashes, report them in our community!");
+        Tools.printLauncherInfo(versionId, Tools.isValidString(minecraftProfile.javaArgs) ? minecraftProfile.javaArgs : LauncherPreferences.PREF_CUSTOM_JAVA_ARGS);
+        if(Tools.LOCAL_RENDERER.equals("opengles_mobileglues")) {
+            try {
+                // MobileGlues needs its config.json freshly written before every launch,
+                // otherwise it runs with defaults that break Sodium chunk rendering.
+                LauncherPreferences.writeMGRendererSettings();
+            } catch (java.io.IOException e) {
+                Log.w("runCraft", "Failed to write MobileGlues renderer settings", e);
+            }
+        }
 
         MinecraftAccount minecraftAccount = PojavProfile.getCurrentProfileContent(this, null);
         JREUtils.redirectAndPrintJRELog();
