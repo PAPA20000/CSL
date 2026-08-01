@@ -150,6 +150,18 @@ public class ModsSearchFragment extends Fragment {
         });
 
         mFilterButton.setOnClickListener(v -> displayFilterDialog());
+
+        // Infrawire Powered Badge in AppBar
+        View poweredBadge = view.findViewById(R.id.infrawire_powered_badge);
+        if (poweredBadge != null) {
+            net.kdt.pojavlaunch.sponsor.InfrawirePartner.applyPressAnimation(poweredBadge);
+            poweredBadge.setOnClickListener(v -> {
+                if (getActivity() != null) {
+                    net.kdt.pojavlaunch.sponsor.InfrawirePartner.openPartnerPage(getActivity());
+                }
+            });
+        }
+
         mSearchEditText.setHint(getString(R.string.browse_search_hint_typed, "mods"));
         updateFilterDot();
 

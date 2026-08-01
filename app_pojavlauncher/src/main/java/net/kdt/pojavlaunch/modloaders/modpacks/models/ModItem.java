@@ -12,6 +12,7 @@ public class ModItem extends ModSource implements Serializable {
     public String downloads;
     public String description;
     public String imageUrl;
+    public String galleryUrl;
     /** True if the mod author blocked third-party distribution (CF allowModDistribution=false) */
     public boolean isRestricted;
     /** Direct website URL for the mod page (used for CF restricted mods) */

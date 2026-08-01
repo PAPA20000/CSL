@@ -148,6 +148,7 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     public class ModItemViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         private final ImageView mIconView;
         private final ImageView mSourceIconView;
+        private final ImageView mBackgroundView;
         private final TextView mTitleView;
         private final TextView mInfoView;
         private final TextView mDownloadsView;
@@ -162,6 +163,7 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             mLikedPrefs = itemView.getContext().getSharedPreferences("liked_mods", Context.MODE_PRIVATE);
             mIconView = itemView.findViewById(R.id.mod_thumbnail_imageview);
             mSourceIconView = itemView.findViewById(R.id.mod_source_imageview);
+            mBackgroundView = itemView.findViewById(R.id.mod_background_image);
             mTitleView = itemView.findViewById(R.id.mod_title_textview);
             mInfoView = itemView.findViewById(R.id.mod_info_textview);
             mDownloadsView = itemView.findViewById(R.id.mod_downloads_text);
@@ -175,7 +177,7 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             mCurrentItem = item;
             mTitleView.setText(item.title);
 
-            // Author line (downloads moved to the dedicated chip)
+            // Author line
             if (item.author != null && !item.author.isEmpty()) {
                 mInfoView.setText("by " + item.author);
                 mInfoView.setVisibility(android.view.View.VISIBLE);
@@ -204,13 +206,34 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             // Source badge
             mSourceIconView.setImageResource(getSourceDrawable(item.apiSource));
 
-            // Icon loading
+            // Background / Icon loading
             mIconView.setImageDrawable(null);
+            if (mBackgroundView != null) {
+                mBackgroundView.setVisibility(View.GONE);
+                if (item.galleryUrl != null && !item.galleryUrl.isEmpty()) {
+                    mIconCache.getImage(
+                            bitmap -> {
+                                if (mCurrentItem == item && bitmap != null) {
+                                    mBackgroundView.setImageBitmap(bitmap);
+                                    mBackgroundView.setVisibility(View.VISIBLE);
+                                    mBackgroundView.setAlpha(0f);
+                                    mBackgroundView.animate().alpha(0.6f).setDuration(300).start();
+                                }
+                            },
+                            item.getIconCacheTag() + "_bg",
+                            item.galleryUrl
+                    );
+                }
+            }
+
             mIconCache.getImage(
                     bitmap -> {
                         if (mCurrentItem == item) {
                             if (bitmap != null) {
                                 mIconView.setImageBitmap(bitmap);
+                                // For now, use blurred icon as background if no gallery
+                                // But following user request, we use gradient by default.
+                                // If we had gallery images, we'd load them here.
                             } else {
                                 mIconView.setImageResource(R.mipmap.ic_launcher_foreground);
                             }
