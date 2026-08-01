@@ -158,8 +158,15 @@ public class EnableClientInstallTask implements Runnable {
      * accepted as a fallback, then any {@code CSCLIENT-*.jar} as a last resort.
      */
     private String resolveCsClientJarUrl() throws IOException, JSONException {
-        String body = DownloadUtils.downloadString(ClientFeature.CS_CLIENT_RELEASE_API);
-        JSONObject release = new JSONObject(body);
+        // Prefer the exact per-version release (v<mod>-<mc>), then fall back to
+        // releases/latest (for a single-version "latest" build).
+        JSONObject release = tryFetchRelease(ClientFeature.csClientReleaseApiFor(mGameVersion));
+        if (release == null) {
+            release = tryFetchRelease(ClientFeature.CS_CLIENT_RELEASE_API);
+        }
+        if (release == null) {
+            throw new IOException("CS CLIENT release could not be fetched");
+        }
         JSONArray assets = release.optJSONArray("assets");
         if (assets == null || assets.length() == 0) {
             throw new IOException("CS CLIENT has no downloadable release asset");
@@ -178,6 +185,22 @@ public class EnableClientInstallTask implements Runnable {
         if (legacy != null) return legacy;
         if (any != null) return any; // last-resort single-version build
         throw new IOException("CS CLIENT release has no jar asset");
+    }
+
+    /**
+     * Returns the release JSON, or null if the endpoint 404s (no such
+     * tag/release). GitHub returns a JSON error object (without "assets") on
+     * a missing tag, so we only accept payloads that actually carry assets.
+     */
+    private JSONObject tryFetchRelease(String url) throws IOException, JSONException {
+        try {
+            String body = DownloadUtils.downloadString(url);
+            if (body == null || body.isEmpty()) return null;
+            JSONObject obj = new JSONObject(body);
+            return obj.has("assets") ? obj : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     // ── Step 3: Profile ─────────────────────────────────────────────────

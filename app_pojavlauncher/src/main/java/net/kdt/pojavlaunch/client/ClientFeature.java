@@ -39,6 +39,14 @@ public final class ClientFeature {
 
     /** Latest CS CLIENT release asset (auto-resolved from the GitHub API at install time). */
     public static final String CS_CLIENT_RELEASE_API = "https://api.github.com/repos/PAPA20000/Mod/releases/latest";
+    /**
+     * Per-version release endpoint. CS CLIENT CI publishes one GitHub release
+     * per Minecraft version tagged {@code v<mod>-<mc>}, so we resolve the exact
+     * version's release (not "latest", which could be a different MC version).
+     */
+    public static String csClientReleaseApiFor(String mcVersion) {
+        return "https://api.github.com/repos/PAPA20000/Mod/releases/tags/v2.3.0-" + mcVersion;
+    }
     /** Modrinth project id of Fabric API. */
     public static final String FABRIC_API_PROJECT_ID = "fabric-api";
 
