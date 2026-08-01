@@ -86,7 +86,7 @@ public class ModrinthApi implements ModpackApi{
                     hit.get("description").getAsString(),
                     hit.get("icon_url").getAsString()
             );
-            if (hit.has("gallery") && hit.get("gallery").isJsonArray()) {
+            if (hit.has("gallery") && !hit.get("gallery").isJsonNull() && hit.get("gallery").isJsonArray()) {
                 JsonArray gallery = hit.getAsJsonArray("gallery");
                 if (gallery.size() > 0) {
                     items[i].galleryUrl = gallery.get(0).getAsString();

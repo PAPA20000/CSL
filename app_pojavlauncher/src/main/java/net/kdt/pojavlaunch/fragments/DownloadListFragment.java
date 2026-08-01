@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Lifecycle;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -107,10 +108,6 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
     @Override
     public void onDestroyView() {
         // Cancel every pending animation / callback before views are torn down.
-        if (mPadAnimator != null) {
-            mPadAnimator.cancel();
-            mPadAnimator = null;
-        }
         if (mLoadingCard != null) mLoadingCard.animate().cancel();
         if (mStatusText != null) mStatusText.animate().cancel();
         if (mProgressBar != null) mProgressBar.animate().cancel();
@@ -122,8 +119,6 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
         mProgressBar = null;
         mLoadingCard = null;
         mStatusText = null;
-        mSponsorBadge = null;
-        mBadgeHidden = false;
         super.onDestroyView();
     }
 

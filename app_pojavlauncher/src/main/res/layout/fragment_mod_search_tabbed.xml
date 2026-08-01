@@ -11,7 +11,7 @@
     android:background="@drawable/bg_browse_page">
 
     <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/mod_store_appbar"
+        android:id="@+id/mod_store_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/bg_browse_header"
