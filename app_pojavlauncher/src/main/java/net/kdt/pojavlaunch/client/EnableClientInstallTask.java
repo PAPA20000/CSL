@@ -151,9 +151,9 @@ public class EnableClientInstallTask implements Runnable {
      *
      * The multi-version build system emits one jar per MC version named
      * {@code CSCLIENT-<mcversion>-<modversion>.jar} (e.g. CSCLIENT-1.21.1-2.3.0.jar,
-     * CSCLIENT-1.26.2-2.3.0.jar). We match the asset name against mGameVersion so
-     * the correct build is installed; a bare {@code CSCLIENT-*.jar} (single-version
-     * legacy) is accepted as a fallback only for 1.21.1.
+     * CSCLIENT-1.21.11-2.3.0.jar). We match the asset name against mGameVersion so
+     * the correct build is installed; a bare {@code CSCLIENT-<mcversion>.jar} is
+     * accepted as a fallback, then any {@code CSCLIENT-*.jar} as a last resort.
      */
     private String resolveCsClientJarUrl() throws IOException, JSONException {
         String body = DownloadUtils.downloadString(ClientFeature.CS_CLIENT_RELEASE_API);
@@ -169,7 +169,7 @@ public class EnableClientInstallTask implements Runnable {
             String name = asset.optString("name", "");
             if (!name.endsWith(".jar")) continue;
             if (any == null) any = asset.getString("browser_download_url");
-            if (name.startsWith("CSCLIENT-1.21.1-") && name.equals(exactTarget)) primary = asset.getString("browser_download_url");
+            if (primary == null && name.startsWith(exactTarget)) primary = asset.getString("browser_download_url");
             if (legacy == null && name.equals("CSCLIENT-" + mGameVersion + ".jar")) legacy = asset.getString("browser_download_url");
         }
         if (primary != null) return primary;

@@ -69,6 +69,38 @@
 
 <br>
 
+## ✨ CS Client — Premium Feature
+
+**CS Client** is the built-in premium client-side ecosystem, enabled in one tap
+from the launcher home (or Settings → **Enable Client Feature**).
+
+### Multi-version automatic install
+The launcher fully manages CS Client for every supported Minecraft version:
+
+| Supported versions | `1.21` · `1.21.1` · `1.21.2` · `1.21.3` · `1.21.4` · `1.21.5` · `1.21.6` · `1.21.7` · `1.21.8` · `1.21.9` · `1.21.10` · `1.21.11` |
+|---|---|
+
+When you press **Enable**, it automatically:
+1. Detects the selected Minecraft version.
+2. Installs the correct **Fabric Loader** profile.
+3. Downloads the matching **Fabric API** (Modrinth).
+4. Downloads the matching **CS Client** jar (`CSCLIENT-<mc>-<mod>.jar`).
+5. Creates a ready-to-launch **"CS CLIENT V1"** profile (icon, banner, JVM args,
+   recommended memory) — no manual setup.
+
+### Unified skin & cape sync
+Launcher ↔ CS Client share one configuration (`config/csclient/csclient.json`
++ the `skins/` / `capes/` folders). Changing a skin or cape in the launcher
+instantly updates the client, and vice-versa — never two separate settings.
+Custom skins/capes require the Client Feature to be enabled.
+
+### In-game
+A small white **CS** mark appears before the local player's nametag, and all
+60+ modules (HUD, zoom, freelook, fullbright, cosmetics, performance) are
+available via the **Right-Shift** menu.
+
+<br>
+
 ## 📥 Download
 
 <div align="center">

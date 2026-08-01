@@ -22,9 +22,6 @@ import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.UiMotion;
 import net.kdt.pojavlaunch.client.ClientFeature;
 import net.kdt.pojavlaunch.client.EnableClientInstallTask;
-import net.kdt.pojavlaunch.modloaders.FabricVersion;
-import net.kdt.pojavlaunch.modloaders.FabriclikeUtils;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -138,19 +135,12 @@ public class EnableClientWizardFragment extends Fragment {
     private void loadVersions() {
         mVersionsLoading.setVisibility(View.VISIBLE);
         mVersionsError.setVisibility(View.GONE);
+        // Use the exact, build-verified version list from ClientFeature so the
+        // wizard only ever offers versions CS CLIENT genuinely has a jar for.
         PojavApplication.sExecutorService.execute(() -> {
             List<String> found = new ArrayList<>();
-            try {
-                FabricVersion[] all = FabriclikeUtils.FABRIC_UTILS.downloadGameVersions();
-                if (all != null) {
-                    for (FabricVersion v : all) {
-                        if (v == null || v.version == null) continue;
-                        String token = v.version.trim();
-                        if (isSupportedRelease(token)) found.add(token);
-                    }
-                }
-            } catch (Exception e) {
-                // fall through to the error state
+            for (String v : ClientFeature.SUPPORTED_MC_VERSIONS) {
+                if (v != null && isSupportedRelease(v)) found.add(v);
             }
             Collections.sort(found, VERSION_DESC);
             List<String> finalFound = found;
@@ -169,13 +159,15 @@ public class EnableClientWizardFragment extends Fragment {
         });
     }
 
-    /** Only stable releases within 1.21 → 1.26.2 (no snapshots / pre-releases). */
+    /**
+     * Only stable releases on the 1.21.x line that CS CLIENT actually builds
+     * (1.21 … 1.21.11). 26.x is a different (unobfuscated / Mojang-mapped)
+     * generation with its own build, so it is not offered here.
+     */
     private static boolean isSupportedRelease(String token) {
-        if (token == null || !token.matches("1\\.\\d+(\\.\\d+)?")) return false;
-        int[] parts = parse(token);
-        int minor = parts[1], patch = parts[2];
-        if (minor < 21 || minor > 26) return false;
-        return minor < 26 || patch <= 2;
+        if (token == null || !token.matches("1\\.21(\\.\\d+)?")) return false;
+        int patch = parse(token)[2];
+        return patch <= 11;
     }
 
     private void onVersionSelected(String version) {
