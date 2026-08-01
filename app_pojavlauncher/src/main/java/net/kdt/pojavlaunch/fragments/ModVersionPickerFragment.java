@@ -27,6 +27,8 @@ import net.kdt.pojavlaunch.modloaders.modpacks.models.ModDetail;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.ModItem;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.Constants;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
+import net.kdt.pojavlaunch.UiMotion;
+import net.kdt.pojavlaunch.utils.ProfileDetection;
 import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
 import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 
@@ -115,6 +117,7 @@ public class ModVersionPickerFragment extends Fragment {
                 requireActivity().getOnBackPressedDispatcher().onBackPressed();
             }
         });
+        UiMotion.pressFeedback(mBackButton, mPrevButton, mNextButton);
 
         mVersionList.setLayoutManager(new LinearLayoutManager(requireContext()));
         mVersionList.addItemDecoration(new net.kdt.pojavlaunch.modloaders.modpacks.SpacesItemDecoration(8));
@@ -129,20 +132,26 @@ public class ModVersionPickerFragment extends Fragment {
         mTargetMcVersion = resolveTargetMcVersion();
         mTargetLoader = resolveTargetLoader();
 
+        // Screens hosted inside a pane (child FragmentManager) skip the global
+        // activity-level reveal, so animate here; activity-level screens are
+        // already revealed by LauncherActivity's lifecycle callback.
+        if (getParentFragment() != null) UiMotion.revealScreen(view);
         loadVersions();
     }
 
-    /** Extracts the plain MC version (e.g. "1.20.1") from the selected profile. */
+    /**
+     * Resolves the plain MC version of the selected profile. Prefers the version
+     * JSON inheritsFrom chain (authoritative) and falls back to a correct
+     * extraction from the version id — the loader version must never be picked
+     * (e.g. "fabric-loader-0.19.3-1.21.10" must resolve to "1.21.10").
+     */
     @Nullable
     private String resolveTargetMcVersion() {
         try {
             MinecraftProfile profile = getSelectedProfile();
-            String vid = profile != null ? profile.lastVersionId : null;
-            if (vid == null) return null;
-            // Handles raw ("1.20.1") and loader-suffixed ("fabric-loader-0.15.7-1.20.1") ids
-            java.util.regex.Matcher m = java.util.regex.Pattern
-                    .compile("(\\d+\\.\\d+(?:\\.\\d+)?)").matcher(vid);
-            return m.find() ? m.group(1) : null;
+            if (profile == null) return null;
+            String mc = ProfileDetection.getMcVersion(profile);
+            return (mc == null || mc.isEmpty()) ? null : mc;
         } catch (Exception e) {
             return null;
         }
@@ -153,14 +162,24 @@ public class ModVersionPickerFragment extends Fragment {
     private String resolveTargetLoader() {
         try {
             MinecraftProfile profile = getSelectedProfile();
-            String vid = profile != null && profile.lastVersionId != null
+            if (profile == null) return null;
+            // Fast path: the version id usually names the loader directly.
+            String vid = profile.lastVersionId != null
                     ? profile.lastVersionId.toLowerCase(java.util.Locale.US) : null;
-            if (vid == null) return null;
-            if (vid.contains("neoforge")) return "neoforge";
-            if (vid.contains("fabric")) return "fabric";
-            if (vid.contains("quilt")) return "quilt";
-            if (vid.contains("forge")) return "forge"; // plain forge AFTER neoforge
-            if (vid.contains("liteloader")) return "liteloader";
+            if (vid != null) {
+                if (vid.contains("neoforge")) return "neoforge";
+                if (vid.contains("fabric")) return "fabric";
+                if (vid.contains("quilt")) return "quilt";
+                if (vid.contains("forge")) return "forge";
+                if (vid.contains("liteloader")) return "liteloader";
+            }
+            // Deeper fallback: version JSON chain or installed mods folder —
+            // catches loaders whose id does not carry the loader name.
+            if (ProfileDetection.hasLoader(profile, "neoforge")) return "neoforge";
+            if (ProfileDetection.hasLoader(profile, "fabric")) return "fabric";
+            if (ProfileDetection.hasLoader(profile, "quilt")) return "quilt";
+            if (ProfileDetection.hasLoader(profile, "forge")) return "forge";
+            if (ProfileDetection.hasLoader(profile, "liteloader")) return "liteloader";
             return null; // vanilla / optifine / unknown → loader check not applicable
         } catch (Exception e) {
             return null;
@@ -181,24 +200,19 @@ public class ModVersionPickerFragment extends Fragment {
         }
     }
 
-    /** Same MC release line? ("1.21" ≡ "1.21.1" family; "1.21.1" ≡ "1.21" family). */
-    private static boolean sameMcFamily(String a, String b) {
-        if (a == null || b == null) return false;
-        if (a.equals(b)) return true;
-        return a.startsWith(b + ".") || b.startsWith(a + ".");
-    }
-
     private boolean mcMatches(VersionEntry entry) {
         if (mTargetMcVersion == null) return true; // nothing to judge → treat as OK
+        String target = mTargetMcVersion.trim();
         if (entry.mcList != null) {
             for (String v : entry.mcList) {
-                if (v != null && sameMcFamily(v.trim(), mTargetMcVersion)) return true;
+                if (v != null && ProfileDetection.isVersionCompatible(target, v.trim())) return true;
             }
         }
-        // Never rely on the single display value alone, but DO accept it as evidence
+        // Fallback evidence for sources that only carry a display value
+        // (e.g. CurseForge); Modrinth always fills the full mcList above.
         if (entry.mcVersion != null) {
             for (String token : entry.mcVersion.split(",")) {
-                if (sameMcFamily(token.trim(), mTargetMcVersion)) return true;
+                if (ProfileDetection.isVersionCompatible(target, token.trim())) return true;
             }
         }
         return false;
@@ -347,7 +361,14 @@ public class ModVersionPickerFragment extends Fragment {
         mPrevButton.setEnabled(page > 0);
         mNextButton.setEnabled(page < mTotalPages - 1);
 
-        // Fade + translate animation on page change
+        // Staggered item entrance + soft page fade on every page change
+        if (mVersionList != null && isAdded()) {
+            android.view.animation.LayoutAnimationController controller =
+                    android.view.animation.AnimationUtils.loadLayoutAnimation(
+                            requireContext(), R.anim.list_item_enter);
+            mVersionList.setLayoutAnimation(controller);
+            mVersionList.scheduleLayoutAnimation();
+        }
         mVersionList.setAlpha(0.6f);
         mVersionList.setTranslationY(30f);
         mVersionList.animate()

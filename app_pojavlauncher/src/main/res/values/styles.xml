@@ -33,6 +33,12 @@
         <item name="colorAccent">#E4E4EA</item>
     </style>
 
+    <!-- ── Dialogs ─────────────────────────────────────────── -->
+    <style name="DialogFadeScale" parent="@android:style/Animation.Dialog">
+        <item name="android:windowEnterAnimation">@anim/fade_scale_in</item>
+        <item name="android:windowExitAnimation">@anim/fade_scale_out</item>
+    </style>
+
     <!-- ── Midnight Blue ────────────────────────────────────── -->
     <style name="AppTheme.MidnightBlue">
         <item name="android:statusBarColor">#121212</item>

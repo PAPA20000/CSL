@@ -529,6 +529,12 @@ public class ModDetailFragment extends Fragment {
         if (mModDetail.mcVersionNames != null && mModDetail.mcVersionNames.length > versionIndex) {
             modMcVer = mModDetail.mcVersionNames[versionIndex];
         }
+        // FULL list of supported MC versions for this exact version row —
+        // the compat scan must use this, never the single display value.
+        String[] supportedVersions = null;
+        if (mModDetail.mcVersionLists != null && mModDetail.mcVersionLists.length > versionIndex) {
+            supportedVersions = mModDetail.mcVersionLists[versionIndex];
+        }
 
         LauncherProfiles.load();
         java.util.Map<String, MinecraftProfile> profiles = LauncherProfiles.mainProfileJson.profiles;
@@ -582,9 +588,19 @@ public class ModDetailFragment extends Fragment {
 
                 // Check version compatibility
                 boolean versionCompatible = true;
-                if (modMcVer != null && !modMcVer.isEmpty()) {
-                    String pmcVer = net.kdt.pojavlaunch.utils.ProfileDetection.getMcVersion(p);
-                    versionCompatible = net.kdt.pojavlaunch.utils.ProfileDetection.isVersionCompatible(pmcVer, modMcVer);
+                String pmcVer = net.kdt.pojavlaunch.utils.ProfileDetection.getMcVersion(p);
+                if (supportedVersions != null && supportedVersions.length > 0) {
+                    versionCompatible = false;
+                    for (String supported : supportedVersions) {
+                        if (supported != null && net.kdt.pojavlaunch.utils.ProfileDetection
+                                .isVersionCompatible(pmcVer, supported.trim())) {
+                            versionCompatible = true;
+                            break;
+                        }
+                    }
+                } else if (modMcVer != null && !modMcVer.isEmpty()) {
+                    versionCompatible = net.kdt.pojavlaunch.utils.ProfileDetection
+                            .isVersionCompatible(pmcVer, modMcVer);
                 }
 
                 boolean isCompatible = loaderCompatible && versionCompatible;

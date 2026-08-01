@@ -1,8 +1,14 @@
 package net.kdt.pojavlaunch;
 
 import android.animation.TimeInterpolator;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
+import android.view.animation.OvershootInterpolator;
+import android.view.animation.AnimationUtils;
+import android.view.animation.LayoutAnimationController;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Small, dependency-free motion system used by launcher screens.
@@ -14,6 +20,7 @@ import android.view.animation.DecelerateInterpolator;
 public final class UiMotion {
     private static final long ENTER_DURATION = 300L;
     private static final TimeInterpolator ENTER = new DecelerateInterpolator(1.7f);
+    private static final TimeInterpolator PRESS_OUT = new OvershootInterpolator(1.6f);
 
     private UiMotion() { }
 
@@ -85,6 +92,54 @@ public final class UiMotion {
             chrome.animate().alpha(1f).translationY(0f)
                     .setDuration(280L).setInterpolator(ENTER).start();
         });
+    }
+
+    /**
+     * Tactile press feedback for touch targets: quick scale-down on touch down,
+     * springy settle on release. Returns false from the listener so the view's
+     * own click handling keeps working.
+     */
+    public static void pressFeedback(View... views) {
+        for (View view : views) {
+            if (view == null) continue;
+            view.setOnTouchListener((v, event) -> {
+                switch (event.getActionMasked()) {
+                    case MotionEvent.ACTION_DOWN:
+                        v.animate().cancel();
+                        v.animate().scaleX(0.92f).scaleY(0.92f)
+                                .setDuration(70L).setInterpolator(ENTER).start();
+                        break;
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        v.animate().scaleX(1f).scaleY(1f)
+                                .setDuration(150L).setInterpolator(PRESS_OUT).start();
+                        break;
+                }
+                return false;
+            });
+        }
+    }
+
+    /** Soft drop-in for a single element (dialog content, chips, banners...). */
+    public static void fadeInDown(View view, long startDelay) {
+        if (view == null || view.getWindowToken() == null) return;
+        view.animate().cancel();
+        view.setAlpha(0f);
+        view.setTranslationY(-dp(view, 10));
+        view.animate().alpha(1f).translationY(0f)
+                .setStartDelay(startDelay)
+                .setDuration(280L)
+                .setInterpolator(ENTER)
+                .start();
+    }
+
+    /** Staggered child entrance for RecyclerViews (layout animation). */
+    public static void revealList(RecyclerView list) {
+        if (list == null || list.getContext() == null) return;
+        LayoutAnimationController controller = AnimationUtils.loadLayoutAnimation(
+                list.getContext(), R.anim.list_item_enter);
+        list.setLayoutAnimation(controller);
+        list.scheduleLayoutAnimation();
     }
 
     private static float dp(View view, float value) {

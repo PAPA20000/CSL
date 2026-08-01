@@ -10,9 +10,13 @@ import java.util.regex.Pattern;
 
 public class ProfileDetection {
 
-    /** Regex to match a Minecraft version number like 1.21, 1.21.10, 1.20.6 */
+    /** Regex to match a Minecraft release version token like 1.21, 1.21.10, 1.20.6, 1.21.4-pre1. */
     private static final Pattern MC_VERSION_PATTERN =
-            Pattern.compile("(1\\.[0-9]+(?:\\.[0-9]+)?)");
+            Pattern.compile("1\\.[0-9]+(?:\\.[0-9]+)?(?:-(?:pre|rc)[0-9]+)?");
+
+    /** Regex to match snapshot version ids like 24w14a / 25w06a / 24w14potato. */
+    private static final Pattern SNAPSHOT_PATTERN =
+            Pattern.compile("(\\d{2}w\\d{2}[a-z]*)");
 
     /** Loader-related keywords used to determine if a version is a loader version */
     private static final Pattern LOADER_PATTERN =
@@ -56,13 +60,35 @@ public class ProfileDetection {
     public static String extractMcFromVersionId(String versionId) {
         if (versionId == null || versionId.isEmpty()) return "";
 
-        // Try to find the LAST occurrence of a version number (loaders append MC version at the end)
-        Matcher matcher = MC_VERSION_PATTERN.matcher(versionId);
+        // Token-based: split on dash/underscore/space and keep the LAST token
+        // that is a pure MC version. Loaders append the MC version at the end
+        // ("fabric-loader-0.19.3-1.21.10"), and this avoids false matches like
+        // the "1.0" hidden inside a Forge build number ("forge-1.20.1-47.1.0").
+        String[] tokens = versionId.split("[-_ ]+");
         String lastMatch = "";
-        while (matcher.find()) {
-            lastMatch = matcher.group(1);
+        String prev = "";
+        for (String token : tokens) {
+            if (token.isEmpty()) continue;
+            // Re-attach pre/rc suffixes ("pre1", "rc2") to the version token
+            // before them so "1.21.4-pre1" is extracted whole.
+            if (isPreReleaseSuffix(token) && MC_VERSION_PATTERN.matcher(prev).matches()) {
+                token = prev + "-" + token;
+            }
+            if (MC_VERSION_PATTERN.matcher(token).matches()) {
+                lastMatch = token;
+            } else if (SNAPSHOT_PATTERN.matcher(token).matches()) {
+                lastMatch = token;
+            }
+            prev = token;
         }
         return lastMatch;
+    }
+
+    private static boolean isPreReleaseSuffix(String token) {
+        if (token.startsWith("pre") && token.length() > 3 && token.substring(3).matches("[0-9]+")) {
+            return true;
+        }
+        return token.startsWith("rc") && token.length() > 2 && token.substring(2).matches("[0-9]+");
     }
 
     /**
@@ -132,23 +158,7 @@ public class ProfileDetection {
         pmcVer = pmcVer.trim().toLowerCase();
         modMcVer = modMcVer.trim().toLowerCase();
         if (pmcVer.isEmpty() || modMcVer.isEmpty()) return false;
-        
-        // Exact match
-        if (pmcVer.equals(modMcVer)) return true;
-        
-        // Contains match (either way) - handles cases like "1.21" matching "1.21.10"
-        if (pmcVer.contains(modMcVer) || modMcVer.contains(pmcVer)) return true;
-        
-        // Handle wildcards or minor versions: e.g. "1.21.x" or "1.21"
-        String normP = pmcVer.replaceAll("[x*]", "");
-        String normM = modMcVer.replaceAll("[x*]", "");
-        if (normP.endsWith(".")) normP = normP.substring(0, normP.length() - 1);
-        if (normM.endsWith(".")) normM = normM.substring(0, normM.length() - 1);
-        
-        if (!normP.isEmpty() && !normM.isEmpty()) {
-            if (normP.startsWith(normM) || normM.startsWith(normP)) return true;
-        }
-        
+
         // Handle version ranges like ">=1.21" or "1.21-1.22"
         if (modMcVer.startsWith(">=") || modMcVer.startsWith("<=") || modMcVer.startsWith(">") || modMcVer.startsWith("<")) {
             return isVersionInRange(pmcVer, modMcVer);
@@ -159,8 +169,56 @@ public class ProfileDetection {
                 return isVersionInRange(pmcVer, parts[0], parts[1]);
             }
         }
-        
+
+        // Exact or numerically-equal ("1.21" == "1.21.0")
+        if (versionsEqual(pmcVer, modMcVer)) return true;
+
+        // Same release line at a patch boundary: a base tag ("1.21") covers its
+        // numeric patches ("1.21.1"), but never a later minor ("1.21.10").
+        if (sameReleaseFamily(pmcVer, modMcVer)) return true;
+
         return false;
+    }
+
+    /** Numeric equality with zero-padding ("1.21" ≡ "1.21.0", "1.20" ≡ "1.20.1"? No). */
+    private static boolean versionsEqual(String a, String b) {
+        if (a.equals(b)) return true;
+        String[] pa = a.split("\\.");
+        String[] pb = b.split("\\.");
+        int len = Math.max(pa.length, pb.length);
+        for (int i = 0; i < len; i++) {
+            int na = i < pa.length ? parseNum(pa[i]) : 0;
+            int nb = i < pb.length ? parseNum(pb[i]) : 0;
+            // Non-numeric tokens (snapshots/pre-releases) are only equal when
+            // the whole string already matched above.
+            if (na != nb || na < 0 || nb < 0) return false;
+        }
+        return true;
+    }
+
+    /**
+     * Release-line family check at a strict patch boundary:
+     * "1.21" covers "1.21.1", "1.20.1" covers "1.20.6", but "1.21.1" never covers
+     * "1.21.10" and "1.21" never covers "1.22".
+     */
+    private static boolean sameReleaseFamily(String profile, String mod) {
+        if (profile.equals(mod)) return true;
+        String longer, shorter;
+        if (profile.startsWith(mod + ".")) {
+            longer = profile;
+            shorter = mod;
+        } else if (mod.startsWith(profile + ".")) {
+            longer = mod;
+            shorter = profile;
+        } else {
+            return false;
+        }
+        String rest = longer.substring(shorter.length() + 1);
+        return !rest.isEmpty() && rest.matches("[0-9]+");
+    }
+
+    private static int parseNum(String token) {
+        try { return Integer.parseInt(token); } catch (Exception e) { return -1; }
     }
 
     private static boolean isVersionInRange(String version, String rangeExpr) {

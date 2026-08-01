@@ -30,6 +30,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.UiMotion;
 import net.kdt.pojavlaunch.modloaders.modpacks.api.ModrinthApi;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.ModDetail;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.ModItem;
@@ -108,6 +109,7 @@ public class ModsSearchFragment extends Fragment {
                 Tools.removeCurrentFragment(requireActivity());
             }
         });
+        UiMotion.pressFeedback(backButton, mFilterButton);
 
         setupTabs();
 
@@ -411,6 +413,9 @@ public class ModsSearchFragment extends Fragment {
         });
 
         dialog.show();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setWindowAnimations(R.style.DialogFadeScale);
+        }
     }
 
     /** Silver dot on the filter button while any filter is active. */
