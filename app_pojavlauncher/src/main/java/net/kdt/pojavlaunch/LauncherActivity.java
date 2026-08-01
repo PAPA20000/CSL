@@ -873,27 +873,6 @@ public class LauncherActivity extends BaseActivity {
         }
     }
 
-    private void startPremiumButtonPulse(View btn) {
-        if (btn == null) return;
-        android.view.animation.Animation pulse = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.pulse_animation);
-        btn.startAnimation(pulse);
-        btn.setOnTouchListener((v, event) -> {
-            switch (event.getAction()) {
-                case android.view.MotionEvent.ACTION_DOWN:
-                    v.clearAnimation();
-                    v.animate().scaleX(0.92f).scaleY(0.92f).setDuration(80).start();
-                    break;
-                case android.view.MotionEvent.ACTION_UP:
-                case android.view.MotionEvent.ACTION_CANCEL:
-                    v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(120).withEndAction(() -> {
-                        v.startAnimation(pulse);
-                    }).start();
-                    break;
-            }
-            return false;
-        });
-    }
-
     private void bindViews(){
         mFragmentView = findViewById(R.id.container_fragment);
         mSettingsButton = findViewById(R.id.setting_button);

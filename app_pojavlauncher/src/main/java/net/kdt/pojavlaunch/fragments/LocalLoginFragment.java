@@ -9,6 +9,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -22,6 +23,7 @@ import net.kdt.pojavlaunch.utils.SkinFetchUtils;
 import net.kdt.pojavlaunch.PojavApplication;
 
 import java.io.File;
+import java.net.URL;
 import android.text.Editable;
 import android.text.TextWatcher;
 import java.util.regex.Matcher;
