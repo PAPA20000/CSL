@@ -33,7 +33,9 @@ import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.LauncherActivity;
 import net.kdt.pojavlaunch.PojavApplication;
+import net.kdt.pojavlaunch.client.ClientFeature;
 import net.kdt.pojavlaunch.utils.SkinFetchUtils;
+import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 import net.kdt.pojavlaunch.value.MinecraftAccount;
 import net.kdt.pojavlaunch.yggdrasil.SkinAnalyzer;
 import net.kdt.pojavlaunch.yggdrasil.SkinModelType;
@@ -44,6 +46,8 @@ import net.kdt.pojavlaunch.yggdrasil.LocalYggdrasilServer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -106,6 +110,15 @@ public class SkinManagerFragment extends Fragment {
             return;
         }
 
+        // Unified skin/cape system is driven by CS CLIENT — gate the old
+        // launcher skin service behind the Client Feature.
+        if (!ClientFeature.isEnabled(requireContext())) {
+            Tools.dialog(requireContext(), "CS CLIENT required",
+                    "Please enable Client Feature to use custom skins and capes.");
+            getParentFragmentManager().popBackStack();
+            return;
+        }
+
         mSkinPreviewSurface = view.findViewById(R.id.skin_preview_surface);
         mTvSkinPath = view.findViewById(R.id.tv_skin_path);
         mTvCapePath = view.findViewById(R.id.tv_cape_path);
@@ -143,6 +156,7 @@ public class SkinManagerFragment extends Fragment {
 
         updatePathText(mTvSkinPath, mPendingSkinUri, "No custom skin selected");
         updatePathText(mTvCapePath, mPendingCapeUri, "No custom cape selected");
+        syncSelectionsFromClient();
         updateAccountInfo();
 
         view.findViewById(R.id.btn_change_skin).setOnClickListener(v -> openFilePicker(REQUEST_CODE_SKIN));
@@ -240,6 +254,9 @@ public class SkinManagerFragment extends Fragment {
             } else if (!hasCustomTextures && LocalYggdrasilServer.getPort() > 0) {
                 LocalYggdrasilServer.stop();
             }
+            syncToClient(
+                    finalSkin != null ? new File(Tools.DIR_DATA + "/skins/" + acc.username + "_skin.png") : null,
+                    finalCape != null ? new File(Tools.DIR_DATA + "/capes/" + acc.username + "_cape.png") : null);
             acc.clearFaceCache();
             Toast.makeText(requireContext(), "Skin setup saved successfully!", Toast.LENGTH_SHORT).show();
             updateAccountInfo();
@@ -251,6 +268,78 @@ public class SkinManagerFragment extends Fragment {
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(requireContext(), "Failed to save: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    /**
+     * Reads the selections CS CLIENT currently uses and mirrors them into the
+     * launcher UI, so launcher ↔ client never drift apart.
+     */
+    private void syncSelectionsFromClient() {
+        try {
+            MinecraftProfile profile = ClientFeature.resolveClientProfile(requireContext());
+            if (profile == null) return;
+            File gameDir = Tools.getGameDirPath(profile);
+            if (gameDir == null) return;
+
+            String skinSel = ClientFeature.getSkinSelection(gameDir);
+            if (skinSel != null) {
+                File f = new File(ClientFeature.skinFolder(gameDir), skinSel);
+                if (f.isFile()) {
+                    mPendingSkinUri = Uri.fromFile(f).toString();
+                    updatePathText(mTvSkinPath, mPendingSkinUri, "No custom skin selected");
+                }
+            }
+            String capeSel = ClientFeature.getCapeSelection(gameDir);
+            if (capeSel != null) {
+                File f = new File(ClientFeature.capeFolder(gameDir), capeSel);
+                if (f.isFile()) {
+                    mPendingCapeUri = Uri.fromFile(f).toString();
+                    updatePathText(mTvCapePath, mPendingCapeUri, "No custom cape selected");
+                }
+            }
+            updatePreview();
+        } catch (Exception e) {
+            Log.w("SkinManager", "Failed to sync selections from client", e);
+        }
+    }
+
+    /** Pushes the saved skin/cape into the CS CLIENT shared folders + config. */
+    private void syncToClient(File skinFile, File capeFile) {
+        try {
+            MinecraftProfile profile = ClientFeature.resolveClientProfile(requireContext());
+            if (profile == null) return;
+            File gameDir = Tools.getGameDirPath(profile);
+            if (gameDir == null) return;
+
+            String skinName = null, capeName = null;
+            if (skinFile != null && skinFile.isFile()) {
+                File dir = ClientFeature.skinFolder(gameDir);
+                dir.mkdirs();
+                File dest = new File(dir, skinFile.getName());
+                copyFile(skinFile, dest);
+                skinName = dest.getName();
+            }
+            if (capeFile != null && capeFile.isFile()) {
+                File dir = ClientFeature.capeFolder(gameDir);
+                dir.mkdirs();
+                File dest = new File(dir, capeFile.getName());
+                copyFile(capeFile, dest);
+                capeName = dest.getName();
+            }
+            ClientFeature.applySkinCape(gameDir, skinName, capeName, "wide");
+            Toast.makeText(requireContext(), "Synced with CS CLIENT", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Log.w("SkinManager", "Failed to sync skin/cape to client", e);
+        }
+    }
+
+    private static void copyFile(File src, File dst) throws java.io.IOException {
+        try (FileInputStream in = new FileInputStream(src);
+             FileOutputStream out = new FileOutputStream(dst)) {
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = in.read(buffer)) != -1) out.write(buffer, 0, read);
         }
     }
 

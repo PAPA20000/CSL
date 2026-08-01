@@ -123,10 +123,13 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
 
         holder.tvName.setText(profile.name != null ? profile.name : "");
 
-        // Exact Loader/Version
-        String version = profile.lastVersionId != null ? profile.lastVersionId : "";
-        if (version.length() > 20) {
-            version = version.substring(0, 20) + "...";
+        // Clean MC version badge (loader ids are long and noisy)
+        String version = net.kdt.pojavlaunch.utils.ProfileDetection.getMcVersion(profile);
+        if (version == null || version.isEmpty()) {
+            version = profile.lastVersionId != null ? profile.lastVersionId : "";
+        }
+        if (version.length() > 12) {
+            version = version.substring(0, 12) + "...";
         }
         holder.tvVersion.setText(version);
 

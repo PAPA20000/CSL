@@ -1,97 +1,98 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="0dp">
+    android:orientation="vertical"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="8dp">
 
     <androidx.cardview.widget.CardView
-        android:id="@+id/card_fastclient_section"
-        android:layout_width="0dp"
+        android:id="@+id/card_enable_client_feature"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:cardBackgroundColor="#0B1320"
-        app:cardCornerRadius="14dp"
+        app:cardCornerRadius="20dp"
         app:cardElevation="4dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?android:attr/selectableItemBackground">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/bg_settings_row">
+            android:orientation="vertical">
 
-            <!-- Main Row -->
+            <!-- Header row -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/_56sdp"
-                android:orientation="horizontal"
+                android:layout_height="wrap_content"
                 android:gravity="center_vertical"
-                android:paddingStart="@dimen/_14sdp"
-                android:paddingEnd="@dimen/_12sdp">
+                android:orientation="horizontal"
+                android:padding="16dp">
 
                 <ImageView
                     android:id="@+id/iv_fastclient_icon"
-                    android:layout_width="@dimen/_28sdp"
-                    android:layout_height="@dimen/_28sdp"
-                    android:src="@drawable/ic_menu_settings"
-                    app:tint="#C9CBD6"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_icon_badge_neon"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_cs_logo_placeholder"
                     android:scaleType="fitCenter"
-                    android:contentDescription="FastClient" />
+                    android:contentDescription="CS Client" />
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:layout_marginStart="@dimen/_12sdp">
+                    android:layout_marginStart="14dp"
+                    android:orientation="vertical">
 
                     <TextView
                         android:id="@+id/tv_fastclient_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="FastClient Optimization"
+                        android:text="Enable Client Feature"
                         android:textColor="#F0F0F3"
-                        android:textSize="@dimen/_14ssp"
+                        android:textSize="15sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tv_fastclient_subtitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Enable fast client acceleration"
+                        android:text="CS CLIENT — premium mod, skins &amp; capes"
                         android:textColor="#9C9CA8"
-                        android:textSize="@dimen/_11ssp"
+                        android:textSize="11.5sp"
                         android:layout_marginTop="2dp" />
-
                 </LinearLayout>
 
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/switch_fastclient"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checked="false"
-                    app:thumbTint="#C9CBD6"
-                    app:trackTint="#162E4A" />
-
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_chevron_right"
+                    android:contentDescription="Open" />
             </LinearLayout>
 
-            <!-- Active version info (gone by default) -->
+            <!-- Status pill (gone by default) -->
             <TextView
                 android:id="@+id/tv_fastclient_version_info"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="⚡ FastClient v1.6.2 — Active"
-                android:textColor="#C9CBD6"
-                android:textSize="@dimen/_11ssp"
+                android:background="@drawable/bg_green_pill"
+                android:gravity="center"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="7dp"
+                android:text="CS CLIENT enabled"
+                android:textColor="#9FD6AC"
+                android:textSize="11sp"
                 android:textStyle="bold"
-                android:paddingStart="@dimen/_54sdp"
-                android:paddingBottom="@dimen/_10sdp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="14dp"
                 android:visibility="gone" />
 
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Wizard MC version row -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="4dp"
+    android:layout_marginVertical="3dp"
+    android:background="@drawable/bg_active_glass_card"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="14dp">
+
+    <TextView
+        android:id="@+id/client_ver_label"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textColor="#F0F0F3"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        tools:text="1.21.1" />
+
+    <TextView
+        android:id="@+id/client_ver_badge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_badge_pill"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="3dp"
+        android:text="FABRIC"
+        android:textColor="@color/premium_cyan"
+        android:textSize="9sp"
+        android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/client_ver_check"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="12dp"
+        android:contentDescription="Selected"
+        android:src="@drawable/ic_check"
+        android:visibility="gone" />
+
+</LinearLayout>

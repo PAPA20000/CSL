@@ -6,8 +6,8 @@
     android:paddingTop="16dp"
     android:paddingBottom="8dp"
     android:paddingStart="4dp"
-    android:textColor="#C9CBD6"
-    android:textSize="12sp"
+    android:textColor="@color/premium_cyan"
+    android:textSize="11sp"
     android:textStyle="bold"
     android:textAllCaps="true"
-    android:letterSpacing="0.1" />
+    android:letterSpacing="0.16" />
