@@ -141,7 +141,7 @@ public class LauncherProfiles {
 
         // Helper: check if a version ID looks like a loader version (not a raw MC version)
         java.util.regex.Pattern loaderPattern = java.util.regex.Pattern.compile(
-                "(?i)(fabric|forge|neoforge|quilt|optifine|optix|liteloader)");
+                "(?i)(fabric|forge|neoforge|quilt|optifine|liteloader)");
 
         // 1. Scan versions directory
         File versionsDir = new File(Tools.DIR_GAME_NEW, "versions");
@@ -214,10 +214,6 @@ public class LauncherProfiles {
                             profile.name = "Minecraft " + mcVer + " (OptiFine)";
                             profile.icon = "OptiFine";
                             profile.type = "custom";
-                        } else if (lower.contains("optix")) {
-                            profile.name = "Minecraft " + mcVer + " (Optix)";
-                            profile.icon = "Fabric";
-                            profile.type = "custom";
                         } else if (lower.contains("quilt")) {
                             profile.name = "Minecraft " + mcVer + " (Quilt)";
                             profile.icon = "Fabric";
@@ -261,20 +257,9 @@ public class LauncherProfiles {
                         profile.gameDir = relativePath;
                         profile.type = "modpack";
 
-                        String lower = instName.toLowerCase();
-                        if (lower.contains("optix")) {
-                            profile.name = "Optix Client Instance";
-                            profile.icon = "Fabric";
-                            profile.lastVersionId = findBestVersionForInstance("fabric");
-                        } else if (lower.contains("client")) {
-                            profile.name = "Client Feature Instance";
-                            profile.icon = "Fabric";
-                            profile.lastVersionId = findBestVersionForInstance("fabric");
-                        } else {
-                            profile.name = "Modpack " + instName;
-                            profile.icon = "Grass";
-                            profile.lastVersionId = findBestVersionForInstance(null);
-                        }
+                        profile.name = "Modpack " + instName;
+                        profile.icon = "Grass";
+                        profile.lastVersionId = findBestVersionForInstance(null);
 
                         mainProfileJson.profiles.put(UUID.randomUUID().toString(), profile);
                         changed = true;

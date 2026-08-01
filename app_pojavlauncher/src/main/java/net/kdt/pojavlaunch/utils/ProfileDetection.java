@@ -16,7 +16,7 @@ public class ProfileDetection {
 
     /** Loader-related keywords used to determine if a version is a loader version */
     private static final Pattern LOADER_PATTERN =
-            Pattern.compile("(?i)(fabric|forge|neoforge|quilt|optifine|optix|liteloader)");
+            Pattern.compile("(?i)(fabric|forge|neoforge|quilt|optifine|liteloader)");
 
     /**
      * Extract the base Minecraft version from a profile.
