@@ -222,6 +222,66 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/skin_fetch_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="18dp"
+                android:background="@drawable/bg_skin_section_card"
+                android:elevation="4dp"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.12"
+                    android:text="FETCH FROM USERNAME"
+                    android:textColor="#DADDE5"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Enter a Minecraft username to automatically fetch and preview their skin."
+                    android:textColor="#9C9CA8"
+                    android:textSize="12sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <EditText
+                        android:id="@+id/et_skin_username"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_skin_path_chip"
+                        android:hint="Minecraft Username"
+                        android:paddingHorizontal="12dp"
+                        android:singleLine="true"
+                        android:textColor="#FFFFFF"
+                        android:textColorHint="#7C7C88"
+                        android:textSize="14sp" />
+
+                    <Button
+                        android:id="@+id/btn_fetch_skin"
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_skin_button_primary"
+                        android:paddingHorizontal="20dp"
+                        android:text="FETCH"
+                        android:textColor="#0E0E11"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
                 android:id="@+id/skin_skin_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

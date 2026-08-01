@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +16,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 
 import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.R;
@@ -33,23 +34,19 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private static final int VIEW_TYPE_MOD_ITEM = 0;
     private static final int VIEW_TYPE_LOADING = 1;
 
-    // unused
     private final ModIconCache mIconCache = ModIconCache.getInstance();
     private final SearchResultCallback mSearchResultCallback;
     private ModItem[] mModItems;
     private final ModpackApi mModpackApi;
 
-    private final float mCornerDimensionCache;
     private Future<?> mTaskInProgress;
     private SearchFilters mSearchFilters;
     private SearchResult mCurrentResult;
     private boolean mLastPage;
-    private boolean mTasksRunning;
 
     private OnItemClickListener mOnItemClickListener;
 
     public ModItemAdapter(Resources resources, ModpackApi api, SearchResultCallback callback) {
-        mCornerDimensionCache = resources.getDimension(R.dimen._1sdp) / 250;
         mModpackApi = api;
         mModItems = new ModItem[]{};
         mSearchResultCallback = callback;
@@ -117,9 +114,7 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
 
     @Override
-    public void onUpdateTaskCount(int taskCount) {
-        mTasksRunning = taskCount != 0;
-    }
+    public void onUpdateTaskCount(int taskCount) {}
 
     private String formatDownloads(String downloads) {
         try {
@@ -139,16 +134,15 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             case net.kdt.pojavlaunch.modloaders.modpacks.models.Constants.SOURCE_MODRINTH:
                 return R.drawable.ic_modrinth;
             default:
-                throw new RuntimeException("Unknown API source");
+                return 0;
         }
     }
-
-    // ── ViewHolder for compact mod cards ──────────────────────────────────
 
     public class ModItemViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         private final ImageView mIconView;
         private final ImageView mSourceIconView;
-        private final ImageView mBackgroundView;
+        private final ImageView mBackgroundView1;
+        private final ImageView mBackgroundView2;
         private final TextView mTitleView;
         private final TextView mInfoView;
         private final TextView mDownloadsView;
@@ -158,12 +152,18 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         private ModItem mCurrentItem;
         private final SharedPreferences mLikedPrefs;
 
+        private int mCurrentImageIndex = 0;
+        private boolean mUsingFirstView = true;
+        private final Handler mSlideshowHandler = new Handler(Looper.getMainLooper());
+        private Runnable mSlideshowRunnable;
+
         public ModItemViewHolder(@NonNull View itemView) {
             super(itemView);
             mLikedPrefs = itemView.getContext().getSharedPreferences("liked_mods", Context.MODE_PRIVATE);
             mIconView = itemView.findViewById(R.id.mod_thumbnail_imageview);
             mSourceIconView = itemView.findViewById(R.id.mod_source_imageview);
-            mBackgroundView = itemView.findViewById(R.id.mod_background_image);
+            mBackgroundView1 = itemView.findViewById(R.id.mod_background_image_1);
+            mBackgroundView2 = itemView.findViewById(R.id.mod_background_image_2);
             mTitleView = itemView.findViewById(R.id.mod_title_textview);
             mInfoView = itemView.findViewById(R.id.mod_info_textview);
             mDownloadsView = itemView.findViewById(R.id.mod_downloads_text);
@@ -176,26 +176,31 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         public void bind(ModItem item) {
             mCurrentItem = item;
             mTitleView.setText(item.title);
+            
+            // Premium Entrance Animation
+            itemView.setAlpha(0f);
+            itemView.setTranslationY(24f);
+            itemView.animate().alpha(1f).translationY(0f).setDuration(450)
+                    .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                    .setStartDelay(getBindingAdapterPosition() % 6 * 40L)
+                    .start();
 
-            // Author line
             if (item.author != null && !item.author.isEmpty()) {
                 mInfoView.setText("by " + item.author);
-                mInfoView.setVisibility(android.view.View.VISIBLE);
+                mInfoView.setVisibility(View.VISIBLE);
             } else {
-                mInfoView.setVisibility(android.view.View.GONE);
+                mInfoView.setVisibility(View.GONE);
             }
 
-            // Downloads chip
             if (mDownloadsView != null) {
                 if (item.downloads != null && !item.downloads.isEmpty()) {
                     mDownloadsView.setText(formatDownloads(item.downloads));
-                    mDownloadsView.setVisibility(android.view.View.VISIBLE);
+                    mDownloadsView.setVisibility(View.VISIBLE);
                 } else {
-                    mDownloadsView.setVisibility(android.view.View.GONE);
+                    mDownloadsView.setVisibility(View.GONE);
                 }
             }
 
-            // Description
             if (item.description != null && !item.description.isEmpty()) {
                 mDescriptionView.setText(item.description);
                 mDescriptionView.setVisibility(View.VISIBLE);
@@ -203,72 +208,109 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 mDescriptionView.setVisibility(View.GONE);
             }
 
-            // Source badge
             mSourceIconView.setImageResource(getSourceDrawable(item.apiSource));
 
-            // Background / Icon loading
-            mIconView.setImageDrawable(null);
-            if (mBackgroundView != null) {
-                mBackgroundView.setVisibility(View.GONE);
-                if (item.galleryUrl != null && !item.galleryUrl.isEmpty()) {
-                    mIconCache.getImage(
-                            bitmap -> {
-                                if (mCurrentItem == item && bitmap != null) {
-                                    mBackgroundView.setImageBitmap(bitmap);
-                                    mBackgroundView.setVisibility(View.VISIBLE);
-                                    mBackgroundView.setAlpha(0f);
-                                    mBackgroundView.animate().alpha(0.6f).setDuration(300).start();
-                                }
-                            },
-                            item.getIconCacheTag() + "_bg",
-                            item.galleryUrl
-                    );
+            // Slideshow Init
+            stopSlideshow();
+            mBackgroundView1.animate().cancel();
+            mBackgroundView2.animate().cancel();
+            mBackgroundView1.setAlpha(0f);
+            mBackgroundView2.setAlpha(0f);
+            mBackgroundView1.setImageDrawable(null);
+            mBackgroundView2.setImageDrawable(null);
+            mCurrentImageIndex = 0;
+            mUsingFirstView = true;
+
+            if (item.galleryUrls != null && item.galleryUrls.length > 0) {
+                loadSlideshowImage(item.galleryUrls[0], mBackgroundView1, true);
+                if (item.galleryUrls.length > 1) {
+                    startSlideshow();
                 }
+            } else if (item.galleryUrl != null && !item.galleryUrl.isEmpty()) {
+                 loadSlideshowImage(item.galleryUrl, mBackgroundView1, true);
             }
 
+            mIconView.setImageDrawable(null);
             mIconCache.getImage(
                     bitmap -> {
                         if (mCurrentItem == item) {
-                            if (bitmap != null) {
-                                mIconView.setImageBitmap(bitmap);
-                                // For now, use blurred icon as background if no gallery
-                                // But following user request, we use gradient by default.
-                                // If we had gallery images, we'd load them here.
-                            } else {
-                                mIconView.setImageResource(R.mipmap.ic_launcher_foreground);
-                            }
+                            if (bitmap != null) mIconView.setImageBitmap(bitmap);
+                            else mIconView.setImageResource(R.mipmap.ic_launcher_foreground);
                         }
                     },
                     item.getIconCacheTag(),
                     item.imageUrl
             );
 
-            // Like button — restore persisted state (muted rose, never neon)
             String modId = item.id;
             boolean isLiked = mLikedPrefs.getBoolean(modId, false);
             mLikeButton.setImageResource(isLiked ? R.drawable.ic_heart_filled : R.drawable.ic_heart_outline);
-            mLikeButton.setColorFilter(isLiked ? Color.parseColor("#E5A0A6") : Color.parseColor("#7C7C88"));
+            mLikeButton.setColorFilter(isLiked ? Color.parseColor("#FF2D55") : Color.parseColor("#7C7C88"));
             mLikeButton.setOnClickListener(v -> {
                 boolean nowLiked = !mLikedPrefs.getBoolean(modId, false);
                 mLikedPrefs.edit().putBoolean(modId, nowLiked).apply();
                 mLikeButton.setImageResource(nowLiked ? R.drawable.ic_heart_filled : R.drawable.ic_heart_outline);
-                mLikeButton.setColorFilter(nowLiked ? Color.parseColor("#E5A0A6") : Color.parseColor("#7C7C88"));
+                mLikeButton.setColorFilter(nowLiked ? Color.parseColor("#FF2D55") : Color.parseColor("#7C7C88"));
                 if (nowLiked) {
                     v.animate().cancel();
-                    v.setScaleX(0.7f);
-                    v.setScaleY(0.7f);
+                    v.setScaleX(0.7f); v.setScaleY(0.7f);
                     v.animate().scaleX(1f).scaleY(1f).setDuration(240)
-                            .setInterpolator(new android.view.animation.OvershootInterpolator(2f))
-                            .start();
+                            .setInterpolator(new android.view.animation.OvershootInterpolator(2f)).start();
                 }
             });
 
-            // Install button — triggers same navigation as card click
             mInstallButton.setOnClickListener(v -> {
                 if (mOnItemClickListener != null && mCurrentItem != null) {
                     mOnItemClickListener.onItemClick(mCurrentItem);
                 }
             });
+        }
+
+        private void loadSlideshowImage(String url, ImageView view, boolean initial) {
+            mIconCache.getImage(
+                    bitmap -> {
+                        if (mCurrentItem != null && bitmap != null) {
+                            view.setImageBitmap(bitmap);
+                            view.animate().alpha(0.55f).setDuration(initial ? 500 : 800).start();
+                        }
+                    },
+                    url + "_bg",
+                    url
+            );
+        }
+
+        private void startSlideshow() {
+            mSlideshowRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    if (mCurrentItem == null || mCurrentItem.galleryUrls == null || mCurrentItem.galleryUrls.length <= 1) return;
+                    mCurrentImageIndex = (mCurrentImageIndex + 1) % mCurrentItem.galleryUrls.length;
+                    String nextUrl = mCurrentItem.galleryUrls[mCurrentImageIndex];
+                    
+                    final ImageView activeView = mUsingFirstView ? mBackgroundView1 : mBackgroundView2;
+                    final ImageView inactiveView = mUsingFirstView ? mBackgroundView2 : mBackgroundView1;
+                    
+                    mIconCache.getImage(bitmap -> {
+                        if (mCurrentItem != null && bitmap != null) {
+                            inactiveView.setImageBitmap(bitmap);
+                            inactiveView.setAlpha(0f);
+                            inactiveView.animate().alpha(0.55f).setDuration(1200).start();
+                            activeView.animate().alpha(0f).setDuration(1200).start();
+                            mUsingFirstView = !mUsingFirstView;
+                        }
+                    }, nextUrl + "_bg", nextUrl);
+                    
+                    mSlideshowHandler.postDelayed(this, 6000);
+                }
+            };
+            mSlideshowHandler.postDelayed(mSlideshowRunnable, 6000);
+        }
+
+        private void stopSlideshow() {
+            if (mSlideshowRunnable != null) {
+                mSlideshowHandler.removeCallbacks(mSlideshowRunnable);
+                mSlideshowRunnable = null;
+            }
         }
 
         @Override

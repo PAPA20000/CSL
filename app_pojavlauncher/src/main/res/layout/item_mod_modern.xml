@@ -13,16 +13,22 @@
     android:focusable="true"
     android:clipChildren="true">
 
-    <!-- Gallery Background Image -->
+    <!-- Gallery Background Slideshow Layer -->
     <ImageView
-        android:id="@+id/mod_background_image"
+        android:id="@+id/mod_background_image_1"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
-        android:alpha="0.6"
-        tools:visibility="gone" />
+        android:alpha="0" />
 
-    <!-- Gradient Scrim for readability -->
+    <ImageView
+        android:id="@+id/mod_background_image_2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:alpha="0" />
+
+    <!-- Gradient Scrim for readability — Improved for vibrant images -->
     <View
         android:layout_width="match_parent"
         android:layout_height="match_parent"

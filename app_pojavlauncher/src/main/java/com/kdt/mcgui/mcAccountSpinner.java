@@ -98,6 +98,14 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
     private final DoneListener mDoneListener = account -> {
         Toast.makeText(getContext(), R.string.main_login_done, Toast.LENGTH_SHORT).show();
 
+        // Fetch skin face in background
+        if (!account.isLocal()) {
+            PojavApplication.sExecutorService.execute(() -> {
+                account.updateSkinFace();
+                Tools.runOnUiThread(() -> reloadAccounts(false, mAccountList.indexOf(account.username)));
+            });
+        }
+
         // Check if the account being added is not one that is already existing
         // Like login twice on the same mc account...
         for(String mcAccountName : mAccountList){

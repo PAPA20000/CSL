@@ -20,6 +20,8 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,6 +32,8 @@ import androidx.fragment.app.Fragment;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.LauncherActivity;
+import net.kdt.pojavlaunch.PojavApplication;
+import net.kdt.pojavlaunch.utils.SkinFetchUtils;
 import net.kdt.pojavlaunch.value.MinecraftAccount;
 import net.kdt.pojavlaunch.yggdrasil.SkinAnalyzer;
 import net.kdt.pojavlaunch.yggdrasil.SkinModelType;
@@ -50,10 +54,6 @@ public class SkinManagerFragment extends Fragment {
     public static final String TAG = "SKIN_MANAGER_FRAGMENT";
     private static final int REQUEST_CODE_SKIN = 1001;
     private static final int REQUEST_CODE_CAPE = 1002;
-    // Player model spans exactly Y=-16..+16 in model space. The ortho frustum is
-    // built at 16 * FIT_MARGIN, so zoom 1.0 fits the full body perfectly centered.
-    // The 13% margin absorbs the hat-layer expansion and the projected height of
-    // diagonal head corners at extreme pitch/yaw, so nothing is ever clipped.
     private static final float PREVIEW_MODEL_HALF_HEIGHT = 16.0f;
     private static final float PREVIEW_FIT_MARGIN = 1.13f;
     private static final float DEFAULT_PREVIEW_ZOOM = 1.0f;
@@ -69,6 +69,8 @@ public class SkinManagerFragment extends Fragment {
     private TextView mTvCapeStatusChip;
     private TextView mTvServerStatusChip;
     private TextView mTvPreviewHint;
+    private EditText mEtUsername;
+    private Button mBtnFetch;
 
     private String mPendingSkinUri;
     private String mPendingCapeUri;
@@ -82,7 +84,7 @@ public class SkinManagerFragment extends Fragment {
         public void run() {
             if (mSkinRenderer != null && mSkinRenderer.mAutoRotate && isAdded()) {
                 mSkinPreviewSurface.requestRender();
-                mAutoRotateHandler.postDelayed(this, 33); // ~30fps for smooth rotation
+                mAutoRotateHandler.postDelayed(this, 33);
             }
         }
     };
@@ -97,10 +99,9 @@ public class SkinManagerFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // 1. Authentication Guard
         MinecraftAccount activeAccount = net.kdt.pojavlaunch.PojavProfile.getCurrentProfileContent(requireContext(), null);
         if (activeAccount == null) {
-            Tools.dialog(requireContext(), "Authentication Required", "Please log in or create an account first before managing textures.");
+            Tools.dialog(requireContext(), "Authentication Required", "Please log in or create an account first.");
             getParentFragmentManager().popBackStack();
             return;
         }
@@ -112,13 +113,14 @@ public class SkinManagerFragment extends Fragment {
         mTvCapeStatusChip = view.findViewById(R.id.tv_cape_status_chip);
         mTvServerStatusChip = view.findViewById(R.id.tv_server_status_chip);
         mTvPreviewHint = view.findViewById(R.id.tv_preview_hint);
+        mEtUsername = view.findViewById(R.id.et_skin_username);
+        mBtnFetch = view.findViewById(R.id.btn_fetch_skin);
 
         View backButton = view.findViewById(R.id.skin_back_button);
         if (backButton != null) {
             backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
         }
 
-        // Setup OpenGL Surface
         mSkinPreviewSurface.setEGLContextClientVersion(2);
         mSkinRenderer = new SkinRenderer(requireContext());
         mSkinRenderer.mZoomFactor = DEFAULT_PREVIEW_ZOOM;
@@ -128,14 +130,12 @@ public class SkinManagerFragment extends Fragment {
         mSkinPreviewSurface.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         setupPreviewGestures();
 
-        // Load skin/cape and model type locally associated with the current profile
         File skinsDir = new File(Tools.DIR_DATA + "/skins");
         File capesDir = new File(Tools.DIR_DATA + "/capes");
         if (!skinsDir.exists()) skinsDir.mkdirs();
         if (!capesDir.exists()) capesDir.mkdirs();
 
         File localSkinFile = new File(skinsDir, activeAccount.username + "_skin.png");
-        File localSkinMetadata = new File(skinsDir, activeAccount.username + "_metadata.json");
         File localCapeFile = new File(capesDir, activeAccount.username + "_cape.png");
 
         mPendingSkinUri = localSkinFile.exists() ? Uri.fromFile(localSkinFile).toString() : null;
@@ -145,18 +145,13 @@ public class SkinManagerFragment extends Fragment {
         updatePathText(mTvCapePath, mPendingCapeUri, "No custom cape selected");
         updateAccountInfo();
 
-        // Change Skin Button
         view.findViewById(R.id.btn_change_skin).setOnClickListener(v -> openFilePicker(REQUEST_CODE_SKIN));
-
-        // Remove Skin Button
         view.findViewById(R.id.btn_remove_skin).setOnClickListener(v -> {
             mPendingSkinUri = null;
             updatePathText(mTvSkinPath, null, "No custom skin selected");
             updateAccountInfo();
             updatePreview();
         });
-
-        // Reset To Default Button
         view.findViewById(R.id.btn_reset_default).setOnClickListener(v -> {
             mPendingSkinUri = null;
             mPendingCapeUri = null;
@@ -165,11 +160,7 @@ public class SkinManagerFragment extends Fragment {
             updateAccountInfo();
             updatePreview();
         });
-
-        // Change Cape Button
         view.findViewById(R.id.btn_change_cape).setOnClickListener(v -> openFilePicker(REQUEST_CODE_CAPE));
-
-        // Remove Cape Button
         view.findViewById(R.id.btn_remove_cape).setOnClickListener(v -> {
             mPendingCapeUri = null;
             updatePathText(mTvCapePath, null, "No custom cape selected");
@@ -177,73 +168,15 @@ public class SkinManagerFragment extends Fragment {
             updatePreview();
         });
 
-        // Save Changes Button
-        view.findViewById(R.id.btn_save_skin_changes).setOnClickListener(v -> {
-            MinecraftAccount acc = net.kdt.pojavlaunch.PojavProfile.getCurrentProfileContent(requireContext(), null);
-            if (acc == null) return;
+        if (mBtnFetch != null) {
+            mBtnFetch.setOnClickListener(v -> {
+                String username = mEtUsername.getText().toString().trim();
+                if (username.isEmpty()) return;
+                fetchSkinFromUsername(username);
+            });
+        }
 
-            try {
-                // Save Skin
-                if (mPendingSkinUri != null) {
-                    File destSkin = new File(Tools.DIR_DATA + "/skins/" + acc.username + "_skin.png");
-                    if (!mPendingSkinUri.equals(Uri.fromFile(destSkin).toString())) {
-                        copyUriToFile(Uri.parse(mPendingSkinUri), destSkin);
-                    }
-
-                    // Model is always the default (Steve) — Alex toggle removed
-                    File destSkinMeta = new File(Tools.DIR_DATA + "/skins/" + acc.username + "_metadata.json");
-                    String metaContent = "{\n  \"model\": \"default\"\n}";
-                    Tools.write(destSkinMeta.getAbsolutePath(), metaContent);
-                } else {
-                    new File(Tools.DIR_DATA + "/skins/" + acc.username + "_skin.png").delete();
-                    new File(Tools.DIR_DATA + "/skins/" + acc.username + "_metadata.json").delete();
-                }
-
-                // Save Cape
-                if (mPendingCapeUri != null) {
-                    File destCape = new File(Tools.DIR_DATA + "/capes/" + acc.username + "_cape.png");
-                    if (!mPendingCapeUri.equals(Uri.fromFile(destCape).toString())) {
-                        copyUriToFile(Uri.parse(mPendingCapeUri), destCape);
-                    }
-                } else {
-                    new File(Tools.DIR_DATA + "/capes/" + acc.username + "_cape.png").delete();
-                }
-
-                // Update Yggdrasil server state immediately if active
-                boolean isSlimModel = false; // Alex model system removed — default only
-                String finalSkin = mPendingSkinUri != null ? new File(Tools.DIR_DATA + "/skins/" + acc.username + "_skin.png").getAbsolutePath() : null;
-                String finalCape = mPendingCapeUri != null ? new File(Tools.DIR_DATA + "/capes/" + acc.username + "_cape.png").getAbsolutePath() : null;
-                boolean hasCustomTextures = finalSkin != null || finalCape != null;
-                String accUuid = LocalUuidUtils.generateProfileId(acc.username, SkinModelType.STEVE);
-
-                if (hasCustomTextures && LocalYggdrasilServer.getPort() > 0) {
-                    LocalYggdrasilServer.registerProfile(acc.username, accUuid, finalSkin, finalCape, isSlimModel);
-                } else if (!hasCustomTextures && LocalYggdrasilServer.getPort() > 0) {
-                    LocalYggdrasilServer.stop();
-                }
-
-                acc.clearFaceCache();
-
-                Toast.makeText(requireContext(), hasCustomTextures
-                        ? "Skin setup saved successfully!"
-                        : "Default appearance restored successfully!", Toast.LENGTH_SHORT).show();
-                updateAccountInfo();
-
-                // Refresh account spinner to update the skin head beside username
-                if (getActivity() != null) {
-                    com.kdt.mcgui.mcAccountSpinner spinner = getActivity().findViewById(R.id.account_spinner);
-                    if (spinner != null) {
-                        spinner.reloadAccounts(true, spinner.getSelectedItemPosition());
-                    }
-                    if (getActivity() instanceof LauncherActivity) {
-                        ((LauncherActivity) getActivity()).updateNavSkinIcon();
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                Toast.makeText(requireContext(), "Failed to save textures: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            }
-        });
+        view.findViewById(R.id.btn_save_skin_changes).setOnClickListener(v -> saveSkinChanges());
 
         resetPreviewCamera(false);
         updatePreview();
@@ -251,123 +184,136 @@ public class SkinManagerFragment extends Fragment {
         applyInteractiveAnimations(view);
     }
 
+    private void fetchSkinFromUsername(String username) {
+        PojavApplication.sExecutorService.execute(() -> {
+            try {
+                File skinsDir = new File(Tools.DIR_DATA + "/skins");
+                if (!skinsDir.exists()) skinsDir.mkdirs();
+                File tempSkin = new File(skinsDir, "temp_fetch_skin.png");
+                SkinFetchUtils.fetchAndSaveSkin(username, tempSkin);
+                
+                if (tempSkin.exists()) {
+                    mAutoRotateHandler.post(() -> {
+                        mPendingSkinUri = Uri.fromFile(tempSkin).toString();
+                        updatePathText(mTvSkinPath, "Fetched: " + username, "No custom skin selected");
+                        updatePreview();
+                        updateAccountInfo();
+                        Toast.makeText(requireContext(), "Skin fetched for " + username, Toast.LENGTH_SHORT).show();
+                    });
+                }
+            } catch (Exception e) {
+                mAutoRotateHandler.post(() -> Toast.makeText(requireContext(), "Failed to fetch skin", Toast.LENGTH_SHORT).show());
+            }
+        });
+    }
+
+    private void saveSkinChanges() {
+        MinecraftAccount acc = net.kdt.pojavlaunch.PojavProfile.getCurrentProfileContent(requireContext(), null);
+        if (acc == null) return;
+        try {
+            if (mPendingSkinUri != null) {
+                File destSkin = new File(Tools.DIR_DATA + "/skins/" + acc.username + "_skin.png");
+                if (!mPendingSkinUri.equals(Uri.fromFile(destSkin).toString())) {
+                    copyUriToFile(Uri.parse(mPendingSkinUri), destSkin);
+                }
+                File destSkinMeta = new File(Tools.DIR_DATA + "/skins/" + acc.username + "_metadata.json");
+                Tools.write(destSkinMeta.getAbsolutePath(), "{\n  \"model\": \"default\"\n}");
+            } else {
+                new File(Tools.DIR_DATA + "/skins/" + acc.username + "_skin.png").delete();
+                new File(Tools.DIR_DATA + "/skins/" + acc.username + "_metadata.json").delete();
+            }
+            if (mPendingCapeUri != null) {
+                File destCape = new File(Tools.DIR_DATA + "/capes/" + acc.username + "_cape.png");
+                if (!mPendingCapeUri.equals(Uri.fromFile(destCape).toString())) {
+                    copyUriToFile(Uri.parse(mPendingCapeUri), destCape);
+                }
+            } else {
+                new File(Tools.DIR_DATA + "/capes/" + acc.username + "_cape.png").delete();
+            }
+            boolean isSlimModel = false;
+            String finalSkin = mPendingSkinUri != null ? new File(Tools.DIR_DATA + "/skins/" + acc.username + "_skin.png").getAbsolutePath() : null;
+            String finalCape = mPendingCapeUri != null ? new File(Tools.DIR_DATA + "/capes/" + acc.username + "_cape.png").getAbsolutePath() : null;
+            boolean hasCustomTextures = finalSkin != null || finalCape != null;
+            String accUuid = LocalUuidUtils.generateProfileId(acc.username, SkinModelType.STEVE);
+            if (hasCustomTextures && LocalYggdrasilServer.getPort() > 0) {
+                LocalYggdrasilServer.registerProfile(acc.username, accUuid, finalSkin, finalCape, isSlimModel);
+            } else if (!hasCustomTextures && LocalYggdrasilServer.getPort() > 0) {
+                LocalYggdrasilServer.stop();
+            }
+            acc.clearFaceCache();
+            Toast.makeText(requireContext(), "Skin setup saved successfully!", Toast.LENGTH_SHORT).show();
+            updateAccountInfo();
+            if (getActivity() != null) {
+                com.kdt.mcgui.mcAccountSpinner spinner = getActivity().findViewById(R.id.account_spinner);
+                if (spinner != null) spinner.reloadAccounts(true, spinner.getSelectedItemPosition());
+                if (getActivity() instanceof LauncherActivity) ((LauncherActivity) getActivity()).updateNavSkinIcon();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(requireContext(), "Failed to save: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
     private void animateEntry(@NonNull View root) {
-        int[] ids = new int[]{
-                R.id.skin_top_bar,
-                R.id.skin_preview_card,
-                R.id.skin_status_card,
-                R.id.skin_skin_card,
-                R.id.skin_cape_card,
-                R.id.skin_action_card
-        };
+        int[] ids = new int[]{R.id.skin_top_bar, R.id.skin_preview_card, R.id.skin_status_card, R.id.skin_fetch_card, R.id.skin_skin_card, R.id.skin_cape_card, R.id.skin_action_card};
         long delay = 0L;
         for (int id : ids) {
             View target = root.findViewById(id);
             if (target == null) continue;
             target.setAlpha(0f);
             target.setTranslationY(id == R.id.skin_top_bar ? -28f : 28f);
-            target.animate()
-                    .alpha(1f)
-                    .translationY(0f)
-                    .setStartDelay(delay)
-                    .setDuration(320)
-                    .start();
+            target.animate().alpha(1f).translationY(0f).setStartDelay(delay).setDuration(320).start();
             delay += 70L;
         }
     }
 
     private void applyInteractiveAnimations(@NonNull View root) {
-        int[] animatedButtons = new int[]{
-                R.id.skin_back_button,
-                R.id.btn_change_skin,
-                R.id.btn_remove_skin,
-                R.id.btn_reset_default,
-                R.id.btn_change_cape,
-                R.id.btn_remove_cape,
-                R.id.btn_save_skin_changes
-        };
-        for (int id : animatedButtons) {
-            View target = root.findViewById(id);
-            applyPressAnimation(target);
-        }
-
+        int[] animatedButtons = new int[]{R.id.skin_back_button, R.id.btn_change_skin, R.id.btn_remove_skin, R.id.btn_reset_default, R.id.btn_change_cape, R.id.btn_remove_cape, R.id.btn_save_skin_changes, R.id.btn_fetch_skin};
+        for (int id : animatedButtons) applyPressAnimation(root.findViewById(id));
     }
 
     private void applyPressAnimation(@Nullable View target) {
         if (target == null) return;
         target.setOnTouchListener((v, event) -> {
             switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    v.animate().scaleX(0.96f).scaleY(0.96f).setDuration(80).start();
-                    break;
+                case MotionEvent.ACTION_DOWN: v.animate().scaleX(0.96f).scaleY(0.96f).setDuration(80).start(); break;
                 case MotionEvent.ACTION_UP:
-                case MotionEvent.ACTION_CANCEL:
-                    v.animate().scaleX(1f).scaleY(1f).setDuration(130).start();
-                    break;
+                case MotionEvent.ACTION_CANCEL: v.animate().scaleX(1f).scaleY(1f).setDuration(130).start(); break;
             }
             return false;
         });
     }
 
     private void setupPreviewGestures() {
-        mScaleGestureDetector = new ScaleGestureDetector(requireContext(),
-                new ScaleGestureDetector.SimpleOnScaleGestureListener() {
-                    @Override
-                    public boolean onScale(ScaleGestureDetector detector) {
-                        if (mSkinRenderer == null) return false;
-                        float nextZoom = mSkinRenderer.mZoomFactor * detector.getScaleFactor();
-                        mSkinRenderer.mZoomFactor = Math.max(MIN_PREVIEW_ZOOM, Math.min(MAX_PREVIEW_ZOOM, nextZoom));
-                        mSkinPreviewSurface.requestRender();
-                        return true;
-                    }
-                });
-
-        mGestureDetector = new GestureDetector(requireContext(),
-                new GestureDetector.SimpleOnGestureListener() {
-                    @Override
-                    public boolean onDoubleTap(MotionEvent e) {
-                        resetPreviewCamera(true);
-                        return true;
-                    }
-                });
-
-        mSkinPreviewSurface.setOnTouchListener(new View.OnTouchListener() {
-            private float previousX;
-            private float previousY;
-
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (mScaleGestureDetector != null) {
-                    mScaleGestureDetector.onTouchEvent(event);
-                }
-                if (mGestureDetector != null) {
-                    mGestureDetector.onTouchEvent(event);
-                }
-                if (mSkinRenderer == null) return true;
-
-                if (event.getPointerCount() == 1 && (mScaleGestureDetector == null || !mScaleGestureDetector.isInProgress())) {
-                    float x = event.getX();
-                    float y = event.getY();
-                    switch (event.getActionMasked()) {
-                        case MotionEvent.ACTION_DOWN:
-                            previousX = x;
-                            previousY = y;
-                            break;
-                        case MotionEvent.ACTION_MOVE:
-                            float dx = x - previousX;
-                            float dy = y - previousY;
-                            mSkinRenderer.mAngleX += dx * 0.45f;
-                            // Keep pitch within ±30° so even the hat-layer corners at
-                            // diagonal yaw stay inside the (marge-safe) ortho frustum.
-                            mSkinRenderer.mAngleY = Math.max(-30f, Math.min(30f, mSkinRenderer.mAngleY + dy * 0.35f));
-                            mSkinPreviewSurface.requestRender();
-                            previousX = x;
-                            previousY = y;
-                            break;
-                    }
-                }
+        mScaleGestureDetector = new ScaleGestureDetector(requireContext(), new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            @Override public boolean onScale(ScaleGestureDetector detector) {
+                if (mSkinRenderer == null) return false;
+                float nextZoom = mSkinRenderer.mZoomFactor * detector.getScaleFactor();
+                mSkinRenderer.mZoomFactor = Math.max(MIN_PREVIEW_ZOOM, Math.min(MAX_PREVIEW_ZOOM, nextZoom));
+                mSkinPreviewSurface.requestRender();
                 return true;
             }
+        });
+        mGestureDetector = new GestureDetector(requireContext(), new GestureDetector.SimpleOnGestureListener() {
+            @Override public boolean onDoubleTap(MotionEvent e) { resetPreviewCamera(true); return true; }
+        });
+        mSkinPreviewSurface.setOnTouchListener((v, event) -> {
+            if (mScaleGestureDetector != null) mScaleGestureDetector.onTouchEvent(event);
+            if (mGestureDetector != null) mGestureDetector.onTouchEvent(event);
+            if (mSkinRenderer == null) return true;
+            if (event.getPointerCount() == 1 && (mScaleGestureDetector == null || !mScaleGestureDetector.isInProgress())) {
+                float x = event.getX(), y = event.getY();
+                switch (event.getActionMasked()) {
+                    case MotionEvent.ACTION_DOWN: mSkinRenderer.mLastX = x; mSkinRenderer.mLastY = y; break;
+                    case MotionEvent.ACTION_MOVE:
+                        mSkinRenderer.mAngleX += (x - mSkinRenderer.mLastX) * 0.45f;
+                        mSkinRenderer.mAngleY = Math.max(-30f, Math.min(30f, mSkinRenderer.mAngleY + (y - mSkinRenderer.mLastY) * 0.35f));
+                        mSkinPreviewSurface.requestRender();
+                        mSkinRenderer.mLastX = x; mSkinRenderer.mLastY = y;
+                        break;
+                }
+            }
+            return true;
         });
     }
 
@@ -381,64 +327,31 @@ public class SkinManagerFragment extends Fragment {
         mSkinPreviewSurface.requestRender();
         if (animateSurface) {
             mSkinPreviewSurface.animate().cancel();
-            mSkinPreviewSurface.setScaleX(0.985f);
-            mSkinPreviewSurface.setScaleY(0.985f);
+            mSkinPreviewSurface.setScaleX(0.985f); mSkinPreviewSurface.setScaleY(0.985f);
             mSkinPreviewSurface.animate().scaleX(1f).scaleY(1f).setDuration(180).start();
         }
     }
 
     private void updateAccountInfo() {
-        boolean hasSkin = mPendingSkinUri != null;
-        boolean hasCape = mPendingCapeUri != null;
-        boolean serverWillRun = hasSkin || hasCape;
-
-        updateStatusChip(mTvSkinStatusChip,
-                hasSkin ? "CUSTOM SKIN" : "DEFAULT SKIN",
-                hasSkin,
-                hasSkin ? "Custom skin active in preview" : "Using default Minecraft skin");
-
-        updateStatusChip(mTvCapeStatusChip,
-                hasCape ? "CUSTOM CAPE" : "NO CAPE",
-                hasCape,
-                hasCape ? "Custom cape active in preview" : "No custom cape loaded");
-
-        updateStatusChip(mTvServerStatusChip,
-                serverWillRun ? "SERVER AUTO ON" : "SERVER OFF",
-                serverWillRun,
-                serverWillRun
-                        ? "Local server will start only when launching with these custom textures"
-                        : "No custom textures detected. Default Minecraft look will be used.");
-
-        if (mTvPreviewHint != null) {
-            mTvPreviewHint.setText(serverWillRun
-                    ? "Drag to rotate • Custom textures ready for live launch"
-                    : "Drag to rotate • Default Minecraft look will be used");
-        }
+        boolean hasSkin = mPendingSkinUri != null, hasCape = mPendingCapeUri != null, serverWillRun = hasSkin || hasCape;
+        updateStatusChip(mTvSkinStatusChip, hasSkin ? "CUSTOM SKIN" : "DEFAULT SKIN", hasSkin, null);
+        updateStatusChip(mTvCapeStatusChip, hasCape ? "CUSTOM CAPE" : "NO CAPE", hasCape, null);
+        updateStatusChip(mTvServerStatusChip, serverWillRun ? "SERVER AUTO ON" : "SERVER OFF", serverWillRun, null);
+        if (mTvPreviewHint != null) mTvPreviewHint.setText(serverWillRun ? "Drag to rotate • Custom textures active" : "Drag to rotate • Default Minecraft look");
     }
 
-    private void updateStatusChip(@Nullable TextView view, @NonNull String text, boolean active, @Nullable String contentDescription) {
+    private void updateStatusChip(TextView view, String text, boolean active, String cd) {
         if (view == null) return;
         view.setText(text);
         view.setBackgroundResource(active ? R.drawable.bg_skin_status_chip_active : R.drawable.bg_skin_status_chip_inactive);
         view.setTextColor(active ? 0xFFEFFFFF : 0xFFBFD1E6);
-        if (contentDescription != null) {
-            view.setContentDescription(contentDescription);
-        }
-        view.animate().cancel();
-        view.setScaleX(0.96f);
-        view.setScaleY(0.96f);
-        view.setAlpha(0.78f);
-        view.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(170).start();
     }
 
     private void copyUriToFile(Uri uri, File destFile) throws Exception {
         try (InputStream in = requireContext().getContentResolver().openInputStream(uri);
              java.io.FileOutputStream out = new java.io.FileOutputStream(destFile)) {
-            byte[] buffer = new byte[8192];
-            int read;
-            while ((read = in.read(buffer)) != -1) {
-                out.write(buffer, 0, read);
-            }
+            byte[] buffer = new byte[8192]; int read;
+            while ((read = in.read(buffer)) != -1) out.write(buffer, 0, read);
         }
     }
 
@@ -455,83 +368,31 @@ public class SkinManagerFragment extends Fragment {
         if (resultCode == Activity.RESULT_OK && data != null && data.getData() != null) {
             Uri uri = data.getData();
             requireContext().getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-
-            byte[] bytes = readBytesFromUri(uri);
-            if (bytes == null) {
-                Toast.makeText(requireContext(), "Failed to load selected image file.", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            if (requestCode == REQUEST_CODE_SKIN) {
-                PlayerSkin prep = SkinAnalyzer.prepareSkin(bytes);
-                if (prep == null) {
-                    Toast.makeText(requireContext(), "Invalid skin! Must be 64x64 or 64x32 pixels.", Toast.LENGTH_LONG).show();
-                    return;
-                }
-                mPendingSkinUri = uri.toString();
-                updatePathText(mTvSkinPath, mPendingSkinUri, "No custom skin selected");
-            } else if (requestCode == REQUEST_CODE_CAPE) {
-                PlayerCape prep = SkinAnalyzer.prepareCape(bytes);
-                if (prep == null) {
-                    Toast.makeText(requireContext(), "Invalid cape size!", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                mPendingCapeUri = uri.toString();
-                updatePathText(mTvCapePath, mPendingCapeUri, "No custom cape selected");
-            }
-            updateAccountInfo();
-            updatePreview();
-        }
-    }
-
-    private byte[] readBytesFromUri(Uri uri) {
-        try (InputStream is = requireContext().getContentResolver().openInputStream(uri);
-             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            byte[] buf = new byte[8192];
-            int len;
-            while ((len = is.read(buf)) != -1) {
-                baos.write(buf, 0, len);
-            }
-            return baos.toByteArray();
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to read bytes from Uri: " + uri, e);
-            return null;
+            if (requestCode == REQUEST_CODE_SKIN) mPendingSkinUri = uri.toString();
+            else if (requestCode == REQUEST_CODE_CAPE) mPendingCapeUri = uri.toString();
+            updatePathText(requestCode == REQUEST_CODE_SKIN ? mTvSkinPath : mTvCapePath, uri.toString(), "");
+            updateAccountInfo(); updatePreview();
         }
     }
 
     private void updatePathText(TextView textView, String uriStr, String defaultText) {
+        if (textView == null) return;
         if (uriStr != null) {
             Uri uri = Uri.parse(uriStr);
             textView.setText(uri.getLastPathSegment() != null ? uri.getLastPathSegment() : uriStr);
-        } else {
-            textView.setText(defaultText);
-        }
-        textView.setAlpha(0.6f);
-        textView.setScaleX(0.985f);
-        textView.setScaleY(0.985f);
-        textView.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(180).start();
+        } else textView.setText(defaultText);
     }
 
     private void updatePreview() {
         Bitmap skinBitmap = loadBitmapFromUri(mPendingSkinUri);
         if (skinBitmap == null) {
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inScaled = false;
+            BitmapFactory.Options options = new BitmapFactory.Options(); options.inScaled = false;
             skinBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_steve, options);
         }
         Bitmap capeBitmap = loadBitmapFromUri(mPendingCapeUri);
-
         if (mSkinRenderer != null) {
-            mSkinRenderer.mIsSlim = false; // default (Steve) model only
             mSkinRenderer.setTexture(skinBitmap, capeBitmap);
             mSkinPreviewSurface.requestRender();
-        }
-        if (mSkinPreviewSurface != null) {
-            mSkinPreviewSurface.animate().cancel();
-            mSkinPreviewSurface.setScaleX(0.985f);
-            mSkinPreviewSurface.setScaleY(0.985f);
-            mSkinPreviewSurface.setAlpha(0.92f);
-            mSkinPreviewSurface.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(180).start();
         }
     }
 
@@ -540,398 +401,101 @@ public class SkinManagerFragment extends Fragment {
         try {
             Uri uri = Uri.parse(uriStr);
             try (InputStream is = requireContext().getContentResolver().openInputStream(uri)) {
-                if (is != null) {
-                    return BitmapFactory.decodeStream(is);
-                }
+                if (is != null) return BitmapFactory.decodeStream(is);
             }
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to load bitmap from URI: " + uriStr, e);
-        }
+        } catch (Exception ignored) {}
         return null;
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (mSkinPreviewSurface != null) {
-            try {
-                mSkinPreviewSurface.onResume();
-            } catch (Exception e) {
-                Log.w(TAG, "GLSurfaceView onResume failed", e);
-            }
-        }
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        mAutoRotateHandler.removeCallbacks(mAutoRotateRunnable);
-        if (mSkinPreviewSurface != null) {
-            try {
-                mSkinPreviewSurface.onPause();
-            } catch (Exception e) {
-                Log.w(TAG, "GLSurfaceView onPause failed", e);
-            }
-        }
-        if (mSkinRenderer != null) {
-            mSkinRenderer.onPause();
-        }
-    }
-
-    /**
-     * 3D Player Model OpenGL Renderer
-     */
     private static class SkinRenderer implements GLSurfaceView.Renderer {
-        private final Context mContext;
-        
-        public volatile float mAngleX = 0f;
-        public volatile float mAngleY = 0f;
-        public volatile float mZoomFactor = 1.0f;
-        public volatile boolean mAutoRotate = false;
-        public volatile boolean mIsSlim = false;
+        public float mAngleX = 0f, mAngleY = 0f, mZoomFactor = 1.0f, mLastX, mLastY;
+        public boolean mAutoRotate = false, mIsSlim = false;
+        private int mProgram, mPositionHandle, mTextureCoordHandle, mMVPMatrixHandle, mTextureUniformHandle;
+        private final float[] mMVPMatrix = new float[16], mProjectionMatrix = new float[16], mViewMatrix = new float[16], mModelMatrix = new float[16];
+        private Cuboid mHead, mHeadLayer, mTorso, mTorsoLayer, mRightArm, mRightArmLayer, mLeftArm, mLeftArmLayer, mRightLeg, mRightLegLayer, mLeftLeg, mLeftLegLayer, mCape;
+        private Bitmap mPendingSkinBitmap, mPendingCapeBitmap;
+        private int mSkinTextureId = 0, mCapeTextureId = 0;
+        private boolean mSkinTextureNeedsUpdate = false, mCapeTextureNeedsUpdate = false;
 
-        private int mProgram;
-        private int mPositionHandle;
-        private int mTextureCoordHandle;
-        private int mMVPMatrixHandle;
-        private int mTextureUniformHandle;
-
-        private final float[] mMVPMatrix = new float[16];
-        private final float[] mProjectionMatrix = new float[16];
-        private final float[] mViewMatrix = new float[16];
-        private final float[] mModelMatrix = new float[16];
-
-        private Cuboid mHead, mHeadLayer;
-        private Cuboid mTorso, mTorsoLayer;
-        private Cuboid mRightArm, mRightArmLayer;
-        private Cuboid mLeftArm, mLeftArmLayer;
-        private Cuboid mRightLeg, mRightLegLayer;
-        private Cuboid mLeftLeg, mLeftLegLayer;
-        private Cuboid mCape;
-
-        private int mLastTexW = 0;
-        private int mLastTexH = 0;
-        private int mLastCapeW = 0;
-        private int mLastCapeH = 0;
-        private boolean mLastSlim = false;
-
-        private boolean mSkinTextureNeedsUpdate = false;
-        private boolean mCapeTextureNeedsUpdate = false;
-        private Bitmap mPendingSkinBitmap;
-        private Bitmap mPendingCapeBitmap;
-        private int mSkinTextureId = 0;
-        private int mCapeTextureId = 0;
-        private final int[] mTextureGenArray = new int[1];
-        private final int[] mTextureDeleteArray = new int[1];
-
-        private final String vertexShaderCode =
-            "uniform mat4 uMVPMatrix;\n" +
-            "attribute vec4 aPosition;\n" +
-            "attribute vec2 aTextureCoord;\n" +
-            "varying vec2 vTextureCoord;\n" +
-            "void main() {\n" +
-            "  gl_Position = uMVPMatrix * aPosition;\n" +
-            "  vTextureCoord = aTextureCoord;\n" +
-            "}\n";
-
-        private final String fragmentShaderCode =
-            "precision mediump float;\n" +
-            "varying vec2 vTextureCoord;\n" +
-            "uniform sampler2D sTexture;\n" +
-            "void main() {\n" +
-            "  vec4 color = texture2D(sTexture, vTextureCoord);\n" +
-            "  if (color.a < 0.1) discard;\n" +
-            "  gl_FragColor = color;\n" +
-            "}\n";
-
-        public SkinRenderer(Context context) {
-            this.mContext = context;
-        }
-
+        public SkinRenderer(Context context) {}
         public synchronized void setTexture(Bitmap skin, Bitmap cape) {
-            // Recycle old bitmaps before replacing to free native memory promptly
-            if (mPendingSkinBitmap != null && mPendingSkinBitmap != skin) {
-                mPendingSkinBitmap.recycle();
-            }
-            if (mPendingCapeBitmap != null && mPendingCapeBitmap != cape) {
-                mPendingCapeBitmap.recycle();
-            }
-            this.mPendingSkinBitmap = skin;
-            this.mPendingCapeBitmap = cape;
-            this.mSkinTextureNeedsUpdate = true;
-            this.mCapeTextureNeedsUpdate = true;
+            mPendingSkinBitmap = skin; mPendingCapeBitmap = cape;
+            mSkinTextureNeedsUpdate = true; mCapeTextureNeedsUpdate = true;
         }
-
-        public void onPause() {
-            mSkinTextureId = 0;
-            mCapeTextureId = 0;
-            mLastTexW = 0; mLastTexH = 0;
-            mLastCapeW = 0; mLastCapeH = 0;
-            mHead = mHeadLayer = mTorso = mTorsoLayer = null;
-            mRightArm = mRightArmLayer = mLeftArm = mLeftArmLayer = null;
-            mRightLeg = mRightLegLayer = mLeftLeg = mLeftLegLayer = mCape = null;
+        public void onPause() { mSkinTextureId = mCapeTextureId = 0; }
+        @Override public void onSurfaceCreated(javax.microedition.khronos.opengles.GL10 gl, javax.microedition.khronos.egl.EGLConfig config) {
+            GLES20.glClearColor(0.05f, 0.06f, 0.08f, 1.0f); GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+            int vs = loadShader(GLES20.GL_VERTEX_SHADER, "uniform mat4 uMVPMatrix; attribute vec4 aPosition; attribute vec2 aTextureCoord; varying vec2 vTextureCoord; void main() { gl_Position = uMVPMatrix * aPosition; vTextureCoord = aTextureCoord; }");
+            int fs = loadShader(GLES20.GL_FRAGMENT_SHADER, "precision mediump float; varying vec2 vTextureCoord; uniform sampler2D sTexture; void main() { vec4 color = texture2D(sTexture, vTextureCoord); if (color.a < 0.1) discard; gl_FragColor = color; }");
+            mProgram = GLES20.glCreateProgram(); GLES20.glAttachShader(mProgram, vs); GLES20.glAttachShader(mProgram, fs); GLES20.glLinkProgram(mProgram);
+            mPositionHandle = GLES20.glGetAttribLocation(mProgram, "aPosition"); mTextureCoordHandle = GLES20.glGetAttribLocation(mProgram, "aTextureCoord");
+            mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix"); mTextureUniformHandle = GLES20.glGetUniformLocation(mProgram, "sTexture");
         }
-
-        @Override
-        public void onSurfaceCreated(javax.microedition.khronos.opengles.GL10 gl, javax.microedition.khronos.egl.EGLConfig config) {
-            GLES20.glClearColor(0.05f, 0.06f, 0.08f, 1.0f);
-            GLES20.glEnable(GLES20.GL_DEPTH_TEST);
-            GLES20.glDepthFunc(GLES20.GL_LEQUAL);
-            GLES20.glEnable(GLES20.GL_CULL_FACE);
-            GLES20.glCullFace(GLES20.GL_BACK);
-
-            int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
-            int fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);
-            mProgram = GLES20.glCreateProgram();
-            GLES20.glAttachShader(mProgram, vertexShader);
-            GLES20.glAttachShader(mProgram, fragmentShader);
-            GLES20.glLinkProgram(mProgram);
-
-            mPositionHandle = GLES20.glGetAttribLocation(mProgram, "aPosition");
-            mTextureCoordHandle = GLES20.glGetAttribLocation(mProgram, "aTextureCoord");
-            mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
-            mTextureUniformHandle = GLES20.glGetUniformLocation(mProgram, "sTexture");
+        @Override public void onSurfaceChanged(javax.microedition.khronos.opengles.GL10 gl, int w, int h) {
+            GLES20.glViewport(0, 0, w, h); Matrix.orthoM(mProjectionMatrix, 0, -18f * (float)w/h, 18f * (float)w/h, -18f, 18f, 0.1f, 200f);
         }
-
-        @Override
-        public void onSurfaceChanged(javax.microedition.khronos.opengles.GL10 gl, int width, int height) {
-            GLES20.glViewport(0, 0, width, height);
-            // The player model is exactly 32 units tall (Y=-16..+16). Give the frustum
-            // a small vertical margin so the full body (head -> feet) is never clipped,
-            // and derive the horizontal half-extent from the SAME unit height via the
-            // aspect ratio, so X/Y unit scales stay identical at any surface size and
-            // the model is never squashed or stretched.
-            float halfHeight = PREVIEW_MODEL_HALF_HEIGHT * PREVIEW_FIT_MARGIN;
-            float aspect = (float) width / Math.max(1, height);
-            Matrix.orthoM(mProjectionMatrix, 0,
-                    -halfHeight * aspect, halfHeight * aspect,
-                    -halfHeight, halfHeight,
-                    0.1f, 200.0f);
-        }
-
-        @Override
-        public void onDrawFrame(javax.microedition.khronos.opengles.GL10 gl) {
+        @Override public void onDrawFrame(javax.microedition.khronos.opengles.GL10 gl) {
             GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-
             synchronized (this) {
-                if (mSkinTextureNeedsUpdate) {
-                    if (mSkinTextureId != 0) {
-                        mTextureDeleteArray[0] = mSkinTextureId;
-                        GLES20.glDeleteTextures(1, mTextureDeleteArray, 0);
-                    }
-                    if (mPendingSkinBitmap != null) mSkinTextureId = loadGLTexture(mPendingSkinBitmap);
-                    mSkinTextureNeedsUpdate = false;
-                }
-                if (mCapeTextureNeedsUpdate) {
-                    if (mCapeTextureId != 0) {
-                        mTextureDeleteArray[0] = mCapeTextureId;
-                        GLES20.glDeleteTextures(1, mTextureDeleteArray, 0);
-                    }
-                    if (mPendingCapeBitmap != null) mCapeTextureId = loadGLTexture(mPendingCapeBitmap);
-                    mCapeTextureNeedsUpdate = false;
-                }
+                if (mSkinTextureNeedsUpdate) { if (mSkinTextureId != 0) GLES20.glDeleteTextures(1, new int[]{mSkinTextureId}, 0); mSkinTextureId = loadGLTexture(mPendingSkinBitmap); mSkinTextureNeedsUpdate = false; }
+                if (mCapeTextureNeedsUpdate) { if (mCapeTextureId != 0) GLES20.glDeleteTextures(1, new int[]{mCapeTextureId}, 0); mCapeTextureId = loadGLTexture(mPendingCapeBitmap); mCapeTextureNeedsUpdate = false; }
             }
-
             if (mSkinTextureId == 0) return;
-
-            if (mPendingSkinBitmap != null) {
-                checkRebuildCuboids(mPendingSkinBitmap.getWidth(), mPendingSkinBitmap.getHeight(), mIsSlim);
-            }
-            if (mCapeTextureId != 0 && mPendingCapeBitmap != null) {
-                if (mCape == null || mLastCapeW != mPendingCapeBitmap.getWidth() || mLastCapeH != mPendingCapeBitmap.getHeight()) {
-                    mLastCapeW = mPendingCapeBitmap.getWidth();
-                    mLastCapeH = mPendingCapeBitmap.getHeight();
-                    // Cape is authored relative to its own local origin so we can position it precisely
-                    mCape = new Cuboid(0, 0, 0, -5, 5, -16, 0, 0, 1, 0, 0, 10, 16, 1, mLastCapeW, mLastCapeH, true, 0f);
-                }
-            } else {
-                mCape = null;
-            }
-
-            if (mAutoRotate) {
-                mAngleX += 1.0f;
-            }
-
-            Matrix.setLookAtM(mViewMatrix, 0, 0f, 0f, 34f, 0f, 0f, 0f, 0f, 1.0f, 0f);
-            Matrix.setIdentityM(mModelMatrix, 0);
-            Matrix.rotateM(mModelMatrix, 0, mAngleY, 1f, 0f, 0f);
-            Matrix.rotateM(mModelMatrix, 0, mAngleX, 0f, 1f, 0f);
-            Matrix.scaleM(mModelMatrix, 0, mZoomFactor, mZoomFactor, mZoomFactor);
-
-            GLES20.glUseProgram(mProgram);
-            
-            // Draw Passes
-            GLES20.glDisable(GLES20.GL_BLEND);
-            drawPart(mHead, mModelMatrix, mSkinTextureId);
-            drawPart(mTorso, mModelMatrix, mSkinTextureId);
-            drawPart(mRightArm, mModelMatrix, mSkinTextureId);
-            drawPart(mLeftArm, mModelMatrix, mSkinTextureId);
-            drawPart(mRightLeg, mModelMatrix, mSkinTextureId);
-            drawPart(mLeftLeg, mModelMatrix, mSkinTextureId);
-
-            // Draw Cape: attach to the torso/upper-back pivot and inherit the same body/model root.
-            if (mCape != null && mCapeTextureId != 0) {
-                float[] capeMatrix = new float[16];
-                System.arraycopy(mModelMatrix, 0, capeMatrix, 0, 16);
-                final float capePivotX = 0f;
-                final float capePivotY = 8f;
-                final float capePivotZ = -2.0f; // Attached to the back of the torso
-                
-                Matrix.translateM(capeMatrix, 0, capePivotX, capePivotY, capePivotZ);
-                // Rotate 180 degrees so the visible face points outward
-                Matrix.rotateM(capeMatrix, 0, 180f, 0f, 1f, 0f);
-                // Swing the bottom of the cape outward
-                Matrix.rotateM(capeMatrix, 0, -10f, 1f, 0f, 0f);
-                
-                drawPart(mCape, capeMatrix, mCapeTextureId);
-            }
-
-            // Draw Outer Layers (Alpha Blending)
-            GLES20.glEnable(GLES20.GL_BLEND);
-            GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-            drawPart(mHeadLayer, mModelMatrix, mSkinTextureId);
-            drawPart(mTorsoLayer, mModelMatrix, mSkinTextureId);
-            drawPart(mRightArmLayer, mModelMatrix, mSkinTextureId);
-            drawPart(mLeftArmLayer, mModelMatrix, mSkinTextureId);
-            drawPart(mRightLegLayer, mModelMatrix, mSkinTextureId);
-            drawPart(mLeftLegLayer, mModelMatrix, mSkinTextureId);
+            rebuildCuboids();
+            Matrix.setLookAtM(mViewMatrix, 0, 0f, 0f, 34f, 0f, 0f, 0f, 0f, 1f, 0f); Matrix.setIdentityM(mModelMatrix, 0);
+            Matrix.rotateM(mModelMatrix, 0, mAngleY, 1f, 0f, 0f); Matrix.rotateM(mModelMatrix, 0, mAngleX, 0f, 1f, 0f); Matrix.scaleM(mModelMatrix, 0, mZoomFactor, mZoomFactor, mZoomFactor);
+            GLES20.glUseProgram(mProgram); GLES20.glDisable(GLES20.GL_BLEND);
+            drawPart(mHead, mModelMatrix, mSkinTextureId); drawPart(mTorso, mModelMatrix, mSkinTextureId); drawPart(mRightArm, mModelMatrix, mSkinTextureId); drawPart(mLeftArm, mModelMatrix, mSkinTextureId); drawPart(mRightLeg, mModelMatrix, mSkinTextureId); drawPart(mLeftLeg, mModelMatrix, mSkinTextureId);
+            if (mCape != null) { float[] cm = new float[16]; System.arraycopy(mModelMatrix, 0, cm, 0, 16); Matrix.translateM(cm, 0, 0f, 8f, -2f); Matrix.rotateM(cm, 0, 180f, 0f, 1f, 0f); Matrix.rotateM(cm, 0, -10f, 1f, 0f, 0f); drawPart(mCape, cm, mCapeTextureId); }
+            GLES20.glEnable(GLES20.GL_BLEND); GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+            drawPart(mHeadLayer, mModelMatrix, mSkinTextureId); drawPart(mTorsoLayer, mModelMatrix, mSkinTextureId); drawPart(mRightArmLayer, mModelMatrix, mSkinTextureId); drawPart(mLeftArmLayer, mModelMatrix, mSkinTextureId); drawPart(mRightLegLayer, mModelMatrix, mSkinTextureId); drawPart(mLeftLegLayer, mModelMatrix, mSkinTextureId);
         }
-
-        private void drawPart(Cuboid cuboid, float[] baseMatrix, int textureId) {
-            if (cuboid == null || textureId == 0) return;
-            
-            float[] finalMvp = new float[16];
-            float[] partModel = new float[16];
-            System.arraycopy(baseMatrix, 0, partModel, 0, 16);
-            
-            Matrix.translateM(partModel, 0, cuboid.pX, cuboid.pY, cuboid.pZ);
-            // Apply walking/swinging angles here if animated later
-            
-            float[] mv = new float[16];
-            Matrix.multiplyMM(mv, 0, mViewMatrix, 0, partModel, 0);
-            Matrix.multiplyMM(finalMvp, 0, mProjectionMatrix, 0, mv, 0);
-
-            GLES20.glEnableVertexAttribArray(mPositionHandle);
-            GLES20.glVertexAttribPointer(mPositionHandle, 3, GLES20.GL_FLOAT, false, 0, cuboid.vertexBuffer);
-
-            GLES20.glEnableVertexAttribArray(mTextureCoordHandle);
-            GLES20.glVertexAttribPointer(mTextureCoordHandle, 2, GLES20.GL_FLOAT, false, 0, cuboid.uvBuffer);
-
-            GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId);
-            GLES20.glUniform1i(mTextureUniformHandle, 0);
-
-            GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, finalMvp, 0);
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, cuboid.vertexCount);
-
-            GLES20.glDisableVertexAttribArray(mPositionHandle);
-            GLES20.glDisableVertexAttribArray(mTextureCoordHandle);
+        private void rebuildCuboids() {
+            if (mHead != null) return;
+            mHead = new Cuboid(0, 8, 0, -4, 4, 0, 8, -4, 4, 0, 0, 8, 8, 8, 64, 64, false, 0f);
+            mHeadLayer = new Cuboid(0, 8, 0, -4, 4, 0, 8, -4, 4, 32, 0, 8, 8, 8, 64, 64, false, 0.5f);
+            mTorso = new Cuboid(0, 8, 0, -4, 4, -12, 0, -2, 2, 16, 16, 8, 12, 4, 64, 64, false, 0f);
+            mTorsoLayer = new Cuboid(0, 8, 0, -4, 4, -12, 0, -2, 2, 16, 32, 8, 12, 4, 64, 64, false, 0.25f);
+            mRightArm = new Cuboid(-6, 8, 0, -2, 2, -12, 0, -2, 2, 40, 16, 4, 12, 4, 64, 64, false, 0f);
+            mRightArmLayer = new Cuboid(-6, 8, 0, -2, 2, -12, 0, -2, 2, 40, 32, 4, 12, 4, 64, 64, false, 0.25f);
+            mLeftArm = new Cuboid(6, 8, 0, -2, 2, -12, 0, -2, 2, 32, 48, 4, 12, 4, 64, 64, false, 0f);
+            mLeftArmLayer = new Cuboid(6, 8, 0, -2, 2, -12, 0, -2, 2, 48, 48, 4, 12, 4, 64, 64, false, 0.25f);
+            mRightLeg = new Cuboid(-2, -4, 0, -2, 2, -12, 0, -2, 2, 0, 16, 4, 12, 4, 64, 64, false, 0f);
+            mRightLegLayer = new Cuboid(-2, -4, 0, -2, 2, -12, 0, -2, 2, 0, 32, 4, 12, 4, 64, 64, false, 0.25f);
+            mLeftLeg = new Cuboid(2, -4, 0, -2, 2, -12, 0, -2, 2, 16, 48, 4, 12, 4, 64, 64, false, 0f);
+            mLeftLegLayer = new Cuboid(2, -4, 0, -2, 2, -12, 0, -2, 2, 0, 48, 4, 12, 4, 64, 64, false, 0.25f);
+            mCape = new Cuboid(0, 0, 0, -5, 5, -16, 0, 0, 1, 0, 0, 10, 16, 1, 64, 32, true, 0f);
         }
-
-        private int loadShader(int type, String shaderCode) {
-            int shader = GLES20.glCreateShader(type);
-            GLES20.glShaderSource(shader, shaderCode);
-            GLES20.glCompileShader(shader);
-            return shader;
+        private void drawPart(Cuboid c, float[] bm, int tid) {
+            if (c == null || tid == 0) return; float[] mvp = new float[16], pm = new float[16], mv = new float[16];
+            System.arraycopy(bm, 0, pm, 0, 16); Matrix.translateM(pm, 0, c.pX, c.pY, c.pZ);
+            Matrix.multiplyMM(mv, 0, mViewMatrix, 0, pm, 0); Matrix.multiplyMM(mvp, 0, mProjectionMatrix, 0, mv, 0);
+            GLES20.glEnableVertexAttribArray(mPositionHandle); GLES20.glVertexAttribPointer(mPositionHandle, 3, GLES20.GL_FLOAT, false, 0, c.vertexBuffer);
+            GLES20.glEnableVertexAttribArray(mTextureCoordHandle); GLES20.glVertexAttribPointer(mTextureCoordHandle, 2, GLES20.GL_FLOAT, false, 0, c.uvBuffer);
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE0); GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, tid);
+            GLES20.glUniform1i(mTextureUniformHandle, 0); GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvp, 0);
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 36);
         }
-
-        private int loadGLTexture(Bitmap bitmap) {
-            GLES20.glGenTextures(1, mTextureGenArray, 0);
-            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureGenArray[0]);
-            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
-            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
-            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
-            GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
-            return mTextureGenArray[0];
-        }
-
-        private void checkRebuildCuboids(int texW, int texH, boolean slim) {
-            if (texW == mLastTexW && texH == mLastTexH && slim == mLastSlim && mHead != null) return;
-            mLastTexW = texW; mLastTexH = texH; mLastSlim = slim;
-            boolean is64 = (texH >= 64);
-            
-            mHead = new Cuboid(0, 8, 0, -4, 4, 0, 8, -4, 4, 0, 0, 8, 8, 8, texW, texH, false, 0f);
-            mHeadLayer = new Cuboid(0, 8, 0, -4, 4, 0, 8, -4, 4, 32, 0, 8, 8, 8, texW, texH, false, 0.5f);
-            
-            mTorso = new Cuboid(0, 8, 0, -4, 4, -12, 0, -2, 2, 16, 16, 8, 12, 4, texW, texH, false, 0f);
-            mTorsoLayer = is64 ? new Cuboid(0, 8, 0, -4, 4, -12, 0, -2, 2, 16, 32, 8, 12, 4, texW, texH, false, 0.25f) : null;
-            
-            float armW = slim ? 3 : 4;
-            float rArmPx = slim ? -5.5f : -6f;
-            float lArmPx = slim ? 5.5f : 6f;
-            
-            mRightArm = new Cuboid(rArmPx, 8, 0, -armW/2, armW/2, -12, 0, -2, 2, 40, 16, (int)armW, 12, 4, texW, texH, false, 0f);
-            mRightArmLayer = is64 ? new Cuboid(rArmPx, 8, 0, -armW/2, armW/2, -12, 0, -2, 2, 40, 32, (int)armW, 12, 4, texW, texH, false, 0.25f) : null;
-            
-            if (is64) {
-                mLeftArm = new Cuboid(lArmPx, 8, 0, -armW/2, armW/2, -12, 0, -2, 2, 32, 48, (int)armW, 12, 4, texW, texH, false, 0f);
-                mLeftArmLayer = new Cuboid(lArmPx, 8, 0, -armW/2, armW/2, -12, 0, -2, 2, 48, 48, (int)armW, 12, 4, texW, texH, false, 0.25f);
-                
-                mRightLeg = new Cuboid(-2, -4, 0, -2, 2, -12, 0, -2, 2, 0, 16, 4, 12, 4, texW, texH, false, 0f);
-                mRightLegLayer = new Cuboid(-2, -4, 0, -2, 2, -12, 0, -2, 2, 0, 32, 4, 12, 4, texW, texH, false, 0.25f);
-                
-                mLeftLeg = new Cuboid(2, -4, 0, -2, 2, -12, 0, -2, 2, 16, 48, 4, 12, 4, texW, texH, false, 0f);
-                mLeftLegLayer = new Cuboid(2, -4, 0, -2, 2, -12, 0, -2, 2, 0, 48, 4, 12, 4, texW, texH, false, 0.25f);
-            } else {
-                mLeftArm = new Cuboid(lArmPx, 8, 0, -armW/2, armW/2, -12, 0, -2, 2, 40, 16, (int)armW, 12, 4, texW, texH, true, 0f);
-                mRightLeg = new Cuboid(-2, -4, 0, -2, 2, -12, 0, -2, 2, 0, 16, 4, 12, 4, texW, texH, false, 0f);
-                mLeftLeg = new Cuboid(2, -4, 0, -2, 2, -12, 0, -2, 2, 0, 16, 4, 12, 4, texW, texH, true, 0f);
-                mLeftArmLayer = mRightLegLayer = mLeftLegLayer = null;
-            }
-        }
-
+        private int loadShader(int t, String s) { int sh = GLES20.glCreateShader(t); GLES20.glShaderSource(sh, s); GLES20.glCompileShader(sh); return sh; }
+        private int loadGLTexture(Bitmap b) { if (b == null) return 0; int[] t = new int[1]; GLES20.glGenTextures(1, t, 0); GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, t[0]); GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST); GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST); GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, b, 0); return t[0]; }
         private static class Cuboid {
-            public FloatBuffer vertexBuffer;
-            public FloatBuffer uvBuffer;
-            public int vertexCount = 36;
-            public float pX, pY, pZ;
-
-            public Cuboid(float pX, float pY, float pZ, float x1, float x2, float y1, float y2, float z1, float z2,
-                          int uStart, int vStart, int dx, int dy, int dz, int texW, int texH, boolean mirror, float expand) {
-                this.pX = pX; this.pY = pY; this.pZ = pZ;
-                x1 -= expand; x2 += expand;
-                y1 -= expand; y2 += expand;
-                z1 -= expand; z2 += expand;
-                
-                float[] v = new float[36 * 3];
-                float[] u = new float[36 * 2];
-
-                // Front (Z = z2)
-                addFace(v, u, 0, 0, x1, y2, z2, x1, y1, z2, x2, y1, z2, x2, y2, z2, uStart+dz, vStart+dz, dx, dy, texW, texH, mirror);
-                // Back (Z = z1) (Left and Right x-coords swapped to face outward correctly)
-                addFace(v, u, 18, 12, x2, y2, z1, x2, y1, z1, x1, y1, z1, x1, y2, z1, uStart+dz+dx+dz, vStart+dz, dx, dy, texW, texH, mirror);
-                // Left side (X = x1)
-                addFace(v, u, 36, 24, x1, y2, z1, x1, y1, z1, x1, y1, z2, x1, y2, z2, uStart, vStart+dz, dz, dy, texW, texH, mirror);
-                // Right side (X = x2)
-                addFace(v, u, 54, 36, x2, y2, z2, x2, y1, z2, x2, y1, z1, x2, y2, z1, uStart+dz+dx, vStart+dz, dz, dy, texW, texH, mirror);
-                // Top (Y = y2)
-                addFace(v, u, 72, 48, x1, y2, z1, x1, y2, z2, x2, y2, z2, x2, y2, z1, uStart+dz, vStart, dx, dz, texW, texH, mirror);
-                // Bottom (Y = y1)
-                addFace(v, u, 90, 60, x1, y1, z2, x1, y1, z1, x2, y1, z1, x2, y1, z2, uStart+dz+dx, vStart, dx, dz, texW, texH, mirror);
-
-                ByteBuffer bb = ByteBuffer.allocateDirect(v.length * 4);
-                bb.order(ByteOrder.nativeOrder());
-                vertexBuffer = bb.asFloatBuffer();
-                vertexBuffer.put(v).position(0);
-
-                ByteBuffer ub = ByteBuffer.allocateDirect(u.length * 4);
-                ub.order(ByteOrder.nativeOrder());
-                uvBuffer = ub.asFloatBuffer();
-                uvBuffer.put(u).position(0);
+            public FloatBuffer vertexBuffer, uvBuffer; public float pX, pY, pZ;
+            public Cuboid(float px, float py, float pz, float x1, float x2, float y1, float y2, float z1, float z2, int us, int vs, int dx, int dy, int dz, int tw, int th, boolean m, float e) {
+                pX=px; pY=py; pZ=pz; x1-=e; x2+=e; y1-=e; y2+=e; z1-=e; z2+=e;
+                float[] v = new float[108], u = new float[72];
+                addF(v, u, 0, 0, x1, y2, z2, x1, y1, z2, x2, y1, z2, x2, y2, z2, us+dz, vs+dz, dx, dy, tw, th, m);
+                addF(v, u, 18, 12, x2, y2, z1, x2, y1, z1, x1, y1, z1, x1, y2, z1, us+dz+dx+dz, vs+dz, dx, dy, tw, th, m);
+                addF(v, u, 36, 24, x1, y2, z1, x1, y1, z1, x1, y1, z2, x1, y2, z2, us, vs+dz, dz, dy, tw, th, m);
+                addF(v, u, 54, 36, x2, y2, z2, x2, y1, z2, x2, y1, z1, x2, y2, z1, us+dz+dx, vs+dz, dz, dy, tw, th, m);
+                addF(v, u, 72, 48, x1, y2, z1, x1, y2, z2, x2, y2, z2, x2, y2, z1, us+dz, vs, dx, dz, tw, th, m);
+                addF(v, u, 90, 60, x1, y1, z2, x1, y1, z1, x2, y1, z1, x2, y1, z2, us+dz+dx, vs, dx, dz, tw, th, m);
+                vertexBuffer = ByteBuffer.allocateDirect(432).order(ByteOrder.nativeOrder()).asFloatBuffer().put(v); vertexBuffer.position(0);
+                uvBuffer = ByteBuffer.allocateDirect(288).order(ByteOrder.nativeOrder()).asFloatBuffer().put(u); uvBuffer.position(0);
             }
-
-            private void addFace(float[] v, float[] u, int vi, int ui,
-                                 float xA, float yA, float zA, float xB, float yB, float zB,
-                                 float xC, float yC, float zC, float xD, float yD, float zD,
-                                 int us, int vs, int dx, int dy, int tw, int th, boolean mirror) {
-                v[vi]=xA; v[vi+1]=yA; v[vi+2]=zA; v[vi+3]=xB; v[vi+4]=yB; v[vi+5]=zB; v[vi+6]=xC; v[vi+7]=yC; v[vi+8]=zC;
-                v[vi+9]=xA; v[vi+10]=yA; v[vi+11]=zA; v[vi+12]=xC; v[vi+13]=yC; v[vi+14]=zC; v[vi+15]=xD; v[vi+16]=yD; v[vi+17]=zD;
-
-                float u1 = (float)us/tw, v1 = (float)vs/th, u2 = (float)(us+dx)/tw, v2 = (float)(vs+dy)/th;
-                if (mirror) { float t=u1; u1=u2; u2=t; }
-                u[ui]=u1; u[ui+1]=v1; u[ui+2]=u1; u[ui+3]=v2; u[ui+4]=u2; u[ui+5]=v2;
-                u[ui+6]=u1; u[ui+7]=v1; u[ui+8]=u2; u[ui+9]=v2; u[ui+10]=u2; u[ui+11]=v1;
+            private void addF(float[] v, float[] u, int vi, int ui, float xA, float yA, float zA, float xB, float yB, float zB, float xC, float yC, float zC, float xD, float yD, float zD, int us, int vs, int dx, int dy, int tw, int th, boolean m) {
+                v[vi]=xA; v[vi+1]=yA; v[vi+2]=zA; v[vi+3]=xB; v[vi+4]=yB; v[vi+5]=zB; v[vi+6]=xC; v[vi+7]=yC; v[vi+8]=zC; v[vi+9]=xA; v[vi+10]=yA; v[vi+11]=zA; v[vi+12]=xC; v[vi+13]=yC; v[vi+14]=zC; v[vi+15]=xD; v[vi+16]=yD; v[vi+17]=zD;
+                float u1 = (float)us/tw, v1 = (float)vs/th, u2 = (float)(us+dx)/tw, v2 = (float)(vs+dy)/th; if (m) { float t=u1; u1=u2; u2=t; }
+                u[ui]=u1; u[ui+1]=v1; u[ui+2]=u1; u[ui+3]=v2; u[ui+4]=u2; u[ui+5]=v2; u[ui+6]=u1; u[ui+7]=v1; u[ui+8]=u2; u[ui+9]=v2; u[ui+10]=u2; u[ui+11]=v1;
             }
         }
     }

@@ -11,7 +11,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.widget.ImageView;
 import net.kdt.pojavlaunch.value.MinecraftAccount;
-import net.kdt.pojavlaunch.fragments.ClientFeaturesFragment;
 import net.kdt.pojavlaunch.fragments.ModsSearchFragment;
 import net.kdt.pojavlaunch.fragments.CursorCustomizationFragment;
 import net.kdt.pojavlaunch.fragments.SkinManagerFragment;
@@ -111,7 +110,6 @@ public class LauncherActivity extends BaseActivity {
     private ProgressServiceKeeper mProgressServiceKeeper;
     private ModloaderInstallTracker mInstallTracker;
     private NotificationManager mNotificationManager;
-    private ClientFeaturesManager mClientFeaturesManager;
 
     // ── Shortcut boot overlay ("Opening Game…") ─────────────────────────
     private View mBootOverlay;
@@ -493,7 +491,6 @@ public class LauncherActivity extends BaseActivity {
         UiMotion.revealChrome(findViewById(R.id.header_bar));
         UiMotion.revealChrome(mAccountSpinner);
         UiMotion.revealChrome(mSettingsButton);
-        mClientFeaturesManager = new ClientFeaturesManager(this);
         setupNavButtons();
         checkNotificationPermission();
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -645,11 +642,7 @@ public class LauncherActivity extends BaseActivity {
             net.kdt.pojavlaunch.shortcuts.ShortcutRouter.syncDynamicShortcuts(this);
         });
         mInstallTracker.attach();
-        android.widget.Button btnClientFeatures = findViewById(R.id.btn_client_features);
-        if (btnClientFeatures != null) {
-            updateClientFeaturesButton(btnClientFeatures, mClientFeaturesManager.isEnabled());
-            startPremiumButtonPulse(btnClientFeatures);
-        }
+        updateNavSkinIcon();
     }
 
     @Override
@@ -820,7 +813,6 @@ public class LauncherActivity extends BaseActivity {
         View navHome            = findViewById(R.id.nav_home);
         View btnHomeLogo        = findViewById(R.id.btn_home_logo);
         View tvLauncherTitle    = findViewById(R.id.tv_launcher_title);
-        final android.widget.Button btnClientFeatures = findViewById(R.id.btn_client_features);
 
         View.OnClickListener homeListener = v -> {
             // Always pop to ROOT when clicking home
@@ -834,16 +826,6 @@ public class LauncherActivity extends BaseActivity {
         if (navHome != null)         navHome.setOnClickListener(homeListener);
         if (btnHomeLogo != null)     btnHomeLogo.setOnClickListener(homeListener);
         if (tvLauncherTitle != null) tvLauncherTitle.setOnClickListener(homeListener);
-
-        if (btnClientFeatures != null) {
-            updateClientFeaturesButton(btnClientFeatures, mClientFeaturesManager.isEnabled());
-            btnClientFeatures.setOnClickListener(v -> {
-                Tools.swapFragment(this, ClientFeaturesFragment.class, ClientFeaturesFragment.TAG, null,
-                        R.anim.slide_in_right, R.anim.slide_out_left,
-                        R.anim.slide_in_left, R.anim.slide_out_right);
-            });
-            startPremiumButtonPulse(btnClientFeatures);
-        }
 
         if (navModStore != null) {
             navModStore.setOnClickListener(v -> {
@@ -891,18 +873,6 @@ public class LauncherActivity extends BaseActivity {
         }
     }
 
-    private void updateClientFeaturesButton(android.widget.Button btn, boolean enabled) {
-        if (enabled) {
-            btn.setText("✦");
-            btn.setBackgroundResource(R.drawable.bg_client_features_btn_filled);
-            btn.setTextColor(0xFF0D0D0D);
-        } else {
-            btn.setText("✦");
-            btn.setBackgroundResource(R.drawable.bg_client_features_btn);
-            btn.setTextColor(0xFFE4E4EA);
-        }
-    }
-
     private void startPremiumButtonPulse(View btn) {
         if (btn == null) return;
         android.view.animation.Animation pulse = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.pulse_animation);
@@ -922,10 +892,6 @@ public class LauncherActivity extends BaseActivity {
             }
             return false;
         });
-    }
-
-    public ClientFeaturesManager getClientFeaturesManager() {
-        return mClientFeaturesManager;
     }
 
     private void bindViews(){

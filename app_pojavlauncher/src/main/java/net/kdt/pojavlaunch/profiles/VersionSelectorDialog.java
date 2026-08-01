@@ -14,7 +14,8 @@ import net.kdt.pojavlaunch.extra.ExtraConstants;
 
 public class VersionSelectorDialog {
     public static void open(Context context, boolean hideCustomVersions, VersionSelectorListener listener) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.Theme_AppCompat_DayNight_Dialog_Alert);
+        builder.setTitle("Select Version");
         ExpandableListView expandableListView = (ExpandableListView) LayoutInflater.from(context)
                 .inflate(R.layout.dialog_expendable_list_view , null);
         JMinecraftVersionList jMinecraftVersionList = (JMinecraftVersionList) getValue(ExtraConstants.RELEASE_TABLE);
