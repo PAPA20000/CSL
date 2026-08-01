@@ -41,7 +41,6 @@ public class EnableClientInstallTask implements Runnable {
     /** Official profile banner for the created profile. */
     public static final String PROFILE_BACKGROUND_URL =
             "https://i.ibb.co/zHR1SSbK/file-00000000f090820899128c8fd2c87e03.png";
-    public static final String PROFILE_NAME = "CS CLIENT V1";
 
     private final String mGameVersion;
     private final Listener mListener;
@@ -112,12 +111,15 @@ public class EnableClientInstallTask implements Runnable {
     // ── Step 2: Fabric API + CS CLIENT jars ─────────────────────────────
 
     private File installClientMods() throws IOException, JSONException {
-        // IMPORTANT: the profile resolves gameDir "./custom_instances/csclient"
+        // IMPORTANT: the profile resolves gameDir "./custom_instances/..."
         // relative to DIR_GAME_HOME (see Tools.getGameDirPath). Installing under
         // DIR_GAME_NEW (".minecraft") would put the mods in a folder the game
         // never reads, so CS CLIENT would silently never load. Must match
         // ModpackInstaller/FabriclikeDownloadTask: DIR_GAME_HOME/custom_instances.
-        File gameDir = new File(Tools.DIR_GAME_HOME, "custom_instances/csclient");
+        // Each version gets its own instance dir so multiple CS Client versions
+        // can coexist, and enabling a new version creates its own profile.
+        String instDir = "csclient-" + mGameVersion;
+        File gameDir = new File(Tools.DIR_GAME_HOME, "custom_instances/" + instDir);
         File modsDir = new File(gameDir, "mods");
         FileUtils.ensureDirectory(modsDir);
 
@@ -185,12 +187,14 @@ public class EnableClientInstallTask implements Runnable {
         LauncherProfiles.load();
         String profileKey = LauncherProfiles.getFreeProfileKey();
         MinecraftProfile profile = MinecraftProfile.createTemplate();
-        profile.name = PROFILE_NAME;
+        // One ready-to-launch profile per CS Client version, so each enabled
+        // version gets its own profile and instance (no collisions).
+        profile.name = "CS CLIENT " + mGameVersion;
         profile.lastVersionId = versionId;
         profile.type = "custom";
         profile.icon = "csclient";
         profile.background = PROFILE_BACKGROUND_URL;
-        profile.gameDir = "./custom_instances/csclient";
+        profile.gameDir = "./custom_instances/csclient-" + mGameVersion;
         // Production-ready profile: recommended memory + stable JVM flags for
         // Fabric 1.21.x, default touch-friendly renderer, so it launches
         // immediately with no manual tuning (Req 7).
