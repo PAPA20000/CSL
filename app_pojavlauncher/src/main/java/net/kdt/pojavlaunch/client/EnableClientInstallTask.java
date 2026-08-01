@@ -112,7 +112,12 @@ public class EnableClientInstallTask implements Runnable {
     // ── Step 2: Fabric API + CS CLIENT jars ─────────────────────────────
 
     private File installClientMods() throws IOException, JSONException {
-        File gameDir = new File(Tools.DIR_GAME_NEW, "custom_instances/csclient");
+        // IMPORTANT: the profile resolves gameDir "./custom_instances/csclient"
+        // relative to DIR_GAME_HOME (see Tools.getGameDirPath). Installing under
+        // DIR_GAME_NEW (".minecraft") would put the mods in a folder the game
+        // never reads, so CS CLIENT would silently never load. Must match
+        // ModpackInstaller/FabriclikeDownloadTask: DIR_GAME_HOME/custom_instances.
+        File gameDir = new File(Tools.DIR_GAME_HOME, "custom_instances/csclient");
         File modsDir = new File(gameDir, "mods");
         FileUtils.ensureDirectory(modsDir);
 
@@ -141,7 +146,15 @@ public class EnableClientInstallTask implements Runnable {
         return gameDir;
     }
 
-    /** Resolves the latest CS CLIENT release asset via the GitHub API. */
+    /**
+     * Resolves the CS CLIENT jar for the SELECTED Minecraft version.
+     *
+     * The multi-version build system emits one jar per MC version named
+     * {@code CSCLIENT-<mcversion>-<modversion>.jar} (e.g. CSCLIENT-1.21.1-2.3.0.jar,
+     * CSCLIENT-1.26.2-2.3.0.jar). We match the asset name against mGameVersion so
+     * the correct build is installed; a bare {@code CSCLIENT-*.jar} (single-version
+     * legacy) is accepted as a fallback only for 1.21.1.
+     */
     private String resolveCsClientJarUrl() throws IOException, JSONException {
         String body = DownloadUtils.downloadString(ClientFeature.CS_CLIENT_RELEASE_API);
         JSONObject release = new JSONObject(body);
@@ -149,13 +162,19 @@ public class EnableClientInstallTask implements Runnable {
         if (assets == null || assets.length() == 0) {
             throw new IOException("CS CLIENT has no downloadable release asset");
         }
+        String exactTarget = "CSCLIENT-" + mGameVersion + "-";
+        String primary = null, legacy = null, any = null;
         for (int i = 0; i < assets.length(); i++) {
             JSONObject asset = assets.getJSONObject(i);
             String name = asset.optString("name", "");
-            if (name.endsWith(".jar")) {
-                return asset.getString("browser_download_url");
-            }
+            if (!name.endsWith(".jar")) continue;
+            if (any == null) any = asset.getString("browser_download_url");
+            if (name.startsWith("CSCLIENT-1.21.1-") && name.equals(exactTarget)) primary = asset.getString("browser_download_url");
+            if (legacy == null && name.equals("CSCLIENT-" + mGameVersion + ".jar")) legacy = asset.getString("browser_download_url");
         }
+        if (primary != null) return primary;
+        if (legacy != null) return legacy;
+        if (any != null) return any; // last-resort single-version build
         throw new IOException("CS CLIENT release has no jar asset");
     }
 
@@ -172,6 +191,12 @@ public class EnableClientInstallTask implements Runnable {
         profile.icon = "csclient";
         profile.background = PROFILE_BACKGROUND_URL;
         profile.gameDir = "./custom_instances/csclient";
+        // Production-ready profile: recommended memory + stable JVM flags for
+        // Fabric 1.21.x, default touch-friendly renderer, so it launches
+        // immediately with no manual tuning (Req 7).
+        profile.javaArgs = "-Xms256M -Xmx" + recommendedMemoryMegabytes()
+                + "M -Dfile.encoding=UTF-8 -XX:+UseG1GC";
+        if (profile.pojavRendererName == null) profile.pojavRendererName = "opengl";
         String now = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
                 .format(new Date());
         profile.created = now;
@@ -183,5 +208,32 @@ public class EnableClientInstallTask implements Runnable {
                 .apply();
         LauncherProfiles.write();
         return profileKey;
+    }
+
+    /**
+     * Recommended heap for the selected Minecraft version. Modern versions
+     * (1.21.x) need more RAM for the Fabric mod set; cap at 4 GB so low-end
+     * Android devices aren't starved. Honours the user's configured total RAM
+     * preference when it is lower than the recommended value.
+     */
+    private String recommendedMemoryMegabytes() {
+        int recommended = 2048;
+        try {
+            String ver = mGameVersion == null ? "" : mGameVersion;
+            String[] parts = ver.split("\\.");
+            if (parts.length >= 2) {
+                int major = Integer.parseInt(parts[0]);
+                int minor = Integer.parseInt(parts[1]);
+                // 1.20 and later default to 2.5 GB; 1.21+ prefer 3 GB.
+                if (major > 1 || minor >= 21) recommended = 3072;
+                else if (minor >= 20) recommended = 2560;
+            }
+        } catch (NumberFormatException ignored) { }
+        // Respect an explicit user memory ceiling (LauncherPreferences stores MB).
+        try {
+            int userMax = LauncherPreferences.PREF_RAM_ALLOCATION;
+            if (userMax > 0 && userMax < recommended) recommended = userMax;
+        } catch (Throwable ignored) { }
+        return String.valueOf(recommended);
     }
 }

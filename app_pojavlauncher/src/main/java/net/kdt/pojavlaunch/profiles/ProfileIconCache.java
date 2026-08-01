@@ -172,6 +172,7 @@ public class ProfileIconCache {
     private static int getStaticIconResource(String icon) {
         switch (icon) {
             case "default": return R.drawable.ic_cs_logo_placeholder; // official CS Launcher logo
+            case "csclient": return R.drawable.ic_cs_logo_placeholder; // official CS Client logo
             case "fabric": return R.drawable.ic_fabric;
             case "quilt": return R.drawable.ic_quilt;
             default: return -1;

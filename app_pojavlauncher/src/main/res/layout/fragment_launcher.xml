@@ -97,7 +97,7 @@
                 style="@style/LauncherMenuButton.Universal"
                 android:layout_width="match_parent"
                 android:drawableStart="@drawable/ic_star"
-                android:text="✦ Enable Client Features" />
+                android:text="Enable Client Feature" />
 
             <!-- MANAGE SKIN -->
             <com.kdt.mcgui.LauncherMenuButton

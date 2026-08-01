@@ -170,6 +170,7 @@ public class MainMenuFragment extends Fragment {
         Button mOpenDirectoryButton = view.findViewById(R.id.open_directory_button);
         Button mCursorCustomButton  = view.findViewById(R.id.cursor_customization_button);
         Button mHomeButton          = view.findViewById(R.id.home_button);
+        Button mClientFeatureButton = view.findViewById(R.id.btn_client_features);
         Button mManageSkinButton    = view.findViewById(R.id.btn_manage_skin);
 
         ImageButton mEditProfileBtn = view.findViewById(R.id.edit_profile_button);
@@ -194,6 +195,7 @@ public class MainMenuFragment extends Fragment {
         if (mDiscordButton != null) mDiscordButton.setOnClickListener(v -> Tools.openURL(requireActivity(), getString(R.string.discord_invite)));
         if (mCustomControlButton != null) mCustomControlButton.setOnClickListener(v -> startActivity(new Intent(requireContext(), CustomControlsActivity.class)));
         if (mCursorCustomButton != null) mCursorCustomButton.setOnClickListener(v -> Tools.swapFragment(requireActivity(), CursorCustomizationFragment.class, CursorCustomizationFragment.TAG, null));
+        if (mClientFeatureButton != null) mClientFeatureButton.setOnClickListener(v -> openPane(EnableClientWizardFragment.class, EnableClientWizardFragment.TAG, null));
         if (mManageSkinButton != null) mManageSkinButton.setOnClickListener(v -> openPane(SkinManagerFragment.class, SkinManagerFragment.TAG, null));
 
         if (mInstallJarButton != null) {
@@ -216,7 +218,7 @@ public class MainMenuFragment extends Fragment {
         if (isTwoPane() && mVersionSpinner != null) mVersionSpinner.setOnClickListener(v -> openPane(InstancePickerFragment.class, InstancePickerFragment.TAG, null));
         if (isTwoPane()) setBottomBarVisible(getChildFragmentManager().getBackStackEntryCount() == 0);
 
-        applyPremiumTouchAnimation(mHomeButton, mCursorCustomButton, mCustomControlButton, mInstallJarButton, mShareLogsButton, mOpenDirectoryButton, mPlayBtn, mEditProfileBtn, mVersionSpinner, mManageSkinButton);
+        applyPremiumTouchAnimation(mHomeButton, mClientFeatureButton, mCursorCustomButton, mCustomControlButton, mInstallJarButton, mShareLogsButton, mOpenDirectoryButton, mPlayBtn, mEditProfileBtn, mVersionSpinner, mManageSkinButton);
 
         if (mPlayBtn != null) mPlayBtn.setOnClickListener(v -> ExtraCore.setValue(ExtraConstants.LAUNCH_GAME, true));
     }

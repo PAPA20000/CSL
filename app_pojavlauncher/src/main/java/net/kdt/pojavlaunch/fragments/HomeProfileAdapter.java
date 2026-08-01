@@ -207,7 +207,8 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
 
         // 1) Custom user icon / modpack artwork (data URI) or named loader icons
         boolean hasCustomOrNamedIcon = icon != null
-                && (icon.startsWith("data:") || icon.equals("fabric") || icon.equals("quilt"));
+                && (icon.startsWith("data:") || icon.equals("fabric") || icon.equals("quilt")
+                    || icon.equals("csclient"));
         if (hasCustomOrNamedIcon) {
             try {
                 drawable = ProfileIconCache.fetchIcon(target.getResources(), profileKey, icon);
