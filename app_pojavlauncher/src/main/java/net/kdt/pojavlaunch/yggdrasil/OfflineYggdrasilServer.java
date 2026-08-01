@@ -17,8 +17,6 @@ import java.security.KeyPairGenerator;
 import java.security.Signature;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.json.JSONArray;
@@ -276,7 +274,7 @@ public class OfflineYggdrasilServer {
                 body = null;
                 Log.i(TAG, "<<< 204 join (accepted)");
             } else if (path.equals("/sessionserver/session/minecraft/hasJoined")) {
-                // Has-joined endpoint — look up by username from query
+                // Has-joined endpoint — look up by username from query.
                 String queryUsername = null;
                 if (qIdx != -1) {
                     String query = pathAndQuery.substring(qIdx + 1);
@@ -286,20 +284,33 @@ public class OfflineYggdrasilServer {
                         }
                     }
                 }
-                if (queryUsername != null) {
-                    Character ch = byName.get(queryUsername.toLowerCase());
-                    if (ch != null) {
-                        body = ch.toProfileResponse(localBase(), this::signRsa).getBytes(StandardCharsets.UTF_8);
+                Character ch = queryUsername != null ? byName.get(queryUsername.toLowerCase()) : null;
+                if (ch != null) {
+                    body = ch.toProfileResponse(localBase(), this::signRsa).getBytes(StandardCharsets.UTF_8);
+                    contentType = "application/json; charset=utf-8";
+                    statusCode = 200;
+                    statusText = "OK";
+                    Log.i(TAG, "<<< 200 hasJoined: " + queryUsername);
+                } else if (queryUsername != null) {
+                    // Not a registered offline player -> proxy to Mojang so that a
+                    // REAL online-mode server can still validate premium players.
+                    // This prevents "Failed to log in: Status: 404" for online play.
+                    String mojangJson = proxyHasJoinedToMojang(pathAndQuery);
+                    if (mojangJson != null && !mojangJson.isEmpty()) {
+                        body = mojangJson.getBytes(StandardCharsets.UTF_8);
                         contentType = "application/json; charset=utf-8";
                         statusCode = 200;
                         statusText = "OK";
-                        Log.i(TAG, "<<< 200 hasJoined: " + queryUsername);
+                        Log.i(TAG, "<<< 200 proxied hasJoined for: " + queryUsername);
+                    } else {
+                        statusCode = 204;
+                        statusText = "No Content";
+                        Log.w(TAG, "<<< 204 hasJoined not found (and Mojang has no session): " + queryUsername);
                     }
-                }
-                if (body == null) {
+                } else {
                     statusCode = 204;
                     statusText = "No Content";
-                    Log.w(TAG, "<<< 204 hasJoined not found: " + queryUsername);
+                    Log.w(TAG, "<<< 204 hasJoined (no username)");
                 }
             } else {
                 Log.w(TAG, "<<< 404 unknown path: " + path);
@@ -340,6 +351,35 @@ public class OfflineYggdrasilServer {
      * textures resolve correctly. Returns null if offline or not found so the
      * caller can fall back to the default Steve/Alex skin.
      */
+    /**
+     * Forwards a vanilla hasJoined request to Mojang's real session server so
+     * online-mode servers can validate premium players even when the local skin
+     * server is active. Returns the Mojang JSON body, or null when Mojang has
+     * no such session (the player isn't currently joined / offline).
+     */
+    private String proxyHasJoinedToMojang(String pathAndQuery) {
+        try {
+            int qIdx = pathAndQuery.indexOf('?');
+            String query = qIdx != -1 ? pathAndQuery.substring(qIdx + 1) : "";
+            URL url = new URL("https://sessionserver.mojang.com/session/minecraft/hasJoined?" + query);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(4000);
+            conn.setReadTimeout(4000);
+            conn.setRequestProperty("User-Agent", "CSLauncher");
+            int code = conn.getResponseCode();
+            if (code != 200) return null;
+            StringBuilder sb = new StringBuilder();
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = br.readLine()) != null) sb.append(line);
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to proxy hasJoined to Mojang: " + e.getMessage());
+            return null;
+        }
+    }
+
     private String proxyToMojang(String uuid) {
         try {
             URL url = new URL("https://sessionserver.mojang.com/session/minecraft/profile/" + uuid + "?unsigned=false");
