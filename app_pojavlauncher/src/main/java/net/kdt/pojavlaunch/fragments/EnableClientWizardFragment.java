@@ -23,8 +23,6 @@ import net.kdt.pojavlaunch.UiMotion;
 import net.kdt.pojavlaunch.client.ClientFeature;
 import net.kdt.pojavlaunch.client.EnableClientInstallTask;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -51,24 +49,6 @@ public class EnableClientWizardFragment extends Fragment {
     private final List<String> mVersions = new ArrayList<>();
     private String mSelectedVersion;
     private int mStep = STEP_VERSION;
-
-    private static final Comparator<String> VERSION_DESC = (a, b) -> {
-        int[] pa = parse(a), pb = parse(b);
-        for (int i = 0; i < 3; i++) {
-            if (pa[i] != pb[i]) return Integer.compare(pb[i], pa[i]);
-        }
-        return 0;
-    };
-
-    private static int[] parse(String v) {
-        String[] parts = v.split("\\.");
-        int[] out = new int[3];
-        for (int i = 0; i < 3; i++) {
-            try { out[i] = i < parts.length ? Integer.parseInt(parts[i]) : 0; }
-            catch (NumberFormatException ignored) { }
-        }
-        return out;
-    }
 
     public EnableClientWizardFragment() {
         super(R.layout.fragment_enable_client_wizard);
@@ -135,14 +115,11 @@ public class EnableClientWizardFragment extends Fragment {
     private void loadVersions() {
         mVersionsLoading.setVisibility(View.VISIBLE);
         mVersionsError.setVisibility(View.GONE);
-        // Use the exact, build-verified version list from ClientFeature so the
-        // wizard only ever offers versions CS CLIENT genuinely has a jar for.
+        // Dynamic: fetch the Minecraft versions actually published on Modrinth and
+        // keep only the ones CS CLIENT supports (stable 1.21.x <= 1.21.11). Falls
+        // back to the static build-verified list when offline/Modrinth unreachable.
         PojavApplication.sExecutorService.execute(() -> {
-            List<String> found = new ArrayList<>();
-            for (String v : ClientFeature.SUPPORTED_MC_VERSIONS) {
-                if (v != null && isSupportedRelease(v)) found.add(v);
-            }
-            Collections.sort(found, VERSION_DESC);
+            List<String> found = ClientFeature.fetchAvailableVersions();
             List<String> finalFound = found;
             Tools.runOnUiThread(() -> {
                 if (!isAdded()) return;
@@ -157,17 +134,6 @@ public class EnableClientWizardFragment extends Fragment {
                 UiMotion.revealList(mVersionList);
             });
         });
-    }
-
-    /**
-     * Only stable releases on the 1.21.x line that CS CLIENT actually builds
-     * (1.21 … 1.21.11). 26.x is a different (unobfuscated / Mojang-mapped)
-     * generation with its own build, so it is not offered here.
-     */
-    private static boolean isSupportedRelease(String token) {
-        if (token == null || !token.matches("1\\.21(\\.\\d+)?")) return false;
-        int patch = parse(token)[2];
-        return patch <= 11;
     }
 
     private void onVersionSelected(String version) {

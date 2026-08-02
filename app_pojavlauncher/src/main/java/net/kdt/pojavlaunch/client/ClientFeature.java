@@ -7,6 +7,7 @@ import android.util.Log;
 
 import androidx.fragment.app.FragmentActivity;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -20,6 +21,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Central bridge between CS Launcher and the CS CLIENT mod.
@@ -49,6 +53,82 @@ public final class ClientFeature {
     }
     /** Modrinth project id of Fabric API. */
     public static final String FABRIC_API_PROJECT_ID = "fabric-api";
+
+    /** Modrinth endpoint listing every Minecraft version (releases + snapshots + prereleases). */
+    public static final String MODRINTH_GAME_VERSIONS_URL = "https://api.modrinth.com/v2/tag/game_version";
+
+    /**
+     * Fetches the Minecraft versions that are actually published on Modrinth
+     * (the {@code tag/game_version} list), then filters them to our supported
+     * set (stable 1.21.x releases up to 1.21.11) using {@link #isSupportedRelease}.
+     *
+     * <p>This replaces the hardcoded {@link #SUPPORTED_MC_VERSIONS} as the source
+     * for the client wizard: the version list is derived from what Modrinth
+     * actually serves, so we never offer (or gate on) a version that has no
+     * Modrinth/Fabric-API build. On any network error it falls back to the static
+     * list so the wizard still works offline.
+     *
+     * @return a sorted (descending) list of supported Minecraft versions
+     */
+    public static List<String> fetchAvailableVersions() {
+        List<String> result = new ArrayList<>();
+        try {
+            String body = net.kdt.pojavlaunch.utils.DownloadUtils.downloadString(MODRINTH_GAME_VERSIONS_URL);
+            if (body != null && !body.isEmpty()) {
+                JsonArray arr = JsonParser.parseString(body).getAsJsonArray();
+                for (int i = 0; i < arr.size(); i++) {
+                    JsonObject o = arr.get(i).getAsJsonObject();
+                    String ver = o.has("version") ? o.get("version").getAsString() : null;
+                    String type = o.has("version_type") ? o.get("version_type").getAsString() : "";
+                    // Only stable "release" builds count (excludes -rc/-pre/-snapshot).
+                    if (ver != null && "release".equals(type) && isSupportedRelease(ver)) {
+                        result.add(ver);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Could not fetch Modrinth game versions; using static list", e);
+            result = null;
+        }
+        if (result == null || result.isEmpty()) {
+            // Offline / error fallback: the known build-verified list.
+            result = new ArrayList<>();
+            for (String v : SUPPORTED_MC_VERSIONS) {
+                if (v != null) result.add(v);
+            }
+        }
+        Collections.sort(result, (a, b) -> compareVersions(b, a)); // descending
+        return result;
+    }
+
+    /**
+     * Only stable releases on the 1.21.x line that CS CLIENT actually builds
+     * (1.21 … 1.21.11). 26.x is a different (unobfuscated / Mojang-mapped)
+     * generation with its own build, so it is not offered here.
+     */
+    public static boolean isSupportedRelease(String token) {
+        if (token == null || !token.matches("1\\.21(\\.\\d+)?")) return false;
+        try {
+            String[] parts = token.split("\\.");
+            int patch = parts.length >= 3 ? Integer.parseInt(parts[2]) : 0;
+            return patch <= 11;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    /** Basic numeric descending comparator for dotted MC versions ("1.21.10" > "1.21.9"). */
+    private static int compareVersions(String a, String b) {
+        String[] pa = a.replace("1.21", "1.21").split("\\.");
+        String[] pb = b.split("\\.");
+        int n = Math.max(pa.length, pb.length);
+        for (int i = 0; i < n; i++) {
+            int ia = i < pa.length ? Integer.parseInt(pa[i]) : 0;
+            int ib = i < pb.length ? Integer.parseInt(pb[i]) : 0;
+            if (ia != ib) return Integer.compare(ia, ib);
+        }
+        return 0;
+    }
 
     /**
      * Minecraft versions CS CLIENT actually builds for (the 1.21.x line).
