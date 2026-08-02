@@ -212,6 +212,8 @@ dependencies {
     // broke the CI compile with "package com.google.gson does not exist" etc.):
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'commons-io:commons-io:2.15.1'
+    // Tar/XZ runtime extraction (MultiRTUtils) needs Apache Commons Compress.
+    implementation 'org.apache.commons:commons-compress:1.26.1'
     // exp4j is built from source at https://github.com/PojavLauncherTeam/exp4j
     implementation 'net.objecthunter:exp4j:0.4.8'
     implementation 'net.sourceforge.htmlcleaner:htmlcleaner:2.6.1'
