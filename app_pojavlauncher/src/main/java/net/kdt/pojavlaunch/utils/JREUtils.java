@@ -24,6 +24,7 @@ import com.oracle.dalvik.*;
 import java.io.*;
 import java.util.*;
 import net.kdt.pojavlaunch.*;
+import net.kdt.pojavlaunch.client.ClientFeature;
 import net.kdt.pojavlaunch.value.MinecraftAccount;
 import net.kdt.pojavlaunch.extra.ExtraConstants;
 import net.kdt.pojavlaunch.extra.ExtraCore;
@@ -354,7 +355,12 @@ public class JREUtils {
             Logger.appendToLog("Metadata file exists: " + skinMeta.exists());
             Logger.appendToLog("Has custom textures: " + hasCustomTextures);
 
-            if (hasCustomTextures) {
+            if (hasCustomTextures && !ClientFeature.isCsClientInstance(gameDirectory)) {
+                // CS CLIENT instances do NOT use the localhost Yggdrasil skin server:
+                // the CS CLIENT mod reads skin/cape directly from the shared
+                // <gameDir>/skins and <gameDir>/capes folders (and the selection
+                // from config/csclient/csclient.json), so starting authlib-injector
+                // here would fight with the mod. Skip it entirely for those.
                 net.kdt.pojavlaunch.yggdrasil.LocalYggdrasilServer.start();
                 int serverPort = net.kdt.pojavlaunch.yggdrasil.LocalYggdrasilServer.getPort();
                 Logger.appendToLog("Yggdrasil server port: " + serverPort);
@@ -366,6 +372,8 @@ public class JREUtils {
                 Logger.appendToLog("authlib-injector.jar exists: " + authlibJar.exists());
                 if (authlibJar.exists()) Logger.appendToLog("authlib-injector.jar size: " + authlibJar.length() + " bytes");
                 shouldStopLocalSkinServerAfterLaunch = true;
+            } else if (ClientFeature.isCsClientInstance(gameDirectory)) {
+                Logger.appendToLog("CS CLIENT instance: local Yggdrasil skin server skipped (mod reads shared folders directly).");
             } else {
                 Logger.appendToLog("No custom skin/cape active, skipping local Yggdrasil server startup.");
             }
@@ -422,7 +430,12 @@ public class JREUtils {
         userArgs.add("-javaagent:"+new File(Tools.DIR_DATA,"methods_injector_agent/methods_injector_agent.jar").getAbsolutePath());
 
         // === STEP 4: Add authlib-injector BEFORE JVMArgs (which contains main class + game args) ===
-        if (net.kdt.pojavlaunch.yggdrasil.LocalYggdrasilServer.getPort() > 0) {
+        // CS CLIENT instances never inject authlib-injector / the localhost hosts:
+        // the mod needs real Mojang access for premium skin lookup and reads the
+        // skin/cape from the shared folders directly. Otherwise skip injection too
+        // (port 0 means no local server was started).
+        if (net.kdt.pojavlaunch.yggdrasil.LocalYggdrasilServer.getPort() > 0
+                && !ClientFeature.isCsClientInstance(gameDirectory)) {
             int skinPort = net.kdt.pojavlaunch.yggdrasil.LocalYggdrasilServer.getPort();
             String authlibPath = new File(Tools.DIR_DATA, "authlib-injector/authlib-injector.jar").getAbsolutePath();
             

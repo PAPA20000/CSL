@@ -189,6 +189,22 @@ public final class ClientFeature {
         }
     }
 
+    /**
+     * True when this game directory is a CS CLIENT instance (i.e. one created by
+     * the Enable Client Feature wizard, {@code custom_instances/csclient-<mc>}).
+     *
+     * <p>For such instances the CS CLIENT mod reads skin/cape directly from the
+     * shared {@code <gameDir>/skins} and {@code <gameDir>/capes} folders, so the
+     * launcher must NOT also start the localhost Yggdrasil skin server
+     * (authlib-injector). This keeps the two mechanisms from fighting and lets
+     * the mod be the single source of truth for skins on CS CLIENT instances.
+     */
+    public static boolean isCsClientInstance(File gameDir) {
+        if (gameDir == null) return false;
+        String name = gameDir.getName();
+        return name != null && name.startsWith("csclient-");
+    }
+
     // ── Wizard entry ────────────────────────────────────────────────────
 
     /** Opens the premium "Enable Client Feature" wizard. */
