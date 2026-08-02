@@ -31,6 +31,13 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
+      # ── Gradle wrapper permission ────────────────────────────────────────────
+      # actions/checkout does not always preserve the git exec bit on gradlew, so
+      # ensure it is executable before any ./gradlew invocation (else the build
+      # fails with "Permission denied" / exit code 126).
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
       # ── JRE 8 Runtime ───────────────────────────────────────────────────────
       # Artifact storage/CDN downloads occasionally time out. Keep the first
       # attempt non-fatal and retry once with a fresh action invocation.
