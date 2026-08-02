@@ -39,9 +39,10 @@ public class ControlData {
     private static List<String> SPECIAL_BUTTON_NAME_ARRAY;
     private static WeakReference<ExpressionBuilder> builder = new WeakReference<>(null);
     private static WeakReference<ArrayMap<String, String>> conversionMap = new WeakReference<>(null);
+    private static String lastExpression = "";
 
     static {
-        buildExpressionBuilder();
+        buildExpressionBuilder("1 + 1");
         buildConversionMap();
     }
 
@@ -207,8 +208,8 @@ public class ControlData {
     /**
      * Create a builder, keep a weak reference to it to use it with all views on first inflation
      */
-    private static void buildExpressionBuilder() {
-        ExpressionBuilder expressionBuilder = new ExpressionBuilder("1 + 1")
+    private static void buildExpressionBuilder(String stringExpression) {
+        ExpressionBuilder expressionBuilder = new ExpressionBuilder(stringExpression)
                 .function(new Function("dp", 1) {
                     @Override
                     public double apply(double... args) {
@@ -227,11 +228,18 @@ public class ControlData {
     /**
      * wrapper for the WeakReference to the expressionField.
      *
+     * <p>Standard exp4j's {@code ExpressionBuilder} takes the expression string in
+     * its constructor (there is no {@code .expression(String)} mutator, that was a
+     * PojavLauncherTeam fork API that is no longer bundled), so we rebuild the
+     * builder for each expression.
+     *
      * @param stringExpression the expression to set.
      */
     private static void setExpression(String stringExpression) {
-        if (builder.get() == null) buildExpressionBuilder();
-        builder.get().expression(stringExpression);
+        if (builder.get() == null || !stringExpression.equals(lastExpression)) {
+            buildExpressionBuilder(stringExpression);
+            lastExpression = stringExpression;
+        }
     }
 
     /**
