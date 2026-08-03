@@ -34,10 +34,40 @@ public class LauncherProfiles {
      *  Does NOT auto-scan version directories — that only happens on explicit
      *  {@link #rescanProfiles()} calls, to prevent deleted profiles from
      *  being recreated behind the user's back. */
+    /** Set when a lenient parse rescued a corrupted profiles file; consumed after the model is normalized. */
+    private static boolean sRecoveredLenient;
+
     public static void load(){
         if (launcherProfilesFile.exists()) {
             try {
-                mainProfileJson = Tools.GLOBAL_GSON.fromJson(Tools.read(launcherProfilesFile.getAbsolutePath()), MinecraftLauncherProfiles.class);
+                String json = Tools.read(launcherProfilesFile.getAbsolutePath());
+                try {
+                    mainProfileJson = Tools.GLOBAL_GSON.fromJson(json, MinecraftLauncherProfiles.class);
+                } catch (Throwable strictFail) {
+                    // Interrupted/corrupted writes leave trailing garbage behind (the strict
+                    // parser dies on it). Retry with a lenient reader before giving up.
+                    Log.w(LauncherProfiles.class.toString(), "Strict profiles parse failed, retrying lenient", strictFail);
+                    try {
+                        com.google.gson.stream.JsonReader reader =
+                                new com.google.gson.stream.JsonReader(new java.io.StringReader(json));
+                        reader.setLenient(true);
+                        mainProfileJson = Tools.GLOBAL_GSON.fromJson(reader, MinecraftLauncherProfiles.class);
+                        sRecoveredLenient = true;
+                        Log.i(LauncherProfiles.class.toString(), "launcher_profiles.json recovered via lenient parse");
+                    } catch (Throwable lenientFail) {
+                        Log.e(LauncherProfiles.class.toString(), "Unrecoverable launcher_profiles.json — backing it up and starting clean", lenientFail);
+                        try {
+                            File backup = new File(launcherProfilesFile.getParentFile(),
+                                    "launcher_profiles.json.corrupt-" + System.currentTimeMillis() + ".bak");
+                            Tools.write(backup.getAbsolutePath(), json);
+                            //noinspection ResultOfMethodCallIgnored
+                            launcherProfilesFile.delete();
+                        } catch (Throwable backupFail) {
+                            Log.e(LauncherProfiles.class.toString(), "Failed to back up the corrupt profiles file", backupFail);
+                        }
+                        mainProfileJson = null;
+                    }
+                }
             } catch (IOException e) {
                 Log.e(LauncherProfiles.class.toString(), "Failed to load file: ", e);
                 throw new RuntimeException(e);
@@ -47,6 +77,12 @@ public class LauncherProfiles {
         // Fill with default
         if (mainProfileJson == null) mainProfileJson = new MinecraftLauncherProfiles();
         if (mainProfileJson.profiles == null) mainProfileJson.profiles = new HashMap<>();
+
+        // Re-normalize the file we just rescued so the strict parser works next launch
+        if (sRecoveredLenient) {
+            sRecoveredLenient = false;
+            write();
+        }
 
         // Strip invalid/corrupted profiles and persist the cleanup immediately
         boolean purged = purgeInvalidProfiles();

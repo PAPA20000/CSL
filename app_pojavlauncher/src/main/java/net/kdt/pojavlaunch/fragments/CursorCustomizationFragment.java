@@ -404,6 +404,9 @@ public class CursorCustomizationFragment extends Fragment {
     }
 
     private void setupStateEditor(@NonNull View view) {
+        // The swatch getters evaluate immediately during setup, before any
+        // state row is opened — the appearance must exist from the start.
+        if (mEditingAppearance == null) mEditingAppearance = CursorAppearance.load(mEditingState);
         View useSystem = view.findViewById(R.id.cse_btn_use_system);
         if (useSystem != null) useSystem.setOnClickListener(v -> {
             if (mEditingAppearance == null) return;
@@ -441,11 +444,11 @@ public class CursorCustomizationFragment extends Fragment {
                 0, v -> mEditingAppearance.shadowRadius = v, "dp");
 
         setupSwatchRow(view, R.id.cse_glow_colors,
-                () -> mEditingAppearance.glowColor, c -> mEditingAppearance.glowColor = c);
+                () -> mEditingAppearance == null ? 0 : mEditingAppearance.glowColor, c -> mEditingAppearance.glowColor = c);
         setupSwatchRow(view, R.id.cse_tint_colors,
-                () -> mEditingAppearance.tintColor, c -> mEditingAppearance.tintColor = c);
+                () -> mEditingAppearance == null ? 0 : mEditingAppearance.tintColor, c -> mEditingAppearance.tintColor = c);
         setupSwatchRow(view, R.id.cse_border_colors,
-                () -> mEditingAppearance.borderColor, c -> mEditingAppearance.borderColor = c);
+                () -> mEditingAppearance == null ? 0 : mEditingAppearance.borderColor, c -> mEditingAppearance.borderColor = c);
 
         // Tap-to-place hotspot on the preview pad.
         View pad = view.findViewById(R.id.cse_preview_pad);
