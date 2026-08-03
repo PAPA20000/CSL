@@ -983,7 +983,62 @@
 
     <!-- Settings -->
     <string name="cs_settings_title">Launcher Settings</string>
+
+    <!-- ════ Phase 4 — Cursor Studio v2 ════ -->
+    <string name="cursor_studio_title">Cursor Studio</string>
+    <string name="cursor_studio_subtitle">Per-state cursors · rules · style</string>
+    <string name="cursor_state_arrow">Arrow</string>
+    <string name="cursor_state_hand">Hand</string>
+    <string name="cursor_state_ibeam">I-Beam</string>
+    <string name="cursor_state_crosshair">Crosshair</string>
+    <string name="cursor_state_resize_ew">Resize ↔</string>
+    <string name="cursor_state_resize_ns">Resize ↕</string>
+    <string name="cursor_state_resize_nwse">Resize ↘</string>
+    <string name="cursor_state_resize_nesw">Resize ↙</string>
+    <string name="cursor_state_move">Move</string>
+    <string name="cursor_state_forbidden">Forbidden</string>
+    <string name="cursor_state_loading">Loading</string>
+    <string name="cursor_state_help">Help</string>
+    <string name="cursor_state_text">Text</string>
+    <string name="cursor_studio_states_tab">States</string>
+    <string name="cursor_studio_rules_tab">Rules</string>
+    <string name="cursor_studio_import">Import</string>
+    <string name="cursor_studio_reset">Reset</string>
+    <string name="cursor_studio_save">Save</string>
+    <string name="cursor_studio_scale">Scale</string>
+    <string name="cursor_studio_rotation">Rotation</string>
+    <string name="cursor_studio_opacity">Opacity</string>
+    <string name="cursor_studio_glow">Glow</string>
+    <string name="cursor_studio_shadow">Shadow</string>
+    <string name="cursor_studio_border">Border</string>
+    <string name="cursor_studio_tint">Color Tint</string>
+    <string name="cursor_studio_hotspot">Hotspot</string>
+    <string name="cursor_studio_anim_speed">Animation Speed</string>
+    <string name="cursor_studio_rules_hint">IF situation THEN cursor — fully editable</string>
+    <string name="cursor_rule_trigger">When</string>
+    <string name="cursor_rule_use">use cursor</string>
+    <string name="cursor_rule_add">+ Add rule</string>
+    <string name="cursor_rule_reset">Reset defaults</string>
+    <string name="cursor_rule_saved">Cursor rules saved</string>
+    <string name="cursor_studio_saved">Cursor saved for state</string>
+    <string name="cursor_studio_reset_done">State restored to default</string>
+    <string name="cursor_trigger_button">Button</string>
+    <string name="cursor_trigger_text_input">Text input</string>
+    <string name="cursor_trigger_disabled">Disabled</string>
+    <string name="cursor_trigger_dragging">Dragging</string>
+    <string name="cursor_trigger_loading">Loading</string>
+    <string name="cursor_trigger_help">Help</string>
+    <string name="cursor_trigger_resize">Resize</string>
+    <string name="cursor_trigger_default">Default</string>
+
+    <!-- ════ Phase 4 — Premium Launch Sequence ════ -->
+    <string name="cs_launch_launching">Launching…</string>
+    <string name="cs_launch_preparing">Preparing session</string>
+    <string name="cs_launch_installed">Game ready</string>
+    <string name="cs_launch_starting_minecraft">Starting Minecraft…</string>
+    <string name="cs_launch_energy_cd">Launch energy</string>
     <string name="cs_settings_unsaved">Unsaved changes</string>
+    <string name="cs_settings_save">Save</string>
     <string name="cs_settings_apply">APPLY</string>
 
     <!-- ═══════════ PHASE 3: Glass terminal + Settings v3 ═══════════ -->

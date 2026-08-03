@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Phase 4: soft ambient aura used behind the profile card during launch -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <gradient
+        android:type="radial"
+        android:gradientRadius="140dp"
+        android:startColor="#33FFC97A"
+        android:centerColor="#1AFFC97A"
+        android:endColor="#00FFC97A" />
+</shape>

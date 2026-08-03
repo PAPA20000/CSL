@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Forbidden / not-allowed cursor (FORBIDDEN state) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp" android:height="48dp"
+    android:viewportWidth="48" android:viewportHeight="48">
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="3.4"
+        android:fillColor="#00000000"
+        android:pathData="M24,24 m-13.5,0 a13.5,13.5 0,1 1,27 0 a13.5,13.5 0,1 1,-27 0" />
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="3.6" android:strokeLineCap="round"
+        android:fillColor="#00000000" android:pathData="M16.2,31.8 L31.8,16.2" />
+</vector>

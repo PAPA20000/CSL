@@ -21,5 +21,7 @@ public class ExtraConstants {
     public static final String LAUNCH_GAME = "launch_game";
     /* ExtraCore Constant: When we want to refresh the mouse cursor */
     public static final String REFRESH_CURSOR = "refresh_cursor";
+    /* ExtraCore Constant: Phase 4 — emitted when the active cursor state changes (Studio live preview) */
+    public static final String CURSOR_STATE_CHANGED = "cursor_state_changed";
 
 }

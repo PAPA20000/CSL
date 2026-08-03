@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Phase 4: energy glow ring that pulses around the game icon on launch -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#2EFFC97A" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="oval">
+            <stroke android:width="3dp" android:color="#99FFC97A" />
+            <solid android:color="#00000000" />
+        </shape>
+    </item>
+</layer-list>

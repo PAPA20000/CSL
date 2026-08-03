@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Settings V4: soft top glow behind the header -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:angle="270"
+        android:startColor="#2EFFFFFF"
+        android:centerColor="#0FFFFFFF"
+        android:endColor="#00FFFFFF" />
+</shape>

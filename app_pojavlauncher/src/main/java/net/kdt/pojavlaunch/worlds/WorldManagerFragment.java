@@ -9,6 +9,8 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -79,6 +81,20 @@ public class WorldManagerFragment extends Fragment implements WorldListAdapter.L
     private ProgressBar mProgressBar;
     private TextView mProgressText;
 
+    // ── Phase 4 hardening ──
+    private boolean mLoaded;
+    private final Handler mSearchHandler = new Handler(Looper.getMainLooper());
+    private final Runnable mSearchRunnable = () -> {
+        if (mAdapter != null && mSearch != null) {
+            String q = mSearch.getText() != null ? mSearch.getText().toString() : "";
+            mAdapter.setQuery(q);
+            LauncherPreferences.DEFAULT_PREF.edit()
+                    .putString("world_manager_query", q).apply();
+        }
+    };
+    private int mRestoredSort = WorldListAdapter.SORT_LAST_PLAYED;
+    private String mRestoredQuery = "";
+
     // ── SAF: import a world zip ──
     private final ActivityResultLauncher<Object> mImportLauncher =
             registerForActivityResult(new OpenDocumentWithExtension("zip"), uri -> {
@@ -112,6 +128,12 @@ public class WorldManagerFragment extends Fragment implements WorldListAdapter.L
         mSavesDir = new File(mGameDir, "saves");
         mProfileKey = args != null ? args.getString(BUNDLE_PROFILE_KEY) : null;
         mProfileName = args != null ? args.getString(BUNDLE_PROFILE_NAME) : null;
+
+        // Phase 4: remember the user's sort + search across visits.
+        mRestoredSort = LauncherPreferences.DEFAULT_PREF
+                .getInt("world_manager_sort", WorldListAdapter.SORT_LAST_PLAYED);
+        mRestoredQuery = LauncherPreferences.DEFAULT_PREF
+                .getString("world_manager_query", "");
     }
 
     @Override
@@ -144,17 +166,27 @@ public class WorldManagerFragment extends Fragment implements WorldListAdapter.L
         mList.setHasFixedSize(false);
         mList.setItemViewCacheSize(10);
         mAdapter = new WorldListAdapter(this);
+        mAdapter.setSortMode(mRestoredSort);
         mList.setAdapter(mAdapter);
 
         setupSortChips(view);
 
+        // Phase 4: debounced search (300 ms) so typing stays smooth.
+        mSearch.setText(mRestoredQuery);
         mSearch.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
             @Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
             @Override public void afterTextChanged(Editable s) {
-                if (mAdapter != null) mAdapter.setQuery(s != null ? s.toString() : "");
+                mSearchHandler.removeCallbacks(mSearchRunnable);
+                mSearchHandler.postDelayed(mSearchRunnable, 300);
             }
         });
+
+        // Phase 4: loading state — never flash the empty page mid-scan.
+        mLoaded = false;
+        View loading = view.findViewById(R.id.world_loading);
+        if (loading != null) loading.setVisibility(View.VISIBLE);
+        if (mEmptyState != null) mEmptyState.setVisibility(View.GONE);
 
         reloadWorlds(true);
         refreshStorageCard(view);
@@ -170,10 +202,12 @@ public class WorldManagerFragment extends Fragment implements WorldListAdapter.L
 
     @Override
     public void onDestroyView() {
+        mSearchHandler.removeCallbacksAndMessages(null);
         if (mProgressDialog != null) mProgressDialog.dismiss();
-        mList.setAdapter(null);
+        if (mList != null) mList.setAdapter(null);
         mList = null;
         mAdapter = null;
+        mLoaded = false;
         super.onDestroyView();
     }
 
@@ -188,6 +222,9 @@ public class WorldManagerFragment extends Fragment implements WorldListAdapter.L
             requireActivity().runOnUiThread(() -> {
                 if (mAdapter == null || !isAdded()) return;
                 mAdapter.submit(worlds);
+                mLoaded = true;
+                View loading = getView() != null ? getView().findViewById(R.id.world_loading) : null;
+                if (loading != null) loading.setVisibility(View.GONE);
                 updateCountAndEmpty(worlds.size());
                 refreshStorageCard(requireView());
             });
@@ -197,6 +234,7 @@ public class WorldManagerFragment extends Fragment implements WorldListAdapter.L
     private void updateCountAndEmpty(int count) {
         mCountChip.setText(getResources().getQuantityString(
                 R.plurals.cs_world_count, count, count));
+        if (!mLoaded) return; // loading spinner is showing
         boolean empty = count == 0;
         mEmptyState.setVisibility(empty ? View.VISIBLE : View.GONE);
         if (empty) {
@@ -248,6 +286,8 @@ public class WorldManagerFragment extends Fragment implements WorldListAdapter.L
             final int mode = i;
             mSortChips[i].setOnClickListener(v -> {
                 if (mAdapter != null) mAdapter.setSortMode(mode);
+                LauncherPreferences.DEFAULT_PREF.edit()
+                        .putInt("world_manager_sort", mode).apply();
                 updateSortChipStyles();
             });
             UiMotion.pressFeedback(mSortChips[i]);

@@ -216,7 +216,7 @@ public class LauncherPreferenceFragment extends Fragment {
             TextView chipText = chipView.findViewById(R.id.settings_nav_chip_text);
             boolean selected = Objects.equals(item.categoryLinkTarget, mCategoryName);
             chipText.setText(shortenCategoryLabel(item.title));
-            chipText.setBackgroundResource(selected ? R.drawable.bg_cs_pill_active : R.drawable.bg_cs_pill_idle);
+            chipText.setBackgroundResource(selected ? R.drawable.bg_setting_rail_active : R.drawable.bg_setting_rail_idle);
             chipText.setTextColor(Color.parseColor(selected ? "#0D0D0D" : "#9CA3AF"));
             chipText.setOnClickListener(v -> {
                 if (!selected) openCategoryPage(item.categoryLinkTarget);

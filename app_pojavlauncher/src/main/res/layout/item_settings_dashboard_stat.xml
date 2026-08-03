@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Settings V4 dashboard stat tile -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="0dp"
     android:layout_height="wrap_content"
     android:layout_marginEnd="10dp"
     android:layout_weight="1"
-    android:background="@drawable/bg_csp_chip_idle"
+    android:background="@drawable/bg_setting_card_v4_sm"
     android:orientation="vertical"
     android:paddingStart="14dp"
     android:paddingTop="12dp"
@@ -15,6 +16,8 @@
         android:id="@+id/dashboard_stat_value"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:maxLines="1"
         android:textColor="#FFFFFF"
         android:textSize="16sp"
         android:textStyle="bold" />

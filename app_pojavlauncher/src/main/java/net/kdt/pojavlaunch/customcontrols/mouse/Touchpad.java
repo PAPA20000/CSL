@@ -106,7 +106,8 @@ public class Touchpad extends View implements GrabListener, AbstractTouchpad, Ex
 
     @Override
     protected void onDraw(Canvas canvas) {
-        Bitmap bitmap = net.kdt.pojavlaunch.customcontrols.mouse.CustomCursorRenderer.getCurrentFrameBitmap();
+        // Phase 4: the active cursor state (per-state art + hotspot).
+        Bitmap bitmap = net.kdt.pojavlaunch.cursor.CursorController.getCurrentFrameBitmap();
         if (bitmap == null) {
             if (mMousePointerDrawable == null) return;
             canvas.save();
@@ -117,25 +118,25 @@ public class Touchpad extends View implements GrabListener, AbstractTouchpad, Ex
         }
 
         canvas.save();
-        int hotspotX = LauncherPreferences.DEFAULT_PREF.getInt("custom_cursor_hotspot_x", 0);
-        int hotspotY = LauncherPreferences.DEFAULT_PREF.getInt("custom_cursor_hotspot_y", 0);
-        
+        int hotspotX = net.kdt.pojavlaunch.cursor.CursorController.getCurrentHotspotX();
+        int hotspotY = net.kdt.pojavlaunch.cursor.CursorController.getCurrentHotspotY();
+
         float scale = LauncherPreferences.PREF_MOUSESCALE;
         float drawWidth = bitmap.getWidth() * scale;
         float drawHeight = bitmap.getHeight() * scale;
-        
+
         float drawX = mMouseX - (hotspotX * scale);
         float drawY = mMouseY - (hotspotY * scale);
-        
+
         canvas.translate(drawX, drawY);
-        
+
         android.graphics.Rect src = new android.graphics.Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
         android.graphics.RectF dst = new android.graphics.RectF(0, 0, drawWidth, drawHeight);
-        
+
         android.graphics.Paint paint = new android.graphics.Paint();
         paint.setFilterBitmap(true);
         paint.setAntiAlias(true);
-        
+
         canvas.drawBitmap(bitmap, src, dst, paint);
         canvas.restore();
     }

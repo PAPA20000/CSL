@@ -37,9 +37,15 @@ public class CallbackBridge {
     }
 
     public static void glfwSetCursor(long window, long cursor) {
-        net.kdt.pojavlaunch.Tools.MAIN_HANDLER.post(() -> {
-            net.kdt.pojavlaunch.customcontrols.mouse.CustomCursorRenderer.updateCursorFrame();
-        });
+        // Phase 4: recover the GLFW shape the game asked for and switch the
+        // launcher cursor to the matching state (Arrow / Hand / IBeam / …).
+        final int shape = net.kdt.pojavlaunch.cursor.CursorRegistry.getShape(cursor);
+        net.kdt.pojavlaunch.cursor.CursorController.onGameCursorShape(shape);
+    }
+
+    /** Phase 4: the game's GLFW creates a standard cursor — remember its shape. */
+    public static long glfwCreateStandardCursor(int shape) {
+        return net.kdt.pojavlaunch.cursor.CursorRegistry.registerStandardShape(shape);
     }
 
     public static final Choreographer sChoreographer = Choreographer.getInstance();

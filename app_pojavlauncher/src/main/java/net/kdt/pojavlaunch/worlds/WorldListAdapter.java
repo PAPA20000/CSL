@@ -63,7 +63,11 @@ public final class WorldListAdapter extends RecyclerView.Adapter<WorldListAdapte
 
     @Override
     public long getItemId(int position) {
-        return mVisible.get(position).stableKey().hashCode();
+        // Phase 4 guard: RecyclerView may query ids during a concurrent diff
+        // swap; never touch an out-of-range row (that crashed old builds).
+        if (position < 0 || position >= mVisible.size()) return RecyclerView.NO_ID;
+        WorldEntry w = mVisible.get(position);
+        return w != null && w.stableKey() != null ? w.stableKey().hashCode() : RecyclerView.NO_ID;
     }
 
     public void submit(@NonNull List<WorldEntry> worlds) {

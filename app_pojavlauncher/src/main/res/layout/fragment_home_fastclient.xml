@@ -34,6 +34,14 @@
                 android:layout_height="@dimen/_56sdp"
                 android:layout_marginEnd="@dimen/_12sdp">
 
+                <View
+                    android:id="@+id/launch_glow_ring"
+                    android:layout_width="78dp"
+                    android:layout_height="78dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_launch_glow_ring"
+                    android:visibility="gone" />
+
                 <ImageView
                     android:id="@+id/iv_player_head"
                     android:layout_width="match_parent"
@@ -266,6 +274,20 @@
                 android:letterSpacing="0.08"
                 android:layout_gravity="center" />
         </net.kdt.pojavlaunch.ui.PremiumPlayButtonView>
+
+        <!-- Phase 4: "Launching…" status revealed by the launch sequence -->
+        <TextView
+            android:id="@+id/launch_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/_8sdp"
+            android:text="@string/cs_launch_launching"
+            android:textColor="#FFC97A"
+            android:textSize="@dimen/_12ssp"
+            android:textStyle="bold"
+            android:letterSpacing="0.14"
+            android:visibility="gone" />
 
         <!-- Infrawire Official Partner — premium sponsor card (below Play, never blocking) -->
         <include

@@ -25,7 +25,15 @@
         android:id="@+id/img_profile_background_scrim"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/bg_profile_card_scrim"
+        android:background="@drawable/bg_profile_card_scrim" />
+
+    <!-- Phase 4: energy glow ring revealed by the launch sequence -->
+    <View
+        android:id="@+id/launch_glow_ring"
+        android:layout_width="118dp"
+        android:layout_height="118dp"
+        android:layout_gravity="center"
+        android:background="@drawable/bg_launch_glow_ring"
         android:visibility="gone" />
 
     <!-- Main content -->

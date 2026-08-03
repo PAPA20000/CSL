@@ -172,10 +172,22 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         });
 
         holder.btnPlay.setOnClickListener(v -> {
-            // Phase 3: "launch" is a unique morph, not the old download pulse.
-            holder.btnPlay.beginLaunch();
             v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
-            if (mListener != null) mListener.onProfilePlay(profileKey, profile);
+            if (isProfileInstalled(profile)) {
+                // Phase 4: installed → premium energy launch (no download feel).
+                holder.btnPlay.beginInstalledLaunch();
+                net.kdt.pojavlaunch.ui.LaunchSequenceController.play(
+                        holder.btnPlay,
+                        holder.cardRoot,
+                        holder.imgBackground,
+                        holder.imgIcon,
+                        null,
+                        () -> { if (mListener != null) mListener.onProfilePlay(profileKey, profile); });
+            } else {
+                // Not installed → the classic premium download morph (unchanged).
+                holder.btnPlay.beginLaunch();
+                if (mListener != null) mListener.onProfilePlay(profileKey, profile);
+            }
         });
 
         holder.btnBrowse.setOnClickListener(v -> {
@@ -308,6 +320,19 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
     @Override
     public int getItemCount() {
         return mProfileList.size();
+    }
+
+    /** Phase 4: version folder + jar present in the profile's game directory. */
+    private static boolean isProfileInstalled(MinecraftProfile profile) {
+        if (profile == null || profile.lastVersionId == null
+                || "Unknown".equals(profile.lastVersionId)) return false;
+        try {
+            java.io.File gameDir = net.kdt.pojavlaunch.Tools.getGameDirPath(profile);
+            java.io.File versionDir = new java.io.File(gameDir, "versions/" + profile.lastVersionId);
+            return new java.io.File(versionDir, profile.lastVersionId + ".jar").exists();
+        } catch (Throwable t) {
+            return false;
+        }
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

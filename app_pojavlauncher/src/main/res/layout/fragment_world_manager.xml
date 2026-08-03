@@ -251,6 +251,16 @@
             android:paddingHorizontal="14dp"
             android:paddingBottom="10dp" />
 
+        <!-- Phase 4: visible while the (off-thread) first scan is running,
+             so the page never flashes an empty state before worlds appear -->
+        <ProgressBar
+            android:id="@+id/world_loading"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center"
+            android:indeterminateTint="#E4E4EA"
+            android:visibility="gone" />
+
         <LinearLayout
             android:id="@+id/world_empty_state"
             android:layout_width="match_parent"

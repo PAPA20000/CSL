@@ -52,12 +52,28 @@ public class FastClientHomeFragment extends Fragment {
         // 2. Bind Profile Data (Name, Icon, Version, Chips)
         bindProfileData(view);
 
-        // 3. Play Button Functionality — premium Phase-3 launch morph
+        // 3. Play Button Functionality — Phase 4 premium launch sequence.
+        // Installed game → energy launch (no download feel).
+        // Not installed → existing download morph (unchanged).
         PremiumPlayButtonView btnPlay = view.findViewById(R.id.btn_play_main);
+        final View leftPane = view.findViewById(R.id.left_pane);
+        final ImageView launchIcon = view.findViewById(R.id.iv_player_head);
+        final TextView launchStatus = view.findViewById(R.id.launch_status);
         btnPlay.setOnClickListener(v -> {
-            btnPlay.beginLaunch();
             v.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP);
-            ExtraCore.setValue(ExtraConstants.LAUNCH_GAME, true);
+            if (isCurrentProfileInstalled()) {
+                btnPlay.beginInstalledLaunch();
+                net.kdt.pojavlaunch.ui.LaunchSequenceController.play(
+                        btnPlay,
+                        view.findViewById(R.id.card_profile),
+                        leftPane,
+                        launchIcon,
+                        launchStatus,
+                        () -> ExtraCore.setValue(ExtraConstants.LAUNCH_GAME, true));
+            } else {
+                btnPlay.beginLaunch();
+                ExtraCore.setValue(ExtraConstants.LAUNCH_GAME, true);
+            }
         });
 
         // 4. Profile Selection & Settings
@@ -201,6 +217,23 @@ public class FastClientHomeFragment extends Fragment {
                 });
             }
         }
+    }
+
+    /**
+     * Phase 4: "already installed" check — the version folder + jar exist in
+     * this profile's game directory. Drives which launch animation plays.
+     */
+    private boolean isCurrentProfileInstalled() {
+        String profileKey = LauncherPreferences.DEFAULT_PREF
+                .getString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE, "");
+        LauncherProfiles.load();
+        MinecraftProfile profile = LauncherProfiles.mainProfileJson != null
+                ? LauncherProfiles.mainProfileJson.profiles.get(profileKey) : null;
+        if (profile == null || profile.lastVersionId == null
+                || "Unknown".equals(profile.lastVersionId)) return false;
+        File gameDir = Tools.getGameDirPath(profile);
+        File versionDir = new File(gameDir, "versions/" + profile.lastVersionId);
+        return new File(versionDir, profile.lastVersionId + ".jar").exists();
     }
 
     private File getCurrentProfileDirectory() {

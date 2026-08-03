@@ -52,10 +52,14 @@ public class PremiumPlayButtonView extends FrameLayout implements TaskCountListe
 
     private ValueAnimator mIdleAnimator;
     private ValueAnimator mLaunchAnimator;
+    private ValueAnimator mEnergyAnimator;
     private float mIdleFraction = 0f;
     private float mLaunchFraction = 0f;
+    private float mEnergyFraction = 0f;
     private boolean mLaunching;
     private boolean mExplicitLaunch;
+    /** Phase 4: installed-game launch → energy beam, never a progress wave. */
+    private boolean mEnergyMode;
     private boolean mAnimationsAllowed = true;
 
     private final float[] mPX = new float[PARTICLE_COUNT];
@@ -111,9 +115,42 @@ public class PremiumPlayButtonView extends FrameLayout implements TaskCountListe
 
     /** Immediate premium launch morph. Call before dispatching LAUNCH_GAME. */
     public void beginLaunch() {
+        mEnergyMode = false;
         mExplicitLaunch = true;
         setLaunching(true);
         spawnParticles();
+        morph();
+        removeCallbacks(mFailsafeReset);
+        postDelayed(mFailsafeReset, FAILSAFE_MS);
+    }
+
+    /**
+     * Phase 4 — premium launch for an ALREADY-INSTALLED game.
+     *
+     * Deliberately different from {@link #beginLaunch()}: no progress wave,
+     * no download connotation. The button glows with an energy beam that
+     * sweeps horizontally (an energy pulse, not a progress bar), the edge
+     * pulses and particles burst — then Minecraft takes over via the boot
+     * overlay. The task-count listener never drives this mode, so download
+     * tasks that still fire during a normal launch cannot turn it back into
+     * a "download" animation.
+     */
+    public void beginInstalledLaunch() {
+        mEnergyMode = true;
+        mExplicitLaunch = true;
+        setLaunching(true);
+        spawnParticles();
+        startEnergyAnimator();
+        morph();
+        removeCallbacks(mFailsafeReset);
+        postDelayed(mFailsafeReset, FAILSAFE_MS);
+    }
+
+    public boolean isEnergyMode() {
+        return mEnergyMode;
+    }
+
+    private void morph() {
         animate().cancel();
         animate().scaleX(0.965f).scaleY(0.90f).setDuration(80)
                 .withEndAction(() -> animate().scaleX(1.035f).scaleY(1.06f)
@@ -123,13 +160,13 @@ public class PremiumPlayButtonView extends FrameLayout implements TaskCountListe
                                 .setDuration(120).start())
                         .start())
                 .start();
-        removeCallbacks(mFailsafeReset);
-        postDelayed(mFailsafeReset, FAILSAFE_MS);
     }
 
     /** Return to the idle platinum state. */
     public void reset() {
         mExplicitLaunch = false;
+        mEnergyMode = false;
+        stopEnergyAnimator();
         setLaunching(false);
     }
 
@@ -140,14 +177,20 @@ public class PremiumPlayButtonView extends FrameLayout implements TaskCountListe
     private void setLaunching(boolean launching) {
         if (mLaunching == launching) return;
         mLaunching = launching;
-        if (launching) startLaunchAnimator();
-        else stopLaunchAnimator();
+        if (launching) {
+            startLaunchAnimator();
+            if (mEnergyMode) startEnergyAnimator();
+        } else {
+            stopLaunchAnimator();
+            stopEnergyAnimator();
+        }
         setSelected(launching);
         invalidate();
     }
 
     @Override
     public void onUpdateTaskCount(int taskCount) {
+        if (mEnergyMode) return; // installed-launch: tasks are launch chores, not progress
         post(() -> {
             if (taskCount > 0) {
                 setLaunching(true);
@@ -178,8 +221,10 @@ public class PremiumPlayButtonView extends FrameLayout implements TaskCountListe
         ProgressKeeper.removeTaskCountListener(this);
         stopIdleAnimator();
         stopLaunchAnimator();
+        stopEnergyAnimator();
         mLaunching = false;
         mExplicitLaunch = false;
+        mEnergyMode = false;
         clearParticles();
         super.onDetachedFromWindow();
     }
@@ -191,9 +236,11 @@ public class PremiumPlayButtonView extends FrameLayout implements TaskCountListe
         if (!mAnimationsAllowed) {
             stopIdleAnimator();
             stopLaunchAnimator();
+            stopEnergyAnimator();
         } else {
             startIdleAnimator();
             if (mLaunching) startLaunchAnimator();
+            if (mLaunching && mEnergyMode) startEnergyAnimator();
         }
     }
 
@@ -241,6 +288,30 @@ public class PremiumPlayButtonView extends FrameLayout implements TaskCountListe
         clearParticles();
     }
 
+    /** Phase 4 energy beam: a sweeping energy pulse, never a progress bar. */
+    private void startEnergyAnimator() {
+        if (!mAnimationsAllowed || !isAttachedToWindow()) return;
+        if (mEnergyAnimator == null) {
+            mEnergyAnimator = ValueAnimator.ofFloat(-0.2f, 1.2f);
+            mEnergyAnimator.setDuration(950);
+            mEnergyAnimator.setRepeatCount(ValueAnimator.INFINITE);
+            mEnergyAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+            mEnergyAnimator.addUpdateListener(a -> {
+                mEnergyFraction = (Float) a.getAnimatedValue();
+                stepParticles();
+                invalidate();
+            });
+        }
+        if (!mEnergyAnimator.isStarted()) mEnergyAnimator.start();
+    }
+
+    private void stopEnergyAnimator() {
+        if (mEnergyAnimator != null) {
+            mEnergyAnimator.cancel();
+            mEnergyAnimator = null;
+        }
+    }
+
     @Override
     protected void dispatchDraw(Canvas canvas) {
         int save = canvas.save();
@@ -255,7 +326,20 @@ public class PremiumPlayButtonView extends FrameLayout implements TaskCountListe
         canvas.drawRect(-getWidth() * 0.25f, 0, getWidth() * 0.5f, getHeight(), mSheenPaint);
         canvas.restore();
 
-        if (mLaunching) {
+        if (mLaunching && mEnergyMode) {
+            // Phase 4 energy beam: a swept energy pulse + comet head.
+            // Visually the opposite of a progress bar — it charges, then the
+            // game takes over through the boot overlay.
+            canvas.save();
+            float sweep = mEnergyFraction * getWidth() * 1.6f - getWidth() * 0.35f;
+            canvas.translate(sweep, 0);
+            canvas.drawRect(-getWidth() * 0.55f, 0, getWidth() * 0.45f, getHeight(), mWavePaint);
+            float headX = getWidth() * 0.14f;
+            float headY = getHeight() * 0.5f;
+            mParticlePaint.setColor(0xCCFFE3B8);
+            canvas.drawCircle(headX, headY, getHeight() * 0.42f, mParticlePaint);
+            canvas.restore();
+        } else if (mLaunching) {
             // Premium horizontal wave: progress-like motion, not a circular download.
             canvas.save();
             canvas.translate((mLaunchFraction - 0.5f) * getWidth(), 0);
@@ -269,9 +353,11 @@ public class PremiumPlayButtonView extends FrameLayout implements TaskCountListe
 
         // Glow + edge highlight above content.
         if (mLaunching) {
-            float pulse = 0.5f + 0.5f * (float) Math.sin(mLaunchFraction * Math.PI * 2.0);
-            mStrokePaint.setColor(0x559B59E8);
-            mStrokePaint.setStrokeWidth(dp(4.5f + pulse * 1.3f));
+            float pulse = mEnergyMode
+                    ? 0.6f + 0.4f * (float) Math.sin(mEnergyFraction * Math.PI * 2.0)
+                    : 0.5f + 0.5f * (float) Math.sin(mLaunchFraction * Math.PI * 2.0);
+            mStrokePaint.setColor(mEnergyMode ? 0x66FFC97A : 0x559B59E8);
+            mStrokePaint.setStrokeWidth(dp((mEnergyMode ? 5.5f : 4.5f) + pulse * 1.3f));
             canvas.drawPath(mRoundPath, mStrokePaint);
         }
         mStrokePaint.setColor(mLaunching ? 0x99F3F3F7 : 0x66FFFFFF);

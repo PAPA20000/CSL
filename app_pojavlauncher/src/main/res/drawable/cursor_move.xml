@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Move / all-direction cursor (MOVE state) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp" android:height="48dp"
+    android:viewportWidth="48" android:viewportHeight="48">
+    <path android:fillColor="#FFFFFF" android:pathData="M24,4 L18.2,11 L21.4,11 L21.4,20 L26.6,20 L26.6,11 L29.8,11 Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M24,44 L18.2,37 L21.4,37 L21.4,28 L26.6,28 L26.6,37 L29.8,37 Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M4,24 L11,18.2 L11,21.4 L20,21.4 L20,26.6 L11,26.6 L11,29.8 Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M44,24 L37,18.2 L37,21.4 L28,21.4 L28,26.6 L37,26.6 L37,29.8 Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M24,24 m-3.4,0 a3.4,3.4 0,1 1,6.8 0 a3.4,3.4 0,1 1,-6.8 0" />
+</vector>

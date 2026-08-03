@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Settings V4: active category pill (platinum) -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:angle="0"
+        android:startColor="#F2F2F5"
+        android:endColor="#C9CBD6" />
+    <corners android:radius="18dp" />
+</shape>

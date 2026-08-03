@@ -1411,10 +1411,12 @@ public class GLFW
     }*/
 
     public static long glfwCreateCursor(@NativeType("const GLFWimage *") GLFWImage image, int xhot, int yhot) {
-        return 4L;
+        // Custom-image cursors are not reproduced on Android; fall back to arrow.
+        return CallbackBridge.glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
     }
     public static long glfwCreateStandardCursor(int shape) {
-        return 4L;
+        // Phase 4: route through the bridge so the shape reaches the launcher.
+        return CallbackBridge.glfwCreateStandardCursor(shape);
     }
     public static void glfwDestroyCursor(@NativeType("GLFWcursor *") long cursor) {}
     public static void glfwSetCursor(@NativeType("GLFWwindow *") long window, @NativeType("GLFWcursor *") long cursor) {

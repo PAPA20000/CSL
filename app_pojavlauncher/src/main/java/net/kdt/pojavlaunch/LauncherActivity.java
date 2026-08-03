@@ -106,6 +106,7 @@ public class LauncherActivity extends BaseActivity {
     private mcAccountSpinner mAccountSpinner;
     private FragmentContainerView mFragmentView;
     private ImageButton mSettingsButton;
+    private net.kdt.pojavlaunch.cursor.CursorHoverTracker mHoverTracker;
     private ProgressLayout mProgressLayout;
     private ProgressServiceKeeper mProgressServiceKeeper;
     private ModloaderInstallTracker mInstallTracker;
@@ -487,6 +488,13 @@ public class LauncherActivity extends BaseActivity {
         );
         getWindow().setBackgroundDrawable(null);
         bindViews();
+
+        // Phase 4: launcher-wide cursor rules (hover → Hand / I-Beam / …).
+        // One tracker on the activity root covers every swapped fragment.
+        mHoverTracker = new net.kdt.pojavlaunch.cursor.CursorHoverTracker(this);
+        View rootView = findViewById(android.R.id.content);
+        if (rootView != null) mHoverTracker.attach(rootView);
+
         // Give the persistent launcher chrome the same polished arrival as pages.
         UiMotion.revealChrome(findViewById(R.id.header_bar));
         UiMotion.revealChrome(mAccountSpinner);
@@ -661,6 +669,10 @@ public class LauncherActivity extends BaseActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (mHoverTracker != null) {
+            mHoverTracker.detach();
+            mHoverTracker = null;
+        }
         if (mBootOverlay != null) {
             mBootOverlay.removeCallbacks(mBootFailsafe);
             mBootOverlay.removeCallbacks(mBootPostTaskHide);

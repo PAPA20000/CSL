@@ -65,5 +65,11 @@ public class CallbackBridge {
     public static native float nativeGetAndroidDPI();
     public static native boolean nativeNotifyLauncher(int type, int... action);
     public static void glfwSetCursor(long window, long cursor) {}
+
+    /** Phase 4: remember the standard GLFW shape under a unique handle so a
+     *  later glfwSetCursor() can switch the launcher cursor. */
+    public static long glfwCreateStandardCursor(int shape) {
+        return shape;
+    }
 }
 

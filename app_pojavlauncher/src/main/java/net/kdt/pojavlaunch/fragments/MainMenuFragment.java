@@ -44,6 +44,7 @@ public class MainMenuFragment extends Fragment {
     private View mEditProfileButton;
     private View mBottomBar;
     private OnBackPressedCallback mRightPaneBackCallback;
+    private net.kdt.pojavlaunch.cursor.CursorHoverTracker mHoverTracker;
 
     private boolean isTwoPane() {
         return mRightPane != null;
@@ -193,7 +194,7 @@ public class MainMenuFragment extends Fragment {
         if (mNewsButton != null) mNewsButton.setOnClickListener(v -> Tools.openURL(requireActivity(), Tools.URL_HOME));
         if (mDiscordButton != null) mDiscordButton.setOnClickListener(v -> Tools.openURL(requireActivity(), getString(R.string.discord_invite)));
         if (mCustomControlButton != null) mCustomControlButton.setOnClickListener(v -> startActivity(new Intent(requireContext(), CustomControlsActivity.class)));
-        if (mCursorCustomButton != null) mCursorCustomButton.setOnClickListener(v -> Tools.swapFragment(requireActivity(), CursorCustomizationFragment.class, CursorCustomizationFragment.TAG, null));
+        if (mCursorCustomButton != null) mCursorCustomButton.setOnClickListener(v -> Tools.swapFragment(requireActivity(), CursorStudioFragment.class, CursorStudioFragment.TAG, null));
         if (mManageSkinButton != null) mManageSkinButton.setOnClickListener(v -> openPane(SkinManagerFragment.class, SkinManagerFragment.TAG, null));
 
         if (mInstallJarButton != null) {
@@ -219,10 +220,18 @@ public class MainMenuFragment extends Fragment {
         applyPremiumTouchAnimation(mHomeButton, mCursorCustomButton, mCustomControlButton, mInstallJarButton, mShareLogsButton, mOpenDirectoryButton, mPlayBtn, mEditProfileBtn, mVersionSpinner, mManageSkinButton);
 
         if (mPlayBtn != null) mPlayBtn.setOnClickListener(v -> ExtraCore.setValue(ExtraConstants.LAUNCH_GAME, true));
+
+        // Phase 4: launcher-UI cursor rules (hover → Hand/I-Beam/Forbidden…)
+        mHoverTracker = new net.kdt.pojavlaunch.cursor.CursorHoverTracker(requireContext());
+        mHoverTracker.attach(view);
     }
 
     @Override
     public void onDestroyView() {
+        if (mHoverTracker != null) {
+            mHoverTracker.detach();
+            mHoverTracker = null;
+        }
         super.onDestroyView();
         mRightPane = null; mBottomBarBg = null; mPlayButton = null; mEditProfileButton = null; mBottomBar = null;
         getChildFragmentManager().removeOnBackStackChangedListener(mBackStackListener);
