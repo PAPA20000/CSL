@@ -162,6 +162,22 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
             uri -> handleImport(uri, "shaderpacks")
     );
 
+    /** GIF-aware background picker: GIFs stay animated, everything else is cropped. */
+    private final ActivityResultLauncher<String[]> mBackgroundImagePicker = registerForActivityResult(
+            new ActivityResultContracts.OpenDocument(), uri -> {
+                android.content.Context context = getContext();
+                if (context == null) return;
+                if (uri == null) {
+                    Toast.makeText(context, R.string.cropper_select_cancelled, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (isGifDocument(context, uri)) {
+                    applyAnimatedBackground(context, uri);
+                } else {
+                    CropperUtils.openCropperDialog(context, uri, mBackgroundCropperListener);
+                }
+            });
+
     private List<String> mRenderNames;
     private volatile String mEncodedBackgroundUri = null;
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
@@ -379,6 +395,194 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
         });
     }
 
+    private static boolean isGifDocument(android.content.Context context, android.net.Uri uri) {
+        try (InputStream in = context.getContentResolver().openInputStream(uri)) {
+            byte[] head = new byte[3];
+            if (in == null || in.read(head) < 3) return false;
+            return head[0] == 'G' && head[1] == 'I' && head[2] == 'F';
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /** Store the raw GIF as a data URI (no re-encode) and preview it animating. */
+    private void applyAnimatedBackground(android.content.Context context, android.net.Uri uri) {
+        mBgExecutor.execute(() -> {
+            try (InputStream in = context.getContentResolver().openInputStream(uri);
+                 java.io.ByteArrayOutputStream raw = new java.io.ByteArrayOutputStream()) {
+                byte[] buf = new byte[8192];
+                int read;
+                long total = 0;
+                while ((read = in.read(buf)) != -1) {
+                    raw.write(buf, 0, read);
+                    total += read;
+                    if (total > 15L * 1024 * 1024) throw new java.io.IOException("GIF too large");
+                }
+                byte[] gifBytes = raw.toByteArray();
+                String dataUri = "data:image/gif;base64,"
+                        + android.util.Base64.encodeToString(gifBytes, android.util.Base64.NO_WRAP);
+                android.graphics.drawable.Drawable preview =
+                        net.kdt.pojavlaunch.profiles.ProfileGifSupport.buildGifDrawable(gifBytes);
+                mEncodedBackgroundUri = dataUri;
+                mMainHandler.post(() -> {
+                    if (mTempProfile != null) mTempProfile.background = dataUri;
+                    if (preview != null && mProfileBackground != null) {
+                        net.kdt.pojavlaunch.profiles.ProfileGifSupport.stopDrawable(mProfileBackground.getDrawable());
+                        mProfileBackground.setImageDrawable(preview);
+                    }
+                });
+            } catch (Exception e) {
+                mMainHandler.post(() -> Tools.showErrorRemote(e));
+            }
+        });
+    }
+
+    private void readInputsFromUi() {
+        if (mTempProfile == null) return;
+        mTempProfile.lastVersionId = mDefaultVersion.getText().toString();
+        mTempProfile.controlFile = mDefaultControl.getText().toString();
+        mTempProfile.name = mDefaultName.getText().toString();
+        mTempProfile.javaArgs = mDefaultJvmArgument.getText().toString()
+                .replaceAll("[\\r\\n]+", " ")
+                .trim();
+        mTempProfile.gameDir = mDefaultPath.getText().toString();
+
+        if(mTempProfile.controlFile != null && mTempProfile.controlFile.isEmpty()) mTempProfile.controlFile = null;
+        if(mTempProfile.javaArgs != null && mTempProfile.javaArgs.isEmpty()) mTempProfile.javaArgs = null;
+        if(mTempProfile.gameDir != null && mTempProfile.gameDir.isEmpty()) mTempProfile.gameDir = null;
+
+        if (mDefaultRuntime.getSelectedItem() instanceof Runtime) {
+            Runtime selectedRuntime = (Runtime) mDefaultRuntime.getSelectedItem();
+            mTempProfile.javaDir = (selectedRuntime.name.equals("<Default>") || selectedRuntime.versionString == null)
+                    ? null : Tools.LAUNCHERPROFILES_RTPREFIX + selectedRuntime.name;
+        }
+
+        if(mDefaultRenderer.getSelectedItemPosition() == mRenderNames.size()) mTempProfile.pojavRendererName = null;
+        else mTempProfile.pojavRendererName = mRenderNames.get(mDefaultRenderer.getSelectedItemPosition());
+    }
+
+    @Override
+    public void onCropped(Bitmap contentBitmap) {
+        mProfileIcon.setImageBitmap(contentBitmap);
+        Log.i(TAG_ASYNC, "w="+contentBitmap.getWidth() +" h="+contentBitmap.getHeight());
+        mBgExecutor.execute(() -> {
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            try (Base64OutputStream base64OutputStream = new Base64OutputStream(byteArrayOutputStream, Base64.NO_WRAP)) {
+                contentBitmap.compress(
+                    Build.VERSION.SDK_INT < Build.VERSION_CODES.R ?
+                        Bitmap.CompressFormat.WEBP:
+                        Bitmap.CompressFormat.WEBP_LOSSY,
+                    60,
+                    base64OutputStream
+                );
+                base64OutputStream.flush();
+                byteArrayOutputStream.flush();
+            }catch (IOException e) {
+                mMainHandler.post(() -> Tools.showErrorRemote(e));
+                return;
+            }
+            String iconLine = new String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8);
+            String dataUri = "data:image/webp;base64," + iconLine;
+            mMainHandler.post(() -> {
+                if (mTempProfile != null) mTempProfile.icon = dataUri;
+            });
+        });
+    }
+
+    @Override
+    public void onFailed(Exception exception) {
+        Tools.showErrorRemote(exception);
+    }
+
+    /** Two-step premium delete: first tap arms the button (solid danger +
+        wiggle + label change), second tap actually deletes. Auto-disarms. */
+    private void onDeleteClicked() {
+        if (!mDeleteArmed) {
+            armDelete();
+            return;
+        }
+        disarmDelete();
+        runDeleteProfile();
+    }
+
+    private void armDelete() {
+        if (mDeleteButton == null) return;
+        mDeleteArmed = true;
+        mDeleteButton.setText(R.string.cs_confirm_delete);
+        mDeleteButton.setBackgroundResource(R.drawable.bg_cs_danger_solid_button);
+        mDeleteButton.animate().cancel();
+        mDeleteButton.setScaleX(0.94f);
+        mDeleteButton.setScaleY(0.94f);
+        mDeleteButton.animate().scaleX(1f).scaleY(1f).setDuration(260)
+                .setInterpolator(new OvershootInterpolator(2.4f)).start();
+        mMainHandler.removeCallbacks(mDeleteDisarm);
+        mMainHandler.postDelayed(mDeleteDisarm, 3500);
+    }
+
+    private void disarmDelete() {
+        if (mDeleteButton == null || !mDeleteArmed) return;
+        mDeleteArmed = false;
+        mDeleteButton.setText(R.string.global_delete);
+        mDeleteButton.setBackgroundResource(R.drawable.bg_cs_danger_button);
+    }
+
+    /** Original Pojav delete flow, unchanged aside from the confirm gate. */
+    private void runDeleteProfile() {
+        if(LauncherProfiles.mainProfileJson.profiles.size() > 1){
+            ProfileIconCache.dropIcon(mProfileKey);
+            mDeleteButton.setEnabled(false);
+            mBgExecutor.execute(() -> {
+                LauncherProfiles.mainProfileJson.profiles.remove(mProfileKey);
+                LauncherProfiles.write();
+                try {
+                    net.kdt.pojavlaunch.shortcuts.ProfileShortcutHelper
+                            .removeShortcutsForProfile(requireContext(), mProfileKey);
+                } catch (Exception ignored) {}
+                ExtraCore.setValue(ExtraConstants.REFRESH_VERSION_SPINNER, ProfileEditorFragment.DELETED_PROFILE);
+                mMainHandler.post(() -> {
+                    if (!isAdded()) return;
+                    Fragment parentFrag = getParentFragment();
+                    if (parentFrag instanceof MainMenuFragment) {
+                        MainMenuFragment mmf = (MainMenuFragment) parentFrag;
+                        mmf.clearRightPane();
+                        mmf.reloadSpinner();
+                    } else {
+                        Tools.removeCurrentFragment(requireActivity());
+                    }
+                });
+            });
+        } else {
+            Fragment parentFrag = getParentFragment();
+            if (parentFrag instanceof MainMenuFragment) {
+                ((MainMenuFragment) parentFrag).clearRightPane();
+            } else {
+                Tools.removeCurrentFragment(requireActivity());
+            }
+        }
+    }
+
+    /** Cancel = leave the Studio without persisting (mirrors back navigation). */
+    private void onCancelClicked() {
+        Fragment parentFrag = getParentFragment();
+        if (parentFrag instanceof MainMenuFragment) {
+            ((MainMenuFragment) parentFrag).clearRightPane();
+        } else {
+            Tools.removeCurrentFragment(requireActivity());
+        }
+    }
+
+    private void setupStudioButtons(@NonNull View root) {
+        if (mCancelButton != null) mCancelButton.setOnClickListener(v -> onCancelClicked());
+        net.kdt.pojavlaunch.UiMotion.pressFeedback(
+                mCancelButton, mSaveButton, mDeleteButton);
+        View skins = root.findViewById(R.id.vprof_btn_open_skins);
+        if (skins != null) skins.setOnClickListener(v ->
+                navigateToFragment(SkinManagerFragment.class, SkinManagerFragment.TAG, null));
+        View capes = root.findViewById(R.id.vprof_btn_open_capes);
+        if (capes != null) capes.setOnClickListener(v ->
+                navigateToFragment(SkinManagerFragment.class, SkinManagerFragment.TAG, null));
+    }
+
     /**
      * Loads profile values on a background thread to prevent main-thread jank
      * (file I/O, JSON parsing, runtime enumeration).
@@ -581,6 +785,15 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
         }
         mHeroContainer = null;
         mScrollView = null;
+        if (mProfileKey != null) {
+            // Free the cached icon and refresh the home spinner entry — the
+            // Studio may have mutated the profile this session.
+            ProfileIconCache.dropIcon(mProfileKey);
+            Fragment parent = getParentFragment();
+            if (parent instanceof MainMenuFragment) {
+                ((MainMenuFragment) parent).reloadSpinner();
+            }
+        }
         super.onDestroyView();
     }
 
@@ -631,7 +844,9 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
                     hero.setScaleY(scale);
                 });
         mHeroContainer.setPivotY(0f);
-        mHeroContainer.setClipChildren(true);
+        if (mHeroContainer instanceof ViewGroup) {
+            ((ViewGroup) mHeroContainer).setClipChildren(true);
+        }
     }
 
     /** Recreate-safe reset: editor must always open with the hero expanded. */
