@@ -40,7 +40,7 @@
                 android:layout_height="wrap_content"
                 android:letterSpacing="0.22"
                 android:text="STUDIO"
-                android:textColor="#8F86C9"
+                android:textColor="#9CA3AF"
                 android:textSize="9sp"
                 android:textStyle="bold" />
 
@@ -61,7 +61,7 @@
             android:gravity="center"
             android:paddingHorizontal="12dp"
             android:text="LIVE"
-            android:textColor="#C9BFFF"
+            android:textColor="#E4E4EA"
             android:textSize="9.5sp"
             android:textStyle="bold" />
     </LinearLayout>
@@ -114,7 +114,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="1dp"
                     android:text="by CS Studio"
-                    android:textColor="#8B8FA3"
+                    android:textColor="#9CA3AF"
                     android:textSize="11sp" />
 
                 <TextView
@@ -126,7 +126,7 @@
                     android:gravity="center"
                     android:paddingHorizontal="10dp"
                     android:text="CLASSIC"
-                    android:textColor="#C9BFFF"
+                    android:textColor="#E4E4EA"
                     android:textSize="9sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -141,7 +141,7 @@
                 android:gravity="center"
                 android:paddingHorizontal="14dp"
                 android:text="CLASSIC"
-                android:textColor="#E9E4FF"
+                android:textColor="#E4E4EA"
                 android:textSize="10sp"
                 android:textStyle="bold" />
 
@@ -152,7 +152,7 @@
                 android:layout_gravity="bottom|end"
                 android:layout_margin="14dp"
                 android:text="Scale: 100% | Opacity: 100%"
-                android:textColor="#666B7E"
+                android:textColor="#6B7280"
                 android:textSize="10.5sp" />
         </FrameLayout>
 
@@ -175,7 +175,7 @@
                     android:layout_marginBottom="8dp"
                     android:letterSpacing="0.18"
                     android:text="CURSOR PACKS"
-                    android:textColor="#C9BFFF"
+                    android:textColor="#E4E4EA"
                     android:textSize="11sp"
                     android:textStyle="bold" />
 
@@ -205,7 +205,7 @@
                     android:layout_marginBottom="8dp"
                     android:letterSpacing="0.18"
                     android:text="QUICK STYLE"
-                    android:textColor="#C9BFFF"
+                    android:textColor="#E4E4EA"
                     android:textSize="11sp"
                     android:textStyle="bold" />
 
@@ -276,7 +276,7 @@
                         android:layout_marginBottom="14dp"
                         android:letterSpacing="0.18"
                         android:text="TUNING"
-                        android:textColor="#C9BFFF"
+                        android:textColor="#E4E4EA"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -299,7 +299,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="100%"
-                            android:textColor="#B8A9FF"
+                            android:textColor="#C9CBD6"
                             android:textStyle="bold" />
                     </LinearLayout>
 
@@ -333,7 +333,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="100%"
-                            android:textColor="#B8A9FF"
+                            android:textColor="#C9CBD6"
                             android:textStyle="bold" />
                     </LinearLayout>
 
@@ -367,7 +367,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="50%"
-                            android:textColor="#B8A9FF"
+                            android:textColor="#C9CBD6"
                             android:textStyle="bold" />
                     </LinearLayout>
 
@@ -397,7 +397,7 @@
                         android:layout_marginBottom="12dp"
                         android:letterSpacing="0.18"
                         android:text="GLOW EFFECTS"
-                        android:textColor="#C9BFFF"
+                        android:textColor="#E4E4EA"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -420,7 +420,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0%"
-                            android:textColor="#B8A9FF"
+                            android:textColor="#C9CBD6"
                             android:textStyle="bold" />
                     </LinearLayout>
 
@@ -469,14 +469,14 @@
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:src="@drawable/ic_upload"
-                            app:tint="#B8A9FF" />
+                            app:tint="#C9CBD6" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="10dp"
                             android:text="Tap to import a PNG cursor"
-                            android:textColor="#B8A9FF"
+                            android:textColor="#C9CBD6"
                             android:textSize="12sp"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -496,7 +496,7 @@
                         android:layout_marginEnd="5dp"
                         android:text="Import PNG"
                         android:textAllCaps="true"
-                        android:textColor="#C9BFFF"
+                        android:textColor="#E4E4EA"
                         android:textSize="11sp"
                         android:textStyle="bold"
                         android:background="@drawable/bg_cs_ghost_button" />
@@ -509,7 +509,7 @@
                         android:layout_marginStart="5dp"
                         android:text="Export"
                         android:textAllCaps="true"
-                        android:textColor="#C9BFFF"
+                        android:textColor="#E4E4EA"
                         android:textSize="11sp"
                         android:textStyle="bold"
                         android:background="@drawable/bg_cs_ghost_button" />
@@ -546,7 +546,7 @@
                         android:contentDescription="Favorite"
                         android:padding="13dp"
                         android:src="@drawable/ic_heart_outline"
-                        app:tint="#A8ACBF" />
+                        app:tint="#9CA3AF" />
 
                     <Button
                         android:id="@+id/btn_reset_cursor"

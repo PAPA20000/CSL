@@ -34,6 +34,13 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
     private static final String ARG_TYPE = "content_type";
 
     private String mContentType;
+    // ── Phase 2: per-world datapack context + sort ──
+    private String mInstallKeyOverride;
+    private java.io.File mInstallDirOverride;
+    private String mSortIndex = "relevance";
+    private String mLastQuery = "";
+    private String mLastVersion;
+    private String mLastLoader;
     private RecyclerView mRecyclerView;
     private ProgressBar mProgressBar;
     private View mLoadingCard;
@@ -127,9 +134,34 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
         if (mAdapter != null) mAdapter.refreshInstallStates();
     }
 
+    /** World Manager datapacks: exact install slot instead of profile resolution. */
+    public void setInstallContextOverride(String key, java.io.File dir) {
+        mInstallKeyOverride = key;
+        mInstallDirOverride = dir;
+        applyInstallContext();
+    }
+
+    /** Modrinth sort index (relevance / downloads / newest / updated / follows). */
+    public void setSortIndex(String index) {
+        if (index == null || index.isEmpty()) index = "relevance";
+        if (index.equals(mSortIndex)) return;
+        mSortIndex = index;
+        // re-run with the same query + filters under the new ordering
+        filter(mLastQuery, mLastVersion, mLastLoader);
+    }
+
+    public String getSortIndex() { return mSortIndex; }
+
     /** Resolve the target profile + its content directory for state rendering. */
     private void applyInstallContext() {
         if (mAdapter == null || getContext() == null) return;
+        if (mInstallDirOverride != null) {
+            mAdapter.setInstallContext(
+                    mInstallKeyOverride != null ? mInstallKeyOverride : mProfileKey,
+                    mContentType, mInstallDirOverride);
+            if (mAdapter != null) mAdapter.refreshInstallStates();
+            return;
+        }
         String key = mProfileKey;
         if (key == null || key.isEmpty()) {
             key = LauncherPreferences.DEFAULT_PREF.getString(
@@ -191,7 +223,10 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
 
     public void filter(String query, @Nullable String mcVersion, @Nullable String modLoader) {
         if (!isUiReady()) return;
-        SearchFilters filters = buildFilters(query != null ? query : "");
+        mLastQuery = query != null ? query : "";
+        mLastVersion = mcVersion;
+        mLastLoader = modLoader;
+        SearchFilters filters = buildFilters(mLastQuery);
         filters.mcVersion = mcVersion != null && !mcVersion.isEmpty() ? mcVersion : null;
         filters.modLoader = modLoader != null && !modLoader.isEmpty() ? modLoader : null;
         showLoadingCapsule();
@@ -245,6 +280,7 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
             filters.projectType = mContentType;
             filters.isModpack = false;
         }
+        filters.sortIndex = mSortIndex;
         return filters;
     }
 

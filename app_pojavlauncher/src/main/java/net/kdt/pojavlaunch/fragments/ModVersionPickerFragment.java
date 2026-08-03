@@ -397,6 +397,14 @@ public class ModVersionPickerFragment extends Fragment {
                 mModItem, mModDetail, entry.index, mProfileKey, mContentType);
         Fragment parent = getParentFragment();
         Bundle args = fragment.getArguments();
+        // Forward the per-world datapack target (World Manager flow), if any.
+        Bundle self = getArguments();
+        if (self != null && args != null) {
+            String td = self.getString(ModInstallFragment.ARG_TARGET_DIR);
+            if (td != null) args.putString(ModInstallFragment.ARG_TARGET_DIR, td);
+            String ik = self.getString(ModInstallFragment.ARG_INSTALL_KEY);
+            if (ik != null) args.putString(ModInstallFragment.ARG_INSTALL_KEY, ik);
+        }
         if (parent instanceof MainMenuFragment) {
             ((MainMenuFragment) parent).openChildPane(ModInstallFragment.class, ModInstallFragment.TAG, args);
         } else if (parent != null) {

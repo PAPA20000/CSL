@@ -15,5 +15,7 @@ public class SearchFilters {
     @Nullable public String modLoader;
     /** Additional categories facet for Modrinth search (e.g. "adventure" for worlds) */
     @Nullable public String categories;
+    /** Modrinth sort index: relevance / downloads / follows / newest / updated */
+    @Nullable public String sortIndex;
 
 }

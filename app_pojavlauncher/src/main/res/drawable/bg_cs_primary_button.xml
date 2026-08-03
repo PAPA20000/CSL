@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- PRIMARY BUTTON (SAVE/APPLY) — bright violet gradient, white bold text,
-     built-in ripple. Meets WCAG contrast (white on #5A3EE8+). -->
+<!-- PRIMARY BUTTON (SAVE/APPLY) — platinum silver gradient (the CS Launcher
+     PLAY-button identity) with dark bold text + built-in ripple.
+     WCAG: #0D0D0D on #D9DAE0+ ≈ 12:1 contrast. -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="#40FFFFFF">
+    android:color="#33000000">
     <item android:id="@android:id/background">
         <selector>
             <item android:state_enabled="false">
                 <shape android:shape="rectangle">
                     <corners android:radius="16dp" />
-                    <solid android:color="#2A2A38" />
+                    <solid android:color="#2A2A2A" />
                 </shape>
             </item>
             <item android:state_pressed="true">
@@ -16,8 +17,8 @@
                     <corners android:radius="16dp" />
                     <gradient
                         android:angle="135"
-                        android:startColor="#6A4DF0"
-                        android:endColor="#8E3FF2" />
+                        android:startColor="#FFFFFF"
+                        android:endColor="#C9CBD6" />
                 </shape>
             </item>
             <item>
@@ -25,8 +26,8 @@
                     <corners android:radius="16dp" />
                     <gradient
                         android:angle="135"
-                        android:startColor="#7C5CFF"
-                        android:endColor="#A349FF" />
+                        android:startColor="#F4F4F8"
+                        android:endColor="#D9DAE0" />
                 </shape>
             </item>
         </selector>

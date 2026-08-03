@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- WORLD ROW — icon, name, version • last played, size + datapack chips -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:gravity="center_vertical"
+    android:minHeight="76dp"
+    android:orientation="horizontal"
+    android:background="@drawable/bg_cs_settings_row"
+    android:clickable="true"
+    android:focusable="true"
+    android:padding="12dp">
+
+    <FrameLayout
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:background="@drawable/bg_cs_world_icon"
+        android:padding="4dp">
+
+        <ImageView
+            android:id="@+id/world_icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:contentDescription="@string/cs_world_icon_desc"
+            tools:src="@tools:sample/avatars" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/world_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="#FFFFFF"
+            android:textSize="14.5sp"
+            android:textStyle="bold"
+            tools:text="My Survival Base" />
+
+        <TextView
+            android:id="@+id/world_meta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="#9CA3AF"
+            android:textSize="10.5sp"
+            tools:text="1.20.1 • 2d ago" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/world_size_chip"
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"
+                android:gravity="center"
+                android:paddingHorizontal="8dp"
+                android:background="@drawable/bg_cs_chip"
+                android:textColor="#9CA3AF"
+                android:textSize="9.5sp"
+                android:textStyle="bold"
+                tools:text="842 MB" />
+
+            <TextView
+                android:id="@+id/world_datapack_chip"
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"
+                android:layout_marginStart="6dp"
+                android:gravity="center"
+                android:paddingHorizontal="8dp"
+                android:background="@drawable/bg_cs_chip_accent"
+                android:textColor="#E4E4EA"
+                android:textSize="9.5sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                tools:text="3 datapacks" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/world_menu_button"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_marginStart="8dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/cs_world_actions"
+        android:src="@drawable/ic_cs_more"
+        app:tint="#9CA3AF" />
+</LinearLayout>

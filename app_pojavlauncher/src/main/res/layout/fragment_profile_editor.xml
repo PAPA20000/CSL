@@ -13,8 +13,50 @@
     android:background="@drawable/bg_cs_page_bg"
     android:orientation="vertical">
 
-    <!-- ── HERO HEADER — profile banner + identity + meta chips ─────── -->
+    <!-- ── MINI TOOLBAR — slides in when the hero collapses ────────── -->
+    <LinearLayout
+        android:id="@+id/vprof_mini_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:background="@drawable/bg_cs_header_bar"
+        android:paddingHorizontal="14dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="17dp"
+            android:layout_height="17dp"
+            android:src="@drawable/ic_nav_general"
+            app:tint="#E4E4EA" />
+
+        <TextView
+            android:id="@+id/vprof_mini_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="#FFFFFF"
+            android:textSize="13.5sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/vprof_mini_version"
+            android:layout_width="wrap_content"
+            android:layout_height="23dp"
+            android:gravity="center"
+            android:paddingHorizontal="9dp"
+            android:background="@drawable/bg_cs_chip_accent"
+            android:textColor="#E4E4EA"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- ── HERO HEADER — collapses away on scroll (profile banner) ───── -->
     <FrameLayout
+        android:id="@+id/vprof_hero_container"
         android:layout_width="match_parent"
         android:layout_height="196dp">
 
@@ -23,7 +65,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="centerCrop"
-            android:background="#12101F"
+            android:background="#101014"
             tools:src="@tools:sample/backgrounds/scenic" />
 
         <View
@@ -41,7 +83,7 @@
             android:paddingHorizontal="14dp"
             android:text="@string/change_background"
             android:textAllCaps="true"
-            android:textColor="#E9E4FF"
+            android:textColor="#E4E4EA"
             android:textSize="10.5sp"
             android:textStyle="bold"
             android:letterSpacing="0.06"
@@ -92,7 +134,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/cs_studio_title"
-                    android:textColor="#8F86C9"
+                    android:textColor="#9CA3AF"
                     android:textSize="9.5sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.22" />
@@ -126,7 +168,7 @@
                             android:gravity="center"
                             android:paddingHorizontal="11dp"
                             android:background="@drawable/bg_cs_chip_accent"
-                            android:textColor="#C9BFFF"
+                            android:textColor="#E4E4EA"
                             android:textSize="10.5sp"
                             android:textStyle="bold"
                             tools:text="1.21" />
@@ -139,7 +181,7 @@
                             android:gravity="center"
                             android:paddingHorizontal="11dp"
                             android:background="@drawable/bg_cs_chip"
-                            android:textColor="#A8ACBF"
+                            android:textColor="#9CA3AF"
                             android:textSize="10.5sp"
                             android:textStyle="bold"
                             tools:text="Fabric" />
@@ -152,7 +194,7 @@
                             android:gravity="center"
                             android:paddingHorizontal="11dp"
                             android:background="@drawable/bg_cs_chip"
-                            android:textColor="#A8ACBF"
+                            android:textColor="#9CA3AF"
                             android:textSize="10.5sp"
                             tools:text="Java 21" />
 
@@ -164,7 +206,7 @@
                             android:gravity="center"
                             android:paddingHorizontal="11dp"
                             android:background="@drawable/bg_cs_chip"
-                            android:textColor="#A8ACBF"
+                            android:textColor="#9CA3AF"
                             android:textSize="10.5sp"
                             tools:text="Played 2d ago" />
 
@@ -176,7 +218,7 @@
                             android:gravity="center"
                             android:paddingHorizontal="11dp"
                             android:background="@drawable/bg_cs_chip"
-                            android:textColor="#A8ACBF"
+                            android:textColor="#9CA3AF"
                             android:textSize="10.5sp"
                             tools:text="842 MB" />
                     </LinearLayout>
@@ -185,39 +227,102 @@
         </LinearLayout>
     </FrameLayout>
 
-    <!-- ── SECTION NAV RAIL ─────────────────────────────────────────── -->
-    <HorizontalScrollView
+    <!-- ── EDITING WORKSPACE — slim section rail + full-width workspace ── -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:scrollbars="none"
-        android:paddingHorizontal="12dp"
-        android:paddingTop="10dp">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
 
-        <LinearLayout
-            android:id="@+id/vprof_studio_sidebar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
+        <ScrollView
+            android:layout_width="64dp"
+            android:layout_height="match_parent"
+            android:overScrollMode="never"
+            android:scrollbars="none">
 
-            <TextView android:id="@+id/vprof_nav_general" style="@style/CsNavItem" android:text="@string/cs_section_general" app:drawableTopCompat="@drawable/ic_profile" />
-            <TextView android:id="@+id/vprof_nav_java" style="@style/CsNavItem" android:text="@string/cs_section_java" app:drawableTopCompat="@drawable/ic_java_cup" />
-            <TextView android:id="@+id/vprof_nav_memory" style="@style/CsNavItem" android:text="@string/cs_section_memory" app:drawableTopCompat="@drawable/ic_setting_ram" />
-            <TextView android:id="@+id/vprof_nav_graphics" style="@style/CsNavItem" android:text="@string/cs_section_graphics" app:drawableTopCompat="@drawable/ic_settings_video" />
-            <TextView android:id="@+id/vprof_nav_mods" style="@style/CsNavItem" android:text="@string/cs_section_mods" app:drawableTopCompat="@drawable/ic_mc_block" />
-            <TextView android:id="@+id/vprof_nav_rpacks" style="@style/CsNavItem" android:text="@string/cs_section_rpacks" app:drawableTopCompat="@drawable/ic_browse_resources" />
-            <TextView android:id="@+id/vprof_nav_shaders" style="@style/CsNavItem" android:text="@string/cs_section_shaders" app:drawableTopCompat="@drawable/ic_gif" />
-            <TextView android:id="@+id/vprof_nav_skin" style="@style/CsNavItem" android:text="@string/cs_section_skin" app:drawableTopCompat="@drawable/ic_manage_skin" />
-            <TextView android:id="@+id/vprof_nav_cape" style="@style/CsNavItem" android:text="@string/cs_section_cape" app:drawableTopCompat="@drawable/ic_profile" />
-            <TextView android:id="@+id/vprof_nav_runtime" style="@style/CsNavItem" android:text="@string/cs_section_runtime" app:drawableTopCompat="@drawable/ic_setting_java_runtime" />
-            <TextView android:id="@+id/vprof_nav_advanced" style="@style/CsNavItem" android:text="@string/cs_section_advanced" app:drawableTopCompat="@drawable/ic_settings_advanced" />
-        </LinearLayout>
-    </HorizontalScrollView>
+            <LinearLayout
+                android:id="@+id/vprof_studio_sidebar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="7dp"
+                android:paddingTop="12dp">
+
+                <LinearLayout android:id="@+id/vprof_nav_general" style="@style/CsRailItem">
+                    <ImageView style="@style/CsRailIcon" android:src="@drawable/ic_nav_general" android:contentDescription="@string/cs_section_general" />
+                    <TextView style="@style/CsRailLabel" android:text="@string/cs_section_general" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/vprof_nav_java" style="@style/CsRailItem">
+                    <ImageView style="@style/CsRailIcon" android:src="@drawable/ic_nav_java" android:contentDescription="@string/cs_section_java" />
+                    <TextView style="@style/CsRailLabel" android:text="@string/cs_section_java" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/vprof_nav_memory" style="@style/CsRailItem">
+                    <ImageView style="@style/CsRailIcon" android:src="@drawable/ic_nav_memory" android:contentDescription="@string/cs_section_memory" />
+                    <TextView style="@style/CsRailLabel" android:text="@string/cs_section_memory" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/vprof_nav_graphics" style="@style/CsRailItem">
+                    <ImageView style="@style/CsRailIcon" android:src="@drawable/ic_nav_graphics" android:contentDescription="@string/cs_section_graphics" />
+                    <TextView style="@style/CsRailLabel" android:text="@string/cs_section_graphics" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/vprof_nav_mods" style="@style/CsRailItem">
+                    <ImageView style="@style/CsRailIcon" android:src="@drawable/ic_nav_mods" android:contentDescription="@string/cs_section_mods" />
+                    <TextView style="@style/CsRailLabel" android:text="@string/cs_section_mods" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/vprof_nav_rpacks" style="@style/CsRailItem">
+                    <ImageView style="@style/CsRailIcon" android:src="@drawable/ic_nav_rpacks" android:contentDescription="@string/cs_section_rpacks" />
+                    <TextView style="@style/CsRailLabel" android:text="@string/cs_section_rpacks" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/vprof_nav_shaders" style="@style/CsRailItem">
+                    <ImageView style="@style/CsRailIcon" android:src="@drawable/ic_nav_shaders" android:contentDescription="@string/cs_section_shaders" />
+                    <TextView style="@style/CsRailLabel" android:text="@string/cs_section_shaders" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/vprof_nav_skin" style="@style/CsRailItem">
+                    <ImageView style="@style/CsRailIcon" android:src="@drawable/ic_nav_skin" android:contentDescription="@string/cs_section_skin" />
+                    <TextView style="@style/CsRailLabel" android:text="@string/cs_section_skin" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/vprof_nav_cape" style="@style/CsRailItem">
+                    <ImageView style="@style/CsRailIcon" android:src="@drawable/ic_nav_cape" android:contentDescription="@string/cs_section_cape" />
+                    <TextView style="@style/CsRailLabel" android:text="@string/cs_section_cape" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/vprof_nav_runtime" style="@style/CsRailItem">
+                    <ImageView style="@style/CsRailIcon" android:src="@drawable/ic_nav_runtime" android:contentDescription="@string/cs_section_runtime" />
+                    <TextView style="@style/CsRailLabel" android:text="@string/cs_section_runtime" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/vprof_nav_advanced" style="@style/CsRailItem">
+                    <ImageView style="@style/CsRailIcon" android:src="@drawable/ic_nav_advanced" android:contentDescription="@string/cs_section_advanced" />
+                    <TextView style="@style/CsRailLabel" android:text="@string/cs_section_advanced" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/vprof_nav_worlds" style="@style/CsRailItem">
+                    <ImageView style="@style/CsRailIcon" android:src="@drawable/ic_nav_worlds" android:contentDescription="@string/cs_section_worlds" />
+                    <TextView style="@style/CsRailLabel" android:text="@string/cs_section_worlds" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </ScrollView>
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="#14FFFFFF" />
+
+
 
     <!-- ── CONTENT — premium section cards ──────────────────────────── -->
     <androidx.core.widget.NestedScrollView
         android:id="@+id/vprof_studio_scroll"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
         android:layout_weight="1"
         android:overScrollMode="never"
         android:scrollbars="none">
@@ -252,7 +357,7 @@
                     android:inputType="textPersonName"
                     android:paddingHorizontal="14dp"
                     android:textColor="#FFFFFF"
-                    android:textColorHint="#5A5E70"
+                    android:textColorHint="#6B7280"
                     android:textSize="14sp" />
 
                 <TextView
@@ -277,7 +382,7 @@
                         android:hint="@string/version_select_hint"
                         android:paddingHorizontal="14dp"
                         android:textColor="#FFFFFF"
-                        android:textColorHint="#5A5E70"
+                        android:textColorHint="#6B7280"
                         android:textSize="14sp" />
 
                     <Button
@@ -310,7 +415,7 @@
                         android:maxLines="2"
                         android:paddingHorizontal="14dp"
                         android:textColor="#FFFFFF"
-                        android:textColorHint="#5A5E70"
+                        android:textColorHint="#6B7280"
                         android:textSize="14sp" />
 
                     <Button
@@ -348,7 +453,7 @@
                     android:inputType="text"
                     android:paddingHorizontal="14dp"
                     android:textColor="#FFFFFF"
-                    android:textColorHint="#5A5E70"
+                    android:textColorHint="#6B7280"
                     android:textSize="14sp" />
             </LinearLayout>
 
@@ -377,7 +482,7 @@
                         android:id="@+id/vprof_ram_value"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="#B8A9FF"
+                        android:textColor="#C9CBD6"
                         android:textSize="13.5sp"
                         android:textStyle="bold"
                         tools:text="4096 MB" />
@@ -405,14 +510,14 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/cs_ram_global_hint"
-                        android:textColor="#666B7E"
+                        android:textColor="#6B7280"
                         android:textSize="11sp" />
 
                     <TextView
                         android:id="@+id/vprof_ram_total"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="#666B7E"
+                        android:textColor="#6B7280"
                         android:textSize="11sp"
                         tools:text="Device: 12 GB" />
                 </LinearLayout>
@@ -442,7 +547,7 @@
                         android:background="@drawable/bg_cs_input_field"
                         android:dropDownWidth="match_parent"
                         android:paddingHorizontal="12dp"
-                        android:popupBackground="#14141E" />
+                        android:popupBackground="#1C1C1C" />
 
                     <ImageView
                         android:layout_width="wrap_content"
@@ -451,7 +556,7 @@
                         android:layout_marginEnd="14dp"
                         android:rotation="180"
                         android:src="@drawable/spinner_arrow"
-                        app:tint="#A8ACBF" />
+                        app:tint="#9CA3AF" />
                 </FrameLayout>
             </LinearLayout>
 
@@ -473,7 +578,7 @@
                         android:layout_weight="1"
                         android:text="@string/cs_section_mods"
                         android:textAllCaps="true"
-                        android:textColor="#C9BFFF"
+                        android:textColor="#E4E4EA"
                         android:textSize="12sp"
                         android:textStyle="bold"
                         android:letterSpacing="0.18" />
@@ -486,7 +591,7 @@
                         android:contentDescription="@string/cs_section_mods"
                         android:padding="7dp"
                         android:src="@drawable/ic_add"
-                        app:tint="#B8A9FF" />
+                        app:tint="#C9CBD6" />
                 </LinearLayout>
 
                 <androidx.recyclerview.widget.RecyclerView
@@ -506,7 +611,7 @@
                     android:gravity="center"
                     android:padding="20dp"
                     android:text="@string/manage_mods_empty"
-                    android:textColor="#666B7E"
+                    android:textColor="#6B7280"
                     android:visibility="gone" />
             </LinearLayout>
 
@@ -528,7 +633,7 @@
                         android:layout_weight="1"
                         android:text="@string/mcl_button_resource_packs"
                         android:textAllCaps="true"
-                        android:textColor="#C9BFFF"
+                        android:textColor="#E4E4EA"
                         android:textSize="12sp"
                         android:textStyle="bold"
                         android:letterSpacing="0.18" />
@@ -542,7 +647,7 @@
                         android:contentDescription="@string/cs_section_rpacks"
                         android:padding="7dp"
                         android:src="@drawable/ic_add"
-                        app:tint="#B8A9FF" />
+                        app:tint="#C9CBD6" />
 
                     <ImageButton
                         android:id="@+id/vprof_editor_resource_packs_folder"
@@ -552,7 +657,7 @@
                         android:contentDescription="@string/cs_section_rpacks"
                         android:padding="7dp"
                         android:src="@drawable/ic_folder"
-                        app:tint="#B8A9FF" />
+                        app:tint="#C9CBD6" />
                 </LinearLayout>
 
                 <androidx.recyclerview.widget.RecyclerView
@@ -572,7 +677,7 @@
                     android:gravity="center"
                     android:padding="20dp"
                     android:text="No resource packs installed."
-                    android:textColor="#666B7E"
+                    android:textColor="#6B7280"
                     android:visibility="gone" />
             </LinearLayout>
 
@@ -594,7 +699,7 @@
                         android:layout_weight="1"
                         android:text="@string/mcl_button_shader_packs"
                         android:textAllCaps="true"
-                        android:textColor="#C9BFFF"
+                        android:textColor="#E4E4EA"
                         android:textSize="12sp"
                         android:textStyle="bold"
                         android:letterSpacing="0.18" />
@@ -608,7 +713,7 @@
                         android:contentDescription="@string/cs_section_shaders"
                         android:padding="7dp"
                         android:src="@drawable/ic_add"
-                        app:tint="#B8A9FF" />
+                        app:tint="#C9CBD6" />
 
                     <ImageButton
                         android:id="@+id/vprof_editor_shader_packs_folder"
@@ -618,7 +723,7 @@
                         android:contentDescription="@string/cs_section_shaders"
                         android:padding="7dp"
                         android:src="@drawable/ic_folder"
-                        app:tint="#B8A9FF" />
+                        app:tint="#C9CBD6" />
                 </LinearLayout>
 
                 <androidx.recyclerview.widget.RecyclerView
@@ -638,7 +743,7 @@
                     android:gravity="center"
                     android:padding="20dp"
                     android:text="No shader packs installed."
-                    android:textColor="#666B7E"
+                    android:textColor="#6B7280"
                     android:visibility="gone" />
             </LinearLayout>
 
@@ -654,7 +759,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:text="Change your account skin, preview it and apply it to this profile."
-                    android:textColor="#8B8FA3"
+                    android:textColor="#9CA3AF"
                     android:textSize="12sp"
                     android:lineSpacingExtra="2dp" />
 
@@ -676,7 +781,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:text="Capes linked to your Microsoft account can be selected from the Skin Studio."
-                    android:textColor="#8B8FA3"
+                    android:textColor="#9CA3AF"
                     android:textSize="12sp"
                     android:lineSpacingExtra="2dp" />
 
@@ -709,7 +814,7 @@
                         android:layout_height="match_parent"
                         android:background="@drawable/bg_cs_input_field"
                         android:paddingHorizontal="12dp"
-                        android:popupBackground="#14141E" />
+                        android:popupBackground="#1C1C1C" />
 
                     <ImageView
                         android:layout_width="wrap_content"
@@ -718,7 +823,7 @@
                         android:layout_marginEnd="14dp"
                         android:rotation="180"
                         android:src="@drawable/spinner_arrow"
-                        app:tint="#A8ACBF" />
+                        app:tint="#9CA3AF" />
                 </FrameLayout>
             </LinearLayout>
 
@@ -750,7 +855,7 @@
                         android:hint="@string/use_global_default"
                         android:paddingHorizontal="14dp"
                         android:textColor="#FFFFFF"
-                        android:textColorHint="#5A5E70"
+                        android:textColorHint="#6B7280"
                         android:textSize="14sp" />
 
                     <Button
@@ -761,6 +866,7 @@
             </LinearLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
+    </LinearLayout>
 
     <!-- ── BOTTOM ACTION BAR — Cancel | Save | Delete ───────────────── -->
     <LinearLayout
@@ -768,7 +874,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="#0B0B13"
+        android:background="#0B0B0E"
         android:paddingHorizontal="16dp"
         android:paddingTop="12dp"
         android:paddingBottom="14dp"
@@ -782,7 +888,7 @@
             android:layout_marginEnd="10dp"
             android:text="@string/cs_cancel"
             android:textAllCaps="true"
-            android:textColor="#A8ACBF"
+            android:textColor="#9CA3AF"
             android:textSize="13sp"
             android:textStyle="bold"
             android:letterSpacing="0.08"
@@ -796,7 +902,7 @@
             android:layout_marginEnd="10dp"
             android:text="@string/global_save"
             android:textAllCaps="true"
-            android:textColor="#FFFFFF"
+            android:textColor="#0D0D0D"
             android:textSize="14sp"
             android:textStyle="bold"
             android:letterSpacing="0.1"

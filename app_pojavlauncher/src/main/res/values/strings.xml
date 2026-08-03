@@ -915,4 +915,87 @@
     <string name="cs_section_cape">Cape</string>
     <string name="cs_section_runtime">Runtime</string>
     <string name="cs_section_advanced">Advanced</string>
+
+    <!-- ═══════════ PHASE 2: Profile Studio / World Manager / Datapacks / Settings ═══════════ -->
+    <string name="cs_back">Back</string>
+    <string name="cs_section_worlds">Worlds</string>
+
+    <!-- World Manager -->
+    <string name="cs_world_manager_title">World Manager</string>
+    <string name="cs_world_subtitle_profile">Profile: %s</string>
+    <string name="cs_world_search_hint">Search worlds…</string>
+    <string name="cs_world_sort_last_played">Last Played</string>
+    <string name="cs_world_sort_name">Name</string>
+    <string name="cs_world_sort_size">Size</string>
+    <string name="cs_world_sort_version">Version</string>
+    <string name="cs_world_empty">No worlds found</string>
+    <string name="cs_world_empty_search">No worlds match “%s”</string>
+    <string name="cs_world_empty_hint">Play a world once, or import one below</string>
+    <string name="cs_world_import">Import World (.zip)</string>
+    <string name="cs_world_open_folder">Open Folder</string>
+    <string name="cs_world_icon_desc">World icon</string>
+    <string name="cs_world_actions">World Actions</string>
+
+    <string name="cs_world_storage_title">World Storage</string>
+    <string name="cs_world_storage_loading">Calculating…</string>
+    <string name="cs_world_storage_summary">used by %s</string>
+    <string name="cs_world_storage_free">%s free</string>
+    <string name="cs_world_storage_total">of %s</string>
+
+    <string name="cs_world_info_version">Version</string>
+    <string name="cs_world_info_last_played">Last Played</string>
+    <string name="cs_world_info_size">World Size</string>
+    <string name="cs_world_info_datapacks">Datapacks</string>
+    <string name="cs_world_info_seed">Seed</string>
+    <string name="cs_world_info_folder">Folder</string>
+
+    <string name="cs_world_play">Play World</string>
+    <string name="cs_world_browse_datapacks">Browse Datapacks (Modrinth)</string>
+    <string name="cs_world_rename">Rename</string>
+    <string name="cs_world_duplicate">Duplicate</string>
+    <string name="cs_world_backup">Backup</string>
+    <string name="cs_world_restore">Restore Backup</string>
+    <string name="cs_world_export">Export</string>
+    <string name="cs_world_compress">Compress</string>
+    <string name="cs_world_delete">Delete World</string>
+    <string name="cs_world_delete_confirm">Delete “%s” permanently? This cannot be undone.</string>
+    <string name="cs_world_compress_keep">Zip only (keep original)</string>
+    <string name="cs_world_compress_remove">Zip and remove original</string>
+    <string name="cs_world_no_backups">No backups found for this world.</string>
+    <string name="cs_world_launching">Launching — %s is in your Singleplayer list</string>
+    <string name="cs_world_play_no_profile">Profile not found for this launch.</string>
+
+    <string name="cs_copy_path">Copy Path</string>
+    <string name="cs_path_copied">Path copied to clipboard</string>
+    <string name="cs_rename">Rename</string>
+
+    <!-- Datapack Browser -->
+    <string name="cs_datapacks_title">Datapacks</string>
+    <string name="cs_datapacks_search_hint">Search Modrinth datapacks…</string>
+    <string name="cs_dp_sort_relevance">Relevant</string>
+    <string name="cs_dp_sort_popular">Popular</string>
+    <string name="cs_dp_sort_new">New</string>
+    <string name="cs_dp_sort_updated">Updated</string>
+    <string name="cs_dp_version_all">All versions</string>
+    <string name="cs_dp_version_hint">e.g. 1.20.1</string>
+    <string name="cs_dp_version_title">Minecraft version</string>
+    <string name="cs_dp_install_path">Installs into: %s</string>
+
+    <!-- Settings -->
+    <string name="cs_settings_title">Launcher Settings</string>
+    <string name="cs_settings_unsaved">Unsaved changes</string>
+    <string name="cs_settings_apply">APPLY</string>
+
+    <plurals name="cs_world_count">
+        <item quantity="one">%d world</item>
+        <item quantity="other">%d worlds</item>
+    </plurals>
+    <plurals name="cs_world_datapack_count">
+        <item quantity="one">%d datapack</item>
+        <item quantity="other">%d datapacks</item>
+    </plurals>
+    <plurals name="cs_dp_installed_count">
+        <item quantity="one">%d installed</item>
+        <item quantity="other">%d installed</item>
+    </plurals>
 </resources>

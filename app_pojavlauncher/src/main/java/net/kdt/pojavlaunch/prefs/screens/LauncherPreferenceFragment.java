@@ -129,6 +129,7 @@ public class LauncherPreferenceFragment extends Fragment {
         setupCategoryRail();
 
         View backButton = view.findViewById(R.id.settings_back_button);
+        net.kdt.pojavlaunch.UiMotion.pressFeedback(backButton);
         if (backButton != null) {
             backButton.setOnClickListener(v -> {
                 Activity activity = getActivity();
@@ -139,6 +140,7 @@ public class LauncherPreferenceFragment extends Fragment {
         }
 
         Button saveBtn = view.findViewById(R.id.btn_save_settings);
+        net.kdt.pojavlaunch.UiMotion.pressFeedback(saveBtn);
         if (saveBtn != null) {
             saveBtn.setOnClickListener(v -> {
                 saveChanges();
@@ -205,8 +207,8 @@ public class LauncherPreferenceFragment extends Fragment {
             TextView chipText = chipView.findViewById(R.id.settings_nav_chip_text);
             boolean selected = Objects.equals(item.categoryLinkTarget, mCategoryName);
             chipText.setText(shortenCategoryLabel(item.title));
-            chipText.setBackgroundResource(selected ? R.drawable.bg_settings_chip_active : R.drawable.bg_settings_chip);
-            chipText.setTextColor(Color.parseColor(selected ? "#0E0E11" : "#9C9CA8"));
+            chipText.setBackgroundResource(selected ? R.drawable.bg_cs_pill_active : R.drawable.bg_cs_pill_idle);
+            chipText.setTextColor(Color.parseColor(selected ? "#0D0D0D" : "#9CA3AF"));
             chipText.setOnClickListener(v -> {
                 if (!selected) openCategoryPage(item.categoryLinkTarget);
             });
@@ -535,6 +537,8 @@ public class LauncherPreferenceFragment extends Fragment {
 
         mAdapter = new SettingsAdapter(categories, mDraftPrefs);
         mRecyclerView.setAdapter(mAdapter);
+        // Phase 2 polish: one-shot staggered reveal (allocation-free after bind)
+        net.kdt.pojavlaunch.UiMotion.revealList(mRecyclerView);
     }
 
     private boolean isItemVisible(SettingItem item, SharedPreferences draftPrefs) {

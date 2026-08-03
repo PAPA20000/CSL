@@ -4,11 +4,11 @@
     android:layout_width="wrap_content"
     android:layout_height="36dp"
     android:layout_marginEnd="10dp"
-    android:background="@drawable/bg_settings_chip"
+    android:background="@drawable/bg_cs_pill_idle"
     android:gravity="center"
     android:minWidth="84dp"
     android:paddingStart="14dp"
     android:paddingEnd="14dp"
-    android:textColor="#9C9CA8"
+    android:textColor="#9CA3AF"
     android:textSize="12sp"
     android:textStyle="bold" />

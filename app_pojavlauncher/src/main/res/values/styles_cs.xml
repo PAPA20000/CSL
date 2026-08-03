@@ -15,7 +15,7 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textAllCaps">true</item>
-        <item name="android:textColor">#C9BFFF</item>
+        <item name="android:textColor">#E4E4EA</item>
         <item name="android:textSize">12sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:letterSpacing">0.18</item>
@@ -78,7 +78,7 @@
         <item name="android:minHeight">0dp</item>
         <item name="android:paddingHorizontal">16dp</item>
         <item name="android:textAllCaps">true</item>
-        <item name="android:textColor">#C9BFFF</item>
+        <item name="android:textColor">#E4E4EA</item>
         <item name="android:textSize">11.5sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:letterSpacing">0.08</item>
@@ -104,7 +104,7 @@
         <item name="android:gravity">center_vertical</item>
         <item name="android:paddingHorizontal">14dp</item>
         <item name="android:textSize">12.5sp</item>
-        <item name="android:textColor">#C9BFFF</item>
+        <item name="android:textColor">#E4E4EA</item>
         <item name="android:background">@drawable/bg_cs_glass_card_sm</item>
     </style>
 
@@ -123,11 +123,94 @@
         <item name="android:layout_height">46dp</item>
         <item name="android:layout_marginTop">14dp</item>
         <item name="android:textAllCaps">true</item>
-        <item name="android:textColor">#C9BFFF</item>
+        <item name="android:textColor">#E4E4EA</item>
         <item name="android:textSize">12sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:letterSpacing">0.1</item>
         <item name="android:background">@drawable/bg_cs_ghost_button</item>
     </style>
 
+
+    <!-- ══ Slim vertical rail (Profile Studio Phase 2) ══ -->
+    <style name="CsRailItem">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingTop">9dp</item>
+        <item name="android:paddingBottom">9dp</item>
+        <item name="android:paddingStart">2dp</item>
+        <item name="android:paddingEnd">2dp</item>
+        <item name="android:layout_marginBottom">5dp</item>
+        <item name="android:background">@drawable/bg_cs_sidebar_item</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <style name="CsRailIcon">
+        <item name="android:layout_width">19dp</item>
+        <item name="android:layout_height">19dp</item>
+        <item name="android:duplicateParentState">true</item>
+        <item name="android:tint">@color/cs_rail_icon</item>
+    </style>
+
+    <style name="CsRailLabel">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">3dp</item>
+        <item name="android:duplicateParentState">true</item>
+        <item name="android:textColor">@color/cs_nav_text</item>
+        <item name="android:textSize">7.6sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.03</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <!-- ══ World Manager ══ -->
+    <style name="CsWorldActionRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">46dp</item>
+        <item name="android:layout_marginTop">6dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingHorizontal">14dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">#E4E4EA</item>
+        <item name="android:background">@drawable/bg_cs_settings_row</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <style name="CsWorldMetaLabel">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">#6B7280</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.08</item>
+    </style>
+
+    <style name="CsWorldMetaValue">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textSize">13.5sp</item>
+        <item name="android:layout_marginTop">2dp</item>
+    </style>
+
+    <!-- ══ Sort / filter chip (World Manager + Datapack browser) ══ -->
+    <style name="CsSortChip">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">30dp</item>
+        <item name="android:layout_marginEnd">7dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingHorizontal">13dp</item>
+        <item name="android:textSize">10.5sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
 </resources>

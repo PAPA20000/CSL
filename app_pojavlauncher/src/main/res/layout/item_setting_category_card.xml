@@ -4,7 +4,7 @@
     android:layout_width="188dp"
     android:layout_height="wrap_content"
     android:layout_marginEnd="12dp"
-    android:background="@drawable/bg_settings_category_card_large"
+    android:background="@drawable/bg_cs_glass_card"
     android:clickable="true"
     android:focusable="true"
     android:minHeight="172dp"
@@ -20,7 +20,7 @@
         <FrameLayout
             android:layout_width="44dp"
             android:layout_height="44dp"
-            android:background="@drawable/bg_settings_icon_well">
+            android:background="@drawable/bg_cs_icon_well">
 
             <ImageView
                 android:id="@+id/category_card_icon"
@@ -29,7 +29,7 @@
                 android:layout_gravity="center"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_menu_settings"
-                app:tint="#C9CBD6" />
+                app:tint="#E4E4EA" />
         </FrameLayout>
 
         <TextView
@@ -37,7 +37,7 @@
             android:layout_width="wrap_content"
             android:layout_height="28dp"
             android:layout_marginStart="10dp"
-            android:background="@drawable/bg_settings_chip"
+            android:background="@drawable/bg_cs_pill_idle"
             android:gravity="center"
             android:minWidth="58dp"
             android:paddingStart="10dp"
@@ -54,7 +54,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="14dp"
         android:maxLines="2"
-        android:textColor="#F6FAFF"
+        android:textColor="#FFFFFF"
         android:textSize="17sp"
         android:textStyle="bold" />
 

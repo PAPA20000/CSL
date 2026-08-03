@@ -54,6 +54,12 @@ public class ModInstallFragment extends Fragment {
     private int mVersionIndex;
     private String mProfileKey;
     private String mContentType;
+    /** Optional absolute dir override (World Manager → datapacks installs). */
+    private String mTargetDirPath;
+    /** Optional tracking-slot override (world folder name for datapacks). */
+    private String mInstallKey;
+    public static final String ARG_TARGET_DIR = "dp_target_dir";
+    public static final String ARG_INSTALL_KEY = "dp_install_key";
 
     private ImageView mBackButton;
     private ImageView mModIcon;
@@ -133,6 +139,8 @@ public class ModInstallFragment extends Fragment {
             mVersionIndex = getArguments().getInt(ARG_VERSION_INDEX);
             mProfileKey = getArguments().getString(ARG_PROFILE_KEY);
             mContentType = getArguments().getString(ARG_CONTENT_TYPE, "mod");
+            mTargetDirPath = getArguments().getString(ARG_TARGET_DIR);
+            mInstallKey = getArguments().getString(ARG_INSTALL_KEY);
         }
     }
 
@@ -867,7 +875,8 @@ public class ModInstallFragment extends Fragment {
                     // Record the install so store cards show ✓ Installed / Update states
                     try {
                         if (mModItem != null && mModItem.id != null) {
-                            String key = mProfileKey;
+                            String key = mInstallKey != null && !mInstallKey.isEmpty()
+                                    ? mInstallKey : mProfileKey;
                             if (key == null || key.isEmpty()) {
                                 key = net.kdt.pojavlaunch.prefs.LauncherPreferences.DEFAULT_PREF.getString(
                                         net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_KEY_CURRENT_PROFILE, null);
@@ -953,6 +962,13 @@ public class ModInstallFragment extends Fragment {
     }
 
     private File getContentDir() {
+        // Per-world datapack installs bypass profile resolution entirely.
+        if (mTargetDirPath != null && !mTargetDirPath.isEmpty()) {
+            File direct = new File(mTargetDirPath);
+            //noinspection ResultOfMethodCallIgnored
+            direct.mkdirs();
+            return direct;
+        }
         try {
             String key = mProfileKey != null ? mProfileKey
                     : LauncherPreferences.DEFAULT_PREF.getString(

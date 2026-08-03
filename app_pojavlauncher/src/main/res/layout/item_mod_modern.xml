@@ -99,7 +99,7 @@
                     android:layout_height="wrap_content"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:textColor="#B8A9FF"
+                    android:textColor="#C9CBD6"
                     android:textSize="10.5sp"
                     android:layout_marginTop="2dp"
                     tools:text="by modmuss50" />
@@ -112,7 +112,7 @@
                     android:textColor="#8B90A6"
                     android:textSize="10sp"
                     app:drawableStartCompat="@drawable/ic_download_trend"
-                    app:drawableTint="#666B7E"
+                    app:drawableTint="#6B7280"
                     android:drawablePadding="4dp"
                     tools:text="179M" />
             </LinearLayout>
@@ -194,7 +194,7 @@
                 android:padding="9dp"
                 android:scaleType="centerInside"
                 android:src="@drawable/ic_menu_share"
-                app:tint="#A8ACBF" />
+                app:tint="#9CA3AF" />
 
             <ImageButton
                 android:id="@+id/btn_like"

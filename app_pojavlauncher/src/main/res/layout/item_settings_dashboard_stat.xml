@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     android:layout_marginEnd="10dp"
     android:layout_weight="1"
-    android:background="@drawable/bg_settings_chip"
+    android:background="@drawable/bg_cs_pill_idle"
     android:orientation="vertical"
     android:paddingStart="14dp"
     android:paddingTop="12dp"
@@ -15,7 +15,7 @@
         android:id="@+id/dashboard_stat_value"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#F6FAFF"
+        android:textColor="#FFFFFF"
         android:textSize="16sp"
         android:textStyle="bold" />
 
@@ -24,7 +24,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
-        android:textColor="#92A8C1"
+        android:textColor="#6B7280"
         android:textSize="11sp" />
 
 </LinearLayout>

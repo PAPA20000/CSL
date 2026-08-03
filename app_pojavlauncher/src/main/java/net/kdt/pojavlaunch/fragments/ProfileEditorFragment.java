@@ -100,7 +100,15 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
             R.id.vprof_nav_general, R.id.vprof_nav_java, R.id.vprof_nav_memory,
             R.id.vprof_nav_graphics, R.id.vprof_nav_mods, R.id.vprof_nav_rpacks,
             R.id.vprof_nav_shaders, R.id.vprof_nav_skin, R.id.vprof_nav_cape,
-            R.id.vprof_nav_runtime, R.id.vprof_nav_advanced };
+            R.id.vprof_nav_runtime, R.id.vprof_nav_advanced, R.id.vprof_nav_worlds };
+    /** The last rail item opens the World Manager instead of scrolling. */
+    private static final int NAV_WORLDS_INDEX = 11;
+
+    // ── Phase 2: collapsing hero + mini toolbar ──
+    private View mHeroContainer;
+    private View mMiniToolbar;
+    private TextView mMiniName, mMiniVersion;
+    private boolean mHeroCollapsed = false;
     private final int[] mSectionIds = {
             R.id.vprof_section_general, R.id.vprof_section_java, R.id.vprof_section_memory,
             R.id.vprof_section_graphics, R.id.vprof_section_mods, R.id.vprof_section_rpacks,
@@ -544,6 +552,10 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
         mHdrLastPlayed = view.findViewById(R.id.vprof_hdr_lastplayed_text);
         mHdrSize = view.findViewById(R.id.vprof_hdr_size_text);
         mScrollView = view.findViewById(R.id.vprof_studio_scroll);
+        mHeroContainer = view.findViewById(R.id.vprof_hero_container);
+        mMiniToolbar = view.findViewById(R.id.vprof_mini_toolbar);
+        mMiniName = view.findViewById(R.id.vprof_mini_name);
+        mMiniVersion = view.findViewById(R.id.vprof_mini_version);
         mRamSeekbar = view.findViewById(R.id.vprof_ram_seekbar);
         mRamValue = view.findViewById(R.id.vprof_ram_value);
         mRamTotal = view.findViewById(R.id.vprof_ram_total);
@@ -557,7 +569,79 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
         setupStudioButtons(view);
         setupRamSlider();
         setupHeaderWatchers();
+        setupCollapsingHero();
         revealStudioCards(view);
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // Phase 2 — COLLAPSING HERO
+    // Scroll down → banner/icon/name/chips fade + slide + scale away, the
+    // workspace becomes full-screen and a compact mini toolbar takes over.
+    // Scroll back to top → hero returns. All math is allocation-free and
+    // driven directly by the scroll position (true 60fps collapse).
+    // ══════════════════════════════════════════════════════════════════
+    private void setupCollapsingHero() {
+        if (!(mScrollView instanceof androidx.core.widget.NestedScrollView)) return;
+        if (mHeroContainer == null) return;
+        final float density = getResources().getDisplayMetrics().density;
+        ((androidx.core.widget.NestedScrollView) mScrollView).setOnScrollChangeListener(
+                (androidx.core.widget.NestedScrollView.OnScrollChangeListener)
+                        (v, scrollX, scrollY, oldX, oldY) -> {
+                    View hero = mHeroContainer;
+                    if (hero == null) return;
+                    int heroH = hero.getHeight();
+                    if (heroH <= 0) return;
+                    float range = heroH * 0.82f;
+                    float p = Math.min(1f, Math.max(0f, scrollY / range));
+
+                    // Parallax slide + fade + subtle scale-down (Material collapse)
+                    hero.setTranslationY(-scrollY * 0.55f);
+                    float alpha = 1f - p * 1.18f;
+                    hero.setAlpha(Math.max(0f, Math.min(1f, alpha)));
+                    float scale = 0.93f + 0.07f * (1f - p);
+                    hero.setScaleX(scale);
+                    hero.setScaleY(scale);
+
+                    // Mini toolbar cross-fades in near the collapse point
+                    updateMiniToolbar(p);
+                });
+        // Sanity: hero parallax must never leave a transformed state when
+        // the view tree gets recreated.
+        mHeroContainer.setPivotY(0f);
+    }
+
+    private void updateMiniToolbar(float p) {
+        if (mMiniToolbar == null) return;
+        if (p >= 0.92f && !mHeroCollapsed) {
+            mHeroCollapsed = true;
+            // Mirror the live header text into the mini toolbar
+            if (mMiniName != null && mHdrName != null) mMiniName.setText(mHdrName.getText());
+            if (mMiniVersion != null && mHdrVersion != null) mMiniVersion.setText(mHdrVersion.getText());
+            mMiniToolbar.animate().cancel();
+            if (mMiniToolbar.getVisibility() != View.VISIBLE) {
+                mMiniToolbar.setVisibility(View.VISIBLE);
+                mMiniToolbar.setAlpha(0f);
+                float d = getResources().getDisplayMetrics().density;
+                mMiniToolbar.setTranslationY(-10f * d);
+            }
+            mMiniToolbar.animate().alpha(1f).translationY(0f)
+                    .setDuration(170)
+                    .setInterpolator(new DecelerateInterpolator())
+                    .start();
+        } else if (p <= 0.78f && mHeroCollapsed) {
+            mHeroCollapsed = false;
+            mMiniToolbar.animate().cancel();
+            mMiniToolbar.animate().alpha(0f).translationY(-8f * getResources().getDisplayMetrics().density)
+                    .setDuration(140)
+                    .withEndAction(() -> {
+                        if (mMiniToolbar != null && !mHeroCollapsed) {
+                            mMiniToolbar.setVisibility(View.GONE);
+                            mMiniToolbar.setAlpha(1f);
+                            mMiniToolbar.setTranslationY(0f);
+                        }
+                    })
+                    .start();
+        }
     }
 
     /** GIF-aware background picker: GIFs stay animated, everything else is cropped. */
@@ -788,6 +872,13 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
             View nav = root.findViewById(mNavIds[i]);
             if (nav == null) continue;
             nav.setOnClickListener(v -> {
+                if (idx == NAV_WORLDS_INDEX) {
+                    // World Manager is a full page, not a scroll section —
+                    // give the same press feedback then navigate.
+                    selectNav(root, idx);
+                    openWorldManager();
+                    return;
+                }
                 selectNav(root, idx);
                 View section = root.findViewById(mSectionIds[idx]);
                 if (section != null
@@ -798,6 +889,35 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
             });
         }
         selectNav(root, 0);
+    }
+
+    /** Open the World Manager for this profile's game directory. */
+    private void openWorldManager() {
+        if (getContext() == null) return;
+        File gameDir;
+        try {
+            gameDir = Tools.getGameDirPath(mTempProfile);
+        } catch (Exception e) {
+            gameDir = new File(Tools.DIR_GAME_NEW);
+        }
+        Bundle args = new Bundle();
+        args.putString(net.kdt.pojavlaunch.worlds.WorldManagerFragment.BUNDLE_GAME_DIR,
+                gameDir.getAbsolutePath());
+        args.putString(net.kdt.pojavlaunch.worlds.WorldManagerFragment.BUNDLE_PROFILE_KEY,
+                mProfileKey);
+        args.putString(net.kdt.pojavlaunch.worlds.WorldManagerFragment.BUNDLE_PROFILE_NAME,
+                mTempProfile != null && mTempProfile.name != null ? mTempProfile.name : "");
+
+        Fragment parent = getParentFragment();
+        if (parent instanceof MainMenuFragment) {
+            ((MainMenuFragment) parent).openChildPane(
+                    net.kdt.pojavlaunch.worlds.WorldManagerFragment.class,
+                    net.kdt.pojavlaunch.worlds.WorldManagerFragment.TAG, args);
+        } else {
+            Tools.swapFragment(getActivity(),
+                    net.kdt.pojavlaunch.worlds.WorldManagerFragment.class,
+                    net.kdt.pojavlaunch.worlds.WorldManagerFragment.TAG, args);
+        }
     }
 
     private void selectNav(@NonNull View root, int selected) {

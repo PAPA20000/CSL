@@ -32,6 +32,8 @@ public class ModDownloadHelper {
                 return new File(baseDir, "shaderpacks");
             case "world":
                 return new File(baseDir, "saves");
+            case "datapack":
+                return new File(baseDir, "datapacks");
             default:
                 return new File(baseDir, "downloads");
         }
@@ -58,6 +60,8 @@ public class ModDownloadHelper {
                 return new File(mcDir, "shaderpacks");
             case "world":
                 return new File(mcDir, "saves");
+            case "datapack":
+                return new File(mcDir, "datapacks");
             default:
                 return new File(mcDir, "downloads");
         }
