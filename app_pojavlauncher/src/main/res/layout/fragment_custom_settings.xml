@@ -15,7 +15,7 @@
         android:id="@+id/settings_header_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_cs_header_bar"
+        android:background="@drawable/bg_csp_header"
         android:orientation="vertical"
         android:paddingTop="8dp"
         android:paddingBottom="10dp"
@@ -32,7 +32,7 @@
                 android:id="@+id/settings_back_button"
                 android:layout_width="38dp"
                 android:layout_height="38dp"
-                android:background="@drawable/bg_cs_settings_row"
+                android:background="@drawable/bg_csp_row"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center">
@@ -48,7 +48,7 @@
                 android:layout_width="36dp"
                 android:layout_height="36dp"
                 android:layout_marginStart="12dp"
-                android:background="@drawable/bg_cs_icon_well">
+                android:background="@drawable/bg_csp_iconwell">
 
                 <ImageView
                     android:id="@+id/settings_header_icon"
@@ -88,13 +88,46 @@
                 android:id="@+id/settings_live_badge"
                 android:layout_width="wrap_content"
                 android:layout_height="24dp"
-                android:background="@drawable/bg_cs_chip_accent"
+                android:background="@drawable/bg_csp_value"
                 android:gravity="center"
                 android:paddingHorizontal="10dp"
                 android:textColor="#E4E4EA"
                 android:textSize="10sp"
                 android:textStyle="bold"
                 android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- Search settings — filters ALL pages live -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:background="@drawable/bg_csp_search"
+            android:paddingHorizontal="12dp">
+
+            <ImageView
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:src="@drawable/ic_cs_search"
+                app:tint="#6B7280" />
+
+            <EditText
+                android:id="@+id/settings_search_input"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginStart="9dp"
+                android:background="@null"
+                android:hint="@string/cs_settings_search_hint"
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:maxLines="1"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#6B7280"
+                android:textSize="12.5sp" />
         </LinearLayout>
 
         <!-- Category pill rail (sub-pages) -->

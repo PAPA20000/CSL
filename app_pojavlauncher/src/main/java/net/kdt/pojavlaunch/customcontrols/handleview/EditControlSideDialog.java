@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.PopupMenu;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.SeekBar;
@@ -28,6 +29,8 @@ import net.kdt.pojavlaunch.colorselector.ColorSelector;
 import net.kdt.pojavlaunch.customcontrols.ControlData;
 import net.kdt.pojavlaunch.customcontrols.ControlDrawerData;
 import net.kdt.pojavlaunch.customcontrols.ControlJoystickData;
+import net.kdt.pojavlaunch.customcontrols.commands.ChatCommandEngine;
+import net.kdt.pojavlaunch.customcontrols.commands.CommandScriptHighlighter;
 import net.kdt.pojavlaunch.customcontrols.buttons.ControlDrawer;
 import net.kdt.pojavlaunch.customcontrols.buttons.ControlInterface;
 import net.kdt.pojavlaunch.utils.interfaces.SimpleItemSelectedListener;
@@ -60,7 +63,9 @@ public class EditControlSideDialog extends SideDialogView {
         }
     };
     private EditText mNameEditText, mWidthEditText, mHeightEditText, mCommandEditText;
-    private TextView mCommandTextView;
+    private TextView mCommandTextView, mCommandStatusView;
+    private View mCommandActionsRow, mCommandTemplatesButton, mCommandHistoryButton,
+            mCommandValidateButton, mCommandImportExportButton;
     @SuppressLint("UseSwitchCompatOrMaterialCode")
     private Switch mToggleSwitch, mPassthroughSwitch, mSwipeableSwitch, mForwardLockSwitch, mAbsoluteTrackingSwitch;
     private Spinner mOrientationSpinner;
@@ -178,6 +183,13 @@ public class EditControlSideDialog extends SideDialogView {
 
         mDisplayInGameCheckbox.setChecked(data.displayInGame);
         mDisplayInMenuCheckbox.setChecked(data.displayInMenu);
+
+        // Automation scripts persist verbatim in ControlData.command.
+        String commandText = data.command == null ? "" : data.command;
+        if (!commandText.isEmpty()) {
+            net.kdt.pojavlaunch.customcontrols.commands.ChatCommandEngine
+                    .recordHistory(mDialogContent.getContext(), commandText);
+        }
 
         for (int i = 0; i < data.keycodes.length; i++) {
             if (data.keycodes[i] < 0) {
@@ -301,6 +313,9 @@ public class EditControlSideDialog extends SideDialogView {
         int visibility = isCommand ? View.VISIBLE : View.GONE;
         mCommandTextView.setVisibility(visibility);
         mCommandEditText.setVisibility(visibility);
+        if (mCommandActionsRow != null) mCommandActionsRow.setVisibility(visibility);
+        if (mCommandStatusView != null) mCommandStatusView.setVisibility(visibility);
+        if (isCommand) updateCommandStatus(null);
     }
 
     private void setDefaultVisibilitySetting() {
@@ -309,6 +324,31 @@ public class EditControlSideDialog extends SideDialogView {
         }
         for(Spinner s : mKeycodeSpinners) {
             s.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    /** Validate silently while typing, loudly when Validate is tapped. */
+    private void updateCommandStatus(@androidx.annotation.Nullable String forcedMessage) {
+        if (mCommandStatusView == null || mCommandEditText == null) return;
+        Context ctx = mDialogContent.getContext();
+        String script = mCommandEditText.getText() != null
+                ? mCommandEditText.getText().toString() : "";
+        ChatCommandEngine.ValidationResult result = ChatCommandEngine.validate(script);
+
+        if (forcedMessage != null) {
+            mCommandStatusView.setText(forcedMessage);
+            mCommandStatusView.setTextColor(0xFFBFD1E6);
+        } else if (!result.isValid()) {
+            mCommandStatusView.setText(ctx.getString(R.string.customctrl_command_error_line,
+                    result.errorLine, result.error));
+            mCommandStatusView.setTextColor(0xFFFF6B74);
+        } else if (result.steps.isEmpty()) {
+            mCommandStatusView.setText(R.string.customctrl_command_empty);
+            mCommandStatusView.setTextColor(0xFF9CA3AF);
+        } else {
+            mCommandStatusView.setText(ctx.getString(R.string.customctrl_command_ready,
+                    result.steps.size()));
+            mCommandStatusView.setTextColor(0xFF22C55E);
         }
     }
 
@@ -343,6 +383,15 @@ public class EditControlSideDialog extends SideDialogView {
 
         mCommandTextView = mDialogContent.findViewById(R.id.editCommand_textView);
         mCommandEditText = mDialogContent.findViewById(R.id.editCommand_editText);
+        mCommandActionsRow = mDialogContent.findViewById(R.id.editCommand_actions);
+        mCommandStatusView = mDialogContent.findViewById(R.id.editCommand_status);
+        mCommandTemplatesButton = mDialogContent.findViewById(R.id.editCommand_templates);
+        mCommandHistoryButton = mDialogContent.findViewById(R.id.editCommand_history);
+        mCommandValidateButton = mDialogContent.findViewById(R.id.editCommand_validate);
+        mCommandImportExportButton = mDialogContent.findViewById(R.id.editCommand_import_export);
+
+        // Live automation syntax highlighting (zero text mutation).
+        CommandScriptHighlighter.attach(mCommandEditText);
 
         //Decorative stuff
         mMappingTextView = mDialogContent.findViewById(R.id.editMapping_textView);
@@ -485,7 +534,21 @@ public class EditControlSideDialog extends SideDialogView {
         mCommandEditText.addTextChangedListener((SimpleTextWatcher) text -> {
             if (internalChanges) return;
             mCurrentlyEditedButton.getProperties().command = text.toString();
+            updateCommandStatus(null);
         });
+
+        if (mCommandTemplatesButton != null) {
+            mCommandTemplatesButton.setOnClickListener(v -> showCommandTemplates(v));
+        }
+        if (mCommandHistoryButton != null) {
+            mCommandHistoryButton.setOnClickListener(v -> showCommandHistory(v));
+        }
+        if (mCommandValidateButton != null) {
+            mCommandValidateButton.setOnClickListener(v -> showCommandPreview(v));
+        }
+        if (mCommandImportExportButton != null) {
+            mCommandImportExportButton.setOnClickListener(v -> showCommandImportExport(v));
+        }
 
         mSelectStrokeColor.setOnClickListener(v -> {
             mColorSelector.setAlphaEnabled(false);
@@ -504,6 +567,126 @@ public class EditControlSideDialog extends SideDialogView {
             });
             appearColor(isAtRight(), mCurrentlyEditedButton.getProperties().bgColor);
         });
+    }
+
+    // ═══════════════ Phase 3 — Command Studio editor ═══════════════
+
+    private void showCommandTemplates(@NonNull View anchor) {
+        PopupMenu menu = new PopupMenu(anchor.getContext(), anchor);
+        menu.getMenu().add("Welcome message");
+        menu.getMenu().add("Teleport home");
+        menu.getMenu().add("Speed boost");
+        menu.getMenu().add("Kit starter");
+        menu.getMenu().add("Variable + condition demo");
+        menu.setOnMenuItemClickListener(item -> {
+            String template;
+            CharSequence title = item.getTitle();
+            if ("Teleport home".contentEquals(title)) {
+                template = "/spawnpoint ${player}\ndelay:250\n/tp ${player} ~ 80 ~";
+            } else if ("Speed boost".contentEquals(title)) {
+                template = "/effect give ${player} minecraft:speed 30 1\ndelay:500\n/title ${player} actionbar {\"text\":\"Speed ready\",\"color\":\"aqua\"}";
+            } else if ("Kit starter".contentEquals(title)) {
+                template = "/give ${player} minecraft:stone_sword 1\n/give ${player} minecraft:bread 8\nrepeat:2 /tell ${player} Starter kit delivered";
+            } else if ("Variable + condition demo".contentEquals(title)) {
+                template = "var:mode=pro\nif:${mode}==pro\n/say Pro mode active for ${player}";
+            } else {
+                template = "/say Welcome ${player}!\ndelay:250";
+            }
+            appendCommandScript(template);
+            return true;
+        });
+        menu.show();
+    }
+
+    private void showCommandHistory(@NonNull View anchor) {
+        java.util.List<String> history = ChatCommandEngine.getHistory(anchor.getContext());
+        PopupMenu menu = new PopupMenu(anchor.getContext(), anchor);
+        if (history.isEmpty()) {
+            menu.getMenu().add("No saved commands");
+        } else {
+            int i = 0;
+            for (String script : history) {
+                String label = script.replace('\n', ' ');
+                if (label.length() > 42) label = label.substring(0, 42) + "…";
+                menu.getMenu().add(0, i, i, label);
+                i++;
+            }
+            menu.getMenu().add(0, 99, 99, "Clear history");
+        }
+        menu.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == 99) {
+                ChatCommandEngine.clearHistory(anchor.getContext());
+                return true;
+            }
+            int id = item.getItemId();
+            if (id >= 0 && id < history.size()) {
+                mCommandEditText.setText(history.get(id));
+                mCommandEditText.setSelection(mCommandEditText.getText().length());
+            }
+            return true;
+        });
+        menu.show();
+    }
+
+    private void showCommandPreview(@NonNull View anchor) {
+        String script = mCommandEditText.getText() != null
+                ? mCommandEditText.getText().toString() : "";
+        updateCommandStatus(null);
+        java.util.List<String> lines = ChatCommandEngine.dryRun(anchor.getContext(), script);
+        StringBuilder sb = new StringBuilder();
+        int max = Math.min(lines.size(), 12);
+        for (int i = 0; i < max; i++) {
+            if (i > 0) sb.append('\n');
+            sb.append("• ").append(lines.get(i));
+        }
+        if (lines.size() > max) sb.append("\n… ").append(lines.size() - max).append(" more");
+        new android.app.AlertDialog.Builder(anchor.getContext())
+                .setTitle("Command test preview")
+                .setMessage(sb.toString())
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
+    }
+
+    private void showCommandImportExport(@NonNull View anchor) {
+        PopupMenu menu = new PopupMenu(anchor.getContext(), anchor);
+        menu.getMenu().add(0, 1, 0, R.string.customctrl_command_export);
+        menu.getMenu().add(0, 2, 1, R.string.customctrl_command_import);
+        menu.setOnMenuItemClickListener(item -> {
+            Context ctx = anchor.getContext();
+            android.content.ClipboardManager clipboard =
+                    (android.content.ClipboardManager) ctx.getSystemService(Context.CLIPBOARD_SERVICE);
+            if (clipboard == null) return true;
+            if (item.getItemId() == 1) {
+                clipboard.setPrimaryClip(android.content.ClipData.newPlainText("CS Command Script",
+                        mCommandEditText.getText()));
+                updateCommandStatus(ctx.getString(R.string.customctrl_command_exported));
+            } else {
+                android.content.ClipData clip = clipboard.getPrimaryClip();
+                if (clip == null || clip.getItemCount() == 0) {
+                    updateCommandStatus(ctx.getString(R.string.customctrl_command_clipboard_empty));
+                } else {
+                    CharSequence pasted = clip.getItemAt(0).coerceToText(ctx);
+                    if (pasted == null || pasted.length() == 0) {
+                        updateCommandStatus(ctx.getString(R.string.customctrl_command_clipboard_empty));
+                    } else {
+                        mCommandEditText.setText(pasted);
+                        mCommandEditText.setSelection(mCommandEditText.getText().length());
+                        updateCommandStatus(ctx.getString(R.string.customctrl_command_imported));
+                    }
+                }
+            }
+            return true;
+        });
+        menu.show();
+    }
+
+    private void appendCommandScript(@NonNull String script) {
+        CharSequence current = mCommandEditText.getText();
+        String next = current == null || current.length() == 0
+                ? script
+                : current.toString().replaceAll("[\\s\\n]+$", "") + "\n" + script;
+        mCommandEditText.setText(next);
+        mCommandEditText.setSelection(mCommandEditText.getText().length());
     }
 
     private float safeParseFloat(String string) {

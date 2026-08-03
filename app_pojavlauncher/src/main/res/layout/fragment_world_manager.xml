@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ═══════════════════════════════════════════════════════════════════
-     WORLD MANAGER — CS Premium (Phase 2)
-     Header • Storage card • Search • Sort chips • World list • Import FAB
-     Responsive: LinearLayoutManager portrait, 2-col grid landscape (java).
+     WORLD MANAGER — CS Premium (Phase 3)
+     Fixed chrome (header • storage • search • sort) + a REAL scrolling
+     RecyclerView (proper recycling, never measure-all) + import bar.
      ═══════════════════════════════════════════════════════════════════ -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -77,242 +77,219 @@
             tools:text="6 worlds" />
     </LinearLayout>
 
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/world_scroll"
+    <!-- ── FIXED CHROME (never scrolls with the list) ─────────────── -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fillViewport="true"
-        android:overScrollMode="never">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="14dp"
+        android:paddingTop="12dp">
 
+        <!-- storage card -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="14dp"
-            android:paddingTop="12dp"
-            android:paddingBottom="12dp">
+            android:background="@drawable/bg_cs_glass_card"
+            android:padding="16dp">
 
-            <!-- ── STORAGE CARD ────────────────────────────────────── -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@drawable/bg_cs_glass_card"
-                android:padding="16dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <FrameLayout
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:background="@drawable/bg_cs_icon_well">
-
-                        <ImageView
-                            android:layout_width="19dp"
-                            android:layout_height="19dp"
-                            android:layout_gravity="center"
-                            android:src="@drawable/ic_cs_storage"
-                            app:tint="#E4E4EA" />
-                    </FrameLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="12dp"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/cs_world_storage_title"
-                            android:textColor="#FFFFFF"
-                            android:textSize="13.5sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/world_storage_summary"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="@string/cs_world_storage_loading"
-                            android:textColor="#9CA3AF"
-                            android:textSize="10.5sp" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/world_storage_used"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="#E4E4EA"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        tools:text="2.4 GB" />
-                </LinearLayout>
-
-                <!-- thin brand-consistent animated progress track -->
-                <ProgressBar
-                    android:id="@+id/world_storage_bar"
-                    style="?android:attr/progressBarStyleHorizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="7dp"
-                    android:layout_marginTop="12dp"
-                    android:max="100"
-                    android:progress="0"
-                    android:progressDrawable="@drawable/bg_cs_world_storage_bar" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/world_storage_free"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:textColor="#6B7280"
-                        android:textSize="10sp"
-                        tools:text="48.2 GB free" />
-
-                    <TextView
-                        android:id="@+id/world_storage_total"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="#6B7280"
-                        android:textSize="10sp"
-                        tools:text="of 128 GB" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <!-- ── SEARCH ──────────────────────────────────────────── -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="46dp"
-                android:layout_marginTop="12dp"
                 android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:background="@drawable/bg_cs_input_field"
-                android:paddingHorizontal="13dp">
+                android:orientation="horizontal">
 
-                <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:src="@drawable/ic_cs_search"
-                    app:tint="#6B7280" />
-
-                <EditText
-                    android:id="@+id/world_search_input"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:layout_marginStart="10dp"
-                    android:background="@null"
-                    android:hint="@string/cs_world_search_hint"
-                    android:imeOptions="actionSearch"
-                    android:inputType="text"
-                    android:maxLines="1"
-                    android:textColor="#FFFFFF"
-                    android:textColorHint="#6B7280"
-                    android:textSize="13.5sp" />
-            </LinearLayout>
-
-            <!-- ── SORT CHIPS ──────────────────────────────────────── -->
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:overScrollMode="never"
-                android:scrollbars="none">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/world_sort_last_played"
-                        style="@style/CsSortChip"
-                        android:text="@string/cs_world_sort_last_played" />
-
-                    <TextView
-                        android:id="@+id/world_sort_name"
-                        style="@style/CsSortChip"
-                        android:text="@string/cs_world_sort_name" />
-
-                    <TextView
-                        android:id="@+id/world_sort_size"
-                        style="@style/CsSortChip"
-                        android:text="@string/cs_world_sort_size" />
-
-                    <TextView
-                        android:id="@+id/world_sort_version"
-                        style="@style/CsSortChip"
-                        android:text="@string/cs_world_sort_version" />
-                </LinearLayout>
-            </HorizontalScrollView>
-
-            <!-- ── LIST / EMPTY STATE ──────────────────────────────── -->
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minHeight="260dp"
-                android:layout_marginTop="12dp">
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/world_list"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:nestedScrollingEnabled="false"
-                    android:overScrollMode="never" />
-
-                <LinearLayout
-                    android:id="@+id/world_empty_state"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:paddingVertical="44dp"
-                    android:visibility="gone">
+                <FrameLayout
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_cs_icon_well">
 
                     <ImageView
-                        android:layout_width="52dp"
-                        android:layout_height="52dp"
-                        android:alpha="0.55"
-                        android:src="@drawable/ic_nav_worlds"
-                        app:tint="#6B7280" />
+                        android:layout_width="19dp"
+                        android:layout_height="19dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_cs_storage"
+                        app:tint="#E4E4EA" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp"
+                    android:orientation="vertical">
 
                     <TextView
-                        android:id="@+id/world_empty_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:gravity="center"
-                        android:text="@string/cs_world_empty"
+                        android:text="@string/cs_world_storage_title"
+                        android:textColor="#FFFFFF"
+                        android:textSize="13.5sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/world_storage_summary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/cs_world_storage_loading"
                         android:textColor="#9CA3AF"
-                        android:textSize="13sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:gravity="center"
-                        android:text="@string/cs_world_empty_hint"
-                        android:textColor="#6B7280"
                         android:textSize="10.5sp" />
                 </LinearLayout>
-            </FrameLayout>
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
 
-    <!-- ── IMPORT FAB ─────────────────────────────────────────────── -->
-    <!-- kept simple: full-width ghost action pinned above the nav area -->
+                <TextView
+                    android:id="@+id/world_storage_used"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#E4E4EA"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    tools:text="2.4 GB" />
+            </LinearLayout>
+
+            <ProgressBar
+                android:id="@+id/world_storage_bar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="7dp"
+                android:layout_marginTop="12dp"
+                android:max="100"
+                android:progress="0"
+                android:progressDrawable="@drawable/bg_cs_world_storage_bar" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/world_storage_free"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="#6B7280"
+                    android:textSize="10sp"
+                    tools:text="48.2 GB free" />
+
+                <TextView
+                    android:id="@+id/world_storage_total"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#6B7280"
+                    android:textSize="10sp"
+                    tools:text="of 128 GB" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- search -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:background="@drawable/bg_cs_input_field"
+            android:paddingHorizontal="13dp">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_cs_search"
+                app:tint="#6B7280" />
+
+            <EditText
+                android:id="@+id/world_search_input"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginStart="10dp"
+                android:background="@null"
+                android:hint="@string/cs_world_search_hint"
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:maxLines="1"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#6B7280"
+                android:textSize="13.5sp" />
+        </LinearLayout>
+
+        <!-- sort chips -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:overScrollMode="never"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView android:id="@+id/world_sort_last_played" style="@style/CsSortChip" android:text="@string/cs_world_sort_last_played" />
+                <TextView android:id="@+id/world_sort_name" style="@style/CsSortChip" android:text="@string/cs_world_sort_name" />
+                <TextView android:id="@+id/world_sort_size" style="@style/CsSortChip" android:text="@string/cs_world_sort_size" />
+                <TextView android:id="@+id/world_sort_version" style="@style/CsSortChip" android:text="@string/cs_world_sort_version" />
+            </LinearLayout>
+        </HorizontalScrollView>
+    </LinearLayout>
+
+    <!-- ── LIST — real RecyclerView scrolling + recycling ─────────── -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="10dp">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/world_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:overScrollMode="never"
+            android:paddingHorizontal="14dp"
+            android:paddingBottom="10dp" />
+
+        <LinearLayout
+            android:id="@+id/world_empty_state"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingVertical="44dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:alpha="0.55"
+                android:src="@drawable/ic_nav_worlds"
+                app:tint="#6B7280" />
+
+            <TextView
+                android:id="@+id/world_empty_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:text="@string/cs_world_empty"
+                android:textColor="#9CA3AF"
+                android:textSize="13sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="center"
+                android:text="@string/cs_world_empty_hint"
+                android:textColor="#6B7280"
+                android:textSize="10.5sp" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- ── IMPORT BAR ─────────────────────────────────────────────── -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="10dp"
-    android:background="@drawable/bg_cs_settings_row"
+    android:background="@drawable/bg_csp_row"
     android:clickable="true"
     android:focusable="true"
     android:gravity="center_vertical"
@@ -18,7 +18,7 @@
     <FrameLayout
         android:layout_width="44dp"
         android:layout_height="44dp"
-        android:background="@drawable/bg_cs_icon_well">
+        android:background="@drawable/bg_csp_iconwell">
 
         <ImageView
             android:id="@+id/setting_icon"
@@ -58,6 +58,16 @@
             android:textColor="#9CA3AF"
             android:textSize="12sp" />
     </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/setting_fav_star"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginStart="6dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/cs_settings_fav_add"
+            android:padding="4dp"
+            android:src="@drawable/ic_csp_star_outline" />
 
     <net.kdt.pojavlaunch.prefs.CustomToggleView
         android:id="@+id/setting_toggle"

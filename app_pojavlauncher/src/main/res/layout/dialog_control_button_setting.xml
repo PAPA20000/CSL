@@ -68,15 +68,99 @@
         android:id="@+id/editCommand_editText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:gravity="center"
+        android:gravity="start|top"
         android:hint="@string/customctrl_command_hint"
         android:imeOptions="flagNoExtractUi"
-        android:inputType="text"
+        android:inputType="textMultiLine"
+        android:minLines="3"
+        android:maxLines="8"
+        android:scrollbars="vertical"
         android:visibility="gone"
 
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/editCommand_textView" />
+
+    <!-- Command Studio automation actions -->
+    <LinearLayout
+        android:id="@+id/editCommand_actions"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        android:visibility="gone"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/editCommand_editText">
+
+        <TextView
+            android:id="@+id/editCommand_templates"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_csp_chip_idle"
+            android:gravity="center"
+            android:text="@string/customctrl_command_templates"
+            android:textColor="#E4E4EA"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/editCommand_history"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_csp_chip_idle"
+            android:gravity="center"
+            android:text="@string/customctrl_command_history"
+            android:textColor="#E4E4EA"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/editCommand_validate"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_csp_chip_idle"
+            android:gravity="center"
+            android:text="@string/customctrl_command_validate"
+            android:textColor="#E4E4EA"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/editCommand_import_export"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_csp_chip_idle"
+            android:gravity="center"
+            android:text="I/O"
+            android:textColor="#E4E4EA"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/editCommand_status"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:text="@string/customctrl_command_empty"
+        android:textColor="#9CA3AF"
+        android:textSize="10sp"
+        android:visibility="gone"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/editCommand_actions" />
 
     <!--  SIZE SECTION -->
     <TextView
@@ -89,7 +173,7 @@
         android:text="@string/customctrl_size"
 
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/editCommand_editText"
+        app:layout_constraintTop_toBottomOf="@id/editCommand_status"
         tools:visibility="visible" />
 
     <EditText

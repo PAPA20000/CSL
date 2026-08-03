@@ -23,6 +23,7 @@ import net.kdt.pojavlaunch.extra.ExtraConstants;
 import net.kdt.pojavlaunch.extra.ExtraCore;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.profiles.ProfileIconCache;
+import net.kdt.pojavlaunch.ui.PremiumPlayButtonView;
 import net.kdt.pojavlaunch.value.MinecraftAccount;
 import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
 import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
@@ -51,9 +52,11 @@ public class FastClientHomeFragment extends Fragment {
         // 2. Bind Profile Data (Name, Icon, Version, Chips)
         bindProfileData(view);
 
-        // 3. Play Button Functionality
-        TextView btnPlay = view.findViewById(R.id.btn_play_main);
+        // 3. Play Button Functionality — premium Phase-3 launch morph
+        PremiumPlayButtonView btnPlay = view.findViewById(R.id.btn_play_main);
         btnPlay.setOnClickListener(v -> {
+            btnPlay.beginLaunch();
+            v.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP);
             ExtraCore.setValue(ExtraConstants.LAUNCH_GAME, true);
         });
 

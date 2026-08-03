@@ -986,6 +986,35 @@
     <string name="cs_settings_unsaved">Unsaved changes</string>
     <string name="cs_settings_apply">APPLY</string>
 
+    <!-- ═══════════ PHASE 3: Glass terminal + Settings v3 ═══════════ -->
+    <string name="cs_log_search_hint">filter logs…</string>
+    <string name="cs_log_pause">Pause</string>
+    <string name="cs_log_copy">Copy</string>
+    <string name="cs_log_export">Export log</string>
+    <string name="cs_log_clear">Clear</string>
+    <string name="cs_log_empty">Nothing to copy yet</string>
+    <string name="cs_log_copied">Logs copied to clipboard</string>
+
+    <string name="cs_settings_search_hint">Search settings…</string>
+    <string name="cs_settings_favorites">Favorites</string>
+    <string name="cs_settings_recent">Recently Changed</string>
+    <string name="cs_settings_no_results">No settings match that search</string>
+    <string name="cs_settings_fav_add">Add to favorites</string>
+    <string name="cs_settings_fav_remove">Remove from favorites</string>
+
+    <!-- Command Studio (multi-command automation) -->
+    <string name="customctrl_command_templates">Templates</string>
+    <string name="customctrl_command_history">History</string>
+    <string name="customctrl_command_validate">Validate</string>
+    <string name="customctrl_command_import">Import</string>
+    <string name="customctrl_command_export">Export</string>
+    <string name="customctrl_command_ready">Script ready — %d action(s)</string>
+    <string name="customctrl_command_empty">Add one command per line. Supports delay:ms, var:name=value, if:…, repeat:N /cmd</string>
+    <string name="customctrl_command_error_line">Line %1$d: %2$s</string>
+    <string name="customctrl_command_exported">Command script copied</string>
+    <string name="customctrl_command_imported">Command script imported</string>
+    <string name="customctrl_command_clipboard_empty">Clipboard is empty</string>
+
     <plurals name="cs_world_count">
         <item quantity="one">%d world</item>
         <item quantity="other">%d worlds</item>

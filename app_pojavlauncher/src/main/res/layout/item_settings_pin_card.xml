@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PINNED SETTING CARD — Favorites / Recently Changed dashboard rail -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="196dp"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="10dp"
+    android:minHeight="64dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:background="@drawable/bg_csp_card"
+    android:clickable="true"
+    android:focusable="true"
+    android:padding="12dp">
+
+    <FrameLayout
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:background="@drawable/bg_csp_iconwell">
+
+        <ImageView
+            android:id="@+id/pin_card_glyph"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_gravity="center"
+            android:contentDescription="@null"
+            tools:src="@drawable/ic_csp_star_filled" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="10dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/pin_card_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="#FFFFFF"
+            android:textSize="12.5sp"
+            android:textStyle="bold"
+            tools:text="Resolution Scale" />
+
+        <TextView
+            android:id="@+id/pin_card_category"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAllCaps="true"
+            android:textColor="#6B7280"
+            android:textSize="8.5sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.08"
+            tools:text="GRAPHICS" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/pin_card_remove"
+        android:layout_width="26dp"
+        android:layout_height="26dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/cs_settings_fav_remove"
+        android:src="@drawable/ic_log_close"
+        android:visibility="gone"
+        app:tint="#6B7280" />
+</LinearLayout>

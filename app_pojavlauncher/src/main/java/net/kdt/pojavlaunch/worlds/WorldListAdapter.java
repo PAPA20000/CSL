@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import net.kdt.pojavlaunch.PojavApplication;
@@ -71,6 +72,44 @@ public final class WorldListAdapter extends RecyclerView.Adapter<WorldListAdapte
         refilter();
     }
 
+    /**
+     * Phase 3 crash fix — every data refresh goes through DiffUtil (never
+     * notifyDataSetChanged), so the RecyclerView only touches rows that
+     * actually moved/changed. No more recycling storms, no binding work for
+     * untouched rows, and Tmp-detached views are never animated by hand.
+     */
+    private void dispatchSwap(@NonNull List<WorldEntry> next) {
+        final List<WorldEntry> old = new ArrayList<>(mVisible);
+        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new DiffUtil.Callback() {
+            @Override public int getOldListSize() { return old.size(); }
+            @Override public int getNewListSize() { return next.size(); }
+
+            @Override
+            public boolean areItemsTheSame(int o, int n) {
+                return old.get(o).stableKey().equals(next.get(n).stableKey());
+            }
+
+            @Override
+            public boolean areContentsTheSame(int o, int n) {
+                WorldEntry a = old.get(o);
+                WorldEntry b = next.get(n);
+                return eq(a.displayName, b.displayName)
+                        && eq(a.versionName, b.versionName)
+                        && a.lastPlayedMs == b.lastPlayedMs
+                        && a.sizeBytes == b.sizeBytes
+                        && a.datapackCount == b.datapackCount
+                        && a.hardcore == b.hardcore;
+            }
+        }, false);
+        mVisible.clear();
+        mVisible.addAll(next);
+        diff.dispatchUpdatesTo(this);
+    }
+
+    private static boolean eq(Object a, Object b) {
+        return a == b || (a != null && a.equals(b));
+    }
+
     public void setQuery(@Nullable String query) {
         String q = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
         if (q.equals(mQuery)) return;
@@ -87,16 +126,16 @@ public final class WorldListAdapter extends RecyclerView.Adapter<WorldListAdapte
     public int getSortMode() { return mSortMode; }
 
     private void refilter() {
-        mVisible.clear();
+        List<WorldEntry> next = new ArrayList<>(mAll.size());
         for (WorldEntry w : mAll) {
             if (mQuery.isEmpty()
                     || w.displayName.toLowerCase(Locale.ROOT).contains(mQuery)
                     || w.folderName.toLowerCase(Locale.ROOT).contains(mQuery)) {
-                mVisible.add(w);
+                next.add(w);
             }
         }
-        mVisible.sort(comparatorFor(mSortMode));
-        notifyDataSetChanged();
+        next.sort(comparatorFor(mSortMode));
+        dispatchSwap(next);
     }
 
     @NonNull
@@ -169,11 +208,37 @@ public final class WorldListAdapter extends RecyclerView.Adapter<WorldListAdapte
         h.itemView.setOnClickListener(v -> mListener.onWorldClick(w));
         h.menu.setOnClickListener(v -> mListener.onWorldMenu(w, v));
 
-        // Entrance: only when the view is freshly attached to the window,
-        // so recycling during scroll never stutters.
-        if (h.itemView.getAlpha() < 1f) {
-            h.itemView.animate().alpha(1f).translationY(0f).setDuration(180).start();
-        }
+        // Phase 3 crash fix: the default RecyclerView ItemAnimator owns ALL
+        // motion. We never start our own ViewPropertyAnimator on bound rows.
+        // Every bind restores a pristine transform so recycled rows can never
+        // carry leftovers from a previous animation lifetime.
+        resetRowTransforms(h.itemView);
+    }
+
+    /** onViewRecycled: cancel anything in flight + scrub view state. */
+    @Override
+    public void onViewRecycled(@NonNull VH holder) {
+        super.onViewRecycled(holder);
+        holder.itemView.animate().cancel();
+        resetRowTransforms(holder.itemView);
+        holder.icon.setTag(null);
+    }
+
+    /** Detached rows must never animate — the ItemAnimator handles motion. */
+    @Override
+    public void onViewDetachedFromWindow(@NonNull VH holder) {
+        super.onViewDetachedFromWindow(holder);
+        holder.itemView.animate().cancel();
+        resetRowTransforms(holder.itemView);
+    }
+
+    private static void resetRowTransforms(@NonNull View row) {
+        row.setAlpha(1f);
+        row.setTranslationX(0f);
+        row.setTranslationY(0f);
+        row.setScaleX(1f);
+        row.setScaleY(1f);
+        row.setRotation(0f);
     }
 
     private static void bindIcon(@NonNull ImageView into, @NonNull WorldEntry w) {

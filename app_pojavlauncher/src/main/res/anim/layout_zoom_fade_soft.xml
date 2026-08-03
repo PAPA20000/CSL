@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Audio page entrance: gentle scale + fade. -->
+<layoutAnimation xmlns:android="http://schemas.android.com/apk/res/android"
+    android:animation="@anim/fade_scale_in"
+    android:animationOrder="normal"
+    android:delay="10%" />

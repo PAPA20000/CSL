@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.net.Uri;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
@@ -128,6 +129,8 @@ public class SkinManagerFragment extends Fragment {
         mSkinRenderer.mAngleY = DEFAULT_PREVIEW_PITCH;
         mSkinPreviewSurface.setRenderer(mSkinRenderer);
         mSkinPreviewSurface.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+        mSkinRenderer.mAutoRotate = true;
+        mAutoRotateHandler.postDelayed(mAutoRotateRunnable, 500);
         setupPreviewGestures();
 
         File skinsDir = new File(Tools.DIR_DATA + "/skins");
@@ -216,8 +219,6 @@ public class SkinManagerFragment extends Fragment {
                 if (!mPendingSkinUri.equals(Uri.fromFile(destSkin).toString())) {
                     copyUriToFile(Uri.parse(mPendingSkinUri), destSkin);
                 }
-                File destSkinMeta = new File(Tools.DIR_DATA + "/skins/" + acc.username + "_metadata.json");
-                Tools.write(destSkinMeta.getAbsolutePath(), "{\n  \"model\": \"default\"\n}");
             } else {
                 new File(Tools.DIR_DATA + "/skins/" + acc.username + "_skin.png").delete();
                 new File(Tools.DIR_DATA + "/skins/" + acc.username + "_metadata.json").delete();
@@ -230,13 +231,20 @@ public class SkinManagerFragment extends Fragment {
             } else {
                 new File(Tools.DIR_DATA + "/capes/" + acc.username + "_cape.png").delete();
             }
-            boolean isSlimModel = false;
             String finalSkin = mPendingSkinUri != null ? new File(Tools.DIR_DATA + "/skins/" + acc.username + "_skin.png").getAbsolutePath() : null;
             String finalCape = mPendingCapeUri != null ? new File(Tools.DIR_DATA + "/capes/" + acc.username + "_cape.png").getAbsolutePath() : null;
+            boolean isSlimModel = finalSkin != null && detectSlimModel(finalSkin);
+            if (finalSkin != null) {
+                File destSkinMeta = new File(Tools.DIR_DATA + "/skins/" + acc.username + "_metadata.json");
+                Tools.write(destSkinMeta.getAbsolutePath(),
+                        "{\n  \"model\": \"" + (isSlimModel ? "slim" : "default") + "\"\n}");
+            }
             boolean hasCustomTextures = finalSkin != null || finalCape != null;
-            String accUuid = LocalUuidUtils.generateProfileId(acc.username, SkinModelType.STEVE);
+            String accUuid = LocalUuidUtils.generateProfileId(acc.username,
+                    isSlimModel ? SkinModelType.ALEX : SkinModelType.STEVE);
             if (hasCustomTextures && LocalYggdrasilServer.getPort() > 0) {
                 LocalYggdrasilServer.registerProfile(acc.username, accUuid, finalSkin, finalCape, isSlimModel);
+                if (mSkinRenderer != null) mSkinRenderer.mIsSlim = isSlimModel;
             } else if (!hasCustomTextures && LocalYggdrasilServer.getPort() > 0) {
                 LocalYggdrasilServer.stop();
             }
@@ -304,12 +312,27 @@ public class SkinManagerFragment extends Fragment {
             if (event.getPointerCount() == 1 && (mScaleGestureDetector == null || !mScaleGestureDetector.isInProgress())) {
                 float x = event.getX(), y = event.getY();
                 switch (event.getActionMasked()) {
-                    case MotionEvent.ACTION_DOWN: mSkinRenderer.mLastX = x; mSkinRenderer.mLastY = y; break;
+                    case MotionEvent.ACTION_DOWN:
+                        mSkinRenderer.mAutoRotate = false;
+                        mAutoRotateHandler.removeCallbacks(mAutoRotateRunnable);
+                        mSkinRenderer.mLastX = x;
+                        mSkinRenderer.mLastY = y;
+                        break;
                     case MotionEvent.ACTION_MOVE:
                         mSkinRenderer.mAngleX += (x - mSkinRenderer.mLastX) * 0.45f;
                         mSkinRenderer.mAngleY = Math.max(-30f, Math.min(30f, mSkinRenderer.mAngleY + (y - mSkinRenderer.mLastY) * 0.35f));
                         mSkinPreviewSurface.requestRender();
                         mSkinRenderer.mLastX = x; mSkinRenderer.mLastY = y;
+                        break;
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        mAutoRotateHandler.removeCallbacks(mAutoRotateRunnable);
+                        mAutoRotateHandler.postDelayed(() -> {
+                            if (mSkinRenderer != null) {
+                                mSkinRenderer.mAutoRotate = true;
+                                mAutoRotateHandler.postDelayed(mAutoRotateRunnable, 33);
+                            }
+                        }, 1800);
                         break;
                 }
             }
@@ -347,6 +370,27 @@ public class SkinManagerFragment extends Fragment {
         view.setTextColor(active ? 0xFFEFFFFF : 0xFFBFD1E6);
     }
 
+    /** Pixel-alpha based Steve/Alex detection (64x64 vs legacy 64x32 safe). */
+    private boolean detectSlimModel(@NonNull String skinPath) {
+        Bitmap bmp = null;
+        try {
+            BitmapFactory.Options opts = new BitmapFactory.Options();
+            opts.inScaled = false;
+            bmp = BitmapFactory.decodeFile(skinPath, opts);
+            if (bmp == null) return false;
+            final Bitmap source = bmp;
+            return SkinAnalyzer.detectSkinModel(source.getHeight(),
+                    (x, y) -> {
+                        if (x < 0 || y < 0 || x >= source.getWidth() || y >= source.getHeight()) return 0;
+                        return Color.alpha(source.getPixel(x, y));
+                    }) == SkinModelType.ALEX;
+        } catch (Throwable ignored) {
+            return false;
+        } finally {
+            if (bmp != null && !bmp.isRecycled()) bmp.recycle();
+        }
+    }
+
     private void copyUriToFile(Uri uri, File destFile) throws Exception {
         try (InputStream in = requireContext().getContentResolver().openInputStream(uri);
              java.io.FileOutputStream out = new java.io.FileOutputStream(destFile)) {
@@ -360,6 +404,35 @@ public class SkinManagerFragment extends Fragment {
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("image/png");
         startActivityForResult(intent, requestCode);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mSkinPreviewSurface != null) {
+            mSkinPreviewSurface.onResume();
+            if (mSkinRenderer != null && mSkinRenderer.mAutoRotate) {
+                mAutoRotateHandler.removeCallbacks(mAutoRotateRunnable);
+                mAutoRotateHandler.postDelayed(mAutoRotateRunnable, 33);
+            }
+        }
+    }
+
+    @Override
+    public void onPause() {
+        mAutoRotateHandler.removeCallbacks(mAutoRotateRunnable);
+        if (mSkinPreviewSurface != null) mSkinPreviewSurface.onPause();
+        super.onPause();
+    }
+
+    @Override
+    public void onDestroyView() {
+        mAutoRotateHandler.removeCallbacks(mAutoRotateRunnable);
+        if (mSkinRenderer != null) mSkinRenderer.onPause();
+        if (mSkinPreviewSurface != null) mSkinPreviewSurface.onPause();
+        mSkinPreviewSurface = null;
+        mSkinRenderer = null;
+        super.onDestroyView();
     }
 
     @Override
@@ -407,95 +480,388 @@ public class SkinManagerFragment extends Fragment {
         return null;
     }
 
+    /** Premium GL preview renderer: lighting, shadow, cached geometry, slim/steve arms. */
     private static class SkinRenderer implements GLSurfaceView.Renderer {
         public float mAngleX = 0f, mAngleY = 0f, mZoomFactor = 1.0f, mLastX, mLastY;
         public boolean mAutoRotate = false, mIsSlim = false;
-        private int mProgram, mPositionHandle, mTextureCoordHandle, mMVPMatrixHandle, mTextureUniformHandle;
-        private final float[] mMVPMatrix = new float[16], mProjectionMatrix = new float[16], mViewMatrix = new float[16], mModelMatrix = new float[16];
-        private Cuboid mHead, mHeadLayer, mTorso, mTorsoLayer, mRightArm, mRightArmLayer, mLeftArm, mLeftArmLayer, mRightLeg, mRightLegLayer, mLeftLeg, mLeftLegLayer, mCape;
+
+        private int mProgram, mPositionHandle, mTextureCoordHandle, mNormalHandle;
+        private int mMVPMatrixHandle, mModelMatrixHandle, mTextureUniformHandle;
+        private int mColorProgram, mColorPositionHandle, mColorMvpHandle, mColorUniformHandle;
+
+        private final float[] mMVPMatrix = new float[16];
+        private final float[] mProjectionMatrix = new float[16];
+        private final float[] mViewMatrix = new float[16];
+        private final float[] mModelMatrix = new float[16];
+        private final float[] mPartModel = new float[16];
+        private final float[] mMvScratch = new float[16];
+        private final float[] mMvpScratch = new float[16];
+        private final float[] mShadowModel = new float[16];
+
+        private Cuboid mHead, mHeadLayer, mTorso, mTorsoLayer;
+        private Cuboid mRightArm, mRightArmLayer, mLeftArm, mLeftArmLayer;
+        private Cuboid mRightLeg, mRightLegLayer, mLeftLeg, mLeftLegLayer, mCape;
+        private ShadowDisc mShadowDisc;
+
         private Bitmap mPendingSkinBitmap, mPendingCapeBitmap;
         private int mSkinTextureId = 0, mCapeTextureId = 0;
         private boolean mSkinTextureNeedsUpdate = false, mCapeTextureNeedsUpdate = false;
 
         public SkinRenderer(Context context) {}
+
         public synchronized void setTexture(Bitmap skin, Bitmap cape) {
-            mPendingSkinBitmap = skin; mPendingCapeBitmap = cape;
-            mSkinTextureNeedsUpdate = true; mCapeTextureNeedsUpdate = true;
+            boolean slim = skin != null && detectSlim(skin);
+            if (slim != mIsSlim) {
+                mIsSlim = slim;
+                clearCuboids();
+            }
+            mPendingSkinBitmap = skin;
+            mPendingCapeBitmap = cape;
+            mSkinTextureNeedsUpdate = true;
+            mCapeTextureNeedsUpdate = true;
         }
-        public void onPause() { mSkinTextureId = mCapeTextureId = 0; }
-        @Override public void onSurfaceCreated(javax.microedition.khronos.opengles.GL10 gl, javax.microedition.khronos.egl.EGLConfig config) {
-            GLES20.glClearColor(0.05f, 0.06f, 0.08f, 1.0f); GLES20.glEnable(GLES20.GL_DEPTH_TEST);
-            int vs = loadShader(GLES20.GL_VERTEX_SHADER, "uniform mat4 uMVPMatrix; attribute vec4 aPosition; attribute vec2 aTextureCoord; varying vec2 vTextureCoord; void main() { gl_Position = uMVPMatrix * aPosition; vTextureCoord = aTextureCoord; }");
-            int fs = loadShader(GLES20.GL_FRAGMENT_SHADER, "precision mediump float; varying vec2 vTextureCoord; uniform sampler2D sTexture; void main() { vec4 color = texture2D(sTexture, vTextureCoord); if (color.a < 0.1) discard; gl_FragColor = color; }");
-            mProgram = GLES20.glCreateProgram(); GLES20.glAttachShader(mProgram, vs); GLES20.glAttachShader(mProgram, fs); GLES20.glLinkProgram(mProgram);
-            mPositionHandle = GLES20.glGetAttribLocation(mProgram, "aPosition"); mTextureCoordHandle = GLES20.glGetAttribLocation(mProgram, "aTextureCoord");
-            mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix"); mTextureUniformHandle = GLES20.glGetUniformLocation(mProgram, "sTexture");
+
+        public void onPause() {
+            // GL context is being torn down by GLSurfaceView; re-upload next frame.
+            mSkinTextureId = 0;
+            mCapeTextureId = 0;
+            mSkinTextureNeedsUpdate = true;
+            mCapeTextureNeedsUpdate = true;
         }
-        @Override public void onSurfaceChanged(javax.microedition.khronos.opengles.GL10 gl, int w, int h) {
-            GLES20.glViewport(0, 0, w, h); Matrix.orthoM(mProjectionMatrix, 0, -18f * (float)w/h, 18f * (float)w/h, -18f, 18f, 0.1f, 200f);
+
+        private static boolean detectSlim(@androidx.annotation.NonNull Bitmap skin) {
+            return SkinAnalyzer.detectSkinModel(skin.getHeight(), (x, y) -> {
+                if (x < 0 || y < 0 || x >= skin.getWidth() || y >= skin.getHeight()) return 0;
+                return Color.alpha(skin.getPixel(x, y));
+            }) == SkinModelType.ALEX;
         }
-        @Override public void onDrawFrame(javax.microedition.khronos.opengles.GL10 gl) {
+
+        @Override
+        public void onSurfaceCreated(javax.microedition.khronos.opengles.GL10 gl,
+                                     javax.microedition.khronos.egl.EGLConfig config) {
+            GLES20.glClearColor(0.035f, 0.044f, 0.060f, 1.0f);
+            GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+            GLES20.glDepthFunc(GLES20.GL_LEQUAL);
+
+            int vs = loadShader(GLES20.GL_VERTEX_SHADER,
+                    "uniform mat4 uMVPMatrix;\n" +
+                    "uniform mat4 uModelMatrix;\n" +
+                    "attribute vec4 aPosition;\n" +
+                    "attribute vec2 aTextureCoord;\n" +
+                    "attribute vec3 aNormal;\n" +
+                    "varying vec2 vTextureCoord;\n" +
+                    "varying vec3 vNormal;\n" +
+                    "void main() {\n" +
+                    "  gl_Position = uMVPMatrix * aPosition;\n" +
+                    "  vTextureCoord = aTextureCoord;\n" +
+                    "  vNormal = normalize((uModelMatrix * vec4(aNormal, 0.0)).xyz);\n" +
+                    "}\n");
+            int fs = loadShader(GLES20.GL_FRAGMENT_SHADER,
+                    "precision mediump float;\n" +
+                    "varying vec2 vTextureCoord;\n" +
+                    "varying vec3 vNormal;\n" +
+                    "uniform sampler2D sTexture;\n" +
+                    "void main() {\n" +
+                    "  vec4 color = texture2D(sTexture, vTextureCoord);\n" +
+                    "  if (color.a < 0.08) discard;\n" +
+                    "  vec3 lightDir = normalize(vec3(-0.38, 0.82, 0.42));\n" +
+                    "  float diffuse = max(dot(normalize(vNormal), lightDir), 0.0);\n" +
+                    "  float shade = 0.58 + diffuse * 0.42;\n" +
+                    "  gl_FragColor = vec4(color.rgb * shade, color.a);\n" +
+                    "}\n");
+            mProgram = linkProgram(vs, fs);
+            mPositionHandle = GLES20.glGetAttribLocation(mProgram, "aPosition");
+            mTextureCoordHandle = GLES20.glGetAttribLocation(mProgram, "aTextureCoord");
+            mNormalHandle = GLES20.glGetAttribLocation(mProgram, "aNormal");
+            mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
+            mModelMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uModelMatrix");
+            mTextureUniformHandle = GLES20.glGetUniformLocation(mProgram, "sTexture");
+
+            int cvs = loadShader(GLES20.GL_VERTEX_SHADER,
+                    "uniform mat4 uMVPMatrix; attribute vec4 aPosition;\n" +
+                    "void main() { gl_Position = uMVPMatrix * aPosition; }\n");
+            int cfs = loadShader(GLES20.GL_FRAGMENT_SHADER,
+                    "precision mediump float; uniform vec4 uColor;\n" +
+                    "void main() { gl_FragColor = uColor; }\n");
+            mColorProgram = linkProgram(cvs, cfs);
+            mColorPositionHandle = GLES20.glGetAttribLocation(mColorProgram, "aPosition");
+            mColorMvpHandle = GLES20.glGetUniformLocation(mColorProgram, "uMVPMatrix");
+            mColorUniformHandle = GLES20.glGetUniformLocation(mColorProgram, "uColor");
+        }
+
+        @Override
+        public void onSurfaceChanged(javax.microedition.khronos.opengles.GL10 gl, int w, int h) {
+            GLES20.glViewport(0, 0, w, h);
+            Matrix.orthoM(mProjectionMatrix, 0,
+                    -18f * (float) w / h, 18f * (float) w / h,
+                    -18f, 18f, 0.1f, 200f);
+        }
+
+        @Override
+        public void onDrawFrame(javax.microedition.khronos.opengles.GL10 gl) {
             GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
             synchronized (this) {
-                if (mSkinTextureNeedsUpdate) { if (mSkinTextureId != 0) GLES20.glDeleteTextures(1, new int[]{mSkinTextureId}, 0); mSkinTextureId = loadGLTexture(mPendingSkinBitmap); mSkinTextureNeedsUpdate = false; }
-                if (mCapeTextureNeedsUpdate) { if (mCapeTextureId != 0) GLES20.glDeleteTextures(1, new int[]{mCapeTextureId}, 0); mCapeTextureId = loadGLTexture(mPendingCapeBitmap); mCapeTextureNeedsUpdate = false; }
+                if (mSkinTextureNeedsUpdate) {
+                    if (mSkinTextureId != 0) GLES20.glDeleteTextures(1, new int[]{mSkinTextureId}, 0);
+                    mSkinTextureId = loadGLTexture(mPendingSkinBitmap);
+                    mSkinTextureNeedsUpdate = false;
+                }
+                if (mCapeTextureNeedsUpdate) {
+                    if (mCapeTextureId != 0) GLES20.glDeleteTextures(1, new int[]{mCapeTextureId}, 0);
+                    mCapeTextureId = loadGLTexture(mPendingCapeBitmap);
+                    mCapeTextureNeedsUpdate = false;
+                }
             }
             if (mSkinTextureId == 0) return;
-            rebuildCuboids();
-            Matrix.setLookAtM(mViewMatrix, 0, 0f, 0f, 34f, 0f, 0f, 0f, 0f, 1f, 0f); Matrix.setIdentityM(mModelMatrix, 0);
-            Matrix.rotateM(mModelMatrix, 0, mAngleY, 1f, 0f, 0f); Matrix.rotateM(mModelMatrix, 0, mAngleX, 0f, 1f, 0f); Matrix.scaleM(mModelMatrix, 0, mZoomFactor, mZoomFactor, mZoomFactor);
-            GLES20.glUseProgram(mProgram); GLES20.glDisable(GLES20.GL_BLEND);
-            drawPart(mHead, mModelMatrix, mSkinTextureId); drawPart(mTorso, mModelMatrix, mSkinTextureId); drawPart(mRightArm, mModelMatrix, mSkinTextureId); drawPart(mLeftArm, mModelMatrix, mSkinTextureId); drawPart(mRightLeg, mModelMatrix, mSkinTextureId); drawPart(mLeftLeg, mModelMatrix, mSkinTextureId);
-            if (mCape != null) { float[] cm = new float[16]; System.arraycopy(mModelMatrix, 0, cm, 0, 16); Matrix.translateM(cm, 0, 0f, 8f, -2f); Matrix.rotateM(cm, 0, 180f, 0f, 1f, 0f); Matrix.rotateM(cm, 0, -10f, 1f, 0f, 0f); drawPart(mCape, cm, mCapeTextureId); }
-            GLES20.glEnable(GLES20.GL_BLEND); GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-            drawPart(mHeadLayer, mModelMatrix, mSkinTextureId); drawPart(mTorsoLayer, mModelMatrix, mSkinTextureId); drawPart(mRightArmLayer, mModelMatrix, mSkinTextureId); drawPart(mLeftArmLayer, mModelMatrix, mSkinTextureId); drawPart(mRightLegLayer, mModelMatrix, mSkinTextureId); drawPart(mLeftLegLayer, mModelMatrix, mSkinTextureId);
+
+            if (mAutoRotate) mAngleX = (mAngleX + 0.34f) % 360f;
+            rebuildCuboidsIfNeeded();
+
+            Matrix.setLookAtM(mViewMatrix, 0,
+                    0f, 1.2f, 34f,
+                    0f, -2.0f, 0f,
+                    0f, 1f, 0f);
+            Matrix.setIdentityM(mModelMatrix, 0);
+            Matrix.rotateM(mModelMatrix, 0, mAngleY, 1f, 0f, 0f);
+            Matrix.rotateM(mModelMatrix, 0, mAngleX, 0f, 1f, 0f);
+            Matrix.scaleM(mModelMatrix, 0, mZoomFactor, mZoomFactor, mZoomFactor);
+
+            drawShadow();
+
+            GLES20.glUseProgram(mProgram);
+            GLES20.glDisable(GLES20.GL_BLEND);
+            drawPart(mHead, mModelMatrix, mSkinTextureId);
+            drawPart(mTorso, mModelMatrix, mSkinTextureId);
+            drawPart(mRightArm, mModelMatrix, mSkinTextureId);
+            drawPart(mLeftArm, mModelMatrix, mSkinTextureId);
+            drawPart(mRightLeg, mModelMatrix, mSkinTextureId);
+            drawPart(mLeftLeg, mModelMatrix, mSkinTextureId);
+
+            if (mCapeTextureId != 0 && mCape != null) {
+                System.arraycopy(mModelMatrix, 0, mPartModel, 0, 16);
+                Matrix.translateM(mPartModel, 0, 0f, 8f, -2f);
+                Matrix.rotateM(mPartModel, 0, 180f, 0f, 1f, 0f);
+                Matrix.rotateM(mPartModel, 0, -10f, 1f, 0f, 0f);
+                drawPart(mCape, mPartModel, mCapeTextureId);
+            }
+
+            // Overlay layers are genuinely transparent: blend + depth keep sleeves,
+            // hats, jackets and capes crisp instead of z-fighting with the base.
+            GLES20.glEnable(GLES20.GL_BLEND);
+            GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+            drawPart(mHeadLayer, mModelMatrix, mSkinTextureId);
+            drawPart(mTorsoLayer, mModelMatrix, mSkinTextureId);
+            drawPart(mRightArmLayer, mModelMatrix, mSkinTextureId);
+            drawPart(mLeftArmLayer, mModelMatrix, mSkinTextureId);
+            drawPart(mRightLegLayer, mModelMatrix, mSkinTextureId);
+            drawPart(mLeftLegLayer, mModelMatrix, mSkinTextureId);
         }
-        private void rebuildCuboids() {
+
+        private void rebuildCuboidsIfNeeded() {
             if (mHead != null) return;
+            int armWidth = mIsSlim ? 3 : 4;
+            float armHalf = armWidth / 2f;
+            float armCenter = 4f + armHalf;
+
             mHead = new Cuboid(0, 8, 0, -4, 4, 0, 8, -4, 4, 0, 0, 8, 8, 8, 64, 64, false, 0f);
             mHeadLayer = new Cuboid(0, 8, 0, -4, 4, 0, 8, -4, 4, 32, 0, 8, 8, 8, 64, 64, false, 0.5f);
             mTorso = new Cuboid(0, 8, 0, -4, 4, -12, 0, -2, 2, 16, 16, 8, 12, 4, 64, 64, false, 0f);
             mTorsoLayer = new Cuboid(0, 8, 0, -4, 4, -12, 0, -2, 2, 16, 32, 8, 12, 4, 64, 64, false, 0.25f);
-            mRightArm = new Cuboid(-6, 8, 0, -2, 2, -12, 0, -2, 2, 40, 16, 4, 12, 4, 64, 64, false, 0f);
-            mRightArmLayer = new Cuboid(-6, 8, 0, -2, 2, -12, 0, -2, 2, 40, 32, 4, 12, 4, 64, 64, false, 0.25f);
-            mLeftArm = new Cuboid(6, 8, 0, -2, 2, -12, 0, -2, 2, 32, 48, 4, 12, 4, 64, 64, false, 0f);
-            mLeftArmLayer = new Cuboid(6, 8, 0, -2, 2, -12, 0, -2, 2, 48, 48, 4, 12, 4, 64, 64, false, 0.25f);
+            mRightArm = new Cuboid(-armCenter, 8, 0, -armHalf, armHalf, -12, 0, -2, 2, 40, 16, armWidth, 12, 4, 64, 64, false, 0f);
+            mRightArmLayer = new Cuboid(-armCenter, 8, 0, -armHalf, armHalf, -12, 0, -2, 2, 40, 32, armWidth, 12, 4, 64, 64, false, 0.25f);
+            mLeftArm = new Cuboid(armCenter, 8, 0, -armHalf, armHalf, -12, 0, -2, 2, 32, 48, armWidth, 12, 4, 64, 64, false, 0f);
+            mLeftArmLayer = new Cuboid(armCenter, 8, 0, -armHalf, armHalf, -12, 0, -2, 2, 48, 48, armWidth, 12, 4, 64, 64, false, 0.25f);
             mRightLeg = new Cuboid(-2, -4, 0, -2, 2, -12, 0, -2, 2, 0, 16, 4, 12, 4, 64, 64, false, 0f);
             mRightLegLayer = new Cuboid(-2, -4, 0, -2, 2, -12, 0, -2, 2, 0, 32, 4, 12, 4, 64, 64, false, 0.25f);
             mLeftLeg = new Cuboid(2, -4, 0, -2, 2, -12, 0, -2, 2, 16, 48, 4, 12, 4, 64, 64, false, 0f);
             mLeftLegLayer = new Cuboid(2, -4, 0, -2, 2, -12, 0, -2, 2, 0, 48, 4, 12, 4, 64, 64, false, 0.25f);
             mCape = new Cuboid(0, 0, 0, -5, 5, -16, 0, 0, 1, 0, 0, 10, 16, 1, 64, 32, true, 0f);
         }
-        private void drawPart(Cuboid c, float[] bm, int tid) {
-            if (c == null || tid == 0) return; float[] mvp = new float[16], pm = new float[16], mv = new float[16];
-            System.arraycopy(bm, 0, pm, 0, 16); Matrix.translateM(pm, 0, c.pX, c.pY, c.pZ);
-            Matrix.multiplyMM(mv, 0, mViewMatrix, 0, pm, 0); Matrix.multiplyMM(mvp, 0, mProjectionMatrix, 0, mv, 0);
-            GLES20.glEnableVertexAttribArray(mPositionHandle); GLES20.glVertexAttribPointer(mPositionHandle, 3, GLES20.GL_FLOAT, false, 0, c.vertexBuffer);
-            GLES20.glEnableVertexAttribArray(mTextureCoordHandle); GLES20.glVertexAttribPointer(mTextureCoordHandle, 2, GLES20.GL_FLOAT, false, 0, c.uvBuffer);
-            GLES20.glActiveTexture(GLES20.GL_TEXTURE0); GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, tid);
-            GLES20.glUniform1i(mTextureUniformHandle, 0); GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvp, 0);
+
+        private void clearCuboids() {
+            mHead = mHeadLayer = mTorso = mTorsoLayer = null;
+            mRightArm = mRightArmLayer = mLeftArm = mLeftArmLayer = null;
+            mRightLeg = mRightLegLayer = mLeftLeg = mLeftLegLayer = null;
+            mCape = null;
+        }
+
+        private void drawPart(Cuboid c, float[] baseModel, int textureId) {
+            if (c == null || textureId == 0) return;
+            System.arraycopy(baseModel, 0, mPartModel, 0, 16);
+            Matrix.translateM(mPartModel, 0, c.pX, c.pY, c.pZ);
+            Matrix.multiplyMM(mMvScratch, 0, mViewMatrix, 0, mPartModel, 0);
+            Matrix.multiplyMM(mMvpScratch, 0, mProjectionMatrix, 0, mMvScratch, 0);
+
+            GLES20.glUseProgram(mProgram);
+            GLES20.glEnableVertexAttribArray(mPositionHandle);
+            GLES20.glVertexAttribPointer(mPositionHandle, 3, GLES20.GL_FLOAT, false, 0, c.vertexBuffer);
+            GLES20.glEnableVertexAttribArray(mTextureCoordHandle);
+            GLES20.glVertexAttribPointer(mTextureCoordHandle, 2, GLES20.GL_FLOAT, false, 0, c.uvBuffer);
+            GLES20.glEnableVertexAttribArray(mNormalHandle);
+            GLES20.glVertexAttribPointer(mNormalHandle, 3, GLES20.GL_FLOAT, false, 0, c.normalBuffer);
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId);
+            GLES20.glUniform1i(mTextureUniformHandle, 0);
+            GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mMvpScratch, 0);
+            GLES20.glUniformMatrix4fv(mModelMatrixHandle, 1, false, mPartModel, 0);
             GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 36);
         }
-        private int loadShader(int t, String s) { int sh = GLES20.glCreateShader(t); GLES20.glShaderSource(sh, s); GLES20.glCompileShader(sh); return sh; }
-        private int loadGLTexture(Bitmap b) { if (b == null) return 0; int[] t = new int[1]; GLES20.glGenTextures(1, t, 0); GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, t[0]); GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST); GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST); GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, b, 0); return t[0]; }
+
+        private void drawShadow() {
+            if (mShadowDisc == null) mShadowDisc = new ShadowDisc();
+            Matrix.setIdentityM(mShadowModel, 0);
+            Matrix.translateM(mShadowModel, 0, 0f, -16.18f, 0f);
+            float shadowScale = 8.2f * mZoomFactor;
+            Matrix.scaleM(mShadowModel, 0, shadowScale, 1f, shadowScale * 0.64f);
+            Matrix.multiplyMM(mMvScratch, 0, mViewMatrix, 0, mShadowModel, 0);
+            Matrix.multiplyMM(mMvpScratch, 0, mProjectionMatrix, 0, mMvScratch, 0);
+
+            GLES20.glUseProgram(mColorProgram);
+            GLES20.glEnable(GLES20.GL_BLEND);
+            GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+            GLES20.glDepthMask(false);
+            GLES20.glEnableVertexAttribArray(mColorPositionHandle);
+            GLES20.glVertexAttribPointer(mColorPositionHandle, 3, GLES20.GL_FLOAT, false, 0, mShadowDisc.vertexBuffer);
+            GLES20.glUniformMatrix4fv(mColorMvpHandle, 1, false, mMvpScratch, 0);
+            GLES20.glUniform4f(mColorUniformHandle, 0f, 0f, 0f, 0.34f);
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, mShadowDisc.vertexCount);
+            GLES20.glDepthMask(true);
+            GLES20.glDisable(GLES20.GL_BLEND);
+        }
+
+        private static int linkProgram(int vertexShader, int fragmentShader) {
+            int program = GLES20.glCreateProgram();
+            GLES20.glAttachShader(program, vertexShader);
+            GLES20.glAttachShader(program, fragmentShader);
+            GLES20.glLinkProgram(program);
+            return program;
+        }
+
+        private int loadShader(int type, String source) {
+            int shader = GLES20.glCreateShader(type);
+            GLES20.glShaderSource(shader, source);
+            GLES20.glCompileShader(shader);
+            return shader;
+        }
+
+        private int loadGLTexture(Bitmap bitmap) {
+            if (bitmap == null) return 0;
+            int[] textures = new int[1];
+            GLES20.glGenTextures(1, textures, 0);
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+            GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
+            return textures[0];
+        }
+
         private static class Cuboid {
-            public FloatBuffer vertexBuffer, uvBuffer; public float pX, pY, pZ;
-            public Cuboid(float px, float py, float pz, float x1, float x2, float y1, float y2, float z1, float z2, int us, int vs, int dx, int dy, int dz, int tw, int th, boolean m, float e) {
-                pX=px; pY=py; pZ=pz; x1-=e; x2+=e; y1-=e; y2+=e; z1-=e; z2+=e;
-                float[] v = new float[108], u = new float[72];
-                addF(v, u, 0, 0, x1, y2, z2, x1, y1, z2, x2, y1, z2, x2, y2, z2, us+dz, vs+dz, dx, dy, tw, th, m);
-                addF(v, u, 18, 12, x2, y2, z1, x2, y1, z1, x1, y1, z1, x1, y2, z1, us+dz+dx+dz, vs+dz, dx, dy, tw, th, m);
-                addF(v, u, 36, 24, x1, y2, z1, x1, y1, z1, x1, y1, z2, x1, y2, z2, us, vs+dz, dz, dy, tw, th, m);
-                addF(v, u, 54, 36, x2, y2, z2, x2, y1, z2, x2, y1, z1, x2, y2, z1, us+dz+dx, vs+dz, dz, dy, tw, th, m);
-                addF(v, u, 72, 48, x1, y2, z1, x1, y2, z2, x2, y2, z2, x2, y2, z1, us+dz, vs, dx, dz, tw, th, m);
-                addF(v, u, 90, 60, x1, y1, z2, x1, y1, z1, x2, y1, z1, x2, y1, z2, us+dz+dx, vs, dx, dz, tw, th, m);
-                vertexBuffer = ByteBuffer.allocateDirect(432).order(ByteOrder.nativeOrder()).asFloatBuffer().put(v); vertexBuffer.position(0);
-                uvBuffer = ByteBuffer.allocateDirect(288).order(ByteOrder.nativeOrder()).asFloatBuffer().put(u); uvBuffer.position(0);
+            public final FloatBuffer vertexBuffer;
+            public final FloatBuffer uvBuffer;
+            public final FloatBuffer normalBuffer;
+            public final float pX, pY, pZ;
+
+            public Cuboid(float px, float py, float pz,
+                          float x1, float x2, float y1, float y2, float z1, float z2,
+                          int us, int vs, int dx, int dy, int dz, int tw, int th,
+                          boolean mirror, float expand) {
+                pX = px; pY = py; pZ = pz;
+                x1 -= expand; x2 += expand;
+                y1 -= expand; y2 += expand;
+                z1 -= expand; z2 += expand;
+
+                float[] vertices = new float[108];
+                float[] uvs = new float[72];
+                float[] normals = new float[108];
+                addFace(vertices, uvs, 0, 0,
+                        x1, y2, z2, x1, y1, z2, x2, y1, z2, x2, y2, z2,
+                        us + dz, vs + dz, dx, dy, tw, th, mirror);
+                addFace(vertices, uvs, 18, 12,
+                        x2, y2, z1, x2, y1, z1, x1, y1, z1, x1, y2, z1,
+                        us + dz + dx + dz, vs + dz, dx, dy, tw, th, mirror);
+                addFace(vertices, uvs, 36, 24,
+                        x1, y2, z1, x1, y1, z1, x1, y1, z2, x1, y2, z2,
+                        us, vs + dz, dz, dy, tw, th, mirror);
+                addFace(vertices, uvs, 54, 36,
+                        x2, y2, z2, x2, y1, z2, x2, y1, z1, x2, y2, z1,
+                        us + dz + dx, vs + dz, dz, dy, tw, th, mirror);
+                addFace(vertices, uvs, 72, 48,
+                        x1, y2, z1, x1, y2, z2, x2, y2, z2, x2, y2, z1,
+                        us + dz, vs, dx, dz, tw, th, mirror);
+                addFace(vertices, uvs, 90, 60,
+                        x1, y1, z2, x1, y1, z1, x2, y1, z1, x2, y1, z2,
+                        us + dz + dx, vs, dx, dz, tw, th, mirror);
+
+                putNormal(normals, 0, 0f, 0f, 1f);
+                putNormal(normals, 18, 0f, 0f, -1f);
+                putNormal(normals, 36, -1f, 0f, 0f);
+                putNormal(normals, 54, 1f, 0f, 0f);
+                putNormal(normals, 72, 0f, 1f, 0f);
+                putNormal(normals, 90, 0f, -1f, 0f);
+
+                vertexBuffer = ByteBuffer.allocateDirect(108 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer().put(vertices);
+                uvBuffer = ByteBuffer.allocateDirect(72 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer().put(uvs);
+                normalBuffer = ByteBuffer.allocateDirect(108 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer().put(normals);
+                vertexBuffer.position(0);
+                uvBuffer.position(0);
+                normalBuffer.position(0);
             }
-            private void addF(float[] v, float[] u, int vi, int ui, float xA, float yA, float zA, float xB, float yB, float zB, float xC, float yC, float zC, float xD, float yD, float zD, int us, int vs, int dx, int dy, int tw, int th, boolean m) {
-                v[vi]=xA; v[vi+1]=yA; v[vi+2]=zA; v[vi+3]=xB; v[vi+4]=yB; v[vi+5]=zB; v[vi+6]=xC; v[vi+7]=yC; v[vi+8]=zC; v[vi+9]=xA; v[vi+10]=yA; v[vi+11]=zA; v[vi+12]=xC; v[vi+13]=yC; v[vi+14]=zC; v[vi+15]=xD; v[vi+16]=yD; v[vi+17]=zD;
-                float u1 = (float)us/tw, v1 = (float)vs/th, u2 = (float)(us+dx)/tw, v2 = (float)(vs+dy)/th; if (m) { float t=u1; u1=u2; u2=t; }
-                u[ui]=u1; u[ui+1]=v1; u[ui+2]=u1; u[ui+3]=v2; u[ui+4]=u2; u[ui+5]=v2; u[ui+6]=u1; u[ui+7]=v1; u[ui+8]=u2; u[ui+9]=v2; u[ui+10]=u2; u[ui+11]=v1;
+
+            private static void putNormal(float[] normals, int offset, float x, float y, float z) {
+                for (int i = 0; i < 6; i++) {
+                    normals[offset + i * 3] = x;
+                    normals[offset + i * 3 + 1] = y;
+                    normals[offset + i * 3 + 2] = z;
+                }
+            }
+
+            private static void addFace(float[] vertices, float[] uvs, int vi, int ui,
+                                        float xa, float ya, float za,
+                                        float xb, float yb, float zb,
+                                        float xc, float yc, float zc,
+                                        float xd, float yd, float zd,
+                                        int us, int vs, int dx, int dy, int tw, int th, boolean mirror) {
+                vertices[vi] = xa; vertices[vi + 1] = ya; vertices[vi + 2] = za;
+                vertices[vi + 3] = xb; vertices[vi + 4] = yb; vertices[vi + 5] = zb;
+                vertices[vi + 6] = xc; vertices[vi + 7] = yc; vertices[vi + 8] = zc;
+                vertices[vi + 9] = xa; vertices[vi + 10] = ya; vertices[vi + 11] = za;
+                vertices[vi + 12] = xc; vertices[vi + 13] = yc; vertices[vi + 14] = zc;
+                vertices[vi + 15] = xd; vertices[vi + 16] = yd; vertices[vi + 17] = zd;
+
+                float u1 = (float) us / tw, v1 = (float) vs / th;
+                float u2 = (float) (us + dx) / tw, v2 = (float) (vs + dy) / th;
+                if (mirror) { float tmp = u1; u1 = u2; u2 = tmp; }
+                uvs[ui] = u1; uvs[ui + 1] = v1;
+                uvs[ui + 2] = u1; uvs[ui + 3] = v2;
+                uvs[ui + 4] = u2; uvs[ui + 5] = v2;
+                uvs[ui + 6] = u1; uvs[ui + 7] = v1;
+                uvs[ui + 8] = u2; uvs[ui + 9] = v2;
+                uvs[ui + 10] = u2; uvs[ui + 11] = v1;
+            }
+        }
+
+        /** Ground-contact soft ellipse under the player model. */
+        private static class ShadowDisc {
+            final FloatBuffer vertexBuffer;
+            final int vertexCount;
+
+            ShadowDisc() {
+                int segments = 32;
+                float[] vertices = new float[(segments + 2) * 3];
+                vertices[0] = 0f; vertices[1] = 0f; vertices[2] = 0f;
+                for (int i = 0; i <= segments; i++) {
+                    double angle = Math.PI * 2.0 * i / segments;
+                    int idx = (i + 1) * 3;
+                    vertices[idx] = (float) Math.cos(angle);
+                    vertices[idx + 1] = 0f;
+                    vertices[idx + 2] = (float) Math.sin(angle);
+                }
+                vertexCount = segments + 2;
+                vertexBuffer = ByteBuffer.allocateDirect(vertices.length * 4)
+                        .order(ByteOrder.nativeOrder()).asFloatBuffer().put(vertices);
+                vertexBuffer.position(0);
             }
         }
     }

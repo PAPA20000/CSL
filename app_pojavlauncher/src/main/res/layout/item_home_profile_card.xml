@@ -175,17 +175,14 @@
                     android:tint="#D9DAE0" />
             </FrameLayout>
 
-            <!-- Play — premium white pill -->
-            <FrameLayout
+            <!-- Play — Phase 3 premium launch morph (wave + glow + particles) -->
+            <net.kdt.pojavlaunch.ui.PremiumPlayButtonView
                 android:id="@+id/btn_profile_play"
                 android:layout_width="0dp"
                 android:layout_height="36dp"
                 android:layout_weight="1.1"
                 android:layout_marginStart="5dp"
-                android:background="@drawable/bg_play_button_green"
-                android:stateListAnimator="@animator/card_press_anim"
-                android:clickable="true"
-                android:focusable="true">
+                android:contentDescription="@string/cs_world_play">
 
                 <ImageView
                     android:layout_width="17dp"
@@ -193,7 +190,7 @@
                     android:layout_gravity="center"
                     android:src="@drawable/ic_play_arrow"
                     android:tint="#0E0E11" />
-            </FrameLayout>
+            </net.kdt.pojavlaunch.ui.PremiumPlayButtonView>
         </LinearLayout>
 
     </LinearLayout>

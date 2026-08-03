@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Account page entrance: rows glide in from the trailing edge. -->
+<layoutAnimation xmlns:android="http://schemas.android.com/apk/res/android"
+    android:animation="@anim/slide_in_right"
+    android:animationOrder="normal"
+    android:delay="9%" />

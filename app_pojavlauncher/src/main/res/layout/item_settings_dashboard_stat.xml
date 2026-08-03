@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     android:layout_marginEnd="10dp"
     android:layout_weight="1"
-    android:background="@drawable/bg_cs_pill_idle"
+    android:background="@drawable/bg_csp_chip_idle"
     android:orientation="vertical"
     android:paddingStart="14dp"
     android:paddingTop="12dp"

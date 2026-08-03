@@ -247,20 +247,25 @@
             android:background="#2A2A2A"
             android:layout_marginBottom="@dimen/_14sdp" />
 
-        <!-- PLAY Button -->
-        <TextView
+        <!-- PLAY Button — Phase 3 launch morph -->
+        <net.kdt.pojavlaunch.ui.PremiumPlayButtonView
             android:id="@+id/btn_play_main"
             android:layout_width="match_parent"
             android:layout_height="@dimen/_52sdp"
-            android:text="▶  PLAY"
-            android:textColor="#000000"
-            android:textSize="@dimen/_16ssp"
-            android:textStyle="bold"
-            android:letterSpacing="0.08"
-            android:gravity="center"
-            android:background="@drawable/bg_btn_play_orange"
+            android:contentDescription="@string/mcl_version_play"
             android:clickable="true"
-            android:focusable="true" />
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="▶  PLAY"
+                android:textColor="#0E0E11"
+                android:textSize="@dimen/_16ssp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"
+                android:layout_gravity="center" />
+        </net.kdt.pojavlaunch.ui.PremiumPlayButtonView>
 
         <!-- Infrawire Official Partner — premium sponsor card (below Play, never blocking) -->
         <include

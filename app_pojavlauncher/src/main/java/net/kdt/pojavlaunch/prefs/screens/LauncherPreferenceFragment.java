@@ -75,6 +75,14 @@ public class LauncherPreferenceFragment extends Fragment {
     private ImageView mHeaderIcon;
     private LinearLayout mCategoryRail;
     private View mCategoryRailScroll;
+    // ══ Phase 3: search / favorites / recent / focus-jump ══
+    private String mSearchQuery = "";
+    private EditText mSearchInput;
+    private static final String[] ALL_CATEGORIES = {
+            "Launcher Settings", "Video & Graphics", "Controls", "Java Runtime",
+            "Audio", "Account", "Experimental", "Advanced", "Miscellaneous", "Sponsors"};
+    /** One-shot: a pinned setting (Favorite/Recent) asked its page to flash a row. */
+    private static String sPendingFocusKey;
 
     // JRE result launcher
     private final ActivityResultLauncher<Object> mVmInstallLauncher =
@@ -127,6 +135,7 @@ public class LauncherPreferenceFragment extends Fragment {
 
         setupHeaderUi();
         setupCategoryRail();
+        setupSettingsSearch(view);
 
         View backButton = view.findViewById(R.id.settings_back_button);
         net.kdt.pojavlaunch.UiMotion.pressFeedback(backButton);
@@ -348,14 +357,12 @@ public class LauncherPreferenceFragment extends Fragment {
         editor.commit();
     }
 
-    private void setupSettingsList() {
-        List<SettingCategory> categories = new ArrayList<>();
 
-        if (mCategoryName == null) {
-            categories.add(new SettingCategory("Settings Categories", buildRootCategoryItems()));
-        } else {
-            // Subcategory Pages Detail (100% Real Authentic Launcher Options)
-            switch (mCategoryName) {
+    /** Builds the real option page for one category (extracted so the Search
+     *  index can build every page's items off-screen). */
+    private void addCategoryPageTo(List<SettingCategory> categories, String catName) {
+        // Subcategory Pages Detail (100% Real Authentic Launcher Options)
+            switch (catName) {
                 case "Launcher Settings":
                     List<SettingItem> launcherItems = new ArrayList<>();
                     launcherItems.add(new SettingItem("force_english", SettingItem.TYPE_SWITCH, getString(R.string.preference_force_english_title), getString(R.string.preference_force_english_description), false));
@@ -533,12 +540,155 @@ public class LauncherPreferenceFragment extends Fragment {
                     categories.add(new SettingCategory("Official Sponsors", sponsorItems));
                     break;
             }
-        }
+    }
 
-        mAdapter = new SettingsAdapter(categories, mDraftPrefs);
+    private void setupSettingsList() {
+        mAdapter = new SettingsAdapter(buildCurrentCategories(), mDraftPrefs);
         mRecyclerView.setAdapter(mAdapter);
-        // Phase 2 polish: one-shot staggered reveal (allocation-free after bind)
-        net.kdt.pojavlaunch.UiMotion.revealList(mRecyclerView);
+        // Phase 3: every settings page gets its OWN entrance choreography
+        mRecyclerView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(
+                requireContext(), pickPageAnimation()));
+        mRecyclerView.scheduleLayoutAnimation();
+        flashPendingFocusRow();
+    }
+
+    /** Root/hub page, category page, or live search results as grouped categories. */
+    private List<SettingCategory> buildCurrentCategories() {
+        List<SettingCategory> categories = new ArrayList<>();
+        if (mSearchQuery != null && !mSearchQuery.isEmpty()) {
+            buildSearchResults(categories, mSearchQuery);
+        } else if (mCategoryName == null) {
+            categories.add(new SettingCategory("Settings Categories", buildRootCategoryItems()));
+        } else {
+            addCategoryPageTo(categories, mCategoryName);
+        }
+        return categories;
+    }
+
+    /** Match title + summary + key across EVERY real settings page. */
+    private void buildSearchResults(List<SettingCategory> out, String queryRaw) {
+        String q = queryRaw.toLowerCase(java.util.Locale.US);
+        for (String cat : ALL_CATEGORIES) {
+            List<SettingCategory> tmp = new ArrayList<>();
+            addCategoryPageTo(tmp, cat);
+            List<SettingItem> matches = new ArrayList<>();
+            for (SettingCategory page : tmp) {
+                for (SettingItem item : page.items) {
+                    if (item.type == SettingItem.TYPE_CATEGORY_LINK) continue;
+                    String hay = ((item.title != null ? item.title : "") + "\n"
+                            + (item.summary != null ? item.summary : "") + "\n"
+                            + (item.key != null ? item.key : "")).toLowerCase(java.util.Locale.US);
+                    if (hay.contains(q)) matches.add(item);
+                }
+            }
+            if (!matches.isEmpty()) {
+                out.add(new SettingCategory(cat + "  •  " + matches.size(), matches));
+            }
+        }
+        if (out.isEmpty()) {
+            List<SettingItem> empty = new ArrayList<>();
+            empty.add(new SettingItem("search_no_results", SettingItem.TYPE_ACTION,
+                    getString(R.string.cs_settings_no_results),
+                    getString(R.string.cs_settings_search_hint), null));
+            out.add(new SettingCategory("Search", empty));
+        }
+    }
+
+    /** Every page animates differently — nothing just "appears". */
+    private int pickPageAnimation() {
+        if (mSearchQuery != null && !mSearchQuery.isEmpty()) return R.anim.item_stagger_fade;
+        if (mCategoryName == null) return R.anim.install_page_stagger;
+        switch (mCategoryName) {
+            case "Launcher Settings": return R.anim.layout_stagger_up_fast;
+            case "Video & Graphics": return R.anim.layout_animation_fall_down;
+            case "Controls": return R.anim.install_content_layout_animation;
+            case "Java Runtime": return R.anim.layout_fall_down;
+            case "Audio": return R.anim.layout_zoom_fade_soft;
+            case "Account": return R.anim.layout_slide_rise_side;
+            case "Experimental": return R.anim.layout_reverse_fall_slow;
+            case "Advanced": return R.anim.layout_advanced_slide_up;
+            case "Miscellaneous": return R.anim.layout_misc_item_rise;
+            case "Sponsors": return R.anim.install_page_stagger;
+            default: return R.anim.item_stagger_fade;
+        }
+    }
+
+    // ══ Search bar ══
+    private void setupSettingsSearch(@NonNull View root) {
+        mSearchInput = root.findViewById(R.id.settings_search_input);
+        if (mSearchInput == null) return;
+        mSearchInput.addTextChangedListener(new android.text.TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
+            @Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
+            @Override public void afterTextChanged(android.text.Editable e) {
+                mSearchQuery = e != null ? e.toString().trim() : "";
+                if (mAdapter != null) mAdapter.replaceCategories(buildCurrentCategories());
+            }
+        });
+    }
+
+    // ══ Favorite star (bound on every real setting row) ══
+    private void bindFavoriteStar(@NonNull View row, @NonNull SettingItem item) {
+        android.widget.ImageButton star = row.findViewById(R.id.setting_fav_star);
+        if (star == null) return;
+        if (item.key == null || item.key.isEmpty() || item.key.startsWith("cat_")) {
+            star.setVisibility(View.GONE);
+            return;
+        }
+        star.setVisibility(View.VISIBLE);
+        refreshFavoriteStar(star, item.key);
+        star.setOnClickListener(v -> {
+            Context c = v.getContext();
+            net.kdt.pojavlaunch.prefs.SettingsMetaStore.toggleFavorite(c, item.key);
+            refreshFavoriteStar(star, item.key);
+            boolean fav = net.kdt.pojavlaunch.prefs.SettingsMetaStore.isFavorite(c, item.key);
+            Toast.makeText(c, fav ? R.string.cs_settings_fav_add : R.string.cs_settings_fav_remove,
+                    Toast.LENGTH_SHORT).show();
+            star.animate().cancel();
+            star.setScaleX(0.6f); star.setScaleY(0.6f);
+            star.animate().scaleX(1.3f).scaleY(1.3f).setDuration(150)
+                    .withEndAction(() -> star.animate().scaleX(1f).scaleY(1f).setDuration(160).start())
+                    .start();
+        });
+    }
+
+    private void refreshFavoriteStar(@NonNull android.widget.ImageButton star, @NonNull String key) {
+        boolean fav = net.kdt.pojavlaunch.prefs.SettingsMetaStore.isFavorite(star.getContext(), key);
+        star.setImageResource(fav ? R.drawable.ic_csp_star_filled : R.drawable.ic_csp_star_outline);
+        star.setColorFilter(fav ? 0xFFE4E4EA : 0xFF6B7280);
+    }
+
+    // ══ Focus-jump: open a page and softly flash the target row ══
+    private void jumpToSetting(@NonNull String category, @NonNull String key) {
+        sPendingFocusKey = key;
+        openCategoryPage(category);
+    }
+
+    private void flashPendingFocusRow() {
+        if (sPendingFocusKey == null || mRecyclerView == null) return;
+        final String key = sPendingFocusKey;
+        sPendingFocusKey = null;
+        mRecyclerView.postDelayed(() -> {
+            if (mRecyclerView == null) return;
+            for (int i = 0; i < mRecyclerView.getChildCount(); i++) {
+                View vh = mRecyclerView.getChildAt(i);
+                if (!(vh instanceof ViewGroup)) continue;
+                View row = vh.findViewWithTag(key);
+                if (row == null) continue;
+                mRecyclerView.smoothScrollToPosition(i);
+                final View target = row;
+                target.postDelayed(() -> {
+                    target.animate().cancel();
+                    target.setAlpha(0.35f);
+                    target.animate().alpha(1f).setDuration(320)
+                            .withEndAction(() -> {
+                                target.setAlpha(0.45f);
+                                target.animate().alpha(1f).setDuration(320).start();
+                            }).start();
+                }, 380);
+                break;
+            }
+        }, 420);
     }
 
     private boolean isItemVisible(SettingItem item, SharedPreferences draftPrefs) {
@@ -589,7 +739,15 @@ public class LauncherPreferenceFragment extends Fragment {
             }
             if (statusText != null) {
                 statusText.setText("\u25cf Unsaved Changes");
-                statusText.setTextColor(Color.parseColor("#D8C79A"));
+                statusText.setTextColor(Color.parseColor("#FFB020"));
+            }
+            if (mHeaderBadge != null) {
+                mHeaderBadge.setText("UNSAVED");
+                if (mHeaderBadge.getVisibility() != View.VISIBLE) {
+                    mHeaderBadge.setVisibility(View.VISIBLE);
+                    mHeaderBadge.startAnimation(AnimationUtils.loadAnimation(
+                            getContext(), R.anim.fade_scale_in));
+                }
             }
         } else {
             if (bar.getVisibility() == View.VISIBLE) {
@@ -612,8 +770,9 @@ public class LauncherPreferenceFragment extends Fragment {
             }
             if (statusText != null) {
                 statusText.setText("\u25cf Changes Saved");
-                statusText.setTextColor(Color.parseColor("#9C9CA8"));
+                statusText.setTextColor(Color.parseColor("#9CA3AF"));
             }
+            if (mHeaderBadge != null) mHeaderBadge.setVisibility(View.GONE);
         }
     }
 
@@ -765,6 +924,16 @@ public class LauncherPreferenceFragment extends Fragment {
         file.delete();
     }
 
+    /** (category, item) pair for search / pins lookup. */
+    private static final class SettingItemHolder {
+        final String category;
+        final SettingItem item;
+        SettingItemHolder(String category, SettingItem item) {
+            this.category = category;
+            this.item = item;
+        }
+    }
+
     // ── RecyclerView Adapter & ViewHolder ─────────────────────────────────────
 
     private class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.CategoryViewHolder> {
@@ -776,12 +945,23 @@ public class LauncherPreferenceFragment extends Fragment {
         public SettingsAdapter(List<SettingCategory> categories, SharedPreferences prefs) {
             this.mCategories = categories;
             this.mPrefs = prefs;
-            this.mListener = (p, key) -> {};
+            this.mListener = (prefsChanged, key) -> {
+                if (key == null) return;
+                Context c = LauncherPreferenceFragment.this.getContext();
+                if (c != null) net.kdt.pojavlaunch.prefs.SettingsMetaStore.recordChange(c, key);
+            };
             this.mPrefs.registerOnSharedPreferenceChangeListener(mListener);
         }
 
         public void cleanup() {
             mPrefs.unregisterOnSharedPreferenceChangeListener(mListener);
+        }
+
+        /** Live search re-render: swap the grouped categories atomically. */
+        public void replaceCategories(@NonNull List<SettingCategory> next) {
+            mCategories.clear();
+            mCategories.addAll(next);
+            notifyDataSetChanged();
         }
 
         @NonNull
@@ -1039,6 +1219,8 @@ public class LauncherPreferenceFragment extends Fragment {
                     itemView = new View(holder.itemView.getContext());
                 }
 
+                itemView.setTag(item.key);
+                bindFavoriteStar(itemView, item);
                 holder.container.addView(itemView);
             }
 
@@ -1097,6 +1279,25 @@ public class LauncherPreferenceFragment extends Fragment {
             statRow.addView(createDashboardStat(inflater, statRow, "Dark", "Launcher theme"));
             statRow.addView(createDashboardStat(inflater, statRow, activeProfile, "Live profile"));
             holder.container.addView(statRow);
+
+            // ══ Phase 3: Favorites + Recently Changed quick-pins ══
+            Context dashCtx = holder.itemView.getContext();
+            java.util.List<String> favKeys = net.kdt.pojavlaunch.prefs.SettingsMetaStore.getFavorites(dashCtx);
+            java.util.List<String> recentKeys = net.kdt.pojavlaunch.prefs.SettingsMetaStore.getRecent(dashCtx);
+            if (!favKeys.isEmpty()) {
+                holder.container.addView(createDashboardSectionHeader(dashCtx,
+                        "YOUR FAVORITES",
+                        dashCtx.getString(R.string.cs_settings_favorites),
+                        "Starred settings — one tap jumps straight to the option."));
+                holder.container.addView(buildPinnedRail(inflater, favKeys, true));
+            }
+            if (!recentKeys.isEmpty()) {
+                holder.container.addView(createDashboardSectionHeader(dashCtx,
+                        "PICK UP WHERE YOU LEFT",
+                        dashCtx.getString(R.string.cs_settings_recent),
+                        "The last options you touched, newest first."));
+                holder.container.addView(buildPinnedRail(inflater, recentKeys, false));
+            }
 
             holder.container.addView(createDashboardSectionHeader(
                     holder.itemView.getContext(),
@@ -1262,6 +1463,70 @@ public class LauncherPreferenceFragment extends Fragment {
                         }).start();
             });
             return view;
+        }
+
+        private View buildPinnedRail(@NonNull LayoutInflater inflater,
+                                     @NonNull java.util.List<String> keys, boolean isFavorite) {
+            Context ctx = requireContext();
+            android.widget.HorizontalScrollView scroller = new android.widget.HorizontalScrollView(ctx);
+            scroller.setHorizontalScrollBarEnabled(false);
+            scroller.setOverScrollMode(View.OVER_SCROLL_NEVER);
+            LinearLayout row = new LinearLayout(ctx);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            scroller.addView(row);
+
+            int shown = 0;
+            for (String key : keys) {
+                SettingItemHolder meta = findSettingMeta(key);
+                if (meta == null || meta.item == null) continue;
+                View card = inflater.inflate(R.layout.item_settings_pin_card, row, false);
+                ((TextView) card.findViewById(R.id.pin_card_title)).setText(meta.item.title);
+                ((TextView) card.findViewById(R.id.pin_card_category)).setText(
+                        shortenCategoryLabel(meta.category));
+                android.widget.ImageView glyph = card.findViewById(R.id.pin_card_glyph);
+                glyph.setImageResource(isFavorite
+                        ? R.drawable.ic_csp_star_filled : R.drawable.ic_csp_recent);
+                glyph.setColorFilter(isFavorite ? 0xFFE4E4EA : 0xFF9CA3AF);
+
+                View remove = card.findViewById(R.id.pin_card_remove);
+                if (isFavorite) {
+                    remove.setVisibility(View.VISIBLE);
+                    remove.setOnClickListener(rv -> {
+                        net.kdt.pojavlaunch.prefs.SettingsMetaStore.toggleFavorite(
+                                rv.getContext(), key);
+                        row.removeView(card);
+                    });
+                } else {
+                    remove.setVisibility(View.GONE);
+                }
+
+                final String cat = meta.category;
+                final String k = key;
+                card.setOnClickListener(v -> {
+                    v.animate().scaleX(0.95f).scaleY(0.95f).setDuration(80)
+                            .withEndAction(() -> {
+                                v.animate().scaleX(1f).scaleY(1f).setDuration(110).start();
+                                jumpToSetting(cat, k);
+                            }).start();
+                });
+                row.addView(card);
+                if (++shown >= 10) break;
+            }
+            return scroller;
+        }
+
+        /** Locate a setting's owning page + row across every real category. */
+        private SettingItemHolder findSettingMeta(@NonNull String key) {
+            for (String cat : ALL_CATEGORIES) {
+                List<SettingCategory> tmp = new ArrayList<>();
+                addCategoryPageTo(tmp, cat);
+                for (SettingCategory page : tmp) {
+                    for (SettingItem item : page.items) {
+                        if (key.equals(item.key)) return new SettingItemHolder(cat, item);
+                    }
+                }
+            }
+            return null;
         }
 
         private int dp(int value) {

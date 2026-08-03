@@ -189,7 +189,6 @@ public class WorldManagerFragment extends Fragment implements WorldListAdapter.L
                 if (mAdapter == null || !isAdded()) return;
                 mAdapter.submit(worlds);
                 updateCountAndEmpty(worlds.size());
-                if (firstLoad) UiMotion.revealList(mList);
                 refreshStorageCard(requireView());
             });
         });

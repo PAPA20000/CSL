@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Miscellaneous page entrance: short rise, denser cadence. -->
+<layoutAnimation xmlns:android="http://schemas.android.com/apk/res/android"
+    android:animation="@anim/install_item_rise"
+    android:animationOrder="normal"
+    android:delay="7%" />

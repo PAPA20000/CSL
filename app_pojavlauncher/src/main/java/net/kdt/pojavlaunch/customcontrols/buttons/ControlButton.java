@@ -22,6 +22,7 @@ import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.customcontrols.ControlData;
 import net.kdt.pojavlaunch.customcontrols.ControlLayout;
+import net.kdt.pojavlaunch.customcontrols.commands.ChatCommandEngine;
 import net.kdt.pojavlaunch.customcontrols.handleview.EditControlSideDialog;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 
@@ -254,23 +255,27 @@ public class ControlButton extends TextView implements ControlInterface {
         final String raw = command.trim();
         if (raw.isEmpty()) return;
 
-        final boolean useCommandBar = raw.startsWith("/");
-        final String payload = useCommandBar ? raw.substring(1) : raw;
-        final int openerKey = useCommandBar
-                ? LwjglGlfwKeycode.GLFW_KEY_SLASH
-                : LwjglGlfwKeycode.GLFW_KEY_T;
+        // Phase 3 Command Studio: the same old field can now carry a
+        // multi-step script (multiple commands, delays, variables, conditions,
+        // repeat:) while single-line legacy commands behave exactly as before.
+        ChatCommandEngine.execute(getContext(), raw, chatLine -> {
+            final boolean useCommandBar = chatLine.startsWith("/");
+            final String payload = useCommandBar ? chatLine.substring(1) : chatLine;
+            final int openerKey = useCommandBar
+                    ? LwjglGlfwKeycode.GLFW_KEY_SLASH
+                    : LwjglGlfwKeycode.GLFW_KEY_T;
 
-        CallbackBridge.sendKeyPress(openerKey);
-
-        Tools.MAIN_HANDLER.postDelayed(() -> {
-            for (int i = 0; i < payload.length(); i++) {
-                CallbackBridge.sendChar(payload.charAt(i), 0);
-            }
-            Tools.MAIN_HANDLER.postDelayed(
-                    () -> CallbackBridge.sendKeyPress(LwjglGlfwKeycode.GLFW_KEY_ENTER),
-                    28
-            );
-        }, 42);
+            CallbackBridge.sendKeyPress(openerKey);
+            Tools.MAIN_HANDLER.postDelayed(() -> {
+                for (int i = 0; i < payload.length(); i++) {
+                    CallbackBridge.sendChar(payload.charAt(i), 0);
+                }
+                Tools.MAIN_HANDLER.postDelayed(
+                        () -> CallbackBridge.sendKeyPress(LwjglGlfwKeycode.GLFW_KEY_ENTER),
+                        28
+                );
+            }, 42);
+        });
     }
 
     @Override

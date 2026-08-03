@@ -20,6 +20,7 @@ import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.profiles.ProfileIconCache;
+import net.kdt.pojavlaunch.ui.PremiumPlayButtonView;
 import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 
 import java.util.List;
@@ -59,6 +60,20 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         return mProfileKeys.get(position).hashCode();
     }
 
+    private void preloadVisualAssets(@NonNull android.content.res.Resources resources) {
+        if (mProfileList.isEmpty()) return;
+        PojavApplication.sExecutorService.execute(() -> {
+            for (int i = 0; i < mProfileList.size(); i++) {
+                MinecraftProfile profile = mProfileList.get(i);
+                String key = mProfileKeys.get(i);
+                try {
+                    ProfileIconCache.fetchIcon(resources, key, profile.icon);
+                    ProfileIconCache.fetchBackground(resources, key, profile.background);
+                } catch (Throwable ignored) {}
+            }
+        });
+    }
+
     private void preloadModCounts() {
         if (mProfileList.isEmpty()) return;
         PojavApplication.sExecutorService.execute(() -> {
@@ -88,15 +103,16 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_home_profile_card, parent, false);
-        // Smooth staggered fade + slide-up entrance for premium feel
-        view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        // Smooth staggered fade + slide-up entrance for premium feel.
+        // No temporary hardware layer here: the state-list animator/compositor
+        // already handles presses, and forcing LAYER_TYPE_HARDWARE for a ~300ms
+        // entrance costs one extra offscreen buffer per profile card.
         android.view.animation.Animation enterAnim =
                 AnimationUtils.loadAnimation(parent.getContext(), R.anim.item_fade_slide_in);
         int pos = mProfileList.isEmpty() ? 0 : Math.min(mBoundCount, 11);
         enterAnim.setStartOffset(pos * 45L);
         mBoundCount++;
         view.startAnimation(enterAnim);
-        view.setLayerType(View.LAYER_TYPE_NONE, null);
         return new ViewHolder(view);
     }
 
@@ -156,6 +172,9 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         });
 
         holder.btnPlay.setOnClickListener(v -> {
+            // Phase 3: "launch" is a unique morph, not the old download pulse.
+            holder.btnPlay.beginLaunch();
+            v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
             if (mListener != null) mListener.onProfilePlay(profileKey, profile);
         });
 
@@ -179,11 +198,15 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         net.kdt.pojavlaunch.profiles.ProfileGifSupport.stopDrawable(holder.imgBackground.getDrawable());
         holder.imgIcon.setImageDrawable(null);
         holder.imgBackground.setImageDrawable(null);
+        holder.btnPlay.reset();
     }
 
     @Override
     public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
         super.onAttachedToRecyclerView(recyclerView);
+        // Warm icon/banner decode off the UI thread. First bind then hits the
+        // shared LRU caches instead of decoding a Base64/GIF payload per row.
+        preloadVisualAssets(recyclerView.getResources());
         // Rebind when a remotely-cached asset (e.g. the default animated GIF)
         // finishes downloading so it fades in without user action.
         net.kdt.pojavlaunch.profiles.ProfileGifSupport.addAssetReadyListener(mAssetReadyListener);
@@ -196,7 +219,8 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
     }
 
     private final net.kdt.pojavlaunch.profiles.ProfileGifSupport.OnAssetReadyListener mAssetReadyListener =
-            assetKey -> Tools.runOnUiThread(this::notifyDataSetChanged);
+            assetKey -> Tools.runOnUiThread(() ->
+                    notifyItemRangeChanged(0, mProfileList.size()));
 
     private void bindIcon(ImageView target, String profileKey, MinecraftProfile profile) {
         String icon = profile.icon;
@@ -291,7 +315,7 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         final TextView tvVersion;
         final TextView tvModCount;
         final TextView tvRam;
-        final FrameLayout btnPlay;
+        final PremiumPlayButtonView btnPlay;
         final FrameLayout btnBrowse;
         final View btnShortcut;
 

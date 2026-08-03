@@ -19,7 +19,7 @@
         <FrameLayout
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:background="@drawable/bg_cs_icon_well">
+            android:background="@drawable/bg_csp_iconwell">
 
             <ImageView
                 android:layout_width="18dp"

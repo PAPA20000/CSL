@@ -1,107 +1,206 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- ═══════════════════════════════════════════════════ -->
-<!-- PHASE-5 PREMIUM GAME LOG TERMINAL (Req-3)           -->
-<!-- Charcoal toolbar · live dot · chip toggles ·        -->
-<!-- near-black terminal body with soft line spacing.    -->
-<!-- ═══════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════════════════════════════
+     CS PREMIUM GLASS TERMINAL (Phase 3)
+     Translucent glass chrome · live/pause dot · search · copy · export ·
+     clear · autoscroll · severity-highlighted animated line stream.
+     All legacy IDs preserved — LoggerView/MainActivity keep working.
+     ═══════════════════════════════════════════════════════════════════ -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:padding="10dp">
 
-    <!-- ── Premium toolbar ── -->
+    <LinearLayout
+        android:id="@+id/log_terminal_card"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@drawable/bg_log_glass_card"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <!-- ── ROW 1: status + actions ── -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:background="@drawable/bg_log_glass_toolbar"
+            android:paddingHorizontal="12dp">
+
+            <View
+                android:id="@+id/log_live_dot"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:background="@drawable/bg_log_dot_live" />
+
+            <TextView
+                android:id="@+id/log_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="9dp"
+                android:text="@string/log_view_label_log_output"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05" />
+
+            <TextView
+                android:id="@+id/log_count_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="#FF6B7280"
+                android:textSize="9.5sp"
+                android:fontFamily="monospace" />
+
+            <!-- legacy toggle ids preserved (compact icon style now) -->
+            <ToggleButton
+                android:id="@+id/content_log_toggle_autoscroll"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:background="@drawable/bg_log_toggle"
+                android:textOff="@string/log_view_button_scroll_off"
+                android:textOn="@string/log_view_button_scroll_on"
+                android:textColor="#C9CBD6"
+                android:textSize="8.5sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.03"
+                android:paddingHorizontal="8dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp" />
+
+            <ToggleButton
+                android:id="@+id/content_log_toggle_log"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_log_toggle"
+                android:textOff="@string/log_view_button_output_off"
+                android:textOn="@string/log_view_button_output_on"
+                android:textColor="#C9CBD6"
+                android:textSize="8.5sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.03"
+                android:paddingHorizontal="8dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp" />
+
+            <ImageButton
+                android:id="@+id/log_view_cancel"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="6dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_log_close"
+                android:background="@drawable/bg_log_toggle"
+                android:contentDescription="@string/log_view_button_output_off"
+                app:tint="#C9CBD6" />
+        </LinearLayout>
+
+        <!-- ── ROW 2: search + quick actions ── -->
+        <LinearLayout
+            android:id="@+id/log_actions_row"
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="12dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:background="@drawable/bg_log_search"
+                android:paddingHorizontal="9dp">
+
+                <ImageView
+                    android:layout_width="13dp"
+                    android:layout_height="13dp"
+                    android:src="@drawable/ic_cs_search"
+                    app:tint="#6B7280" />
+
+                <EditText
+                    android:id="@+id/log_search_input"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginStart="7dp"
+                    android:background="@null"
+                    android:hint="@string/cs_log_search_hint"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:maxLines="1"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#FF6B7280"
+                    android:textSize="11.5sp"
+                    android:fontFamily="monospace" />
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/log_btn_pause"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_log_icon_btn"
+                android:contentDescription="@string/cs_log_pause"
+                android:src="@drawable/ic_log_pause"
+                app:tint="#E4E4EA" />
+
+            <ImageButton
+                android:id="@+id/log_btn_copy"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_log_icon_btn"
+                android:contentDescription="@string/cs_log_copy"
+                android:src="@drawable/ic_log_copy"
+                app:tint="#E4E4EA" />
+
+            <ImageButton
+                android:id="@+id/log_btn_export"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_log_icon_btn"
+                android:contentDescription="@string/cs_log_export"
+                android:src="@drawable/ic_menu_share"
+                app:tint="#E4E4EA" />
+
+            <ImageButton
+                android:id="@+id/log_btn_clear"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_log_icon_btn"
+                android:contentDescription="@string/cs_log_clear"
+                android:src="@drawable/ic_menu_delete_forever"
+                app:tint="#FFFF4444" />
+        </LinearLayout>
+
+        <!-- ── TERMINAL BODY (translucent glass) ── -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/content_log_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="#99060708"
+            android:overScrollMode="never"
+            android:paddingVertical="6dp"
+            android:clipToPadding="false" />
+    </LinearLayout>
+
+    <!-- legacy id kept for compatibility (zero-size, unused) -->
     <View
         android:id="@+id/top_log_view"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:background="@drawable/bg_log_toolbar"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <View
-        android:id="@+id/log_live_dot"
-        android:layout_width="8dp"
-        android:layout_height="8dp"
-        android:background="@drawable/bg_log_dot"
-        android:layout_marginStart="16dp"
-        app:layout_constraintBottom_toBottomOf="@+id/top_log_view"
-        app:layout_constraintStart_toStartOf="@+id/top_log_view"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/log_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:text="@string/log_view_label_log_output"
-        android:textColor="#F0F0F3"
-        android:textSize="12.5sp"
-        android:fontFamily="sans-serif-medium"
-        android:letterSpacing="0.06"
-        app:layout_constraintBottom_toBottomOf="@+id/top_log_view"
-        app:layout_constraintStart_toEndOf="@+id/log_live_dot"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ToggleButton
-        android:id="@+id/content_log_toggle_autoscroll"
-        android:layout_width="wrap_content"
-        android:layout_height="30dp"
-        android:layout_marginEnd="8dp"
-        android:background="@drawable/bg_log_toggle"
-        android:textOff="@string/log_view_button_scroll_off"
-        android:textOn="@string/log_view_button_scroll_on"
-        android:textColor="#C9CBD6"
-        android:textSize="9.5sp"
-        android:fontFamily="sans-serif-medium"
-        android:letterSpacing="0.05"
-        android:paddingHorizontal="9dp"
-        android:minWidth="0dp"
-        android:minHeight="0dp"
-        app:layout_constraintBottom_toBottomOf="@+id/top_log_view"
-        app:layout_constraintEnd_toStartOf="@+id/content_log_toggle_log"
-        app:layout_constraintTop_toTopOf="parent"/>
-
-    <ToggleButton
-        android:id="@+id/content_log_toggle_log"
-        android:layout_width="wrap_content"
-        android:layout_height="30dp"
-        android:layout_marginEnd="8dp"
-        android:background="@drawable/bg_log_toggle"
-        android:textOff="@string/log_view_button_output_off"
-        android:textOn="@string/log_view_button_output_on"
-        android:textColor="#C9CBD6"
-        android:textSize="9.5sp"
-        android:fontFamily="sans-serif-medium"
-        android:letterSpacing="0.05"
-        android:paddingHorizontal="9dp"
-        android:minWidth="0dp"
-        android:minHeight="0dp"
-        app:layout_constraintBottom_toBottomOf="@+id/top_log_view"
-        app:layout_constraintEnd_toStartOf="@+id/log_view_cancel"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ImageButton
-        android:id="@+id/log_view_cancel"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:layout_marginEnd="8dp"
-        android:scaleType="centerInside"
-        android:src="@drawable/ic_log_close"
-        android:background="@drawable/bg_log_toggle"
-        android:contentDescription="@string/log_view_button_output_off"
-        app:layout_constraintBottom_toBottomOf="@+id/top_log_view"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <!-- ── Terminal body: animated line stream ── -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/content_log_recycler"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="#0B0B0E"
-        android:overScrollMode="never"
-        android:paddingVertical="8dp"
-        android:clipToPadding="false"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/top_log_view" />
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

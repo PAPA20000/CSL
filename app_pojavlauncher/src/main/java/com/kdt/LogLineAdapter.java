@@ -6,45 +6,93 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
- * Streaming log-line adapter (Req: animated terminal).
+ * Streaming log-line adapter (Phase 3 premium terminal).
  *
- * Renders one row per log line so each arrival animates independently through
- * the RecyclerView item animator (fade + slide), giving the terminal a
- * premium line-by-line rhythm instead of one giant static text block.
- * The stream is capped — oldest lines are trimmed to protect memory.
+ * One row per log line; each arrival animates through the RecyclerView item
+ * animator (fade + slide) for a premium line-by-line rhythm.
+ *
+ * Phase 3 additions:
+ * - Raw buffer + filtered display list → live SEARCH without losing data
+ * - Severity-tagged lines (info / warn / error / success / debug)
+ * - Full-text snapshot for Copy / Export
  */
 public class LogLineAdapter extends RecyclerView.Adapter<LogLineAdapter.LineVH> {
 
     public static final class LogLine {
-        public final CharSequence text;
-        public LogLine(CharSequence text) { this.text = text; }
+        public final CharSequence text;   // tinted, for display
+        public final String raw;          // untinted, for search/copy/export
+        public LogLine(CharSequence text, String raw) {
+            this.text = text;
+            this.raw = raw != null ? raw : "";
+        }
     }
 
     private static final int MAX_LINES = 400;
-    private final List<LogLine> mLines = new ArrayList<>();
+    private final List<LogLine> mRaw = new ArrayList<>();
+    private final List<LogLine> mVisible = new ArrayList<>();
+    @Nullable private String mFilter;
 
     public void appendLine(LogLine line) {
-        if (mLines.size() >= MAX_LINES) {
-            int excess = 40; // trim in small batches, cheaper per-notify
-            int remove = Math.min(excess, mLines.size());
-            mLines.subList(0, remove).clear();
-            notifyItemRangeRemoved(0, remove);
+        if (mRaw.size() >= MAX_LINES) {
+            int remove = Math.min(40, mRaw.size());
+            mRaw.subList(0, remove).clear();
+            refilter();
+            return;
         }
-        mLines.add(line);
-        notifyItemInserted(mLines.size() - 1);
+        mRaw.add(line);
+        if (matches(line)) {
+            mVisible.add(line);
+            notifyItemInserted(mVisible.size() - 1);
+        }
+    }
+
+    public void setFilter(@Nullable String query) {
+        String f = query == null || query.trim().isEmpty()
+                ? null : query.trim().toLowerCase(Locale.US);
+        if ((f == null && mFilter == null) || (f != null && f.equals(mFilter))) return;
+        mFilter = f;
+        refilter();
+    }
+
+    private void refilter() {
+        mVisible.clear();
+        if (mFilter == null) {
+            mVisible.addAll(mRaw);
+        } else {
+            for (LogLine l : mRaw) if (matches(l)) mVisible.add(l);
+        }
+        notifyDataSetChanged();
+    }
+
+    private boolean matches(@NonNull LogLine l) {
+        return mFilter == null || l.raw.toLowerCase(Locale.US).contains(mFilter);
     }
 
     public void clear() {
-        int size = mLines.size();
-        mLines.clear();
-        notifyItemRangeRemoved(0, size);
+        mRaw.clear();
+        mVisible.clear();
+        notifyDataSetChanged();
     }
+
+    /** All lines (or the filtered view) as one plain-text blob for share/copy. */
+    @NonNull
+    public String dumpText() {
+        StringBuilder sb = new StringBuilder();
+        List<LogLine> src = mFilter == null ? mRaw : mVisible;
+        for (LogLine l : src) sb.append(l.raw).append('\n');
+        return sb.toString();
+    }
+
+    public int rawCount() { return mRaw.size(); }
+    public int visibleCount() { return mVisible.size(); }
 
     @NonNull
     @Override
@@ -56,12 +104,12 @@ public class LogLineAdapter extends RecyclerView.Adapter<LogLineAdapter.LineVH> 
 
     @Override
     public void onBindViewHolder(@NonNull LineVH holder, int position) {
-        holder.textView.setText(mLines.get(position).text);
+        holder.textView.setText(mVisible.get(position).text);
     }
 
     @Override
     public int getItemCount() {
-        return mLines.size();
+        return mVisible.size();
     }
 
     static class LineVH extends RecyclerView.ViewHolder {
