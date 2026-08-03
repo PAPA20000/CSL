@@ -99,6 +99,8 @@ jobs:
       # No DEBUG build, no NO-RUNTIME build, no run-number / timestamp clutter.
       - name: Build Release APK
         run: |
+          # Safety: ensure the wrapper is executable (committed mode can be 644).
+          chmod +x ./gradlew
           SIGNING_ARGS=""
           if [ -n "$KEYSTORE_PATH" ]; then
             SIGNING_ARGS="-PsigningKeystore=$KEYSTORE_PATH \
