@@ -218,9 +218,12 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         super.onDetachedFromRecyclerView(recyclerView);
     }
 
+    // NOTE: must not reference the blank-final mProfileList here — instance
+    // field initializers run BEFORE the constructor body assigns it (javac
+    // definite-assignment error). getItemCount() defers the read to call time.
     private final net.kdt.pojavlaunch.profiles.ProfileGifSupport.OnAssetReadyListener mAssetReadyListener =
             assetKey -> Tools.runOnUiThread(() ->
-                    notifyItemRangeChanged(0, mProfileList.size()));
+                    notifyItemRangeChanged(0, getItemCount()));
 
     private void bindIcon(ImageView target, String profileKey, MinecraftProfile profile) {
         String icon = profile.icon;
