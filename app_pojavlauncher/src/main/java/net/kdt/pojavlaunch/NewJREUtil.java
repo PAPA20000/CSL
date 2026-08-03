@@ -45,6 +45,9 @@ public class NewJREUtil {
     }
 
     private static boolean unpackInternalRuntime(AssetManager assetManager, InternalRuntime internalRuntime, String version) {
+        // A real runtime install is beginning — the launch overlay yields and
+        // the Download Console (UNPACK_RUNTIME) takes over the chrome.
+        net.kdt.pojavlaunch.launch.LaunchTracker.runtime();
         try {
             MultiRTUtils.installRuntimeNamedBinpack(
                     assetManager.open(internalRuntime.path+"/universal.tar.xz"),
@@ -179,7 +182,12 @@ public class NewJREUtil {
      * @return whether installation was successful or not
      */
     private static void tryDownloadRuntime(Context activity, int javaVersion){
-        if (!isOnline(activity)) throw new RuntimeException(activity.getString(R.string.multirt_no_internet));
+        if (!isOnline(activity)) {
+            net.kdt.pojavlaunch.launch.LaunchTracker.fail();
+            throw new RuntimeException(activity.getString(R.string.multirt_no_internet));
+        }
+        // A real runtime download is beginning — console takes the chrome.
+        net.kdt.pojavlaunch.launch.LaunchTracker.runtime();
         String arch = archAsString(getDeviceArchitecture());
         // Checks for using this method
         if (!isJavaVersionAvailableForDownload(javaVersion)) throw new RuntimeException("This is not an available JRE version");

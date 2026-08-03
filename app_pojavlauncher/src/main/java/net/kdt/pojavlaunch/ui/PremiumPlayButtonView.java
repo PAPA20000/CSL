@@ -36,7 +36,7 @@ import net.kdt.pojavlaunch.progresskeeper.TaskCountListener;
 public class PremiumPlayButtonView extends FrameLayout implements TaskCountListener {
 
     private static final int PARTICLE_COUNT = 14;
-    private static final long FAILSAFE_MS = 9000L;
+    private static final long FAILSAFE_MS = 4000L;
 
     private final Paint mBasePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint mSheenPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -68,6 +68,20 @@ public class PremiumPlayButtonView extends FrameLayout implements TaskCountListe
         mExplicitLaunch = false;
         if (ProgressKeeper.getTaskCount() == 0) setLaunching(false);
     };
+
+    /**
+     * Launch phases → button beats. STARTING = one glow-burst pop, then settle.
+     * FAILED/IDLE = abort cleanly (never stuck in the launch morph).
+     */
+    private final net.kdt.pojavlaunch.launch.LaunchTracker.PhaseListener mLaunchPhaseListener =
+            phase -> post(() -> {
+                if (phase == net.kdt.pojavlaunch.launch.LaunchTracker.Phase.STARTING) {
+                    completeLaunch();
+                } else if (phase == net.kdt.pojavlaunch.launch.LaunchTracker.Phase.FAILED
+                        || phase == net.kdt.pojavlaunch.launch.LaunchTracker.Phase.IDLE) {
+                    if (mExplicitLaunch) reset();
+                }
+            });
 
     public PremiumPlayButtonView(@NonNull Context context) {
         this(context, null);
@@ -133,6 +147,23 @@ public class PremiumPlayButtonView extends FrameLayout implements TaskCountListe
         setLaunching(false);
     }
 
+    /**
+     * STARTING beat — the game is truly leaving: one last radial burst and a
+     * bright overshoot pop, then the button sits back down. This is the
+     * launch-only finale; downloads never trigger it.
+     */
+    public void completeLaunch() {
+        mExplicitLaunch = false;
+        spawnParticles();
+        animate().cancel();
+        animate().scaleX(1.06f).scaleY(1.09f).setDuration(140)
+                .withEndAction(() -> animate().scaleX(1f).scaleY(1f).setDuration(170)
+                        .setInterpolator(new AccelerateDecelerateInterpolator())
+                        .start())
+                .start();
+        postDelayed(this::reset, 500);
+    }
+
     public boolean isLaunching() {
         return mLaunching;
     }
@@ -168,6 +199,7 @@ public class PremiumPlayButtonView extends FrameLayout implements TaskCountListe
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         ProgressKeeper.addTaskCountListener(this, false);
+        net.kdt.pojavlaunch.launch.LaunchTracker.addListener(mLaunchPhaseListener);
         onUpdateTaskCount(ProgressKeeper.getTaskCount());
         if (mAnimationsAllowed) startIdleAnimator();
     }
@@ -176,6 +208,7 @@ public class PremiumPlayButtonView extends FrameLayout implements TaskCountListe
     protected void onDetachedFromWindow() {
         removeCallbacks(mFailsafeReset);
         ProgressKeeper.removeTaskCountListener(this);
+        net.kdt.pojavlaunch.launch.LaunchTracker.removeListener(mLaunchPhaseListener);
         stopIdleAnimator();
         stopLaunchAnimator();
         mLaunching = false;

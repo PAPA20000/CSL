@@ -95,6 +95,9 @@ public class MinecraftDownloader {
 
         sExecutorService.execute(() -> {
             try {
+                // Launch semantics: verification phase — the Download Console
+                // stays down unless real bytes start flowing (see reportProgress*).
+                net.kdt.pojavlaunch.launch.LaunchTracker.verifying();
                 if(isLocalProfile || !isOnline) {
                     String versionMessage = realVersion; // Use provided version unless we find its a modded instance
 
@@ -114,6 +117,7 @@ public class MinecraftDownloader {
 
                         listener.onDownloadDone();
                     } catch (Exception e) {
+                        net.kdt.pojavlaunch.launch.LaunchTracker.fail();
                         String tryagain = !isOnline ? "Please ensure you have an internet connection" : "Please try again on your Microsoft Account";
                         Tools.showErrorRemote(versionMessage + " is not currently installed. "+ tryagain, e);
                     }
@@ -193,6 +197,8 @@ public class MinecraftDownloader {
     }
 
     private void reportProgressFileCounter(double speed) {
+        // Real bytes are flowing → launch overlay yields to the Download Console.
+        if (mInternetUsageCounter.get() > 0) net.kdt.pojavlaunch.launch.LaunchTracker.downloading();
         long dlFileCounter = mProcessedFileCounter.get();
         int progress = (int)((dlFileCounter * 100L) / mTotalFileCount);
         ProgressLayout.setProgress(ProgressLayout.DOWNLOAD_MINECRAFT, progress,
@@ -201,6 +207,8 @@ public class MinecraftDownloader {
     }
 
     private void reportProgressSizeCounter(double speed) {
+        // Real bytes are flowing → launch overlay yields to the Download Console.
+        if (mInternetUsageCounter.get() > 0) net.kdt.pojavlaunch.launch.LaunchTracker.downloading();
         long dlFileSize = mProcessedSizeCounter.get();
         double dlSizeMegabytes = (double) dlFileSize / ONE_MEGABYTE;
         double dlTotalMegabytes = (double) mTotalSize / ONE_MEGABYTE;
@@ -394,7 +402,11 @@ public class MinecraftDownloader {
         // cached copy turns out to be damaged (truncated write, killed process...).
         verInfo = readVersionJson(versionJsonFile, versionName, manifestEntry);
 
+        // Runtime resolution: no-op when up to date. NewJREUtil flips the
+        // launch phase to RUNTIME itself only when a real install begins,
+        // so the launch overlay never flickers on the fast path.
         if(activity != null && !NewJREUtil.installNewJreIfNeeded(activity, verInfo)){
+            net.kdt.pojavlaunch.launch.LaunchTracker.fail();
             throw new RuntimeException(activity.getString(R.string.exception_failed_to_unpack_jre17));
         }
 

@@ -39,11 +39,16 @@ public class ContextAwareDoneListener implements AsyncMinecraftDownloader.DoneLi
 
     @Override
     public void onDownloadDone() {
-        ProgressKeeper.waitUntilDone(()->ContextExecutor.execute(this));
+        ProgressKeeper.waitUntilDone(() -> {
+            // Verification + any required downloads all cleared — STARTING beat.
+            net.kdt.pojavlaunch.launch.LaunchTracker.starting();
+            ContextExecutor.execute(this);
+        });
     }
 
     @Override
     public void onDownloadFailed(Throwable throwable) {
+        net.kdt.pojavlaunch.launch.LaunchTracker.fail();
         Tools.showErrorRemote(mErrorString, throwable);
     }
 

@@ -133,6 +133,63 @@ public class LauncherActivity extends BaseActivity {
         @Override public void onProgressEnded() { }
     };
 
+    // ── Launch sequence overlay (premium LAUNCH motion — never a download) ──
+    private net.kdt.pojavlaunch.launch.LaunchOverlayView mLaunchOverlay;
+    private final net.kdt.pojavlaunch.launch.LaunchTracker.PhaseListener mLaunchPhaseListener =
+            this::onLaunchPhase;
+
+    private void onLaunchPhase(@NonNull net.kdt.pojavlaunch.launch.LaunchTracker.Phase phase) {
+        if (phase == net.kdt.pojavlaunch.launch.LaunchTracker.Phase.IDLE
+                || phase == net.kdt.pojavlaunch.launch.LaunchTracker.Phase.FAILED) {
+            hideLaunchOverlay();
+            return;
+        }
+        if (mBootActive) {
+            // Shortcut flow: the boot overlay stays authoritative; feed it phases.
+            if (mBootStatus != null) {
+                mBootStatus.setText(
+                        phase == net.kdt.pojavlaunch.launch.LaunchTracker.Phase.STARTING
+                                ? R.string.sg_launching
+                                : phase == net.kdt.pojavlaunch.launch.LaunchTracker.Phase.RUNTIME
+                                ? R.string.sg_runtime
+                                : phase == net.kdt.pojavlaunch.launch.LaunchTracker.Phase.DOWNLOADING
+                                ? R.string.sg_downloading_files
+                                : R.string.sg_verifying);
+            }
+            // Real phases are flowing — the no-task failsafe can stand down.
+            if (mBootOverlay != null) mBootOverlay.removeCallbacks(mBootFailsafe);
+            return;
+        }
+        if (phase == net.kdt.pojavlaunch.launch.LaunchTracker.Phase.RUNTIME
+                || phase == net.kdt.pojavlaunch.launch.LaunchTracker.Phase.DOWNLOADING) {
+            // Real installs/downloads → the Download Console owns the chrome.
+            hideLaunchOverlay();
+            return;
+        }
+        showLaunchOverlay(phase);
+    }
+
+    private void showLaunchOverlay(@NonNull net.kdt.pojavlaunch.launch.LaunchTracker.Phase phase) {
+        if (isFinishing() || isDestroyed()) return;
+        if (mLaunchOverlay == null) {
+            mLaunchOverlay = new net.kdt.pojavlaunch.launch.LaunchOverlayView(this);
+            android.widget.FrameLayout.LayoutParams lp = new android.widget.FrameLayout.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT);
+            addContentView(mLaunchOverlay, lp);
+        }
+        mLaunchOverlay.bind(net.kdt.pojavlaunch.launch.LaunchTracker.getProfileName(),
+                net.kdt.pojavlaunch.launch.LaunchTracker.getVersionId());
+        if (!mLaunchOverlay.isShowing()) mLaunchOverlay.startLaunch();
+        mLaunchOverlay.setPhase(phase);
+    }
+
+    private void hideLaunchOverlay() {
+        if (mLaunchOverlay != null && mLaunchOverlay.isShowing()) {
+            mLaunchOverlay.finishAndHide(null);
+        }
+    }
+
     /* Allows to switch from one button "type" to another */
     private final FragmentManager.FragmentLifecycleCallbacks mFragmentCallbackListener = new FragmentManager.FragmentLifecycleCallbacks() {
         @Override
@@ -227,6 +284,9 @@ public class LauncherActivity extends BaseActivity {
             }
         }
 
+        // Begin the LAUNCH sequence — phases now drive a premium launch overlay
+        // that is completely separate from the download experience.
+        net.kdt.pojavlaunch.launch.LaunchTracker.begin(prof.name, normalizedVersionId);
         new MinecraftDownloader().start(
                 this,
                 mcVersion,
@@ -503,6 +563,7 @@ public class LauncherActivity extends BaseActivity {
         ExtraCore.addExtraListener(ExtraConstants.SELECT_AUTH_METHOD, mSelectAuthMethod);
 
         ExtraCore.addExtraListener(ExtraConstants.LAUNCH_GAME, mLaunchGameListener);
+        net.kdt.pojavlaunch.launch.LaunchTracker.addListener(mLaunchPhaseListener);
 
         // A shortcut asking for an immediate launch must not trigger work the
         // game will never need: no version-list refresh, no onboarding dialogs.
@@ -677,6 +738,11 @@ public class LauncherActivity extends BaseActivity {
         ExtraCore.removeExtraListenerFromValue(ExtraConstants.BACK_PREFERENCE, mBackPreferenceListener);
         ExtraCore.removeExtraListenerFromValue(ExtraConstants.SELECT_AUTH_METHOD, mSelectAuthMethod);
         ExtraCore.removeExtraListenerFromValue(ExtraConstants.LAUNCH_GAME, mLaunchGameListener);
+        net.kdt.pojavlaunch.launch.LaunchTracker.removeListener(mLaunchPhaseListener);
+        if (mLaunchOverlay != null) {
+            mLaunchOverlay.finishAndHide(null);
+            mLaunchOverlay = null;
+        }
 
         getSupportFragmentManager().unregisterFragmentLifecycleCallbacks(mFragmentCallbackListener);
     }

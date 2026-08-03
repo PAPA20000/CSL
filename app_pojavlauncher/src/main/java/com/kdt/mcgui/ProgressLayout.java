@@ -362,7 +362,15 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
     @Override
     public void onUpdateTaskCount(int tc) {
         post(()->{
-            if(tc > 0) {
+            // Launch-vs-download semantics: while the Launch sequence owns the
+            // chrome (PREPARING / VERIFYING / STARTING), the console must NOT
+            // pop up for the verification task record. It opens only for real
+            // downloads (RUNTIME / DOWNLOADING) and non-launch flows (IDLE).
+            int effectiveTc = tc;
+            if (effectiveTc > 0 && net.kdt.pojavlaunch.launch.LaunchTracker.suppressesDownloadConsole()) {
+                effectiveTc = 0;
+            }
+            if(effectiveTc > 0) {
                 removeCallbacks(mFadeOutRunnable);
                 boolean becameVisible = getVisibility() != VISIBLE;
                 mIsFinishing = false;
