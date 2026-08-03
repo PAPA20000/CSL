@@ -252,7 +252,7 @@
             android:id="@+id/btn_play_main"
             android:layout_width="match_parent"
             android:layout_height="@dimen/_52sdp"
-            android:contentDescription="@string/mcl_version_play"
+            android:contentDescription="@string/cs_play_button"
             android:clickable="true"
             android:focusable="true">
 
