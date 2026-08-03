@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +23,7 @@ import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,12 +36,18 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import net.kdt.pojavlaunch.R;
+import net.kdt.pojavlaunch.cursor.CursorAppearance;
+import net.kdt.pojavlaunch.cursor.CursorEngine;
+import net.kdt.pojavlaunch.cursor.CursorRules;
+import net.kdt.pojavlaunch.cursor.CursorState;
 import net.kdt.pojavlaunch.customcontrols.mouse.CursorManager;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CursorCustomizationFragment extends Fragment {
 
@@ -77,6 +85,17 @@ public class CursorCustomizationFragment extends Fragment {
     // Activity result launcher for file picker
     private final ActivityResultLauncher<String> mFilePickerLauncher =
             registerForActivityResult(new ActivityResultContracts.GetContent(), this::onImageSelected);
+
+    // ── Cursor Engine Studio (launcher-side cursors) ──
+    private CursorState mEditingState = CursorState.ARROW;
+    private CursorAppearance mEditingAppearance;
+    private boolean mEditorBinding;               // suppresses slider callbacks during rebind
+    private static final int[] SWATCH_COLORS = {
+            0x00000000, 0xFFFFFFFF, 0xFFE4E4EA, 0xFF22C55E,
+            0xFFFF4444, 0xFFFFD60A, 0xFF4FC3F7, 0xFF9B59E8
+    };
+    private final ActivityResultLauncher<String> mStateFilePickerLauncher =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), this::onStateImageSelected);
 
     public CursorCustomizationFragment() {
         super(R.layout.fragment_cursor_customization);
@@ -277,7 +296,470 @@ public class CursorCustomizationFragment extends Fragment {
         initPacks(view);
         setupAnimSpeedPanel(view);
         setupClickTest(view);
+
+        // ── Cursor Engine: states studio + rule editor ──
+        initCursorEngineStudio(view);
     }
+
+    // ═════════════════════════════════════════════════════════════════════
+    //  CURSOR ENGINE STUDIO — per-state customization + rule editor
+    //  (launcher-UI cursors; the in-game virtual cursor above is untouched)
+    // ═════════════════════════════════════════════════════════════════════
+
+    private void initCursorEngineStudio(@NonNull View view) {
+        androidx.appcompat.widget.SwitchCompat master = view.findViewById(R.id.cse_master_switch);
+        if (master == null) return; // defensive: layout variant without the engine block
+        TextView unsupported = view.findViewById(R.id.cse_engine_unsupported);
+
+        boolean supported = CursorEngine.isSupported();
+        if (unsupported != null) unsupported.setVisibility(supported ? View.GONE : View.VISIBLE);
+        master.setEnabled(supported);
+        master.setChecked(CursorEngine.isEnabled());
+        master.setOnCheckedChangeListener((button, checked) ->
+                CursorEngine.setEnabled(requireContext(), checked));
+
+        buildStatesList(view);
+        setupStateEditor(view);
+        refreshRulesSection(view);
+
+        // Rule-creation controls
+        Spinner matcherSpinner = view.findViewById(R.id.cse_add_rule_matcher);
+        Spinner stateSpinner = view.findViewById(R.id.cse_add_rule_state);
+        if (matcherSpinner != null) {
+            List<String> names = new ArrayList<>();
+            for (int m : CursorRules.ALL_MATCHERS) names.add(CursorRules.matcherName(m));
+            matcherSpinner.setAdapter(new android.widget.ArrayAdapter<>(requireContext(),
+                    android.R.layout.simple_spinner_dropdown_item, names));
+        }
+        if (stateSpinner != null) {
+            stateSpinner.setAdapter(new android.widget.ArrayAdapter<>(requireContext(),
+                    android.R.layout.simple_spinner_dropdown_item, stateNames()));
+        }
+        View addBtn = view.findViewById(R.id.cse_btn_add_rule);
+        if (addBtn != null) addBtn.setOnClickListener(v -> {
+            int matcher = CursorRules.ALL_MATCHERS[
+                    Math.max(0, matcherSpinner == null ? 0 : matcherSpinner.getSelectedItemPosition())];
+            CursorState state = CursorState.values()[
+                    Math.max(0, stateSpinner == null ? 0 : stateSpinner.getSelectedItemPosition())];
+            CursorRules.add(new CursorRules.Rule(matcher, state));
+            CursorEngine.invalidateAll();
+            refreshRulesSection(view);
+        });
+        View resetRules = view.findViewById(R.id.cse_btn_reset_rules);
+        if (resetRules != null) resetRules.setOnClickListener(v -> {
+            CursorRules.resetDefaults();
+            CursorEngine.invalidateAll();
+            refreshRulesSection(view);
+        });
+    }
+
+    // ---------------------------------------------------------------- states list
+
+    private void buildStatesList(@NonNull View view) {
+        LinearLayout container = view.findViewById(R.id.cse_states_list);
+        if (container == null || getContext() == null) return;
+        container.removeAllViews();
+        LayoutInflater inflater = LayoutInflater.from(requireContext());
+        for (CursorState state : CursorState.values()) {
+            View row = inflater.inflate(R.layout.item_cursor_state, container, false);
+            TextView name = row.findViewById(R.id.state_name);
+            TextView badge = row.findViewById(R.id.state_badge);
+            View dot = row.findViewById(R.id.state_dot);
+            if (name != null) name.setText(state.labelRes);
+            boolean custom = CursorAppearance.load(state).customBitmap;
+            if (badge != null) badge.setText(custom ? R.string.cse_badge_custom : R.string.cse_badge_system);
+            if (dot != null) dot.setBackground(makeDot(custom ? 0xFF9B59E8 : 0xFF22C55E));
+            row.setOnClickListener(v -> openStateEditor(view, state));
+            container.addView(row);
+            row.setAlpha(0f);
+            row.setTranslationY(12f * getResources().getDisplayMetrics().density);
+            row.animate().alpha(1f).translationY(0f).setDuration(240)
+                    .setStartDelay(container.indexOfChild(row) * 45L).start();
+        }
+    }
+
+    private android.graphics.drawable.GradientDrawable makeDot(int color) {
+        android.graphics.drawable.GradientDrawable d = new android.graphics.drawable.GradientDrawable();
+        d.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+        d.setColor(color);
+        return d;
+    }
+
+    // ---------------------------------------------------------------- state editor
+
+    private void openStateEditor(@NonNull View root, @NonNull CursorState state) {
+        mEditingState = state;
+        mEditingAppearance = CursorAppearance.load(state);
+        View editor = root.findViewById(R.id.cse_state_editor);
+        if (editor == null) return;
+        boolean wasHidden = editor.getVisibility() != View.VISIBLE;
+        editor.setVisibility(View.VISIBLE);
+        if (wasHidden) {
+            editor.setAlpha(0f);
+            editor.setTranslationY(16f * getResources().getDisplayMetrics().density);
+            editor.animate().alpha(1f).translationY(0f).setDuration(220).start();
+        }
+        bindStateEditor(root);
+    }
+
+    private void setupStateEditor(@NonNull View view) {
+        View useSystem = view.findViewById(R.id.cse_btn_use_system);
+        if (useSystem != null) useSystem.setOnClickListener(v -> {
+            if (mEditingAppearance == null) return;
+            mEditingAppearance.customBitmap = false;
+            mEditingAppearance.bitmapPath = null;
+            persistAppearance();
+        });
+        View importPng = view.findViewById(R.id.cse_btn_import_png);
+        if (importPng != null) importPng.setOnClickListener(v -> mStateFilePickerLauncher.launch("image/*"));
+        View reset = view.findViewById(R.id.cse_btn_reset_state);
+        if (reset != null) reset.setOnClickListener(v -> {
+            mEditingAppearance = new CursorAppearance();
+            mEditingAppearance.reset(mEditingState);
+            CursorEngine.invalidate(mEditingState);
+            bindStateEditor(view);
+            buildStatesList(view);
+            toast(R.string.cse_reset_done);
+        });
+
+        bindSeek(view, R.id.cse_seek_scale, R.id.cse_val_scale,
+                0, v -> mEditingAppearance.scalePercent = v, "%");
+        bindSeek(view, R.id.cse_seek_rotation, R.id.cse_val_rotation,
+                -180, v -> mEditingAppearance.rotationDeg = v, "°");
+        bindSeek(view, R.id.cse_seek_opacity, R.id.cse_val_opacity,
+                0, v -> mEditingAppearance.opacityPercent = v, "%");
+        bindSeek(view, R.id.cse_seek_hotspot_x, R.id.cse_val_hotspot_x,
+                -1, v -> mEditingAppearance.hotspotX = v, "px");
+        bindSeek(view, R.id.cse_seek_hotspot_y, R.id.cse_val_hotspot_y,
+                -1, v -> mEditingAppearance.hotspotY = v, "px");
+        bindSeek(view, R.id.cse_seek_glow, R.id.cse_val_glow,
+                0, v -> mEditingAppearance.glowRadius = v, "dp");
+        bindSeek(view, R.id.cse_seek_border, R.id.cse_val_border,
+                0, v -> mEditingAppearance.borderWidth = v, "dp");
+        bindSeek(view, R.id.cse_seek_shadow, R.id.cse_val_shadow,
+                0, v -> mEditingAppearance.shadowRadius = v, "dp");
+
+        setupSwatchRow(view, R.id.cse_glow_colors,
+                () -> mEditingAppearance.glowColor, c -> mEditingAppearance.glowColor = c);
+        setupSwatchRow(view, R.id.cse_tint_colors,
+                () -> mEditingAppearance.tintColor, c -> mEditingAppearance.tintColor = c);
+        setupSwatchRow(view, R.id.cse_border_colors,
+                () -> mEditingAppearance.borderColor, c -> mEditingAppearance.borderColor = c);
+
+        // Tap-to-place hotspot on the preview pad.
+        View pad = view.findViewById(R.id.cse_preview_pad);
+        ImageView icon = view.findViewById(R.id.cse_editor_preview_icon);
+        if (pad != null && icon != null) {
+            pad.setOnTouchListener((v, event) -> {
+                if (mEditingAppearance == null) return false;
+                Bitmap src = CursorEngine.loadSourceBitmap(mEditingState);
+                if (src == null) return false; // hotspot only meaningful with a custom bitmap
+                int[] padPos = new int[2];
+                int[] iconPos = new int[2];
+                pad.getLocationOnScreen(padPos);
+                icon.getLocationOnScreen(iconPos);
+                float relX = event.getRawX() - iconPos[0];
+                float relY = event.getRawY() - iconPos[1];
+                int iw = icon.getWidth(), ih = icon.getHeight();
+                if (iw <= 0 || ih <= 0) return false;
+                // ImageView is fitCenter: compute the drawn rect.
+                float scale = Math.min(iw / (float) src.getWidth(), ih / (float) src.getHeight());
+                float drawnW = src.getWidth() * scale, drawnH = src.getHeight() * scale;
+                float offX = (iw - drawnW) / 2f, offY = (ih - drawnH) / 2f;
+                int sx = Math.round((relX - offX) / scale);
+                int sy = Math.round((relY - offY) / scale);
+                sx = Math.max(0, Math.min(src.getWidth() - 1, sx));
+                sy = Math.max(0, Math.min(src.getHeight() - 1, sy));
+                mEditingAppearance.hotspotX = sx;
+                mEditingAppearance.hotspotY = sy;
+                persistAppearance();
+                refreshHotspotUi(view);
+                return true;
+            });
+        }
+    }
+
+    private interface IntSetter { void set(int v); }
+    private interface ColorGetter { int get(); }
+    private interface ColorSetter { void set(int c); }
+
+    private void bindSeek(@NonNull View view, int seekId, int valId,
+                          int offset, IntSetter setter, String suffix) {
+        SeekBar seek = view.findViewById(seekId);
+        TextView val = view.findViewById(valId);
+        if (seek == null || val == null) return;
+        seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) {
+                if (mEditorBinding || mEditingAppearance == null) return;
+                int value = progress + offset;
+                if (seekId == R.id.cse_seek_scale) value = Math.max(25, value);
+                setter.set(value);
+                persistAppearanceLight();
+                if (seekId == R.id.cse_seek_hotspot_x || seekId == R.id.cse_seek_hotspot_y) {
+                    refreshHotspotUi(view);
+                } else {
+                    val.setText(value + suffix);
+                }
+            }
+            @Override public void onStartTrackingTouch(SeekBar bar) {}
+            @Override public void onStopTrackingTouch(SeekBar bar) { persistAppearance(); }
+        });
+    }
+
+    private void setupSwatchRow(@NonNull View view, int rowId, ColorGetter getter, ColorSetter setter) {
+        LinearLayout row = view.findViewById(rowId);
+        if (row == null || getContext() == null) return;
+        row.removeAllViews();
+        int size = (int) (30 * getResources().getDisplayMetrics().density);
+        int margin = (int) (8 * getResources().getDisplayMetrics().density);
+        for (int color : SWATCH_COLORS) {
+            ImageView swatch = new ImageView(requireContext());
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(size, size);
+            lp.setMarginEnd(margin);
+            swatch.setLayoutParams(lp);
+            row.addView(swatch);
+            swatch.setOnClickListener(v -> {
+                if (mEditingAppearance == null) return;
+                setter.set(color);
+                persistAppearance();
+                refreshSwatches(row, getter.get());
+            });
+        }
+        refreshSwatches(row, getter.get());
+    }
+
+    private void refreshSwatches(@NonNull LinearLayout row, int selected) {
+        for (int i = 0; i < row.getChildCount() && i < SWATCH_COLORS.length; i++) {
+            ImageView swatch = (ImageView) row.getChildAt(i);
+            int color = SWATCH_COLORS[i];
+            android.graphics.drawable.GradientDrawable d = new android.graphics.drawable.GradientDrawable();
+            d.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+            d.setColor(color == 0 ? 0xFF2A2A30 : color);
+            if (color == 0) {
+                // "None" swatch: dark ring with a strike hint
+                d.setStroke(3, 0xFF55555E);
+            }
+            boolean isSelected = selected == color;
+            d.setStroke(isSelected ? 4 : 2, isSelected ? 0xFFE4E4EA : (color == 0 ? 0xFF55555E : 0x00000000));
+            swatch.setImageDrawable(d);
+            if (color == 0 && isSelected) { /* keep visible ring */ }
+            swatch.setAlpha(color == 0 && !isSelected ? 0.55f : 1f);
+        }
+    }
+
+    private void bindStateEditor(@NonNull View view) {
+        if (mEditingAppearance == null) mEditingAppearance = CursorAppearance.load(mEditingState);
+        mEditorBinding = true;
+        TextView name = view.findViewById(R.id.cse_editor_state_name);
+        TextView badge = view.findViewById(R.id.cse_editor_badge);
+        if (name != null) name.setText(mEditingState.labelRes);
+        if (badge != null) badge.setText(mEditingAppearance.customBitmap
+                ? R.string.cse_badge_custom : R.string.cse_badge_system);
+
+        setSeek(view, R.id.cse_seek_scale, R.id.cse_val_scale, mEditingAppearance.scalePercent, (mEditingAppearance.scalePercent) + "%");
+        setSeek(view, R.id.cse_seek_rotation, R.id.cse_val_rotation, mEditingAppearance.rotationDeg + 180, mEditingAppearance.rotationDeg + "°");
+        setSeek(view, R.id.cse_seek_opacity, R.id.cse_val_opacity, mEditingAppearance.opacityPercent, mEditingAppearance.opacityPercent + "%");
+        setSeek(view, R.id.cse_seek_glow, R.id.cse_val_glow, mEditingAppearance.glowRadius, mEditingAppearance.glowRadius + "dp");
+        setSeek(view, R.id.cse_seek_border, R.id.cse_val_border, mEditingAppearance.borderWidth, mEditingAppearance.borderWidth + "dp");
+        setSeek(view, R.id.cse_seek_shadow, R.id.cse_val_shadow, mEditingAppearance.shadowRadius, mEditingAppearance.shadowRadius + "dp");
+        refreshHotspotUi(view);
+        refreshEditorPreview(view);
+        LinearLayout glowRow = view.findViewById(R.id.cse_glow_colors);
+        LinearLayout tintRow = view.findViewById(R.id.cse_tint_colors);
+        LinearLayout borderRow = view.findViewById(R.id.cse_border_colors);
+        if (glowRow != null) refreshSwatches(glowRow, mEditingAppearance.glowColor);
+        if (tintRow != null) refreshSwatches(tintRow, mEditingAppearance.tintColor);
+        if (borderRow != null) refreshSwatches(borderRow, mEditingAppearance.borderColor);
+        mEditorBinding = false;
+    }
+
+    private void setSeek(@NonNull View view, int seekId, int valId, int progress, String text) {
+        SeekBar seek = view.findViewById(seekId);
+        TextView val = view.findViewById(valId);
+        if (seek != null) seek.setProgress(progress);
+        if (val != null) val.setText(text);
+    }
+
+    private void refreshHotspotUi(@NonNull View view) {
+        if (!isAdded()) return;
+        setSeek(view, R.id.cse_seek_hotspot_x, R.id.cse_val_hotspot_x,
+                mEditingAppearance.hotspotX + 1,
+                mEditingAppearance.hotspotX < 0 ? getString(R.string.cse_auto) : (mEditingAppearance.hotspotX + "px"));
+        setSeek(view, R.id.cse_seek_hotspot_y, R.id.cse_val_hotspot_y,
+                mEditingAppearance.hotspotY + 1,
+                mEditingAppearance.hotspotY < 0 ? getString(R.string.cse_auto) : (mEditingAppearance.hotspotY + "px"));
+        positionHotspotDot(view);
+    }
+
+    private void refreshEditorPreview(@NonNull View view) {
+        ImageView icon = view.findViewById(R.id.cse_editor_preview_icon);
+        if (icon != null) {
+            int base = (int) (70 * getResources().getDisplayMetrics().density);
+            Bitmap preview = CursorEngine.renderPreview(requireContext(), mEditingState, base);
+            icon.setImageBitmap(preview);
+        }
+        // The whole pad shows the real PointerIcon on hover: instant live feedback.
+        View pad = view.findViewById(R.id.cse_preview_pad);
+        if (pad != null && CursorEngine.isSupported()) {
+            pad.setPointerIcon(CursorEngine.getIcon(requireContext(), mEditingState));
+        }
+        positionHotspotDot(view);
+    }
+
+    private void positionHotspotDot(@NonNull View view) {
+        View dot = view.findViewById(R.id.cse_hotspot_dot);
+        ImageView icon = view.findViewById(R.id.cse_editor_preview_icon);
+        if (dot == null || icon == null) return;
+        Bitmap src = CursorEngine.loadSourceBitmap(mEditingState);
+        if (src == null || mEditingAppearance == null
+                || mEditingAppearance.hotspotX < 0 || mEditingAppearance.hotspotY < 0) {
+            dot.setVisibility(View.GONE);
+            return;
+        }
+        android.graphics.drawable.GradientDrawable d = new android.graphics.drawable.GradientDrawable();
+        d.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+        d.setColor(0xFFFF4444);
+        d.setStroke(2, 0xFFFFFFFF);
+        dot.setBackground(d);
+        dot.setVisibility(View.VISIBLE);
+        icon.post(() -> {
+            int iw = icon.getWidth(), ih = icon.getHeight();
+            if (iw <= 0 || ih <= 0) return;
+            float scale = Math.min(iw / (float) src.getWidth(), ih / (float) src.getHeight());
+            float drawnW = src.getWidth() * scale, drawnH = src.getHeight() * scale;
+            float offX = (iw - drawnW) / 2f, offY = (ih - drawnH) / 2f;
+            float cx = offX + mEditingAppearance.hotspotX * scale;
+            float cy = offY + mEditingAppearance.hotspotY * scale;
+            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) dot.getLayoutParams();
+            lp.gravity = Gravity.TOP | Gravity.START;
+            int[] iconPos = new int[2];
+            int[] padPos = new int[2];
+            icon.getLocationOnScreen(iconPos);
+            View pad = view.findViewById(R.id.cse_preview_pad);
+            if (pad == null) return;
+            pad.getLocationOnScreen(padPos);
+            lp.leftMargin = Math.round(iconPos[0] - padPos[0] + cx - dot.getWidth() / 2f);
+            lp.topMargin = Math.round(iconPos[1] - padPos[1] + cy - dot.getHeight() / 2f);
+            dot.setLayoutParams(lp);
+        });
+    }
+
+    private void persistAppearanceLight() {
+        if (mEditingAppearance == null) return;
+        mEditingAppearance.save(mEditingState);
+        // Light path for slider drags: icon/preview refresh happens on tracking-stop.
+    }
+
+    private void persistAppearance() {
+        if (mEditingAppearance == null) return;
+        mEditingAppearance.save(mEditingState);
+        CursorEngine.invalidate(mEditingState);
+        View root = getView();
+        if (root != null) {
+            refreshEditorPreview(root);
+            buildStatesList(root);
+        }
+    }
+
+    private void onStateImageSelected(Uri uri) {
+        if (uri == null) return;
+        try {
+            if (isGif(uri)) {
+                Toast.makeText(getContext(), "GIF not supported for cursor states", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            File file = copyUriToFile(uri, "cse_" + mEditingState.name().toLowerCase(java.util.Locale.ROOT) + ".png");
+            if (mEditingAppearance == null) mEditingAppearance = CursorAppearance.load(mEditingState);
+            mEditingAppearance.customBitmap = true;
+            mEditingAppearance.bitmapPath = file.getAbsolutePath();
+            mEditingAppearance.hotspotX = -1;
+            mEditingAppearance.hotspotY = -1;
+            persistAppearance();
+            View root = getView();
+            if (root != null) bindStateEditor(root);
+            toast(R.string.cse_state_saved);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(getContext(), "Failed to import: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void toast(int res) {
+        if (getContext() != null) Toast.makeText(getContext(), res, Toast.LENGTH_SHORT).show();
+    }
+
+    private List<String> stateNames() {
+        List<String> names = new ArrayList<>();
+        for (CursorState s : CursorState.values()) names.add(getString(s.labelRes));
+        return names;
+    }
+
+    // ---------------------------------------------------------------- rules list
+
+    private void refreshRulesSection(@NonNull View view) {
+        LinearLayout container = view.findViewById(R.id.cse_rules_list);
+        if (container == null || getContext() == null) return;
+        container.removeAllViews();
+        LayoutInflater inflater = LayoutInflater.from(requireContext());
+        List<CursorRules.Rule> rules = CursorRules.get();
+        for (int i = 0; i < rules.size(); i++) {
+            final int index = i;
+            final CursorRules.Rule rule = rules.get(i);
+            View row = inflater.inflate(R.layout.item_cursor_rule, container, false);
+            TextView desc = row.findViewById(R.id.rule_desc);
+            Spinner spinner = row.findViewById(R.id.rule_state_spinner);
+            androidx.appcompat.widget.SwitchCompat enabled = row.findViewById(R.id.rule_enabled);
+            View up = row.findViewById(R.id.rule_up);
+            View down = row.findViewById(R.id.rule_down);
+            View delete = row.findViewById(R.id.rule_delete);
+
+            if (desc != null) desc.setText(CursorRules.matcherName(rule.matcher));
+            if (spinner != null) {
+                spinner.setAdapter(new android.widget.ArrayAdapter<>(requireContext(),
+                        android.R.layout.simple_spinner_dropdown_item, stateNames()));
+                spinner.setSelection(rule.state.ordinal(), false);
+                spinner.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+                    @Override public void onItemSelected(android.widget.AdapterView<?> parent, View v, int position, long id) {
+                        CursorState newState = CursorState.values()[position];
+                        if (newState != rule.state) {
+                            rule.state = newState;
+                            CursorRules.save();
+                            CursorEngine.invalidateAll();
+                        }
+                    }
+                    @Override public void onNothingSelected(android.widget.AdapterView<?> parent) {}
+                });
+            }
+            if (enabled != null) {
+                enabled.setChecked(rule.enabled);
+                enabled.setOnCheckedChangeListener((button, checked) -> {
+                    rule.enabled = checked;
+                    CursorRules.save();
+                    CursorEngine.invalidateAll();
+                });
+            }
+            if (up != null) {
+                up.setVisibility(index > 0 ? View.VISIBLE : View.INVISIBLE);
+                up.setOnClickListener(v -> { CursorRules.move(index, -1); CursorEngine.invalidateAll(); refreshRulesSection(view); });
+            }
+            if (down != null) {
+                down.setVisibility(index < rules.size() - 1 ? View.VISIBLE : View.INVISIBLE);
+                down.setOnClickListener(v -> { CursorRules.move(index, 1); CursorEngine.invalidateAll(); refreshRulesSection(view); });
+            }
+            if (delete != null) {
+                boolean isFallback = rule.matcher == CursorRules.MATCH_ANY;
+                delete.setVisibility(isFallback ? View.INVISIBLE : View.VISIBLE);
+                delete.setOnClickListener(v -> {
+                    CursorRules.remove(index);
+                    CursorEngine.invalidateAll();
+                    refreshRulesSection(view);
+                    toast(R.string.cse_rule_deleted);
+                });
+            }
+            container.addView(row);
+        }
+    }
+
 
     private void updateLivePreview() {
         if (mPreviewImage == null) return;

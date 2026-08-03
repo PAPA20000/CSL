@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cursor Engine — single editable rule row inside the Rule Editor -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/bg_cs_ghost_button"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingHorizontal="12dp"
+    android:paddingVertical="9dp">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/rule_desc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#D7D9E4"
+            android:textSize="12.5sp"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/rule_state_spinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp" />
+    </LinearLayout>
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/rule_enabled"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp" />
+
+    <TextView
+        android:id="@+id/rule_up"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_marginStart="6dp"
+        android:background="@drawable/bg_cs_chip"
+        android:clickable="true"
+        android:gravity="center"
+        android:text="▲"
+        android:textColor="#B9BBC4"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/rule_down"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_marginStart="4dp"
+        android:background="@drawable/bg_cs_chip"
+        android:clickable="true"
+        android:gravity="center"
+        android:text="▼"
+        android:textColor="#B9BBC4"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/rule_delete"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_marginStart="4dp"
+        android:background="@drawable/bg_cs_chip"
+        android:clickable="true"
+        android:gravity="center"
+        android:text="✕"
+        android:textColor="#FF4444"
+        android:textSize="12sp" />
+</LinearLayout>
