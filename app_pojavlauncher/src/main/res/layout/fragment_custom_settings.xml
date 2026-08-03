@@ -15,7 +15,7 @@
         android:id="@+id/settings_header_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_csp_header"
+        android:background="@drawable/bg_s4_header"
         android:orientation="vertical"
         android:paddingTop="8dp"
         android:paddingBottom="10dp"
@@ -32,7 +32,7 @@
                 android:id="@+id/settings_back_button"
                 android:layout_width="38dp"
                 android:layout_height="38dp"
-                android:background="@drawable/bg_csp_row"
+                android:background="@drawable/bg_s4_row"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center">
@@ -48,7 +48,7 @@
                 android:layout_width="36dp"
                 android:layout_height="36dp"
                 android:layout_marginStart="12dp"
-                android:background="@drawable/bg_csp_iconwell">
+                android:background="@drawable/bg_s4_iconwell">
 
                 <ImageView
                     android:id="@+id/settings_header_icon"
@@ -88,7 +88,7 @@
                 android:id="@+id/settings_live_badge"
                 android:layout_width="wrap_content"
                 android:layout_height="24dp"
-                android:background="@drawable/bg_csp_value"
+                android:background="@drawable/bg_s4_value"
                 android:gravity="center"
                 android:paddingHorizontal="10dp"
                 android:textColor="#E4E4EA"
@@ -105,7 +105,7 @@
             android:layout_marginTop="8dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:background="@drawable/bg_csp_search"
+            android:background="@drawable/bg_s4_search"
             android:paddingHorizontal="12dp">
 
             <ImageView

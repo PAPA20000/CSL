@@ -161,7 +161,7 @@ public class LauncherPreferenceFragment extends Fragment {
 
         setupSettingsList();
         mRecyclerView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(
-                requireContext(), R.anim.item_stagger_fade));
+                requireContext(), R.anim.settings_rows_layout_v4));
         mRecyclerView.scheduleLayoutAnimation();
         updateSaveBar();
     }
@@ -594,23 +594,9 @@ public class LauncherPreferenceFragment extends Fragment {
         }
     }
 
-    /** Every page animates differently — nothing just "appears". */
+    /** Settings v4: one cohesive spring-rise entrance signature for every page. */
     private int pickPageAnimation() {
-        if (mSearchQuery != null && !mSearchQuery.isEmpty()) return R.anim.item_stagger_fade;
-        if (mCategoryName == null) return R.anim.install_page_stagger;
-        switch (mCategoryName) {
-            case "Launcher Settings": return R.anim.layout_stagger_up_fast;
-            case "Video & Graphics": return R.anim.layout_animation_fall_down;
-            case "Controls": return R.anim.install_content_layout_animation;
-            case "Java Runtime": return R.anim.layout_fall_down;
-            case "Audio": return R.anim.layout_zoom_fade_soft;
-            case "Account": return R.anim.layout_slide_rise_side;
-            case "Experimental": return R.anim.layout_reverse_fall_slow;
-            case "Advanced": return R.anim.layout_advanced_slide_up;
-            case "Miscellaneous": return R.anim.layout_misc_item_rise;
-            case "Sponsors": return R.anim.install_page_stagger;
-            default: return R.anim.item_stagger_fade;
-        }
+        return R.anim.settings_rows_layout_v4;
     }
 
     // ══ Search bar ══

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="10dp"
-    android:background="@drawable/bg_csp_row"
+    android:background="@drawable/bg_s4_row"
     android:minHeight="86dp"
     android:orientation="vertical"
     android:paddingStart="14dp"
@@ -21,7 +21,7 @@
         <FrameLayout
             android:layout_width="44dp"
             android:layout_height="44dp"
-            android:background="@drawable/bg_csp_iconwell">
+            android:background="@drawable/bg_s4_iconwell">
 
             <ImageView
                 android:id="@+id/setting_icon"
@@ -76,7 +76,7 @@
             android:id="@+id/setting_value_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_csp_value"
+            android:background="@drawable/bg_s4_value"
             android:gravity="center"
             android:minWidth="64dp"
             android:paddingStart="10dp"
@@ -98,9 +98,9 @@
         android:minHeight="6dp"
         android:paddingStart="6dp"
         android:paddingEnd="6dp"
-        android:progressDrawable="@drawable/bg_csp_seek_track"
+        android:progressDrawable="@drawable/bg_s4_seek_track"
         android:splitTrack="false"
-        android:thumb="@drawable/bg_csp_seek_thumb"
+        android:thumb="@drawable/bg_s4_seek_thumb"
         android:thumbOffset="0dp" />
 
 </LinearLayout>

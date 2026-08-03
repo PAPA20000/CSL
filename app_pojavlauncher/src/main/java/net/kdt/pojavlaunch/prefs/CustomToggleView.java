@@ -15,6 +15,8 @@ public class CustomToggleView extends View {
 
     private boolean mChecked = false;
     private float mAnimProgress = 0f;
+    private android.graphics.LinearGradient mOnTrackShader;
+    private float mOnTrackShaderWidth;
     private ValueAnimator mAnimator;
     private final Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF mTrackRect = new RectF();
@@ -118,44 +120,65 @@ public class CustomToggleView extends View {
         float w = getWidth();
         float h = getHeight();
 
-        // Draw background track
+        // ── S4 toggle: obsidian glass track → platinum gradient beam ──
         mTrackRect.set(0, 0, w, h);
         float radius = h / 2f;
+        float density = getResources().getDisplayMetrics().density;
 
-        // Off: deep slate · On: cyan → mint for Control Center look
-        int darkBg = 0xFF1A2436;
-        int activeBg = 0xFFC9CBD6;
-        int trackColor = blendColors(darkBg, activeBg, mAnimProgress);
-
+        // Off track: obsidian glass (always drawn base, crossfaded under the beam)
         mPaint.setStyle(Paint.Style.FILL);
-        mPaint.setColor(trackColor);
+        mPaint.setColor(0xFF14151B);
         canvas.drawRoundRect(mTrackRect, radius, radius, mPaint);
 
-        // Subtle border on the track
+        // On track: horizontal platinum gradient beam fading in
+        if (mAnimProgress > 0.001f) {
+            if (mOnTrackShader == null || mOnTrackShaderWidth != w) {
+                mOnTrackShader = new android.graphics.LinearGradient(0, 0, w, 0,
+                        0xFFF4F4FA, 0xFFB9BBC4, android.graphics.Shader.TileMode.CLAMP);
+                mOnTrackShaderWidth = w;
+            }
+            mPaint.setShader(mOnTrackShader);
+            mPaint.setAlpha((int) (255 * mAnimProgress));
+            canvas.drawRoundRect(mTrackRect, radius, radius, mPaint);
+            mPaint.setShader(null);
+            mPaint.setAlpha(255);
+        }
+
+        // Rim light on the track
         mPaint.setStyle(Paint.Style.STROKE);
-        mPaint.setStrokeWidth(Math.max(1f, getResources().getDisplayMetrics().density));
-        mPaint.setColor(blendColors(0x33FFFFFF, 0x66C9CBD6, mAnimProgress));
+        mPaint.setStrokeWidth(Math.max(1f, density));
+        mPaint.setColor(blendColors(0x2EFFFFFF, 0x66B9BBC4, mAnimProgress));
         canvas.drawRoundRect(mTrackRect, radius, radius, mPaint);
         mPaint.setStyle(Paint.Style.FILL);
 
-        // Draw thumb (white circle)
-        float padding = 3f * getResources().getDisplayMetrics().density;
+        // Thumb
+        float padding = 3.5f * density;
         float thumbRadius = radius - padding;
-
-        // Thumb position interpolation
         float minX = radius;
         float maxX = w - radius;
         float thumbX = minX + (maxX - minX) * mAnimProgress;
         float thumbY = h / 2f;
 
-        // Soft cyan glow when enabled
+        // Violet energy halo when enabled
         if (mAnimProgress > 0.05f) {
-            mPaint.setColor(blendColors(0x00C9CBD6, 0x55C9CBD6, mAnimProgress));
-            canvas.drawCircle(thumbX, thumbY, thumbRadius + padding * 0.7f, mPaint);
+            mPaint.setColor(blendColors(0x009B59E8, 0x4D9B59E8, mAnimProgress));
+            canvas.drawCircle(thumbX, thumbY, thumbRadius + padding * 0.8f, mPaint);
         }
 
-        mPaint.setColor(0xFFFFFFFF);
+        // Platinum thumb body
+        mPaint.setColor(blendColors(0xFFFFFFFF, 0xFFF2F2F6, mAnimProgress));
         canvas.drawCircle(thumbX, thumbY, thumbRadius, mPaint);
+
+        // Thumb rim
+        mPaint.setStyle(Paint.Style.STROKE);
+        mPaint.setStrokeWidth(Math.max(1f, density * 0.8f));
+        mPaint.setColor(blendColors(0x338E929E, 0x99B9BBC4, mAnimProgress));
+        canvas.drawCircle(thumbX, thumbY, thumbRadius - mPaint.getStrokeWidth() / 2f, mPaint);
+        mPaint.setStyle(Paint.Style.FILL);
+
+        // Obsidian pupil in the center of the thumb
+        mPaint.setColor(blendColors(0xFF2A2B31, 0xFF191A20, mAnimProgress));
+        canvas.drawCircle(thumbX, thumbY, thumbRadius * 0.42f, mPaint);
     }
 
     private int blendColors(int color1, int color2, float ratio) {

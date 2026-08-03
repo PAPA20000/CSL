@@ -9,7 +9,7 @@
     android:minHeight="64dp"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:background="@drawable/bg_csp_card"
+    android:background="@drawable/bg_s4_card"
     android:clickable="true"
     android:focusable="true"
     android:padding="12dp">
@@ -17,7 +17,7 @@
     <FrameLayout
         android:layout_width="34dp"
         android:layout_height="34dp"
-        android:background="@drawable/bg_csp_iconwell">
+        android:background="@drawable/bg_s4_iconwell">
 
         <ImageView
             android:id="@+id/pin_card_glyph"
