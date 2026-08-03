@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ═══════════════════════════════════════════════════════════════════
+     CS LAUNCHER V3 — "Amethyst Violet" Premium Design System
+     Original identity: deep space dark + violet glass + soft neon glow.
+     ═══════════════════════════════════════════════════════════════════ -->
+<resources>
+    <!-- Base layers -->
+    <color name="cs_bg_base">#07070C</color>
+    <color name="cs_bg_surface">#0E0E17</color>
+    <color name="cs_bg_elevated">#15151F</color>
+
+    <!-- Glass -->
+    <color name="cs_glass_fill">#0FFFFFFF</color>
+    <color name="cs_glass_fill_strong">#17FFFFFF</color>
+    <color name="cs_glass_stroke">#26FFFFFF</color>
+    <color name="cs_glass_stroke_soft">#1AFFFFFF</color>
+
+    <!-- Primary accent (violet) -->
+    <color name="cs_accent">#7C5CFF</color>
+    <color name="cs_accent_deep">#5A3EE8</color>
+    <color name="cs_accent_light">#B8A9FF</color>
+    <color name="cs_accent_soft">#337C5CFF</color>
+    <color name="cs_accent_glow">#407C5CFF</color>
+
+    <!-- Secondary accent (cyan) -->
+    <color name="cs_cyan">#3DDAD7</color>
+
+    <!-- Semantic -->
+    <color name="cs_success">#2BD97B</color>
+    <color name="cs_success_soft">#262BD97B</color>
+    <color name="cs_danger">#FF4D67</color>
+    <color name="cs_danger_deep">#D63A52</color>
+    <color name="cs_danger_soft">#26FF4D67</color>
+    <color name="cs_warning">#FFB020</color>
+    <color name="cs_warning_soft">#26FFB020</color>
+
+    <!-- Text -->
+    <color name="cs_text_primary">#FFFFFF</color>
+    <color name="cs_text_secondary">#A8ACBF</color>
+    <color name="cs_text_dim">#666B7E</color>
+    <color name="cs_text_on_accent">#FFFFFF</color>
+</resources>

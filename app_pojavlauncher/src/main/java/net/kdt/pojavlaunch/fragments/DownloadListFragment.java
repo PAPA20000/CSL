@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import net.kdt.pojavlaunch.R;
+import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.modloaders.modpacks.GridSpacingItemDecoration;
 import net.kdt.pojavlaunch.modloaders.modpacks.ModItemAdapter;
 import net.kdt.pojavlaunch.modloaders.modpacks.api.CommonApi;
@@ -22,6 +23,11 @@ import net.kdt.pojavlaunch.modloaders.modpacks.api.ModpackApi;
 import net.kdt.pojavlaunch.modloaders.modpacks.api.ModrinthApi;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.ModItem;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.SearchFilters;
+import net.kdt.pojavlaunch.prefs.LauncherPreferences;
+import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
+import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
+
+import java.io.File;
 
 public class DownloadListFragment extends Fragment implements ModItemAdapter.SearchResultCallback {
 
@@ -34,8 +40,15 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
     private TextView mStatusText;
     private ModItemAdapter mAdapter;
     private ModpackApi mApi;
+    private String mProfileKey;
 
     private OnModItemClickListener mItemClickListener;
+
+    /** The profile whose installed-content states should be drawn on the cards. */
+    public void setProfileKey(String profileKey) {
+        mProfileKey = profileKey;
+        applyInstallContext();
+    }
 
     public interface OnModItemClickListener {
         void onItemClick(ModItem item);
@@ -95,6 +108,7 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
 
         mAdapter = new ModItemAdapter(getResources(), mApi, this);
         mRecyclerView.setAdapter(mAdapter);
+        applyInstallContext();
 
         mAdapter.setOnItemClickListener(item -> {
             if (mItemClickListener != null && isUiReady()) {
@@ -103,6 +117,47 @@ public class DownloadListFragment extends Fragment implements ModItemAdapter.Sea
         });
 
         loadContent();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Pick up installs/removals that happened while we were away.
+        applyInstallContext();
+        if (mAdapter != null) mAdapter.refreshInstallStates();
+    }
+
+    /** Resolve the target profile + its content directory for state rendering. */
+    private void applyInstallContext() {
+        if (mAdapter == null || getContext() == null) return;
+        String key = mProfileKey;
+        if (key == null || key.isEmpty()) {
+            key = LauncherPreferences.DEFAULT_PREF.getString(
+                    LauncherPreferences.PREF_KEY_CURRENT_PROFILE, null);
+        }
+        File contentDir = null;
+        if (key != null && !key.isEmpty()) {
+            try {
+                LauncherProfiles.load();
+                MinecraftProfile profile = LauncherProfiles.mainProfileJson.profiles.get(key);
+                if (profile != null) {
+                    File gameDir = Tools.getGameDirPath(profile);
+                    String sub;
+                    switch (mContentType == null ? "mod" : mContentType) {
+                        case "resourcepack": sub = "resourcepacks"; break;
+                        case "shader": sub = "shaderpacks"; break;
+                        case "world": sub = "saves"; break;
+                        default: sub = "mods"; break;
+                    }
+                    contentDir = new File(gameDir, sub);
+                } else {
+                    key = null;
+                }
+            } catch (Exception ignored) {
+                key = null;
+            }
+        }
+        mAdapter.setInstallContext(key, mContentType, contentDir);
     }
 
     @Override

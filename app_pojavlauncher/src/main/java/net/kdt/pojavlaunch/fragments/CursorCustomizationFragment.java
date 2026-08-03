@@ -1,21 +1,31 @@
 package net.kdt.pojavlaunch.fragments;
 
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.PorterDuff;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.*;
+import android.widget.GridLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.core.content.ContextCompat;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -49,6 +59,20 @@ public class CursorCustomizationFragment extends Fragment {
     private int mSelectedCursorStyleRes = R.drawable.ic_mouse_pointer;
     private boolean mUseCustomBitmap = false;
     private int mGlowColor = android.graphics.Color.parseColor("#A6FF3D"); // Default neon green
+
+    // ── CS Premium Cursor Studio — pack browser state ──
+    private android.content.SharedPreferences mFavPrefs;
+    private final java.util.List<CursorPack> mPacks = new java.util.ArrayList<>();
+    private final java.util.List<View> mPackCards = new java.util.ArrayList<>();
+    private CursorPack mCurrentPack;
+    private View mSelectedPackCard;
+    private String mCurrentCategory = "All";
+    private android.widget.GridLayout mPackGrid;
+    private LinearLayout mCatChipsBar;
+    private TextView mPackName, mPackCreator, mPackCategory;
+    private ImageView mFavButton;
+    private AnimatorSet mPulseAnim;
+    private int mAnimSpeedPercent = 50;
 
     // Activity result launcher for file picker
     private final ActivityResultLauncher<String> mFilePickerLauncher =
@@ -248,6 +272,11 @@ public class CursorCustomizationFragment extends Fragment {
         applyPressAnimation(exportButton);
         applyPressAnimation(saveButton);
         applyPressAnimation(resetButton);
+
+        // ── CS Premium pack browser / pulse preview / favorites ──
+        initPacks(view);
+        setupAnimSpeedPanel(view);
+        setupClickTest(view);
     }
 
     private void updateLivePreview() {
@@ -300,7 +329,9 @@ public class CursorCustomizationFragment extends Fragment {
 
             TextView label = view.findViewById(R.id.cursor_preview_label);
             if (label != null) {
-                if (mUseCustomBitmap) {
+                if (mCurrentPack != null) {
+                    label.setText(mCurrentPack.name.toUpperCase(java.util.Locale.US));
+                } else if (mUseCustomBitmap) {
                     label.setText("CUSTOM");
                 } else if (mSelectedCursorStyleRes == R.drawable.ic_gamepad_pointer) {
                     label.setText("GAMEPAD");
@@ -395,6 +426,12 @@ public class CursorCustomizationFragment extends Fragment {
 
         ImageView imgGreen = root.findViewById(R.id.color_green);
         selectGlowColor(mGlowColor, imgGreen);
+
+        mCurrentPack = null;
+        CursorPack classic = findPackById("classic");
+        if (classic != null && mPacks != null && !mPacks.isEmpty()) {
+            selectPack(classic, true);
+        }
 
         updateLivePreview();
 
@@ -676,18 +713,425 @@ public class CursorCustomizationFragment extends Fragment {
     private void applyStyleSelection(View classic, View gamepad, View custom, int selectedIndex) {
         if (classic != null) {
             classic.setBackgroundResource(selectedIndex == 0
-                    ? R.drawable.bg_cursor_style_card_selected
-                    : R.drawable.bg_cursor_style_card);
+                    ? R.drawable.bg_cs_pack_card_selected
+                    : R.drawable.bg_cs_pack_card);
         }
         if (gamepad != null) {
             gamepad.setBackgroundResource(selectedIndex == 1
-                    ? R.drawable.bg_cursor_style_card_selected
-                    : R.drawable.bg_cursor_style_card);
+                    ? R.drawable.bg_cs_pack_card_selected
+                    : R.drawable.bg_cs_pack_card);
         }
         if (custom != null) {
             custom.setBackgroundResource(selectedIndex == 2
-                    ? R.drawable.bg_cursor_style_card_selected
-                    : R.drawable.bg_cursor_style_card);
+                    ? R.drawable.bg_cs_pack_card_selected
+                    : R.drawable.bg_cs_pack_card);
         }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // CS PREMIUM CURSOR STUDIO — pack browser / categories / favorites /
+    // animated live preview. Everything renders through the existing
+    // save pipeline (custom-bitmap path), so packs really work in-game.
+    // ════════════════════════════════════════════════════════════════
+
+    /** Built-in pack model. tint==null → use drawable's own colors. */
+    private static class CursorPack {
+        final String id, name, creator, category;
+        final int resId;
+        final Integer tint;
+        final boolean isClassic, isGamepad, centerHotspot;
+
+        CursorPack(String id, String name, String category, int resId,
+                   Integer tint, boolean isClassic, boolean isGamepad, boolean centerHotspot) {
+            this.id = id; this.name = name; this.creator = "CS Studio"; this.category = category;
+            this.resId = resId; this.tint = tint;
+            this.isClassic = isClassic; this.isGamepad = isGamepad; this.centerHotspot = centerHotspot;
+        }
+    }
+
+    private void initPacks(@NonNull View view) {
+        mFavPrefs = requireContext().getApplicationContext()
+                .getSharedPreferences("liked_cursors", android.content.Context.MODE_PRIVATE);
+        mPackGrid = view.findViewById(R.id.cursor_pack_grid);
+        mCatChipsBar = view.findViewById(R.id.cursor_cat_chips);
+        mPackName = view.findViewById(R.id.cursor_pack_name);
+        mPackCreator = view.findViewById(R.id.cursor_pack_creator);
+        mPackCategory = view.findViewById(R.id.cursor_pack_category);
+        mFavButton = view.findViewById(R.id.btn_favorite_cursor);
+
+        mPacks.clear();
+        mPacks.add(new CursorPack("classic", "Classic Arrow", "Classic", R.drawable.ic_mouse_pointer, null, true, false, false));
+        mPacks.add(new CursorPack("beam", "Precision Beam", "Classic", R.drawable.ic_cursor_beam, null, false, false, true));
+        mPacks.add(new CursorPack("gamepad", "Gamepad Pointer", "Gaming", R.drawable.ic_gamepad_pointer, null, false, true, false));
+        mPacks.add(new CursorPack("crosshair", "Crosshair", "Gaming", R.drawable.ic_cursor_crosshair, null, false, false, true));
+        mPacks.add(new CursorPack("sniper", "Sniper Dot", "Gaming", R.drawable.ic_cursor_dot, 0xFFFF4D67, false, false, true));
+        mPacks.add(new CursorPack("dot", "Focus Dot", "Minimal", R.drawable.ic_cursor_dot, null, false, false, true));
+        mPacks.add(new CursorPack("ring", "Pulse Ring", "Minimal", R.drawable.ic_cursor_ring, null, false, false, true));
+        mPacks.add(new CursorPack("void", "Void", "Dark", R.drawable.ic_mouse_pointer, 0xFF1B1B24, false, false, false));
+        mPacks.add(new CursorPack("midnight", "Midnight", "Dark", R.drawable.ic_mouse_pointer, 0xFF3A4160, false, false, false));
+        mPacks.add(new CursorPack("amethyst", "Amethyst", "RGB", R.drawable.ic_mouse_pointer, 0xFF7C5CFF, false, false, false));
+        mPacks.add(new CursorPack("volt", "Volt", "RGB", R.drawable.ic_mouse_pointer, 0xFFA6FF3D, false, false, false));
+        mPacks.add(new CursorPack("azure", "Azure Ring", "RGB", R.drawable.ic_cursor_ring, 0xFF3DC2FF, false, false, true));
+        mPacks.add(new CursorPack("ember", "Ember", "RGB", R.drawable.ic_cursor_crosshair, 0xFFFF4D67, false, false, true));
+
+        buildCategoryChips();
+        buildPackGrid();
+
+        // Reflect whatever the loaded state says (classic/gamepad/custom bitmap)
+        CursorPack initial = mPacks.get(0);
+        if (mUseCustomBitmap) {
+            initial = findPackById(mFavPrefs.getString("last_pack_id", "classic"));
+        } else if (mSelectedCursorStyleRes == R.drawable.ic_gamepad_pointer) {
+            initial = findPackById("gamepad");
+        }
+        if (initial == null) initial = mPacks.get(0);
+        selectPack(initial, false);
+
+        if (mFavButton != null) {
+            mFavButton.setOnClickListener(v -> toggleFavorite());
+            refreshFavoriteButton();
+        }
+    }
+
+    private CursorPack findPackById(String id) {
+        if (id == null) return null;
+        for (CursorPack p : mPacks) if (p.id.equals(id)) return p;
+        return null;
+    }
+
+    private void buildCategoryChips() {
+        if (mCatChipsBar == null || getContext() == null) return;
+        mCatChipsBar.removeAllViews();
+        final String[] cats = {"All", "Classic", "Gaming", "Minimal", "Dark", "RGB"};
+        float d = getResources().getDisplayMetrics().density;
+        for (String cat : cats) {
+            TextView chip = new TextView(requireContext());
+            chip.setText(cat);
+            chip.setTextSize(11f);
+            chip.setGravity(Gravity.CENTER);
+            chip.setPadding((int) (d * 16), 0, (int) (d * 16), 0);
+            chip.setMinHeight((int) (d * 32));
+            chip.setTypeface(null, android.graphics.Typeface.BOLD);
+            chip.setTag(cat);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            lp.rightMargin = (int) (d * 7);
+            chip.setLayoutParams(lp);
+            chip.setOnClickListener(v -> {
+                mCurrentCategory = (String) v.getTag();
+                refreshChipStyles();
+                filterPackGrid();
+            });
+            mCatChipsBar.addView(chip);
+        }
+        refreshChipStyles();
+    }
+
+    private void refreshChipStyles() {
+        if (mCatChipsBar == null) return;
+        for (int i = 0; i < mCatChipsBar.getChildCount(); i++) {
+            View c = mCatChipsBar.getChildAt(i);
+            boolean active = mCurrentCategory.equals(c.getTag());
+            c.setBackgroundResource(active ? R.drawable.bg_cs_tab_pill_active : R.drawable.bg_cs_tab_pill_idle);
+            ((TextView) c).setTextColor(android.graphics.Color.parseColor(active ? "#FFFFFF" : "#8B8FA3"));
+        }
+    }
+
+    private void buildPackGrid() {
+        if (mPackGrid == null || getContext() == null) return;
+        mPackGrid.removeAllViews();
+        mPackCards.clear();
+        float d = getResources().getDisplayMetrics().density;
+        int idx = 0;
+        for (CursorPack p : mPacks) {
+            boolean fav = mFavPrefs.getBoolean(p.id, false);
+
+            android.widget.FrameLayout card = new android.widget.FrameLayout(requireContext());
+            card.setBackgroundResource(R.drawable.bg_cs_pack_card);
+            card.setTag(p);
+
+            LinearLayout inner = new LinearLayout(requireContext());
+            inner.setOrientation(LinearLayout.VERTICAL);
+            inner.setGravity(Gravity.CENTER_HORIZONTAL);
+            int pad = (int) (d * 10);
+            inner.setPadding(pad, pad, pad, pad);
+
+            ImageView preview = new ImageView(requireContext());
+            Bitmap b = renderPackBitmap(p);
+            if (b != null) preview.setImageBitmap(b);
+            LinearLayout.LayoutParams pv = new LinearLayout.LayoutParams((int) (d * 42), (int) (d * 42));
+            preview.setLayoutParams(pv);
+            inner.addView(preview);
+
+            TextView name = new TextView(requireContext());
+            name.setText(p.name);
+            name.setTextSize(10.5f);
+            name.setTypeface(null, android.graphics.Typeface.BOLD);
+            name.setTextColor(0xFFFFFFFF);
+            name.setMaxLines(1);
+            name.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            LinearLayout.LayoutParams np = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            np.topMargin = (int) (d * 7);
+            name.setLayoutParams(np);
+            inner.addView(name);
+
+            TextView cat = new TextView(requireContext());
+            cat.setText(p.category);
+            cat.setTextSize(8.5f);
+            cat.setTextColor(0xFF666B7E);
+            LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            cp.topMargin = (int) (d * 1);
+            cat.setLayoutParams(cp);
+            inner.addView(cat);
+
+            card.addView(inner);
+
+            ImageView heart = new ImageView(requireContext());
+            heart.setImageResource(fav ? R.drawable.ic_heart_filled : R.drawable.ic_heart_outline);
+            heart.setColorFilter(fav ? 0xFFFF2D55 : 0xFF666B7E);
+            android.widget.FrameLayout.LayoutParams hp = new android.widget.FrameLayout.LayoutParams(
+                    (int) (d * 14), (int) (d * 14), Gravity.TOP | Gravity.END);
+            hp.topMargin = (int) (d * 6);
+            hp.rightMargin = (int) (d * 6);
+            heart.setLayoutParams(hp);
+            heart.setTag("fav_" + p.id);
+            card.addView(heart);
+
+            card.setOnClickListener(v -> selectPack(p, true));
+
+            GridLayout.LayoutParams lp = new GridLayout.LayoutParams(
+                    GridLayout.spec(GridLayout.UNDEFINED), GridLayout.spec(GridLayout.UNDEFINED, 1f));
+            lp.width = 0;
+            lp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+            int m = (int) (d * 4);
+            lp.setMargins(m, m, m, m);
+            card.setLayoutParams(lp);
+
+            // Staggered entrance
+            card.setAlpha(0f);
+            card.setTranslationY((float) (d * 14));
+            card.animate().alpha(1f).translationY(0f)
+                    .setStartDelay(60 + (idx++ % 6) * 40L)
+                    .setDuration(260)
+                    .setInterpolator(new DecelerateInterpolator())
+                    .start();
+
+            mPackGrid.addView(card);
+            mPackCards.add(card);
+        }
+    }
+
+    private void filterPackGrid() {
+        for (View card : mPackCards) {
+            CursorPack p = (CursorPack) card.getTag();
+            boolean show = "All".equals(mCurrentCategory) || mCurrentCategory.equals(p.category);
+            card.setVisibility(show ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    /** Apply a pack: routes through the existing classic/gamepad/custom paths. */
+    private void selectPack(CursorPack pack, boolean animate) {
+        if (pack == null || getView() == null) return;
+        mCurrentPack = pack;
+        mFavPrefs.edit().putString("last_pack_id", pack.id).apply();
+
+        View root = getView();
+        View classic = root.findViewById(R.id.style_classic);
+        View gamepad = root.findViewById(R.id.style_gamepad);
+        View custom = root.findViewById(R.id.style_custom);
+
+        if (pack.isClassic) {
+            mUseCustomBitmap = false;
+            mSelectedCursorStyleRes = R.drawable.ic_mouse_pointer;
+            mHotspotX = 0; mHotspotY = 0;
+            applyStyleSelection(classic, gamepad, custom, 0);
+        } else if (pack.isGamepad) {
+            mUseCustomBitmap = false;
+            mSelectedCursorStyleRes = R.drawable.ic_gamepad_pointer;
+            mHotspotX = 0; mHotspotY = 0;
+            applyStyleSelection(classic, gamepad, custom, 1);
+        } else {
+            Bitmap b = renderPackBitmap(pack);
+            if (b == null) return;
+            mCurrentCursorBitmap = b;
+            mUseCustomBitmap = true;
+            if (pack.centerHotspot) {
+                mHotspotX = b.getWidth() / 2;
+                mHotspotY = b.getHeight() / 2;
+            } else {
+                mHotspotX = 0; mHotspotY = 0;
+            }
+            applyStyleSelection(classic, gamepad, custom, 2);
+        }
+
+        if (mPackName != null) mPackName.setText(pack.name);
+        if (mPackCreator != null) mPackCreator.setText("by " + pack.creator);
+        if (mPackCategory != null) mPackCategory.setText(pack.category.toUpperCase(java.util.Locale.US));
+
+        // Selection ring on the grid card
+        if (mSelectedPackCard != null) mSelectedPackCard.setBackgroundResource(R.drawable.bg_cs_pack_card);
+        for (View card : mPackCards) {
+            if (card.getTag() == pack) {
+                mSelectedPackCard = card;
+                card.setBackgroundResource(R.drawable.bg_cs_pack_card_selected);
+                if (animate) {
+                    card.animate().cancel();
+                    card.setScaleX(0.93f); card.setScaleY(0.93f);
+                    card.animate().scaleX(1f).scaleY(1f).setDuration(220)
+                            .setInterpolator(new OvershootInterpolator(2f)).start();
+                }
+                break;
+            }
+        }
+
+        refreshFavoriteButton();
+        updateLivePreview();
+        if (animate) playPreviewPop();
+    }
+
+    /** Rasterize any pack (PNG or vector, optional tint) into a cursor bitmap. */
+    private Bitmap renderPackBitmap(CursorPack pack) {
+        try {
+            android.content.Context ctx = getContext();
+            if (ctx == null) return null;
+            Drawable d = ContextCompat.getDrawable(ctx, pack.resId);
+            if (d == null) return null;
+            d = d.mutate();
+            if (pack.tint != null) d.setColorFilter(pack.tint, PorterDuff.Mode.SRC_IN);
+            int size = 96;
+            Bitmap bmp;
+            if (d instanceof BitmapDrawable && pack.tint == null) {
+                bmp = BitmapFactory.decodeResource(getResources(), pack.resId);
+            } else {
+                bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+                Canvas canvas = new Canvas(bmp);
+                d.setBounds(0, 0, size, size);
+                d.draw(canvas);
+            }
+            return bmp;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void toggleFavorite() {
+        if (mCurrentPack == null || mFavPrefs == null) return;
+        boolean nowFav = !mFavPrefs.getBoolean(mCurrentPack.id, false);
+        mFavPrefs.edit().putBoolean(mCurrentPack.id, nowFav).apply();
+        // Update the mini heart on the grid card
+        for (View card : mPackCards) {
+            if (card.getTag() == mCurrentPack) {
+                View heart = card.findViewWithTag("fav_" + mCurrentPack.id);
+                if (heart instanceof ImageView) {
+                    ((ImageView) heart).setImageResource(nowFav ? R.drawable.ic_heart_filled : R.drawable.ic_heart_outline);
+                    ((ImageView) heart).setColorFilter(nowFav ? 0xFFFF2D55 : 0xFF666B7E);
+                }
+                break;
+            }
+        }
+        refreshFavoriteButton();
+        if (mFavButton != null && nowFav) {
+            mFavButton.animate().cancel();
+            mFavButton.setScaleX(0.7f); mFavButton.setScaleY(0.7f);
+            mFavButton.animate().scaleX(1f).scaleY(1f).setDuration(240)
+                    .setInterpolator(new OvershootInterpolator(2f)).start();
+        }
+    }
+
+    private void refreshFavoriteButton() {
+        if (mFavButton == null || mCurrentPack == null || mFavPrefs == null) return;
+        boolean fav = mFavPrefs.getBoolean(mCurrentPack.id, false);
+        mFavButton.setImageResource(fav ? R.drawable.ic_heart_filled : R.drawable.ic_heart_outline);
+        mFavButton.setColorFilter(fav ? 0xFFFF2D55 : 0xFFA8ACBF);
+    }
+
+    /** Pulse preview loop whose speed follows the Tuning slider. */
+    private void setupAnimSpeedPanel(@NonNull View view) {
+        SeekBar speed = view.findViewById(R.id.seek_anim_speed);
+        TextView speedText = view.findViewById(R.id.anim_speed_value);
+        if (speed != null) {
+            mAnimSpeedPercent = speed.getProgress();
+            speed.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override public void onProgressChanged(SeekBar s, int progress, boolean fromUser) {
+                    mAnimSpeedPercent = Math.max(0, progress);
+                    if (speedText != null) speedText.setText(mAnimSpeedPercent + "%");
+                    restartPulse();
+                }
+                @Override public void onStartTrackingTouch(SeekBar s) {}
+                @Override public void onStopTrackingTouch(SeekBar s) {}
+            });
+        }
+        if (mPreviewImage != null) mPreviewImage.post(this::restartPulse);
+    }
+
+    private long pulseDuration() {
+        // 0% → 1700ms (calm), 100% → 320ms (energetic)
+        return (long) (1700 - (mAnimSpeedPercent / 100f) * 1380);
+    }
+
+    private void restartPulse() {
+        stopPulse();
+        if (mPreviewImage == null) return;
+        ObjectAnimator sx = ObjectAnimator.ofFloat(mPreviewImage, "scaleX", 1f, 1.07f);
+        ObjectAnimator sy = ObjectAnimator.ofFloat(mPreviewImage, "scaleY", 1f, 1.07f);
+        long dur = pulseDuration();
+        sx.setDuration(dur); sy.setDuration(dur);
+        sx.setRepeatCount(ObjectAnimator.INFINITE);
+        sy.setRepeatCount(ObjectAnimator.INFINITE);
+        sx.setRepeatMode(ObjectAnimator.REVERSE);
+        sy.setRepeatMode(ObjectAnimator.REVERSE);
+        mPulseAnim = new AnimatorSet();
+        mPulseAnim.playTogether(sx, sy);
+        mPulseAnim.setInterpolator(new AccelerateDecelerateInterpolator());
+        mPulseAnim.start();
+    }
+
+    private void stopPulse() {
+        if (mPulseAnim != null) {
+            mPulseAnim.cancel();
+            mPulseAnim = null;
+        }
+    }
+
+    /** Reactive "click test": squash the cursor, then bounce back. */
+    private void setupClickTest(@NonNull View view) {
+        View stage = view.findViewById(R.id.cursor_preview_container);
+        if (stage == null) return;
+        stage.setOnClickListener(v -> playPreviewPop());
+    }
+
+    private void playPreviewPop() {
+        if (mPreviewImage == null) return;
+        stopPulse();
+        mPreviewImage.animate().cancel();
+        mPreviewImage.setScaleX(0.72f);
+        mPreviewImage.setScaleY(0.72f);
+        mPreviewImage.animate().scaleX(1f).scaleY(1f)
+                .setDuration(Math.max(220, pulseDuration() / 2))
+                .setInterpolator(new OvershootInterpolator(2.6f))
+                .withEndAction(() -> {
+                    if (mPreviewImage != null) mPreviewImage.postDelayed(this::restartPulse, 600);
+                })
+                .start();
+    }
+
+    @Override
+    public void onPause() {
+        stopPulse();
+        super.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mPreviewImage != null) mPreviewImage.post(this::restartPulse);
+    }
+
+    @Override
+    public void onDestroyView() {
+        stopPulse();
+        super.onDestroyView();
     }
 }

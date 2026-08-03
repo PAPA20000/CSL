@@ -46,6 +46,11 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     private OnItemClickListener mOnItemClickListener;
 
+    // ── Installed-state context (set by DownloadListFragment) ──
+    private String mInstallProfileKey;
+    private String mInstallContentType = "mod";
+    private java.io.File mInstallContentDir;
+
     public ModItemAdapter(Resources resources, ModpackApi api, SearchResultCallback callback) {
         mModpackApi = api;
         mModItems = new ModItem[]{};
@@ -54,6 +59,27 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     public void setOnItemClickListener(OnItemClickListener listener) {
         this.mOnItemClickListener = listener;
+    }
+
+    /**
+     * Point the adapter at a profile + content type so cards can render
+     * Installed / Update Available states. Null profile disables the feature.
+     */
+    @SuppressLint("NotifyDataSetChanged")
+    public void setInstallContext(String profileKey, String contentType, java.io.File contentDir) {
+        if (java.util.Objects.equals(mInstallProfileKey, profileKey)
+                && java.util.Objects.equals(mInstallContentType, contentType)
+                && java.util.Objects.equals(mInstallContentDir, contentDir)) return;
+        mInstallProfileKey = profileKey;
+        mInstallContentType = contentType == null ? "mod" : contentType;
+        mInstallContentDir = contentDir;
+        notifyDataSetChanged();
+    }
+
+    /** Force a re-render of install states (e.g. after returning to the list). */
+    @SuppressLint("NotifyDataSetChanged")
+    public void refreshInstallStates() {
+        if (mInstallProfileKey != null) notifyDataSetChanged();
     }
 
     public void performSearchQuery(SearchFilters searchFilters) {
@@ -148,7 +174,11 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         private final TextView mDownloadsView;
         private final TextView mDescriptionView;
         private final ImageButton mLikeButton;
+        private final ImageButton mShareButton;
         private final ImageButton mInstallButton;
+        private final View mInstallStatePill;
+        private final ImageView mInstallStateIcon;
+        private final TextView mInstallStateText;
         private ModItem mCurrentItem;
         private final SharedPreferences mLikedPrefs;
 
@@ -169,7 +199,11 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             mDownloadsView = itemView.findViewById(R.id.mod_downloads_text);
             mDescriptionView = itemView.findViewById(R.id.mod_body_textview);
             mLikeButton = itemView.findViewById(R.id.btn_like);
+            mShareButton = itemView.findViewById(R.id.btn_share);
             mInstallButton = itemView.findViewById(R.id.btn_install);
+            mInstallStatePill = itemView.findViewById(R.id.mod_install_state_pill);
+            mInstallStateIcon = itemView.findViewById(R.id.mod_install_state_icon);
+            mInstallStateText = itemView.findViewById(R.id.mod_install_state_text);
             itemView.setOnClickListener(this);
         }
 
@@ -259,11 +293,65 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 }
             });
 
+            applyInstallState(item);
+
+            mShareButton.setOnClickListener(v -> {
+                if (mCurrentItem == null) return;
+                v.animate().cancel();
+                v.setScaleX(0.82f); v.setScaleY(0.82f);
+                v.animate().scaleX(1f).scaleY(1f).setDuration(220)
+                        .setInterpolator(new android.view.animation.OvershootInterpolator(2f)).start();
+                shareModItem(v.getContext(), mCurrentItem);
+            });
+
             mInstallButton.setOnClickListener(v -> {
                 if (mOnItemClickListener != null && mCurrentItem != null) {
                     mOnItemClickListener.onItemClick(mCurrentItem);
                 }
             });
+        }
+
+        /** Real installed-state resolution for the current profile context. */
+        private void applyInstallState(ModItem item) {
+            if (mInstallStatePill == null || mInstallButton == null) return;
+            if (mInstallProfileKey == null || item == null || item.id == null) {
+                mInstallStatePill.setVisibility(View.GONE);
+                mInstallButton.setVisibility(View.VISIBLE);
+                return;
+            }
+            int state = InstalledContentTracker.queryState(
+                    itemView.getContext().getApplicationContext(),
+                    mInstallProfileKey, mInstallContentType, item.id, mInstallContentDir);
+            switch (state) {
+                case InstalledContentTracker.STATE_INSTALLED:
+                    mInstallButton.setVisibility(View.GONE);
+                    mInstallStatePill.setVisibility(View.VISIBLE);
+                    mInstallStatePill.setBackgroundResource(R.drawable.bg_cs_installed_pill);
+                    mInstallStateIcon.setColorFilter(Color.parseColor("#2BD97B"));
+                    mInstallStateText.setText(R.string.cs_installed_profile);
+                    mInstallStateText.setTextColor(Color.parseColor("#8FEBBC"));
+                    break;
+                case InstalledContentTracker.STATE_INSTALLED_NEWER:
+                    mInstallButton.setVisibility(View.GONE);
+                    mInstallStatePill.setVisibility(View.VISIBLE);
+                    mInstallStatePill.setBackgroundResource(R.drawable.bg_cs_installed_pill);
+                    mInstallStateIcon.setColorFilter(Color.parseColor("#2BD97B"));
+                    mInstallStateText.setText(R.string.cs_installed_newer);
+                    mInstallStateText.setTextColor(Color.parseColor("#8FEBBC"));
+                    break;
+                case InstalledContentTracker.STATE_UPDATE_AVAILABLE:
+                    mInstallButton.setVisibility(View.VISIBLE);
+                    mInstallStatePill.setVisibility(View.VISIBLE);
+                    mInstallStatePill.setBackgroundResource(R.drawable.bg_cs_update_pill);
+                    mInstallStateIcon.setColorFilter(Color.parseColor("#FFB020"));
+                    mInstallStateText.setText(R.string.cs_update_available);
+                    mInstallStateText.setTextColor(Color.parseColor("#FFD07A"));
+                    break;
+                default:
+                    mInstallStatePill.setVisibility(View.GONE);
+                    mInstallButton.setVisibility(View.VISIBLE);
+                    break;
+            }
         }
 
         private void loadSlideshowImage(String url, ImageView view, boolean initial) {
@@ -319,6 +407,22 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 mOnItemClickListener.onItemClick(mCurrentItem);
             }
         }
+    }
+
+    /** Share via the project page (Modrinth slug / CF project id / website). */
+    private static void shareModItem(Context context, ModItem item) {
+        String url = item.websiteUrl;
+        if (url == null || url.isEmpty()) {
+            if (item.apiSource == net.kdt.pojavlaunch.modloaders.modpacks.models.Constants.SOURCE_MODRINTH) {
+                url = "https://modrinth.in/project/" + item.id;
+            } else {
+                url = "https://www.curseforge.com/projects/" + item.id;
+            }
+        }
+        android.content.Intent send = new android.content.Intent(android.content.Intent.ACTION_SEND);
+        send.setType("text/plain");
+        send.putExtra(android.content.Intent.EXTRA_TEXT, item.title + " — " + url);
+        context.startActivity(android.content.Intent.createChooser(send, item.title));
     }
 
     private static class LoadingViewHolder extends RecyclerView.ViewHolder {

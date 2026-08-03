@@ -340,6 +340,15 @@ public class ModVersionPickerFragment extends Fragment {
         mAllVersions.addAll(compatible);
         mAllVersions.addAll(incompatible);
 
+        // Publish the store's latest-known version for card state resolution
+        // (Installed / Update Available / Newer-than-store).
+        try {
+            if (mModItem != null && mModItem.id != null && !mAllVersions.isEmpty() && getContext() != null) {
+                net.kdt.pojavlaunch.modloaders.modpacks.InstalledContentTracker.recordLatestKnown(
+                        requireContext(), mContentType, mModItem.id, mAllVersions.get(0).name);
+            }
+        } catch (Exception ignored) {}
+
         mTotalPages = (int) Math.ceil((double) mAllVersions.size() / PAGE_SIZE);
         if (mTotalPages < 1) mTotalPages = 1;
 

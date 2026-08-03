@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- INSTALLED STATE PILL — soft green glass with strong success border. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="20dp" />
+    <solid android:color="#1A2BD97B" />
+    <stroke android:width="1dp" android:color="#592BD97B" />
+</shape>

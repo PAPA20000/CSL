@@ -174,6 +174,7 @@ public class ModsSearchFragment extends Fragment {
                                               @NonNull View v, @Nullable Bundle savedInstanceState) {
                 if (f instanceof DownloadListFragment) {
                     DownloadListFragment dlf = (DownloadListFragment) f;
+                    dlf.setProfileKey(mProfileKey);
                     String type = dlf.getContentType();
                     for (int i = 0; i < TAB_TYPES.length; i++) {
                         if (TAB_TYPES[i].equals(type)) {

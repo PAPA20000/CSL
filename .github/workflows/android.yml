@@ -94,7 +94,9 @@ jobs:
           ./scripts/languagelist_updater.sh
           mkdir -p out
 
-      # ── Release APK (PRIMARY — signed, shrunk) ───────────────────────────────
+      # ── Release APK (ONE AND ONLY BUILD — signed, shrunk) ────────────────────
+      # Single clean artifact: CS-LAUNCHER-V3.apk
+      # No DEBUG build, no NO-RUNTIME build, no run-number / timestamp clutter.
       - name: Build Release APK
         run: |
           SIGNING_ARGS=""
@@ -112,93 +114,52 @@ jobs:
           RELEASE_APK=$(find app_pojavlauncher/build/outputs/apk/release -name "*.apk" | head -n 1)
           if [ -n "$RELEASE_APK" ]; then
             cp "$RELEASE_APK" out/CS-LAUNCHER-V3.apk
-            md5sum  out/CS-LAUNCHER-V3.apk > out/CS-LAUNCHER-V3.md5
+            md5sum    out/CS-LAUNCHER-V3.apk > out/CS-LAUNCHER-V3.md5
             sha256sum out/CS-LAUNCHER-V3.apk > out/CS-LAUNCHER-V3.sha256
           else
             echo "ERROR: Release APK not found" && exit 1
           fi
 
-      # ── Debug APK (internal / QA only) ───────────────────────────────────────
-      - name: Build Debug APK
-        run: |
-          ./gradlew :app_pojavlauncher:assembleDebug \
-            --no-daemon
-
-          DEBUG_APK=$(find app_pojavlauncher/build/outputs/apk/debug -name "*.apk" | head -n 1)
-          if [ -n "$DEBUG_APK" ]; then
-            cp "$DEBUG_APK" out/CS-LAUNCHER-V3-DEBUG.apk
-            md5sum out/CS-LAUNCHER-V3-DEBUG.apk > out/CS-LAUNCHER-V3-DEBUG.md5
-          fi
-
-      # ── No-runtime APK ───────────────────────────────────────────────────────
-      - name: Build APK without runtime
-        run: |
-          rm -rf app_pojavlauncher/src/main/assets/components/jre
-          rm -rf app_pojavlauncher/src/main/assets/components/jre-new
-          rm -rf app_pojavlauncher/src/main/assets/components/jre-21
-          rm -rf app_pojavlauncher/src/main/assets/components/jre-25
-
-          ./gradlew :app_pojavlauncher:assembleRelease \
-            -Pandroid.enableR8.fullMode=true \
-            --no-daemon
-
-          NORUNTIME_APK=$(find app_pojavlauncher/build/outputs/apk/release -name "*.apk" | head -n 1)
-          if [ -n "$NORUNTIME_APK" ]; then
-            cp "$NORUNTIME_APK" out/CS-LAUNCHER-V3-NO-RUNTIME.apk
-            md5sum    out/CS-LAUNCHER-V3-NO-RUNTIME.apk > out/CS-LAUNCHER-V3-NO-RUNTIME.md5
-            sha256sum out/CS-LAUNCHER-V3-NO-RUNTIME.apk > out/CS-LAUNCHER-V3-NO-RUNTIME.sha256
-          fi
-
       # ── APK size report ──────────────────────────────────────────────────────
       - name: APK size report
         run: |
-          echo "## APK Size Report" >> $GITHUB_STEP_SUMMARY
+          SIZE=$(du -sh out/CS-LAUNCHER-V3.apk | cut -f1)
+          echo "## APK Size" >> $GITHUB_STEP_SUMMARY
           echo "| File | Size |" >> $GITHUB_STEP_SUMMARY
           echo "|------|------|" >> $GITHUB_STEP_SUMMARY
-          for f in out/*.apk; do
-            SIZE=$(du -sh "$f" | cut -f1)
-            echo "| $(basename $f) | $SIZE |" >> $GITHUB_STEP_SUMMARY
-          done
+          echo "| CS-LAUNCHER-V3.apk | $SIZE |" >> $GITHUB_STEP_SUMMARY
 
-      # ── Upload all artifacts ─────────────────────────────────────────────────
-      # Kept short-lived and slim on purpose (~265 MB instead of ~529 MB):
-      # every push attaches BOTH APKs to the GitHub Release below from out/
-      # directly, so run artifacts are a convenience copy only. The step is
-      # non-blocking because account-level artifact quota recalculation lags
-      # deletions by 6-12h and must never fail an otherwise good build.
-      - name: Upload artifacts
+      # ── Upload artifact ──────────────────────────────────────────────────────
+      # Clean static name — no run-number / timestamp suffixes.
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         continue-on-error: true
         with:
-          name: cs-launcher-v3-build-${{ github.run_number }}
+          name: CS-LAUNCHER-V3
           path: |
             out/CS-LAUNCHER-V3.apk
             out/CS-LAUNCHER-V3.md5
             out/CS-LAUNCHER-V3.sha256
           retention-days: 2
 
-      # ── GitHub Release (manual only) ─────────────────────────────────────────
+      # ── GitHub Release (single rolling release, always the latest APK) ───────
+      # One fixed tag "v3" + allowUpdates → the release updates in place on
+      # every main push instead of piling up "Build #N" releases with notes.
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
         with:
-          artifacts: "out/CS-LAUNCHER-V3.apk,out/CS-LAUNCHER-V3.md5,out/CS-LAUNCHER-V3.sha256,out/CS-LAUNCHER-V3-NO-RUNTIME.apk,out/CS-LAUNCHER-V3-NO-RUNTIME.md5,out/CS-LAUNCHER-V3-NO-RUNTIME.sha256"
+          artifacts: "out/CS-LAUNCHER-V3.apk,out/CS-LAUNCHER-V3.md5,out/CS-LAUNCHER-V3.sha256"
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: "v3.${{ github.run_number }}"
-          name: "CS Launcher V3 — Build ${{ github.run_number }}"
+          tag: "v3"
+          name: "CS Launcher V3"
           body: |
-            ## CS Launcher V3 — Build ${{ github.run_number }}
+            ## CS Launcher V3
 
-            **Branch:** `${{ github.ref_name }}`
-            **Commit:** `${{ github.sha }}`
+            **Download:** `CS-LAUNCHER-V3.apk` — signed release build with bundled JRE 8.
 
-            ### Downloads
-            | File | Description |
-            |------|-------------|
-            | `CS-LAUNCHER-V3.apk` | ✅ **Recommended** — Signed release build with bundled JRE 8 |
-            | `CS-LAUNCHER-V3-NO-RUNTIME.apk` | Signed release build without bundled runtime (smaller, requires device JRE) |
-
-            > ℹ️ Verify your download with the `.md5` / `.sha256` checksum files.
+            > Verify integrity with the `.md5` / `.sha256` checksum files.
           allowUpdates: true
-          omitBodyDuringUpdate: false
+          omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
           replacesArtifacts: true

@@ -1,66 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- ════════════════════════════════════════════════════════════════════
-     INSTALL PAGE — full project sheet (Req: detailed third page)
-     Hero • Stats • Gallery • About • Details • Dependencies • Changelog
-     • Links • Sticky white CTA
-════════════════════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════════════════════════════
+     CONTENT DETAIL / INSTALL — CS Premium redesign (Modrinth-style).
+     Hero banner + stat chips + scroll-spy tabs + Install CTA.
+     All legacy IDs preserved for ModInstallFragment.
+     ═══════════════════════════════════════════════════════════════════ -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_install_page"
-    android:clipToPadding="false">
+    android:background="@drawable/bg_cs_page_bg">
 
-    <!-- ── Top Navigation Bar ──────────────────────────────────────── -->
-    <LinearLayout
-        android:id="@+id/install_top_bar"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/_52sdp"
-        android:layout_gravity="top"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="#121217"
-        android:elevation="8dp"
-        android:paddingStart="@dimen/padding_medium"
-        android:paddingEnd="@dimen/padding_medium">
-
-        <ImageButton
-            android:id="@+id/install_back_button"
-            android:layout_width="@dimen/_38sdp"
-            android:layout_height="@dimen/_38sdp"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/global_back"
-            android:padding="@dimen/_8sdp"
-            android:scaleType="centerInside"
-            android:src="@drawable/ic_arrow_back_white"
-            app:tint="#E4E4EA" />
-
-        <TextView
-            android:id="@+id/install_topbar_title"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="@dimen/padding_moderate"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="@string/mod_install_title"
-            android:textColor="#F0F0F3"
-            android:textSize="@dimen/_15ssp"
-            android:textStyle="bold"
-            tools:text="Install" />
-
-    </LinearLayout>
-
-    <!-- ── Scrollable content ──────────────────────────────────────── -->
     <androidx.core.widget.NestedScrollView
         android:id="@+id/install_scroll_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="@dimen/_52sdp"
-        android:layout_marginBottom="96dp"
+        android:layout_marginBottom="@dimen/_64sdp"
         android:clipToPadding="false"
-        android:fillViewport="true"
         android:overScrollMode="never"
         android:scrollbars="none">
 
@@ -68,44 +25,41 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:animateLayoutChanges="true"
-            android:layoutAnimation="@anim/install_page_stagger"
-            android:paddingStart="@dimen/_16sdp"
-            android:paddingTop="@dimen/_16sdp"
-            android:paddingEnd="@dimen/_16sdp"
-            android:paddingBottom="@dimen/_24sdp">
+            android:paddingHorizontal="@dimen/_14sdp"
+            android:paddingTop="@dimen/_14sdp"
+            android:paddingBottom="@dimen/_12sdp">
 
-            <!-- ══ HERO: icon • title • author • selected version ══ -->
-            <LinearLayout
+            <!-- ══ HERO BANNER ══ -->
+            <FrameLayout
                 android:id="@+id/install_hero_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@drawable/bg_install_hero_card"
-                android:padding="@dimen/_16sdp">
+                android:background="@drawable/bg_cs_glass_card"
+                android:clipChildren="true">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="92dp"
+                    android:background="@drawable/bg_cs_hero_aura" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="bottom"
+                    android:padding="@dimen/_16sdp">
 
                     <FrameLayout
-                        android:layout_width="@dimen/_88sdp"
-                        android:layout_height="@dimen/_88sdp">
-
-                        <View
-                            android:layout_width="@dimen/_60sdp"
-                            android:layout_height="@dimen/_60sdp"
-                            android:layout_gravity="center"
-                            android:background="@drawable/bg_icon_glow" />
+                        android:layout_width="@dimen/_78sdp"
+                        android:layout_height="@dimen/_78sdp"
+                        android:background="@drawable/bg_cs_icon_ring"
+                        android:padding="2.5dp">
 
                         <ImageView
                             android:id="@+id/install_mod_icon"
-                            android:layout_width="@dimen/_84sdp"
-                            android:layout_height="@dimen/_84sdp"
-                            android:layout_gravity="center"
-                            android:background="@drawable/bg_gallery_image"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/background_image_rounded"
                             android:clipToOutline="true"
                             android:scaleType="centerCrop"
                             tools:src="@mipmap/ic_launcher_foreground" />
@@ -115,225 +69,180 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_marginStart="@dimen/_14sdp"
+                        android:layout_marginStart="@dimen/_12sdp"
                         android:orientation="vertical">
 
                         <TextView
                             android:id="@+id/install_mod_title"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:ellipsize="end"
                             android:maxLines="2"
-                            android:textColor="#F0F0F3"
+                            android:textColor="#FFFFFF"
                             android:textSize="@dimen/_19ssp"
                             android:textStyle="bold"
                             tools:text="Sodium" />
 
                         <TextView
                             android:id="@+id/install_mod_author"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:textColor="#9C9CA8"
+                            android:textColor="#B8A9FF"
                             android:textSize="@dimen/_12ssp"
                             android:visibility="gone"
-                            tools:text="by jellysquid3"
-                            tools:visibility="visible" />
+                            tools:text="by jellysquid3" />
 
                         <TextView
                             android:id="@+id/install_selected_version_badge"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            android:layout_height="@dimen/_24sdp"
                             android:layout_marginTop="@dimen/_8sdp"
-                            android:background="@drawable/bg_version_badge_accent"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:paddingHorizontal="@dimen/_12sdp"
-                            android:paddingVertical="@dimen/_5sdp"
-                            android:textColor="#0E0E11"
-                            android:textSize="@dimen/_11ssp"
+                            android:background="@drawable/bg_cs_chip_accent"
+                            android:gravity="center"
+                            android:paddingHorizontal="@dimen/_10sdp"
+                            android:textColor="#C9BFFF"
+                            android:textSize="@dimen/_10ssp"
                             android:textStyle="bold"
-                            tools:text="Fabric 1.21.1" />
-
+                            tools:text="mc1.21-0.6.0" />
                     </LinearLayout>
-
                 </LinearLayout>
+            </FrameLayout>
 
-                <!-- ══ Stats row: downloads • followers • license ══ -->
+            <!-- ══ STATS CHIPS ══ -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_12sdp"
+                android:scrollbars="none">
+
                 <LinearLayout
                     android:id="@+id/install_stats_row"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_14sdp"
-                    android:orientation="horizontal"
-                    android:alpha="0">
+                    android:orientation="horizontal">
 
                     <LinearLayout
                         android:id="@+id/install_stat_downloads"
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
+                        android:layout_marginEnd="@dimen/_8sdp"
+                        android:background="@drawable/bg_cs_glass_card_sm"
                         android:gravity="center_horizontal"
-                        android:background="@drawable/bg_install_stat_card"
+                        android:orientation="vertical"
+                        android:paddingHorizontal="@dimen/_16sdp"
                         android:paddingVertical="@dimen/_10sdp">
-
-                        <ImageView
-                            android:layout_width="@dimen/_18sdp"
-                            android:layout_height="@dimen/_18sdp"
-                            android:src="@drawable/ic_download_trend" />
 
                         <TextView
                             android:id="@+id/install_stat_downloads_value"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/_5sdp"
-                            android:maxLines="1"
-                            android:textColor="#F0F0F3"
-                            android:textSize="@dimen/_13ssp"
+                            android:textColor="#FFFFFF"
+                            android:textSize="@dimen/_15ssp"
                             android:textStyle="bold"
-                            tools:text="45.2M" />
+                            tools:text="42M" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="1dp"
-                            android:text="@string/mod_install_stats_downloads"
-                            android:textColor="#7C7C88"
-                            android:textSize="@dimen/_10ssp" />
+                            android:text="Downloads"
+                            android:textColor="#666B7E"
+                            android:textSize="@dimen/_9ssp" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:id="@+id/install_stat_followers"
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="@dimen/_8sdp"
-                        android:orientation="vertical"
+                        android:layout_marginEnd="@dimen/_8sdp"
+                        android:background="@drawable/bg_cs_glass_card_sm"
                         android:gravity="center_horizontal"
-                        android:background="@drawable/bg_install_stat_card"
+                        android:orientation="vertical"
+                        android:paddingHorizontal="@dimen/_16sdp"
                         android:paddingVertical="@dimen/_10sdp">
-
-                        <ImageView
-                            android:layout_width="@dimen/_18sdp"
-                            android:layout_height="@dimen/_18sdp"
-                            android:src="@drawable/ic_heart" />
 
                         <TextView
                             android:id="@+id/install_stat_followers_value"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/_5sdp"
-                            android:maxLines="1"
-                            android:textColor="#F0F0F3"
-                            android:textSize="@dimen/_13ssp"
+                            android:textColor="#FFFFFF"
+                            android:textSize="@dimen/_15ssp"
                             android:textStyle="bold"
-                            tools:text="12.4K" />
+                            tools:text="4.2K" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="1dp"
-                            android:text="@string/mod_install_stats_followers"
-                            android:textColor="#7C7C88"
-                            android:textSize="@dimen/_10ssp" />
+                            android:text="Followers"
+                            android:textColor="#666B7E"
+                            android:textSize="@dimen/_9ssp" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:id="@+id/install_stat_license"
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="@dimen/_8sdp"
-                        android:orientation="vertical"
+                        android:background="@drawable/bg_cs_glass_card_sm"
                         android:gravity="center_horizontal"
-                        android:background="@drawable/bg_install_stat_card"
+                        android:orientation="vertical"
+                        android:paddingHorizontal="@dimen/_16sdp"
                         android:paddingVertical="@dimen/_10sdp">
-
-                        <ImageView
-                            android:layout_width="@dimen/_18sdp"
-                            android:layout_height="@dimen/_18sdp"
-                            android:src="@drawable/ic_license_doc" />
 
                         <TextView
                             android:id="@+id/install_stat_license_value"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/_5sdp"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:textColor="#F0F0F3"
-                            android:textSize="@dimen/_13ssp"
+                            android:textColor="#FFFFFF"
+                            android:textSize="@dimen/_15ssp"
                             android:textStyle="bold"
-                            tools:text="LGPL-3.0" />
+                            tools:text="LGPL" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="1dp"
-                            android:text="@string/mod_install_stats_license"
-                            android:textColor="#7C7C88"
-                            android:textSize="@dimen/_10ssp" />
+                            android:text="License"
+                            android:textColor="#666B7E"
+                            android:textSize="@dimen/_9ssp" />
                     </LinearLayout>
-
                 </LinearLayout>
+            </HorizontalScrollView>
 
-            </LinearLayout>
-
-            <!-- ══ GALLERY: screenshot reel from Modrinth ══ -->
-            <LinearLayout
-                android:id="@+id/install_gallery_section"
+            <!-- ══ SCROLL-SPY TABS ══ -->
+            <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_12sdp"
-                android:orientation="vertical"
-                android:alpha="0"
-                android:visibility="gone">
+                android:layout_marginTop="@dimen/_14sdp"
+                android:scrollbars="none">
 
-                <TextView
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:letterSpacing="0.08"
-                    android:text="@string/mod_install_gallery"
-                    android:textColor="#9C9CA8"
-                    android:textSize="@dimen/_11ssp"
-                    android:textStyle="bold" />
+                    android:orientation="horizontal">
 
-                <HorizontalScrollView
-                    android:id="@+id/install_gallery_scroll"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_8sdp"
-                    android:clipToPadding="false"
-                    android:overScrollMode="never"
-                    android:scrollbars="none">
+                    <TextView android:id="@+id/install_tab_overview" style="@style/CsDetailTab" android:text="Overview" />
+                    <TextView android:id="@+id/install_tab_details" style="@style/CsDetailTab" android:text="Details" />
+                    <TextView android:id="@+id/install_tab_gallery" style="@style/CsDetailTab" android:text="Gallery" />
+                    <TextView android:id="@+id/install_tab_deps" style="@style/CsDetailTab" android:text="Dependencies" />
+                    <TextView android:id="@+id/install_tab_changelog" style="@style/CsDetailTab" android:text="Changelog" />
+                </LinearLayout>
+            </HorizontalScrollView>
 
-                    <LinearLayout
-                        android:id="@+id/install_gallery_container"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal" />
-                </HorizontalScrollView>
-            </LinearLayout>
-
-            <!-- ══ ABOUT: full description body ══ -->
+            <!-- ══ OVERVIEW ══ -->
             <LinearLayout
                 android:id="@+id/install_about_section"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_12sdp"
-                android:orientation="vertical"
-                android:background="@drawable/bg_install_section_card"
-                android:padding="@dimen/_14sdp">
+                style="@style/CsSectionCard"
+                android:layout_marginTop="@dimen/_12sdp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:letterSpacing="0.08"
-                    android:text="@string/mod_install_about"
-                    android:textColor="#9C9CA8"
+                    android:layout_marginBottom="@dimen/_8sdp"
+                    android:letterSpacing="0.18"
+                    android:text="OVERVIEW"
+                    android:textColor="#C9BFFF"
                     android:textSize="@dimen/_11ssp"
                     android:textStyle="bold" />
 
@@ -341,203 +250,227 @@
                     android:id="@+id/install_full_description"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_8sdp"
-                    android:lineSpacingExtra="4dp"
-                    android:textColor="#DADDE5"
+                    android:lineSpacingExtra="3dp"
+                    android:textColor="#B9BECC"
                     android:textSize="@dimen/_13ssp"
-                    tools:text="Sodium is a modern rendering engine and graphical optimization mod for Minecraft." />
-
+                    tools:text="Sodium is a modern rendering engine for Minecraft which greatly improves frame rates and reduces stuttering." />
             </LinearLayout>
 
-            <!-- ══ DETAILS: version • updated • source • chips ══ -->
+            <!-- ══ DETAILS ══ -->
             <LinearLayout
                 android:id="@+id/install_details_section"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_12sdp"
-                android:orientation="vertical"
-                android:background="@drawable/bg_install_section_card"
-                android:padding="@dimen/_14sdp">
+                style="@style/CsSectionCard">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:letterSpacing="0.08"
-                    android:text="@string/mod_install_details"
-                    android:textColor="#9C9CA8"
+                    android:layout_marginBottom="@dimen/_10sdp"
+                    android:letterSpacing="0.18"
+                    android:text="DETAILS"
+                    android:textColor="#C9BFFF"
                     android:textSize="@dimen/_11ssp"
                     android:textStyle="bold" />
 
-                <!-- Version row -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_10sdp"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="@dimen/_8sdp">
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/mod_install_version_label"
-                        android:textColor="#7C7C88"
+                        android:text="Version"
+                        android:textColor="#8B8FA3"
                         android:textSize="@dimen/_12ssp" />
 
                     <TextView
                         android:id="@+id/install_detail_version"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/_10sdp"
-                        android:maxWidth="@dimen/_200sdp"
-                        android:ellipsize="end"
-                        android:maxLines="2"
-                        android:textColor="#F0F0F3"
+                        android:textColor="#FFFFFF"
                         android:textSize="@dimen/_12ssp"
                         android:textStyle="bold"
-                        tools:text="0.5.11 - 1.21.1" />
+                        tools:text="mc1.21-0.6.0" />
                 </LinearLayout>
 
-                <!-- Updated row -->
                 <LinearLayout
                     android:id="@+id/install_detail_updated_row"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_8sdp"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:layout_marginBottom="@dimen/_8sdp">
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/mod_install_last_updated"
-                        android:textColor="#7C7C88"
+                        android:text="Updated"
+                        android:textColor="#8B8FA3"
                         android:textSize="@dimen/_12ssp" />
 
                     <TextView
                         android:id="@+id/install_detail_updated"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/_10sdp"
-                        android:maxLines="1"
-                        android:textColor="#F0F0F3"
+                        android:textColor="#FFFFFF"
                         android:textSize="@dimen/_12ssp"
-                        android:textStyle="bold"
-                        tools:text="02 Nov 2024" />
+                        tools:text="2026-07-20" />
                 </LinearLayout>
 
-                <!-- Source row -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_8sdp"
                     android:orientation="horizontal">
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/mod_install_source_label"
-                        android:textColor="#7C7C88"
+                        android:text="Source"
+                        android:textColor="#8B8FA3"
                         android:textSize="@dimen/_12ssp" />
 
                     <TextView
                         android:id="@+id/install_detail_source"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/_10sdp"
-                        android:maxLines="1"
-                        android:textColor="#F0F0F3"
+                        android:textColor="#FFFFFF"
                         android:textSize="@dimen/_12ssp"
-                        android:textStyle="bold"
                         tools:text="Modrinth" />
                 </LinearLayout>
 
-                <!-- Loaders chips -->
                 <TextView
                     android:id="@+id/install_loaders_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/_12sdp"
-                    android:letterSpacing="0.08"
-                    android:text="@string/mod_install_loaders_label"
-                    android:textColor="#7C7C88"
-                    android:textSize="@dimen/_10ssp"
-                    android:textStyle="bold"
-                    android:visibility="gone" />
+                    android:text="Loaders"
+                    android:textColor="#8B8FA3"
+                    android:textSize="@dimen/_11ssp"
+                    android:textStyle="bold" />
 
-                <com.google.android.material.chip.ChipGroup
+                <LinearLayout
                     android:id="@+id/install_loaders_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    app:chipSpacingHorizontal="@dimen/_6sdp"
-                    app:chipSpacingVertical="0dp"
-                    android:visibility="gone" />
+                    android:layout_marginTop="@dimen/_6sdp"
+                    android:orientation="horizontal" />
 
-                <!-- MC versions chips -->
                 <TextView
                     android:id="@+id/install_mcversions_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_10sdp"
-                    android:letterSpacing="0.08"
-                    android:text="@string/mod_install_mcversions_label"
-                    android:textColor="#7C7C88"
-                    android:textSize="@dimen/_10ssp"
-                    android:textStyle="bold"
-                    android:visibility="gone" />
+                    android:layout_marginTop="@dimen/_12sdp"
+                    android:text="Minecraft Versions"
+                    android:textColor="#8B8FA3"
+                    android:textSize="@dimen/_11ssp"
+                    android:textStyle="bold" />
 
-                <com.google.android.material.chip.ChipGroup
+                <LinearLayout
                     android:id="@+id/install_mcversions_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    app:chipSpacingHorizontal="@dimen/_6sdp"
-                    app:chipSpacingVertical="0dp"
-                    android:visibility="gone" />
+                    android:layout_marginTop="@dimen/_6sdp"
+                    android:orientation="horizontal" />
 
-                <!-- Categories chips -->
                 <TextView
                     android:id="@+id/install_categories_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_10sdp"
-                    android:letterSpacing="0.08"
-                    android:text="@string/mod_install_categories_label"
-                    android:textColor="#7C7C88"
-                    android:textSize="@dimen/_10ssp"
-                    android:textStyle="bold"
-                    android:visibility="gone" />
+                    android:layout_marginTop="@dimen/_12sdp"
+                    android:text="Tags"
+                    android:textColor="#8B8FA3"
+                    android:textSize="@dimen/_11ssp"
+                    android:textStyle="bold" />
 
-                <com.google.android.material.chip.ChipGroup
+                <LinearLayout
                     android:id="@+id/install_categories_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    app:chipSpacingHorizontal="@dimen/_6sdp"
-                    app:chipSpacingVertical="0dp"
-                    android:visibility="gone" />
+                    android:layout_marginTop="@dimen/_6sdp"
+                    android:orientation="horizontal" />
 
+                <!-- Links (visibility-managed by Java) -->
+                <LinearLayout
+                    android:id="@+id/install_links_section"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/_12sdp"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/install_link_website"
+                        style="@style/CsLinkRow"
+                        android:text="🌐  Website" />
+
+                    <TextView
+                        android:id="@+id/install_link_source"
+                        style="@style/CsLinkRow"
+                        android:text="💻  Source Code" />
+
+                    <TextView
+                        android:id="@+id/install_link_issues"
+                        style="@style/CsLinkRow"
+                        android:text="🐛  Issue Tracker" />
+
+                    <TextView
+                        android:id="@+id/install_link_wiki"
+                        style="@style/CsLinkRow"
+                        android:text="📖  Wiki" />
+
+                    <TextView
+                        android:id="@+id/install_link_discord"
+                        style="@style/CsLinkRow"
+                        android:text="💬  Discord" />
+                </LinearLayout>
             </LinearLayout>
 
-            <!-- ══ DEPENDENCIES note ══ -->
+            <!-- ══ GALLERY ══ -->
             <LinearLayout
-                android:id="@+id/install_deps_section"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_12sdp"
-                android:orientation="vertical"
-                android:background="@drawable/bg_install_section_card"
-                android:padding="@dimen/_14sdp"
+                android:id="@+id/install_gallery_section"
+                style="@style/CsSectionCard"
                 android:visibility="gone">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:letterSpacing="0.08"
-                    android:text="@string/mod_install_dep_label"
-                    android:textColor="#9C9CA8"
+                    android:layout_marginBottom="@dimen/_8sdp"
+                    android:letterSpacing="0.18"
+                    android:text="GALLERY"
+                    android:textColor="#C9BFFF"
+                    android:textSize="@dimen/_11ssp"
+                    android:textStyle="bold" />
+
+                <HorizontalScrollView
+                    android:id="@+id/install_gallery_scroll"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/_140sdp"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/install_gallery_container"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal" />
+                </HorizontalScrollView>
+            </LinearLayout>
+
+            <!-- ══ DEPENDENCIES ══ -->
+            <LinearLayout
+                android:id="@+id/install_deps_section"
+                style="@style/CsSectionCard"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/_8sdp"
+                    android:letterSpacing="0.18"
+                    android:text="DEPENDENCIES"
+                    android:textColor="#C9BFFF"
                     android:textSize="@dimen/_11ssp"
                     android:textStyle="bold" />
 
@@ -545,31 +478,24 @@
                     android:id="@+id/install_deps_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_8sdp"
-                    android:lineSpacingExtra="3dp"
-                    android:textColor="#D8C79A"
-                    android:textSize="@dimen/_12ssp"
-                    tools:text="2 required, 1 optional — you will choose before install." />
-
+                    android:lineSpacingExtra="2dp"
+                    android:textColor="#B9BECC"
+                    android:textSize="@dimen/_12ssp" />
             </LinearLayout>
 
-            <!-- ══ CHANGELOG of the selected version ══ -->
+            <!-- ══ CHANGELOG ══ -->
             <LinearLayout
                 android:id="@+id/install_changelog_section"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_12sdp"
-                android:orientation="vertical"
-                android:background="@drawable/bg_install_section_card"
-                android:padding="@dimen/_14sdp"
+                style="@style/CsSectionCard"
                 android:visibility="gone">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:letterSpacing="0.08"
-                    android:text="@string/mod_install_changelog_label"
-                    android:textColor="#9C9CA8"
+                    android:layout_marginBottom="@dimen/_8sdp"
+                    android:letterSpacing="0.18"
+                    android:text="CHANGELOG"
+                    android:textColor="#C9BFFF"
                     android:textSize="@dimen/_11ssp"
                     android:textStyle="bold" />
 
@@ -577,152 +503,72 @@
                     android:id="@+id/install_changelog"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_8sdp"
                     android:lineSpacingExtra="3dp"
-                    android:textColor="#9C9CA8"
-                    android:textSize="@dimen/_12ssp"
-                    tools:text="• Fixed crash on startup" />
-
+                    android:textColor="#B9BECC"
+                    android:textSize="@dimen/_12ssp" />
             </LinearLayout>
-
-            <!-- ══ LINKS: website • source • issues • wiki • discord ══ -->
-            <LinearLayout
-                android:id="@+id/install_links_section"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_12sdp"
-                android:orientation="vertical"
-                android:visibility="gone">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:letterSpacing="0.08"
-                    android:text="@string/mod_install_links_label"
-                    android:textColor="#9C9CA8"
-                    android:textSize="@dimen/_11ssp"
-                    android:textStyle="bold" />
-
-                <com.google.android.material.chip.ChipGroup
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_6sdp"
-                    app:chipSpacingHorizontal="@dimen/_8sdp"
-                    app:chipSpacingVertical="@dimen/_2sdp">
-
-                    <TextView
-                        android:id="@+id/install_link_website"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_link_chip"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:drawablePadding="@dimen/_6sdp"
-                        android:gravity="center_vertical"
-                        android:text="@string/mod_install_link_website"
-                        android:textColor="#E4E4EA"
-                        android:textSize="@dimen/_12ssp"
-                        android:visibility="gone"
-                        app:drawableStartCompat="@drawable/ic_open_external"
-                        tools:visibility="visible" />
-
-                    <TextView
-                        android:id="@+id/install_link_source"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_link_chip"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:drawablePadding="@dimen/_6sdp"
-                        android:gravity="center_vertical"
-                        android:text="@string/mod_install_link_source"
-                        android:textColor="#E4E4EA"
-                        android:textSize="@dimen/_12ssp"
-                        android:visibility="gone"
-                        app:drawableStartCompat="@drawable/ic_open_external"
-                        tools:visibility="visible" />
-
-                    <TextView
-                        android:id="@+id/install_link_issues"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_link_chip"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:drawablePadding="@dimen/_6sdp"
-                        android:gravity="center_vertical"
-                        android:text="@string/mod_install_link_issues"
-                        android:textColor="#E4E4EA"
-                        android:textSize="@dimen/_12ssp"
-                        android:visibility="gone"
-                        app:drawableStartCompat="@drawable/ic_open_external"
-                        tools:visibility="visible" />
-
-                    <TextView
-                        android:id="@+id/install_link_wiki"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_link_chip"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:drawablePadding="@dimen/_6sdp"
-                        android:gravity="center_vertical"
-                        android:text="@string/mod_install_link_wiki"
-                        android:textColor="#E4E4EA"
-                        android:textSize="@dimen/_12ssp"
-                        android:visibility="gone"
-                        app:drawableStartCompat="@drawable/ic_open_external"
-                        tools:visibility="visible" />
-
-                    <TextView
-                        android:id="@+id/install_link_discord"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_link_chip"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:drawablePadding="@dimen/_6sdp"
-                        android:gravity="center_vertical"
-                        android:text="@string/mod_install_link_discord"
-                        android:textColor="#E4E4EA"
-                        android:textSize="@dimen/_12ssp"
-                        android:visibility="gone"
-                        app:drawableStartCompat="@drawable/ic_open_external"
-                        tools:visibility="visible" />
-
-                </com.google.android.material.chip.ChipGroup>
-            </LinearLayout>
-
         </LinearLayout>
-
     </androidx.core.widget.NestedScrollView>
 
-    <!-- ── Sticky bottom CTA ───────────────────────────────────────── -->
+    <!-- ── Top bar ──────────────────────────────────────────────────── -->
     <LinearLayout
+        android:id="@+id/install_top_bar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_52sdp"
+        android:layout_gravity="top"
+        android:background="@drawable/bg_glass_header"
+        android:elevation="6dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="@dimen/padding_medium">
+
+        <ImageButton
+            android:id="@+id/install_back_button"
+            android:layout_width="@dimen/_38sdp"
+            android:layout_height="@dimen/_38sdp"
+            android:background="@drawable/bg_cs_ghost_button"
+            android:contentDescription="@string/global_back"
+            android:padding="@dimen/_9sdp"
+            android:src="@drawable/ic_arrow_back_white"
+            app:tint="#E9E4FF" />
+
+        <TextView
+            android:id="@+id/install_topbar_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_12sdp"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="#FFFFFF"
+            android:textSize="@dimen/_15ssp"
+            android:textStyle="bold"
+            tools:text="Sodium" />
+    </LinearLayout>
+
+    <!-- ── Bottom Install CTA ──────────────────────────────────────── -->
+    <FrameLayout
         android:id="@+id/install_bottom_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:orientation="vertical"
-        android:background="#F2141419"
-        android:elevation="12dp"
+        android:background="#0B0B13"
+        android:elevation="10dp"
         android:paddingHorizontal="@dimen/_16sdp"
-        android:paddingTop="@dimen/_12sdp"
-        android:paddingBottom="@dimen/_14sdp">
+        android:paddingTop="@dimen/_10sdp"
+        android:paddingBottom="@dimen/_12sdp">
 
         <Button
             android:id="@+id/install_button"
-            style="@style/Widget.AppCompat.Button"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/_52sdp"
-            android:background="@drawable/bg_install_cta_white"
-            android:stateListAnimator="@null"
+            android:layout_height="@dimen/_50sdp"
+            android:background="@drawable/bg_cs_primary_button"
+            android:letterSpacing="0.1"
             android:text="@string/mod_install_now"
             android:textAllCaps="true"
-            android:textColor="#0E0E11"
-            android:textSize="@dimen/_15ssp"
+            android:textColor="#FFFFFF"
+            android:textSize="@dimen/_14ssp"
             android:textStyle="bold" />
-
-    </LinearLayout>
+    </FrameLayout>
 
 </FrameLayout>

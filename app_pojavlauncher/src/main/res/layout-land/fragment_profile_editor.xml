@@ -1,670 +1,824 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- ═══════════════════════════════════════════════════════════════════
+     PROFILE STUDIO — CS Premium redesign (landscape)
+     Left: animated section rail. Right: section cards. Same IDs as
+     portrait so fragment logic is shared.
+     ═══════════════════════════════════════════════════════════════════ -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/fragment_profile_editor_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_studio_page"
-    android:id="@+id/fragment_profile_editor_root"
-    android:orientation="vertical"
-    android:animateLayoutChanges="true">
+    android:background="@drawable/bg_cs_page_bg"
+    android:orientation="vertical">
 
-    <!-- Landscape Profile Studio header: profile information remains visible while the editable studio scrolls. -->
-    <LinearLayout
+    <!-- ── HERO HEADER ──────────────────────────────────────────────── -->
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="24dp"
-        android:background="@drawable/bg_studio_header">
-        <ImageView android:layout_width="28dp" android:layout_height="28dp" android:src="@drawable/ic_edit_profile" android:tint="#C9CBD6" />
-        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:orientation="vertical">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="PROFILE STUDIO" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="18sp" android:letterSpacing="0.08" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Configure game, runtime and resources" android:textColor="#8EA0B9" android:textSize="11sp" />
-        </LinearLayout>
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="EDIT MODE" android:textColor="#C9CBD6" android:textStyle="bold" android:textSize="10sp" android:letterSpacing="0.1" />
-    </LinearLayout>
+        android:layout_height="148dp">
 
-    <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fadeScrollbars="true"
-        android:scrollbarSize="3dp"
-        android:overScrollMode="never">
+        <ImageView
+            android:id="@+id/vprof_editor_background_preview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:background="#12101F"
+            tools:src="@tools:sample/backgrounds/scenic" />
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_cs_banner_scrim" />
+
+        <Button
+            android:id="@+id/vprof_editor_background_button"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="12dp"
+            android:minHeight="0dp"
+            android:paddingHorizontal="14dp"
+            android:text="@string/change_background"
+            android:textAllCaps="true"
+            android:textColor="#E9E4FF"
+            android:textSize="10.5sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.06"
+            android:background="@drawable/bg_cs_ghost_button" />
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingHorizontal="28dp"
-            android:background="@drawable/bg_studio_panel"
-            android:layout_marginHorizontal="20dp"
-            android:layout_marginTop="18dp"
-            android:layout_marginBottom="8dp"
-            android:paddingBottom="40dp"
-            android:animateLayoutChanges="true">
+            android:layout_gravity="bottom"
+            android:orientation="horizontal"
+            android:gravity="bottom"
+            android:paddingHorizontal="18dp"
+            android:paddingBottom="12dp">
 
-            <!-- ── PROFILE INFORMATION ── -->
             <FrameLayout
                 android:id="@+id/profile_icon_container"
-                android:layout_width="@dimen/_60sdp"
-                android:layout_height="@dimen/_60sdp"
-                android:layout_marginTop="24dp"
-                android:background="@drawable/bg_profile_icon_glow"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
+                android:layout_width="58dp"
+                android:layout_height="58dp"
+                android:background="@drawable/bg_cs_icon_ring"
+                android:padding="2.5dp">
 
                 <ImageView
                     android:id="@+id/vprof_editor_profile_icon"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:padding="6dp"
+                    android:background="@drawable/bg_profile_icon_rounded"
+                    android:padding="4dp"
                     tools:src="@tools:sample/avatars" />
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="bottom|end"
+                    android:src="@drawable/ic_edit_profile"
+                    android:background="@drawable/background_icon_edit_new"
+                    android:padding="3dp"
+                    android:elevation="4dp" />
             </FrameLayout>
 
-            <ImageView
-                android:layout_width="@dimen/_18sdp"
-                android:layout_height="@dimen/_18sdp"
-                android:src="@drawable/ic_edit_profile"
-                android:background="@drawable/background_icon_edit_new"
-                android:padding="3dp"
-                app:layout_constraintBottom_toBottomOf="@+id/profile_icon_container"
-                app:layout_constraintEnd_toEndOf="@+id/profile_icon_container"
-                android:elevation="4dp"/>
-
-            <!-- Profile Name -->
-            <TextView
-                android:id="@+id/vprof_editor_profile_name_sub"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/profiles_profile_name"
-                android:textColor="#E4E4EA"
-                android:textSize="11sp"
-                android:textAllCaps="true"
-                android:letterSpacing="0.1"
-                android:fontFamily="sans-serif-medium"
-                android:layout_marginBottom="6dp"
-                app:layout_constraintBottom_toTopOf="@+id/vprof_editor_profile_name"
-                app:layout_constraintStart_toStartOf="@+id/vprof_editor_profile_name" />
-
-            <EditText
-                android:id="@+id/vprof_editor_profile_name"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="28dp"
-                android:background="@drawable/background_line_new"
-                android:textSize="14sp"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#555555"
-                android:ems="10"
-                android:hint="@string/unnamed"
-                android:inputType="textPersonName"
-                android:paddingHorizontal="14dp"
-                app:layout_constraintTop_toBottomOf="@id/profile_icon_container" />
-
-            <!-- Profile Background -->
-            <TextView
-                android:id="@+id/vprof_editor_background_sub"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="@string/profile_background"
-                android:textColor="#E4E4EA"
-                android:textSize="11sp"
-                android:textAllCaps="true"
-                android:letterSpacing="0.1"
-                android:fontFamily="sans-serif-medium"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_profile_name" />
-
-            <ImageView
-                android:id="@+id/vprof_editor_background_preview"
-                android:layout_width="0dp"
-                android:layout_height="@dimen/_90sdp"
-                android:layout_marginTop="8dp"
-                android:scaleType="centerCrop"
-                android:background="@drawable/bg_profile_icon_rounded"
-                app:layout_constraintEnd_toStartOf="@+id/vprof_editor_background_button"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_background_sub" />
-
-            <Button
-                android:id="@+id/vprof_editor_background_button"
-                android:layout_width="wrap_content"
-                android:layout_height="48dp"
-                android:layout_marginStart="10dp"
-                android:minHeight="0dp"
-                android:paddingHorizontal="14dp"
-                android:text="@string/change_background"
-                android:textColor="#000000"
-                android:textStyle="bold"
-                android:textSize="12sp"
-                android:background="@drawable/bg_neon_button"
-                android:stateListAnimator="@null"
-                app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_background_preview"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/vprof_editor_background_preview" />
-
-            <!-- Version (per-profile RAM section removed in Phase 5) -->
-            <TextView
-                android:id="@+id/textView4"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="@string/profiles_profile_version"
-                android:textColor="#E4E4EA"
-                android:textSize="11sp"
-                android:textAllCaps="true"
-                android:letterSpacing="0.1"
-                android:fontFamily="sans-serif-medium"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_background_preview" />
-
-            <TextView
-                android:id="@+id/vprof_editor_version_spinner"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_marginTop="6dp"
-                android:layout_marginEnd="10dp"
-                android:background="@drawable/background_line_new"
-                android:hint="@string/version_select_hint"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#555555"
-                android:gravity="center_vertical"
-                android:paddingHorizontal="14dp"
-                android:textSize="14sp"
-                app:layout_constraintEnd_toStartOf="@+id/vprof_editor_version_button"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView4" />
-
-            <Button
-                android:id="@+id/vprof_editor_version_button"
-                android:layout_width="wrap_content"
-                android:layout_height="48dp"
-                android:paddingHorizontal="18dp"
-                android:paddingVertical="0dp"
-                android:minHeight="0dp"
-                android:text="@string/global_select"
-                android:textColor="#000000"
-                android:textStyle="bold"
-                android:textSize="12sp"
-                android:background="@drawable/bg_neon_button"
-                android:stateListAnimator="@null"
-                app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_version_spinner"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/vprof_editor_version_spinner" />
-
-            <!-- Custom Path -->
-            <TextView
-                android:id="@+id/vprof_editor_beginPathView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="Custom Path"
-                android:textColor="#E4E4EA"
-                android:textSize="11sp"
-                android:textAllCaps="true"
-                android:letterSpacing="0.1"
-                android:fontFamily="sans-serif-medium"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_version_spinner" />
-
-            <TextView
-                android:id="@+id/vprof_editor_path"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="10dp"
-                android:background="@drawable/background_line_new"
-                android:ems="10"
-                android:maxLines="2"
-                android:ellipsize="end"
-                android:hint=".minecraft"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#555555"
-                android:gravity="center_vertical"
-                android:paddingHorizontal="14dp"
-                android:textSize="14sp"
-                app:layout_constraintEnd_toStartOf="@id/vprof_editor_path_button"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_beginPathView" />
-
-            <Button
-                android:id="@+id/vprof_editor_path_button"
-                android:layout_width="wrap_content"
-                android:layout_height="48dp"
-                android:paddingHorizontal="18dp"
-                android:minHeight="0dp"
-                android:text="@string/global_select"
-                android:textColor="#000000"
-                android:textStyle="bold"
-                android:textSize="12sp"
-                android:background="@drawable/bg_neon_button"
-                android:stateListAnimator="@null"
-                app:layout_constraintBottom_toBottomOf="@id/vprof_editor_path"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/vprof_editor_path" />
-
-            <!-- ── RUNTIME SETTINGS DIVIDER ── -->
-            <View
-                android:id="@+id/divider1"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="28dp"
-                android:background="@drawable/divider_neon_gradient"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_path"/>
-
-            <TextView
-                android:id="@+id/textView2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="@string/pedit_java_runtime"
-                android:textColor="#E4E4EA"
-                android:textSize="11sp"
-                android:textAllCaps="true"
-                android:letterSpacing="0.1"
-                android:fontFamily="sans-serif-medium"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/divider1" />
-
-            <Spinner
-                android:id="@+id/vprof_editor_spinner_runtime"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/background_line_new"
-                android:paddingHorizontal="10dp"
-                android:popupBackground="#1A1A1A"
-                app:layout_constraintTop_toBottomOf="@+id/textView2" />
-
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/_8sdp"
-                android:paddingHorizontal="@dimen/_10sdp"
-                android:rotation="180"
-                android:src="@drawable/spinner_arrow"
-                app:tint="#E4E4EA"
-                app:layout_constraintBottom_toBottomOf="@id/vprof_editor_spinner_runtime"
-                app:layout_constraintEnd_toEndOf="@id/vprof_editor_spinner_runtime"
-                app:layout_constraintTop_toTopOf="@id/vprof_editor_spinner_runtime" />
-
-            <!-- Renderer -->
-            <TextView
-                android:id="@+id/textView3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="@string/pedit_renderer"
-                android:textColor="#E4E4EA"
-                android:textSize="11sp"
-                android:textAllCaps="true"
-                android:letterSpacing="0.1"
-                android:fontFamily="sans-serif-medium"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_spinner_runtime" />
-
-            <Spinner
-                android:id="@+id/vprof_editor_profile_renderer"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/background_line_new"
-                android:dropDownWidth="match_parent"
-                android:paddingHorizontal="10dp"
-                android:popupBackground="#1A1A1A"
-                app:layout_constraintTop_toBottomOf="@+id/textView3" />
-
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/_8sdp"
-                android:paddingHorizontal="@dimen/_10sdp"
-                android:rotation="180"
-                android:src="@drawable/spinner_arrow"
-                app:tint="#E4E4EA"
-                app:layout_constraintBottom_toBottomOf="@id/vprof_editor_profile_renderer"
-                app:layout_constraintEnd_toEndOf="@id/vprof_editor_profile_renderer"
-                app:layout_constraintTop_toTopOf="@id/vprof_editor_profile_renderer" />
-
-            <!-- JVM Args -->
-            <TextView
-                android:id="@+id/textView6"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="@string/pvc_jvmArgs"
-                android:textColor="#E4E4EA"
-                android:textSize="11sp"
-                android:textAllCaps="true"
-                android:letterSpacing="0.1"
-                android:fontFamily="sans-serif-medium"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_profile_renderer" />
-
-            <EditText
-                android:id="@+id/vprof_editor_jre_args"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/background_line_new"
-                android:ems="10"
-                android:hint="@string/use_global_default"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#555555"
-                android:inputType="text"
-                android:paddingHorizontal="14dp"
-                android:textSize="14sp"
-                app:layout_constraintTop_toBottomOf="@+id/textView6" />
-
-            <!-- Default Control -->
-            <TextView
-                android:id="@+id/textView7"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="@string/default_control"
-                android:textColor="#E4E4EA"
-                android:textSize="11sp"
-                android:textAllCaps="true"
-                android:letterSpacing="0.1"
-                android:fontFamily="sans-serif-medium"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_jre_args" />
-
-            <TextView
-                android:id="@+id/vprof_editor_ctrl_spinner"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="10dp"
-                android:background="@drawable/background_line_new"
-                android:hint="@string/use_global_default"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#555555"
-                android:gravity="center_vertical"
-                android:paddingHorizontal="14dp"
-                android:textSize="14sp"
-                app:layout_constraintEnd_toStartOf="@id/vprof_editor_ctrl_button"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView7" />
-
-            <Button
-                android:id="@+id/vprof_editor_ctrl_button"
-                android:layout_width="wrap_content"
-                android:layout_height="48dp"
-                android:paddingHorizontal="18dp"
-                android:minHeight="0dp"
-                android:text="@string/global_select"
-                android:textColor="#000000"
-                android:textStyle="bold"
-                android:textSize="12sp"
-                android:background="@drawable/bg_neon_button"
-                android:stateListAnimator="@null"
-                app:layout_constraintBottom_toBottomOf="@id/vprof_editor_ctrl_spinner"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/vprof_editor_ctrl_spinner" />
-
-            <!-- ── MODS SECTION ── -->
-            <View
-                android:id="@+id/divider2"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="32dp"
-                android:background="@drawable/divider_neon_gradient"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_ctrl_spinner"/>
-
-            <TextView
-                android:id="@+id/vprof_editor_mods_header"
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="Mods"
-                android:textAllCaps="true"
-                android:textSize="13sp"
-                android:textColor="#E4E4EA"
-                android:textStyle="bold"
-                android:letterSpacing="0.12"
-                android:fontFamily="sans-serif-medium"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/vprof_editor_mods_import"
-                app:layout_constraintTop_toBottomOf="@+id/divider2" />
+                android:layout_weight="1"
+                android:layout_marginStart="14dp"
+                android:orientation="vertical">
 
-            <ImageButton
-                android:id="@+id/vprof_editor_mods_import"
-                android:layout_width="@dimen/_34sdp"
-                android:layout_height="@dimen/_34sdp"
-                android:background="@drawable/bg_icon_button_neon"
-                android:src="@drawable/ic_add"
-                android:padding="6dp"
-                app:tint="#E4E4EA"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/vprof_editor_mods_header"
-                app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_mods_header" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/cs_studio_title"
+                    android:textColor="#8F86C9"
+                    android:textSize="9sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.22" />
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/vprof_editor_mods_recycler"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:nestedScrollingEnabled="false"
-                android:overScrollMode="never"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_mods_header" />
+                <TextView
+                    android:id="@+id/vprof_hdr_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="#FFFFFF"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    tools:text="My Survival World" />
+            </LinearLayout>
 
-            <TextView
-                android:id="@+id/vprof_editor_mods_empty"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/manage_mods_empty"
-                android:textColor="#888888"
-                android:gravity="center"
-                android:padding="20dp"
-                android:background="@drawable/bg_empty_state"
-                android:layout_marginTop="12dp"
-                android:visibility="gone"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_mods_header" />
-
-            <androidx.constraintlayout.widget.Barrier
-                android:id="@+id/vprof_editor_mods_barrier"
+            <HorizontalScrollView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:barrierDirection="bottom"
-                app:constraint_referenced_ids="vprof_editor_mods_recycler,vprof_editor_mods_empty" />
+                android:scrollbars="none">
 
-            <!-- ── RESOURCE PACKS SECTION ── -->
-            <View
-                android:id="@+id/divider3"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="32dp"
-                android:background="@drawable/divider_neon_gradient"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_mods_barrier"/>
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/vprof_editor_resource_packs_header"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="@string/mcl_button_resource_packs"
-                android:textAllCaps="true"
-                android:textSize="13sp"
-                android:textColor="#E4E4EA"
-                android:textStyle="bold"
-                android:letterSpacing="0.12"
-                android:fontFamily="sans-serif-medium"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/vprof_editor_resource_packs_import"
-                app:layout_constraintTop_toBottomOf="@+id/divider3" />
+                    <TextView
+                        android:id="@+id/vprof_hdr_version_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="26dp"
+                        android:gravity="center"
+                        android:paddingHorizontal="11dp"
+                        android:background="@drawable/bg_cs_chip_accent"
+                        android:textColor="#C9BFFF"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold"
+                        tools:text="1.21" />
 
-            <ImageButton
-                android:id="@+id/vprof_editor_resource_packs_import"
-                android:layout_width="@dimen/_34sdp"
-                android:layout_height="@dimen/_34sdp"
-                android:background="@drawable/bg_icon_button_neon"
-                android:src="@drawable/ic_add"
-                android:padding="6dp"
-                app:tint="#E4E4EA"
-                app:layout_constraintEnd_toStartOf="@+id/vprof_editor_resource_packs_folder"
-                app:layout_constraintTop_toTopOf="@+id/vprof_editor_resource_packs_header"
-                app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_resource_packs_header" />
+                    <TextView
+                        android:id="@+id/vprof_hdr_loader_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="26dp"
+                        android:layout_marginStart="6dp"
+                        android:gravity="center"
+                        android:paddingHorizontal="11dp"
+                        android:background="@drawable/bg_cs_chip"
+                        android:textColor="#A8ACBF"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold"
+                        tools:text="Fabric" />
 
-            <ImageButton
-                android:id="@+id/vprof_editor_resource_packs_folder"
-                android:layout_width="@dimen/_34sdp"
-                android:layout_height="@dimen/_34sdp"
-                android:background="@drawable/bg_icon_button_neon"
-                android:src="@drawable/ic_folder"
-                android:padding="6dp"
-                app:tint="#E4E4EA"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/vprof_editor_resource_packs_header"
-                app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_resource_packs_header" />
+                    <TextView
+                        android:id="@+id/vprof_hdr_runtime_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="26dp"
+                        android:layout_marginStart="6dp"
+                        android:gravity="center"
+                        android:paddingHorizontal="11dp"
+                        android:background="@drawable/bg_cs_chip"
+                        android:textColor="#A8ACBF"
+                        android:textSize="10.5sp"
+                        tools:text="Java 21" />
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/vprof_editor_resource_packs_recycler"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:nestedScrollingEnabled="false"
-                android:overScrollMode="never"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_resource_packs_header" />
+                    <TextView
+                        android:id="@+id/vprof_hdr_lastplayed_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="26dp"
+                        android:layout_marginStart="6dp"
+                        android:gravity="center"
+                        android:paddingHorizontal="11dp"
+                        android:background="@drawable/bg_cs_chip"
+                        android:textColor="#A8ACBF"
+                        android:textSize="10.5sp"
+                        tools:text="Played 2d ago" />
 
-            <TextView
-                android:id="@+id/vprof_editor_resource_packs_empty"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="No resource packs installed."
-                android:textColor="#888888"
-                android:gravity="center"
-                android:padding="20dp"
-                android:background="@drawable/bg_empty_state"
-                android:layout_marginTop="12dp"
-                android:visibility="gone"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_resource_packs_header" />
+                    <TextView
+                        android:id="@+id/vprof_hdr_size_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="26dp"
+                        android:layout_marginStart="6dp"
+                        android:gravity="center"
+                        android:paddingHorizontal="11dp"
+                        android:background="@drawable/bg_cs_chip"
+                        android:textColor="#A8ACBF"
+                        android:textSize="10.5sp"
+                        tools:text="842 MB" />
+                </LinearLayout>
+            </HorizontalScrollView>
+        </LinearLayout>
+    </FrameLayout>
 
-            <androidx.constraintlayout.widget.Barrier
-                android:id="@+id/vprof_editor_resource_packs_barrier"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:barrierDirection="bottom"
-                app:constraint_referenced_ids="vprof_editor_resource_packs_recycler,vprof_editor_resource_packs_empty" />
+    <!-- ── BODY: left rail + content ───────────────────────────────── -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
 
-            <!-- ── SHADER PACKS SECTION ── -->
-            <View
-                android:id="@+id/divider4"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="32dp"
-                android:background="@drawable/divider_neon_gradient"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_resource_packs_barrier"/>
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="164dp"
+            android:layout_height="match_parent"
+            android:scrollbars="none"
+            android:paddingHorizontal="10dp"
+            android:paddingTop="12dp">
 
-            <TextView
-                android:id="@+id/vprof_editor_shader_packs_header"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="@string/mcl_button_shader_packs"
-                android:textAllCaps="true"
-                android:textSize="13sp"
-                android:textColor="#E4E4EA"
-                android:textStyle="bold"
-                android:letterSpacing="0.12"
-                android:fontFamily="sans-serif-medium"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/vprof_editor_shader_packs_import"
-                app:layout_constraintTop_toBottomOf="@+id/divider4" />
-
-            <ImageButton
-                android:id="@+id/vprof_editor_shader_packs_import"
-                android:layout_width="@dimen/_34sdp"
-                android:layout_height="@dimen/_34sdp"
-                android:background="@drawable/bg_icon_button_neon"
-                android:src="@drawable/ic_add"
-                android:padding="6dp"
-                app:tint="#E4E4EA"
-                app:layout_constraintEnd_toStartOf="@+id/vprof_editor_shader_packs_folder"
-                app:layout_constraintTop_toTopOf="@+id/vprof_editor_shader_packs_header"
-                app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_shader_packs_header" />
-
-            <ImageButton
-                android:id="@+id/vprof_editor_shader_packs_folder"
-                android:layout_width="@dimen/_34sdp"
-                android:layout_height="@dimen/_34sdp"
-                android:background="@drawable/bg_icon_button_neon"
-                android:src="@drawable/ic_folder"
-                android:padding="6dp"
-                app:tint="#E4E4EA"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/vprof_editor_shader_packs_header"
-                app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_shader_packs_header" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/vprof_editor_shader_packs_recycler"
+            <LinearLayout
+                android:id="@+id/vprof_studio_sidebar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:nestedScrollingEnabled="false"
-                android:overScrollMode="never"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_shader_packs_header" />
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/vprof_editor_shader_packs_empty"
+                <TextView android:id="@+id/vprof_nav_general" style="@style/CsNavRailItem" android:text="@string/cs_section_general" app:drawableStartCompat="@drawable/ic_profile" />
+                <TextView android:id="@+id/vprof_nav_java" style="@style/CsNavRailItem" android:text="@string/cs_section_java" app:drawableStartCompat="@drawable/ic_java_cup" />
+                <TextView android:id="@+id/vprof_nav_memory" style="@style/CsNavRailItem" android:text="@string/cs_section_memory" app:drawableStartCompat="@drawable/ic_setting_ram" />
+                <TextView android:id="@+id/vprof_nav_graphics" style="@style/CsNavRailItem" android:text="@string/cs_section_graphics" app:drawableStartCompat="@drawable/ic_settings_video" />
+                <TextView android:id="@+id/vprof_nav_mods" style="@style/CsNavRailItem" android:text="@string/cs_section_mods" app:drawableStartCompat="@drawable/ic_mc_block" />
+                <TextView android:id="@+id/vprof_nav_rpacks" style="@style/CsNavRailItem" android:text="@string/cs_section_rpacks" app:drawableStartCompat="@drawable/ic_browse_resources" />
+                <TextView android:id="@+id/vprof_nav_shaders" style="@style/CsNavRailItem" android:text="@string/cs_section_shaders" app:drawableStartCompat="@drawable/ic_gif" />
+                <TextView android:id="@+id/vprof_nav_skin" style="@style/CsNavRailItem" android:text="@string/cs_section_skin" app:drawableStartCompat="@drawable/ic_manage_skin" />
+                <TextView android:id="@+id/vprof_nav_cape" style="@style/CsNavRailItem" android:text="@string/cs_section_cape" app:drawableStartCompat="@drawable/ic_profile" />
+                <TextView android:id="@+id/vprof_nav_runtime" style="@style/CsNavRailItem" android:text="@string/cs_section_runtime" app:drawableStartCompat="@drawable/ic_setting_java_runtime" />
+                <TextView android:id="@+id/vprof_nav_advanced" style="@style/CsNavRailItem" android:text="@string/cs_section_advanced" app:drawableStartCompat="@drawable/ic_settings_advanced" />
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/vprof_studio_scroll"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:overScrollMode="never"
+            android:scrollbars="none">
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="No shader packs installed."
-                android:textColor="#888888"
-                android:gravity="center"
-                android:padding="20dp"
-                android:background="@drawable/bg_empty_state"
-                android:layout_marginTop="12dp"
-                android:visibility="gone"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_shader_packs_header" />
+                android:orientation="vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="20dp">
 
-            <androidx.constraintlayout.widget.Barrier
-                android:id="@+id/vprof_editor_shader_packs_barrier"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:barrierDirection="bottom"
-                app:constraint_referenced_ids="vprof_editor_shader_packs_recycler,vprof_editor_shader_packs_empty" />
+                <!-- ══ GENERAL ══ -->
+                <LinearLayout
+                    android:id="@+id/vprof_section_general"
+                    style="@style/CsSectionCard">
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </androidx.core.widget.NestedScrollView>
+                    <TextView style="@style/CsSectionTitle" android:text="@string/cs_section_general" />
 
-    <!-- Bottom Action Buttons -->
+                    <TextView
+                        android:id="@+id/vprof_editor_profile_name_sub"
+                        style="@style/CsFieldLabel"
+                        android:text="@string/profiles_profile_name" />
+
+                    <EditText
+                        android:id="@+id/vprof_editor_profile_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/bg_cs_input_field"
+                        android:hint="@string/unnamed"
+                        android:inputType="textPersonName"
+                        android:paddingHorizontal="14dp"
+                        android:textColor="#FFFFFF"
+                        android:textColorHint="#5A5E70"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/textView4"
+                        style="@style/CsFieldLabel"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/profiles_profile_version" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="6dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/vprof_editor_version_spinner"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_cs_input_field"
+                            android:gravity="center_vertical"
+                            android:hint="@string/version_select_hint"
+                            android:paddingHorizontal="14dp"
+                            android:textColor="#FFFFFF"
+                            android:textColorHint="#5A5E70"
+                            android:textSize="14sp" />
+
+                        <Button
+                            android:id="@+id/vprof_editor_version_button"
+                            style="@style/CsMiniAction"
+                            android:text="@string/global_select" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/vprof_editor_beginPathView"
+                        style="@style/CsFieldLabel"
+                        android:layout_marginTop="16dp"
+                        android:text="Game Directory" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="6dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/vprof_editor_path"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_cs_input_field"
+                            android:ellipsize="end"
+                            android:gravity="center_vertical"
+                            android:hint=".minecraft"
+                            android:maxLines="2"
+                            android:paddingHorizontal="14dp"
+                            android:textColor="#FFFFFF"
+                            android:textColorHint="#5A5E70"
+                            android:textSize="14sp" />
+
+                        <Button
+                            android:id="@+id/vprof_editor_path_button"
+                            style="@style/CsMiniAction"
+                            android:text="@string/global_select" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/vprof_editor_background_sub"
+                        style="@style/CsFieldHint"
+                        android:layout_marginTop="14dp"
+                        android:text="@string/profile_background" />
+                </LinearLayout>
+
+                <!-- ══ JAVA ══ -->
+                <LinearLayout
+                    android:id="@+id/vprof_section_java"
+                    style="@style/CsSectionCard">
+
+                    <TextView style="@style/CsSectionTitle" android:text="@string/cs_section_java" />
+
+                    <TextView
+                        android:id="@+id/textView6"
+                        style="@style/CsFieldLabel"
+                        android:text="@string/pvc_jvmArgs" />
+
+                    <EditText
+                        android:id="@+id/vprof_editor_jre_args"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/bg_cs_input_field"
+                        android:hint="@string/use_global_default"
+                        android:inputType="text"
+                        android:paddingHorizontal="14dp"
+                        android:textColor="#FFFFFF"
+                        android:textColorHint="#5A5E70"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <!-- ══ MEMORY ══ -->
+                <LinearLayout
+                    android:id="@+id/vprof_section_memory"
+                    style="@style/CsSectionCard">
+
+                    <TextView style="@style/CsSectionTitle" android:text="@string/cs_section_memory" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="RAM Allocation"
+                            android:textColor="#D7D9E4"
+                            android:textSize="13.5sp" />
+
+                        <TextView
+                            android:id="@+id/vprof_ram_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="#B8A9FF"
+                            android:textSize="13.5sp"
+                            android:textStyle="bold"
+                            tools:text="4096 MB" />
+                    </LinearLayout>
+
+                    <SeekBar
+                        android:id="@+id/vprof_ram_seekbar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:max="8192"
+                        android:progress="2048"
+                        android:progressDrawable="@drawable/bg_settings_seekbar_progress"
+                        android:thumb="@drawable/bg_settings_seekbar_thumb" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="6dp">
+
+                        <TextView
+                            android:id="@+id/vprof_ram_hint"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/cs_ram_global_hint"
+                            android:textColor="#666B7E"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/vprof_ram_total"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="#666B7E"
+                            android:textSize="11sp"
+                            tools:text="Device: 12 GB" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- ══ GRAPHICS ══ -->
+                <LinearLayout
+                    android:id="@+id/vprof_section_graphics"
+                    style="@style/CsSectionCard">
+
+                    <TextView style="@style/CsSectionTitle" android:text="@string/cs_section_graphics" />
+
+                    <TextView
+                        android:id="@+id/textView3"
+                        style="@style/CsFieldLabel"
+                        android:text="@string/pedit_renderer" />
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="6dp">
+
+                        <Spinner
+                            android:id="@+id/vprof_editor_profile_renderer"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/bg_cs_input_field"
+                            android:dropDownWidth="match_parent"
+                            android:paddingHorizontal="12dp"
+                            android:popupBackground="#14141E" />
+
+                        <ImageView
+                            android:layout_width="wrap_content"
+                            android:layout_height="8dp"
+                            android:layout_gravity="center_vertical|end"
+                            android:layout_marginEnd="14dp"
+                            android:rotation="180"
+                            android:src="@drawable/spinner_arrow"
+                            app:tint="#A8ACBF" />
+                    </FrameLayout>
+                </LinearLayout>
+
+                <!-- ══ MODS ══ -->
+                <LinearLayout
+                    android:id="@+id/vprof_section_mods"
+                    style="@style/CsSectionCard">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/vprof_editor_mods_header"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/cs_section_mods"
+                            android:textAllCaps="true"
+                            android:textColor="#C9BFFF"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.18" />
+
+                        <ImageButton
+                            android:id="@+id/vprof_editor_mods_import"
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
+                            android:background="@drawable/bg_cs_glass_card_sm"
+                            android:contentDescription="@string/cs_section_mods"
+                            android:padding="7dp"
+                            android:src="@drawable/ic_add"
+                            app:tint="#B8A9FF" />
+                    </LinearLayout>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/vprof_editor_mods_recycler"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:nestedScrollingEnabled="false"
+                        android:overScrollMode="never" />
+
+                    <TextView
+                        android:id="@+id/vprof_editor_mods_empty"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_empty_state"
+                        android:gravity="center"
+                        android:padding="20dp"
+                        android:text="@string/manage_mods_empty"
+                        android:textColor="#666B7E"
+                        android:visibility="gone" />
+                </LinearLayout>
+
+                <!-- ══ RESOURCE PACKS ══ -->
+                <LinearLayout
+                    android:id="@+id/vprof_section_rpacks"
+                    style="@style/CsSectionCard">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/vprof_editor_resource_packs_header"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/mcl_button_resource_packs"
+                            android:textAllCaps="true"
+                            android:textColor="#C9BFFF"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.18" />
+
+                        <ImageButton
+                            android:id="@+id/vprof_editor_resource_packs_import"
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
+                            android:layout_marginEnd="8dp"
+                            android:background="@drawable/bg_cs_glass_card_sm"
+                            android:contentDescription="@string/cs_section_rpacks"
+                            android:padding="7dp"
+                            android:src="@drawable/ic_add"
+                            app:tint="#B8A9FF" />
+
+                        <ImageButton
+                            android:id="@+id/vprof_editor_resource_packs_folder"
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
+                            android:background="@drawable/bg_cs_glass_card_sm"
+                            android:contentDescription="@string/cs_section_rpacks"
+                            android:padding="7dp"
+                            android:src="@drawable/ic_folder"
+                            app:tint="#B8A9FF" />
+                    </LinearLayout>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/vprof_editor_resource_packs_recycler"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:nestedScrollingEnabled="false"
+                        android:overScrollMode="never" />
+
+                    <TextView
+                        android:id="@+id/vprof_editor_resource_packs_empty"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_empty_state"
+                        android:gravity="center"
+                        android:padding="20dp"
+                        android:text="No resource packs installed."
+                        android:textColor="#666B7E"
+                        android:visibility="gone" />
+                </LinearLayout>
+
+                <!-- ══ SHADERS ══ -->
+                <LinearLayout
+                    android:id="@+id/vprof_section_shaders"
+                    style="@style/CsSectionCard">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/vprof_editor_shader_packs_header"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/mcl_button_shader_packs"
+                            android:textAllCaps="true"
+                            android:textColor="#C9BFFF"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.18" />
+
+                        <ImageButton
+                            android:id="@+id/vprof_editor_shader_packs_import"
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
+                            android:layout_marginEnd="8dp"
+                            android:background="@drawable/bg_cs_glass_card_sm"
+                            android:contentDescription="@string/cs_section_shaders"
+                            android:padding="7dp"
+                            android:src="@drawable/ic_add"
+                            app:tint="#B8A9FF" />
+
+                        <ImageButton
+                            android:id="@+id/vprof_editor_shader_packs_folder"
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
+                            android:background="@drawable/bg_cs_glass_card_sm"
+                            android:contentDescription="@string/cs_section_shaders"
+                            android:padding="7dp"
+                            android:src="@drawable/ic_folder"
+                            app:tint="#B8A9FF" />
+                    </LinearLayout>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/vprof_editor_shader_packs_recycler"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:nestedScrollingEnabled="false"
+                        android:overScrollMode="never" />
+
+                    <TextView
+                        android:id="@+id/vprof_editor_shader_packs_empty"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_empty_state"
+                        android:gravity="center"
+                        android:padding="20dp"
+                        android:text="No shader packs installed."
+                        android:textColor="#666B7E"
+                        android:visibility="gone" />
+                </LinearLayout>
+
+                <!-- ══ SKIN ══ -->
+                <LinearLayout
+                    android:id="@+id/vprof_section_skin"
+                    style="@style/CsSectionCard">
+
+                    <TextView style="@style/CsSectionTitle" android:text="@string/cs_section_skin" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Change your account skin, preview it and apply it to this profile."
+                        android:textColor="#8B8FA3"
+                        android:textSize="12sp"
+                        android:lineSpacingExtra="2dp" />
+
+                    <Button
+                        android:id="@+id/vprof_btn_open_skins"
+                        style="@style/CsWideGhostAction"
+                        android:text="Open Skin Studio" />
+                </LinearLayout>
+
+                <!-- ══ CAPE ══ -->
+                <LinearLayout
+                    android:id="@+id/vprof_section_cape"
+                    style="@style/CsSectionCard">
+
+                    <TextView style="@style/CsSectionTitle" android:text="@string/cs_section_cape" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Capes linked to your Microsoft account can be selected from the Skin Studio."
+                        android:textColor="#8B8FA3"
+                        android:textSize="12sp"
+                        android:lineSpacingExtra="2dp" />
+
+                    <Button
+                        android:id="@+id/vprof_btn_open_capes"
+                        style="@style/CsWideGhostAction"
+                        android:text="Open Cape Picker" />
+                </LinearLayout>
+
+                <!-- ══ RUNTIME ══ -->
+                <LinearLayout
+                    android:id="@+id/vprof_section_runtime"
+                    style="@style/CsSectionCard">
+
+                    <TextView style="@style/CsSectionTitle" android:text="@string/cs_section_runtime" />
+
+                    <TextView
+                        android:id="@+id/textView2"
+                        style="@style/CsFieldLabel"
+                        android:text="@string/pedit_java_runtime" />
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="6dp">
+
+                        <Spinner
+                            android:id="@+id/vprof_editor_spinner_runtime"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/bg_cs_input_field"
+                            android:paddingHorizontal="12dp"
+                            android:popupBackground="#14141E" />
+
+                        <ImageView
+                            android:layout_width="wrap_content"
+                            android:layout_height="8dp"
+                            android:layout_gravity="center_vertical|end"
+                            android:layout_marginEnd="14dp"
+                            android:rotation="180"
+                            android:src="@drawable/spinner_arrow"
+                            app:tint="#A8ACBF" />
+                    </FrameLayout>
+                </LinearLayout>
+
+                <!-- ══ ADVANCED ══ -->
+                <LinearLayout
+                    android:id="@+id/vprof_section_advanced"
+                    style="@style/CsSectionCard">
+
+                    <TextView style="@style/CsSectionTitle" android:text="@string/cs_section_advanced" />
+
+                    <TextView
+                        android:id="@+id/textView7"
+                        style="@style/CsFieldLabel"
+                        android:text="@string/default_control" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="6dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/vprof_editor_ctrl_spinner"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_cs_input_field"
+                            android:gravity="center_vertical"
+                            android:hint="@string/use_global_default"
+                            android:paddingHorizontal="14dp"
+                            android:textColor="#FFFFFF"
+                            android:textColorHint="#5A5E70"
+                            android:textSize="14sp" />
+
+                        <Button
+                            android:id="@+id/vprof_editor_ctrl_button"
+                            style="@style/CsMiniAction"
+                            android:text="@string/global_select" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+    </LinearLayout>
+
+    <!-- ── BOTTOM ACTION BAR ───────────────────────────────────────── -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingHorizontal="20dp"
-        android:paddingVertical="14dp"
-        android:background="#0F0F0F"
-        android:elevation="8dp">
+        android:gravity="center_vertical"
+        android:background="#0B0B13"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="12dp"
+        android:elevation="10dp">
 
-        <com.kdt.mcgui.MineButton
-            android:id="@+id/vprof_editor_save_button"
+        <Button
+            android:id="@+id/vprof_editor_cancel_button"
             android:layout_width="0dp"
             android:layout_height="50dp"
             android:layout_weight="1"
-            android:text="@string/global_save"
-            android:textColor="#000000"
+            android:layout_marginEnd="10dp"
+            android:text="@string/cs_cancel"
+            android:textAllCaps="true"
+            android:textColor="#A8ACBF"
+            android:textSize="13sp"
             android:textStyle="bold"
-            android:textSize="14sp"
-            android:background="@drawable/bg_save_button_neon"
-            android:stateListAnimator="@null"
-            android:layout_marginEnd="8dp" />
+            android:letterSpacing="0.08"
+            android:background="@drawable/bg_cs_ghost_button" />
 
-        <com.kdt.mcgui.MineButton
+        <Button
+            android:id="@+id/vprof_editor_save_button"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1.35"
+            android:layout_marginEnd="10dp"
+            android:text="@string/global_save"
+            android:textAllCaps="true"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.1"
+            android:elevation="6dp"
+            android:background="@drawable/bg_cs_primary_button" />
+
+        <Button
             android:id="@+id/vprof_editor_delete_button"
             android:layout_width="0dp"
             android:layout_height="50dp"
             android:layout_weight="1"
             android:text="@string/global_delete"
-            android:textColor="#FF4444"
+            android:textAllCaps="true"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
             android:textStyle="bold"
-            android:textSize="14sp"
-            android:background="@drawable/bg_delete_button"
-            android:stateListAnimator="@null"
-            android:layout_marginStart="8dp" />
+            android:letterSpacing="0.08"
+            android:background="@drawable/bg_cs_danger_button" />
     </LinearLayout>
 </LinearLayout>

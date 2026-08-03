@@ -285,6 +285,58 @@ public class ModInstallFragment extends Fragment {
             // Restore software layer after animation completes
             view.postDelayed(() -> { if (isAdded()) view.setLayerType(View.LAYER_TYPE_NONE, null); }, 500);
         });
+
+        setupDetailTabs(view);
+    }
+
+    /** CS Premium: scroll-spy tabs — tap a tab to glide to its section card. */
+    private void setupDetailTabs(@NonNull View view) {
+        TextView topTitle = view.findViewById(R.id.install_topbar_title);
+        if (topTitle != null && mModItem != null) topTitle.setText(mModItem.title);
+
+        final int[] tabs = { R.id.install_tab_overview, R.id.install_tab_details,
+                R.id.install_tab_gallery, R.id.install_tab_deps, R.id.install_tab_changelog };
+        final int[] sections = { R.id.install_about_section, R.id.install_details_section,
+                R.id.install_gallery_section, R.id.install_deps_section, R.id.install_changelog_section };
+        final View scroll = view.findViewById(R.id.install_scroll_content);
+
+        for (int i = 0; i < tabs.length; i++) {
+            final int idx = i;
+            View tab = view.findViewById(tabs[i]);
+            if (tab == null) continue;
+            tab.setOnClickListener(v -> {
+                for (int tid : tabs) {
+                    View t = view.findViewById(tid);
+                    if (t instanceof TextView) {
+                        t.setBackgroundResource(R.drawable.bg_cs_tab_pill_idle);
+                        ((TextView) t).setTextColor(android.graphics.Color.parseColor("#8B8FA3"));
+                    }
+                }
+                v.setBackgroundResource(R.drawable.bg_cs_tab_pill_active);
+                ((TextView) v).setTextColor(android.graphics.Color.WHITE);
+
+                View target = view.findViewById(sections[idx]);
+                // Sections stay hidden until their async content lands; fall
+                // back to Overview so the tap always does something useful.
+                if (target == null || target.getVisibility() != View.VISIBLE) {
+                    target = view.findViewById(sections[0]);
+                }
+                if (target != null && scroll instanceof androidx.core.widget.NestedScrollView) {
+                    final View t = target;
+                    v.postDelayed(() -> {
+                        if (!isAdded()) return;
+                        ((androidx.core.widget.NestedScrollView) scroll)
+                                .smoothScrollTo(0, Math.max(0, t.getTop() - 10));
+                    }, 40);
+                }
+            });
+        }
+
+        View first = view.findViewById(tabs[0]);
+        if (first instanceof TextView) {
+            first.setBackgroundResource(R.drawable.bg_cs_tab_pill_active);
+            ((TextView) first).setTextColor(android.graphics.Color.WHITE);
+        }
     }
 
 
@@ -812,6 +864,18 @@ public class ModInstallFragment extends Fragment {
                     if (!isAdded()) return;
                     String msg = ctx.getString(R.string.mod_install_success, fileName);
                     Toast.makeText(ctx, msg, Toast.LENGTH_LONG).show();
+                    // Record the install so store cards show ✓ Installed / Update states
+                    try {
+                        if (mModItem != null && mModItem.id != null) {
+                            String key = mProfileKey;
+                            if (key == null || key.isEmpty()) {
+                                key = net.kdt.pojavlaunch.prefs.LauncherPreferences.DEFAULT_PREF.getString(
+                                        net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_KEY_CURRENT_PROFILE, null);
+                            }
+                            net.kdt.pojavlaunch.modloaders.modpacks.InstalledContentTracker.markInstalled(
+                                    ctx, key, mContentType, mModItem.id, ver, fileName);
+                        }
+                    } catch (Exception ignored) {}
                     // Pop back stack to mod list
                     getParentFragmentManager().popBackStack(
                             ModsSearchFragment.TAG,

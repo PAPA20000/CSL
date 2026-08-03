@@ -1,5 +1,6 @@
 package net.kdt.pojavlaunch.fragments;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
@@ -7,6 +8,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Base64;
 import android.util.Base64OutputStream;
 import android.util.Log;
@@ -14,13 +17,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
+import android.view.animation.OvershootInterpolator;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.animation.LayoutTransition;
-import android.view.animation.DecelerateInterpolator;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.ImageButton;
@@ -82,6 +87,25 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
     private TextView mDefaultPath, mDefaultVersion, mDefaultControl;
     private ImageView mProfileIcon;
     private ImageView mProfileBackground;
+
+    // ── CS Premium Studio additions ──
+    private Button mCancelButton;
+    private TextView mHdrName, mHdrVersion, mHdrLoader, mHdrRuntime, mHdrLastPlayed, mHdrSize;
+    private View mScrollView;
+    private SeekBar mRamSeekbar;
+    private TextView mRamValue, mRamTotal;
+    private boolean mDeleteArmed = false;
+    private final Runnable mDeleteDisarm = () -> disarmDelete();
+    private final int[] mNavIds = {
+            R.id.vprof_nav_general, R.id.vprof_nav_java, R.id.vprof_nav_memory,
+            R.id.vprof_nav_graphics, R.id.vprof_nav_mods, R.id.vprof_nav_rpacks,
+            R.id.vprof_nav_shaders, R.id.vprof_nav_skin, R.id.vprof_nav_cape,
+            R.id.vprof_nav_runtime, R.id.vprof_nav_advanced };
+    private final int[] mSectionIds = {
+            R.id.vprof_section_general, R.id.vprof_section_java, R.id.vprof_section_memory,
+            R.id.vprof_section_graphics, R.id.vprof_section_mods, R.id.vprof_section_rpacks,
+            R.id.vprof_section_shaders, R.id.vprof_section_skin, R.id.vprof_section_cape,
+            R.id.vprof_section_runtime, R.id.vprof_section_advanced };
     private final CropperUtils.CropperListener mBackgroundCropperListener = new CropperUtils.CropperListener() {
         @Override
         public void onCropped(Bitmap contentBitmap) {
@@ -239,44 +263,7 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
             });
         });
 
-        mDeleteButton.setOnClickListener(v -> {
-            if(LauncherProfiles.mainProfileJson.profiles.size() > 1){
-                ProfileIconCache.dropIcon(mProfileKey);
-                mDeleteButton.setEnabled(false);
-                // JSON write off the main thread
-                mBgExecutor.execute(() -> {
-                    LauncherProfiles.mainProfileJson.profiles.remove(mProfileKey);
-                    LauncherProfiles.write();
-                    // Revoke any home screen shortcuts pointing at the deleted
-                    // profile, otherwise tapping one lands on a dead reference.
-                    try {
-                        net.kdt.pojavlaunch.shortcuts.ProfileShortcutHelper
-                                .removeShortcutsForProfile(requireContext(), mProfileKey);
-                    } catch (Exception ignored) {
-                        // Cleanup is best effort; never block profile deletion.
-                    }
-                    ExtraCore.setValue(ExtraConstants.REFRESH_VERSION_SPINNER, ProfileEditorFragment.DELETED_PROFILE);
-                    mMainHandler.post(() -> {
-                        if (!isAdded()) return;
-                        Fragment parentFrag = getParentFragment();
-                        if (parentFrag instanceof MainMenuFragment) {
-                            MainMenuFragment mmf = (MainMenuFragment) parentFrag;
-                            mmf.clearRightPane();
-                            mmf.reloadSpinner();
-                        } else {
-                            Tools.removeCurrentFragment(requireActivity());
-                        }
-                    });
-                });
-            } else {
-                Fragment parentFrag = getParentFragment();
-                if (parentFrag instanceof MainMenuFragment) {
-                    ((MainMenuFragment) parentFrag).clearRightPane();
-                } else {
-                    Tools.removeCurrentFragment(requireActivity());
-                }
-            }
-        });
+        mDeleteButton.setOnClickListener(v -> onDeleteClicked());
 
 
         View.OnClickListener gameDirListener = getGameDirListener();
@@ -449,6 +436,7 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
                 mDefaultRenderer.setSelection(finalRendererIndex);
 
                 bindPacksAdapters(modsDir, resourcePacksDir, shaderPacksDir);
+                populateHeaderMeta();
 
                 // Hide Mods section for Vanilla & OptiFine profiles only if no mod files exist.
                 if (mTempProfile != null) {
@@ -547,10 +535,29 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
         mResourcePacksImport = view.findViewById(R.id.vprof_editor_resource_packs_import);
         mShaderPacksImport = view.findViewById(R.id.vprof_editor_shader_packs_import);
 
+        // ── CS Premium Studio binds (null-safe for layout variants) ──
+        mCancelButton = view.findViewById(R.id.vprof_editor_cancel_button);
+        mHdrName = view.findViewById(R.id.vprof_hdr_name);
+        mHdrVersion = view.findViewById(R.id.vprof_hdr_version_text);
+        mHdrLoader = view.findViewById(R.id.vprof_hdr_loader_text);
+        mHdrRuntime = view.findViewById(R.id.vprof_hdr_runtime_text);
+        mHdrLastPlayed = view.findViewById(R.id.vprof_hdr_lastplayed_text);
+        mHdrSize = view.findViewById(R.id.vprof_hdr_size_text);
+        mScrollView = view.findViewById(R.id.vprof_studio_scroll);
+        mRamSeekbar = view.findViewById(R.id.vprof_ram_seekbar);
+        mRamValue = view.findViewById(R.id.vprof_ram_value);
+        mRamTotal = view.findViewById(R.id.vprof_ram_total);
+
         // Background image change (separate from the profile icon) — GIF-aware:
         // animated GIFs bypass the cropper so their frames survive.
         view.findViewById(R.id.vprof_editor_background_button)
                 .setOnClickListener(v -> mBackgroundImagePicker.launch(new String[]{"image/*"}));
+
+        setupStudioNav(view);
+        setupStudioButtons(view);
+        setupRamSlider();
+        setupHeaderWatchers();
+        revealStudioCards(view);
     }
 
     /** GIF-aware background picker: GIFs stay animated, everything else is cropped. */
@@ -678,5 +685,307 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
     @Override
     public void onFailed(Exception exception) {
         Tools.showErrorRemote(exception);
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // CS PREMIUM STUDIO — wiring for the redesigned header / nav rail /
+    // bottom action bar / memory card.
+    // ════════════════════════════════════════════════════════════════
+
+    /** Two-step premium delete: first tap arms the button (solid danger +
+        wiggle + label change), second tap actually deletes. Auto-disarms. */
+    private void onDeleteClicked() {
+        if (!mDeleteArmed) {
+            armDelete();
+            return;
+        }
+        disarmDelete();
+        runDeleteProfile();
+    }
+
+    private void armDelete() {
+        if (mDeleteButton == null) return;
+        mDeleteArmed = true;
+        mDeleteButton.setText(R.string.cs_confirm_delete);
+        mDeleteButton.setBackgroundResource(R.drawable.bg_cs_danger_solid_button);
+        mDeleteButton.animate().cancel();
+        mDeleteButton.setScaleX(0.94f);
+        mDeleteButton.setScaleY(0.94f);
+        mDeleteButton.animate().scaleX(1f).scaleY(1f).setDuration(260)
+                .setInterpolator(new OvershootInterpolator(2.4f)).start();
+        mMainHandler.removeCallbacks(mDeleteDisarm);
+        mMainHandler.postDelayed(mDeleteDisarm, 3500);
+    }
+
+    private void disarmDelete() {
+        if (mDeleteButton == null || !mDeleteArmed) return;
+        mDeleteArmed = false;
+        mDeleteButton.setText(R.string.global_delete);
+        mDeleteButton.setBackgroundResource(R.drawable.bg_cs_danger_button);
+    }
+
+    /** Original Pojav delete flow, unchanged aside from the confirm gate. */
+    private void runDeleteProfile() {
+        if(LauncherProfiles.mainProfileJson.profiles.size() > 1){
+            ProfileIconCache.dropIcon(mProfileKey);
+            mDeleteButton.setEnabled(false);
+            mBgExecutor.execute(() -> {
+                LauncherProfiles.mainProfileJson.profiles.remove(mProfileKey);
+                LauncherProfiles.write();
+                try {
+                    net.kdt.pojavlaunch.shortcuts.ProfileShortcutHelper
+                            .removeShortcutsForProfile(requireContext(), mProfileKey);
+                } catch (Exception ignored) {}
+                ExtraCore.setValue(ExtraConstants.REFRESH_VERSION_SPINNER, ProfileEditorFragment.DELETED_PROFILE);
+                mMainHandler.post(() -> {
+                    if (!isAdded()) return;
+                    Fragment parentFrag = getParentFragment();
+                    if (parentFrag instanceof MainMenuFragment) {
+                        MainMenuFragment mmf = (MainMenuFragment) parentFrag;
+                        mmf.clearRightPane();
+                        mmf.reloadSpinner();
+                    } else {
+                        Tools.removeCurrentFragment(requireActivity());
+                    }
+                });
+            });
+        } else {
+            Fragment parentFrag = getParentFragment();
+            if (parentFrag instanceof MainMenuFragment) {
+                ((MainMenuFragment) parentFrag).clearRightPane();
+            } else {
+                Tools.removeCurrentFragment(requireActivity());
+            }
+        }
+    }
+
+    /** Cancel = leave the Studio without persisting (mirrors back navigation). */
+    private void onCancelClicked() {
+        Fragment parentFrag = getParentFragment();
+        if (parentFrag instanceof MainMenuFragment) {
+            ((MainMenuFragment) parentFrag).clearRightPane();
+        } else {
+            Tools.removeCurrentFragment(requireActivity());
+        }
+    }
+
+    private void setupStudioButtons(@NonNull View root) {
+        if (mCancelButton != null) mCancelButton.setOnClickListener(v -> onCancelClicked());
+        net.kdt.pojavlaunch.UiMotion.pressFeedback(
+                mCancelButton, mSaveButton, mDeleteButton);
+        View skins = root.findViewById(R.id.vprof_btn_open_skins);
+        if (skins != null) skins.setOnClickListener(v ->
+                navigateToFragment(SkinManagerFragment.class, SkinManagerFragment.TAG, null));
+        View capes = root.findViewById(R.id.vprof_btn_open_capes);
+        if (capes != null) capes.setOnClickListener(v ->
+                navigateToFragment(SkinManagerFragment.class, SkinManagerFragment.TAG, null));
+    }
+
+    /** Section rail: tap → animated selection + smooth scroll to the card. */
+    private void setupStudioNav(@NonNull View root) {
+        for (int i = 0; i < mNavIds.length; i++) {
+            final int idx = i;
+            View nav = root.findViewById(mNavIds[i]);
+            if (nav == null) continue;
+            nav.setOnClickListener(v -> {
+                selectNav(root, idx);
+                View section = root.findViewById(mSectionIds[idx]);
+                if (section != null
+                        && mScrollView instanceof androidx.core.widget.NestedScrollView) {
+                    ((androidx.core.widget.NestedScrollView) mScrollView)
+                            .smoothScrollTo(0, Math.max(0, section.getTop() - 8));
+                }
+            });
+        }
+        selectNav(root, 0);
+    }
+
+    private void selectNav(@NonNull View root, int selected) {
+        for (int i = 0; i < mNavIds.length; i++) {
+            View nav = root.findViewById(mNavIds[i]);
+            if (nav == null) continue;
+            boolean active = i == selected;
+            if (nav.isSelected() != active) {
+                nav.setSelected(active);
+            }
+            if (active) {
+                nav.animate().cancel();
+                nav.setScaleX(0.92f); nav.setScaleY(0.92f);
+                nav.animate().scaleX(1f).scaleY(1f).setDuration(200)
+                        .setInterpolator(new OvershootInterpolator(1.8f)).start();
+            }
+        }
+    }
+
+    /** Global RAM slider: wired to LauncherPreferences "allocation" (MB). */
+    private void setupRamSlider() {
+        if (mRamSeekbar == null || getContext() == null) return;
+        long totalMb = 4096;
+        try {
+            ActivityManager am = (ActivityManager) requireContext().getSystemService(Context.ACTIVITY_SERVICE);
+            ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+            am.getMemoryInfo(mi);
+            totalMb = mi.totalMem / (1024 * 1024);
+        } catch (Exception ignored) {}
+        int maxMb = (int) Math.min(totalMb, 16384);
+        maxMb = Math.max(1024, (maxMb / 128) * 128);
+        mRamSeekbar.setMax(maxMb);
+
+        int current = LauncherPreferences.PREF_RAM_ALLOCATION;
+        if (current <= 0) current = 2048;
+        mRamSeekbar.setProgress(Math.min(current, maxMb));
+        if (mRamValue != null) mRamValue.setText(mRamSeekbar.getProgress() + " MB");
+        if (mRamTotal != null) mRamTotal.setText("Device: " + (totalMb / 1024f >= 1f
+                ? String.format(java.util.Locale.US, "%.0f", totalMb / 1024f) : String.valueOf(totalMb)) + " GB");
+
+        mRamSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override public void onProgressChanged(SeekBar s, int progress, boolean fromUser) {
+                int snapped = Math.max(256, (progress / 128) * 128);
+                if (fromUser && snapped != progress) s.setProgress(snapped);
+                if (mRamValue != null) mRamValue.setText(snapped + " MB");
+                LauncherPreferences.PREF_RAM_ALLOCATION = snapped;
+                LauncherPreferences.DEFAULT_PREF.edit().putInt("allocation", snapped).apply();
+            }
+            @Override public void onStartTrackingTouch(SeekBar s) {}
+            @Override public void onStopTrackingTouch(SeekBar s) {}
+        });
+    }
+
+    /** Header chips track the editor fields live. */
+    private void setupHeaderWatchers() {
+        if (mDefaultName != null) {
+            mDefaultName.addTextChangedListener(new TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
+                @Override public void onTextChanged(CharSequence s, int a, int b, int c) {
+                    if (mHdrName != null) mHdrName.setText(s);
+                }
+                @Override public void afterTextChanged(Editable s) {}
+            });
+        }
+        if (mDefaultVersion != null) {
+            mDefaultVersion.addTextChangedListener(new TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
+                @Override public void onTextChanged(CharSequence s, int a, int b, int c) {
+                    if (mHdrVersion != null) mHdrVersion.setText(s);
+                    if (mHdrLoader != null) mHdrLoader.setText(resolveLoaderName(s));
+                }
+                @Override public void afterTextChanged(Editable s) {}
+            });
+        }
+        if (mDefaultRuntime != null) {
+            mDefaultRuntime.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+                @Override public void onItemSelected(android.widget.AdapterView<?> p, View v, int pos, long id) {
+                    if (mHdrRuntime == null) return;
+                    Object item = p.getItemAtPosition(pos);
+                    if (item instanceof net.kdt.pojavlaunch.multirt.Runtime) {
+                        String version = ((net.kdt.pojavlaunch.multirt.Runtime) item).versionString;
+                        mHdrRuntime.setText(version != null && !version.isEmpty()
+                                ? "Java " + version.replaceAll("[^0-9.].*$", "")
+                                : ((net.kdt.pojavlaunch.multirt.Runtime) item).name);
+                    } else {
+                        mHdrRuntime.setText(R.string.global_default);
+                    }
+                }
+                @Override public void onNothingSelected(android.widget.AdapterView<?> p) {}
+            });
+        }
+    }
+
+    private static String resolveLoaderName(CharSequence versionId) {
+        if (versionId == null) return "Vanilla";
+        String v = versionId.toString().toLowerCase(java.util.Locale.US);
+        if (v.contains("neoforge")) return "NeoForge";
+        if (v.contains("forge")) return "Forge";
+        if (v.contains("fabric")) return "Fabric";
+        if (v.contains("quilt")) return "Quilt";
+        if (v.contains("liteloader")) return "LiteLoader";
+        if (v.contains("optifine")) return "OptiFine";
+        return "Vanilla";
+    }
+
+    /** Fill the hero header after async profile load (chips + dir size). */
+    private void populateHeaderMeta() {
+        if (mTempProfile == null) return;
+        if (mHdrName != null) mHdrName.setText(mTempProfile.name);
+        if (mHdrVersion != null) mHdrVersion.setText(mTempProfile.lastVersionId);
+        if (mHdrLoader != null) mHdrLoader.setText(resolveLoaderName(mTempProfile.lastVersionId));
+
+        if (mHdrLastPlayed != null) {
+            String rel = formatRelativeTime(mTempProfile.lastUsed);
+            if (rel != null) mHdrLastPlayed.setText("Played " + rel);
+            else mHdrLastPlayed.setVisibility(View.GONE);
+        }
+
+        if (mHdrSize != null) {
+            mHdrSize.setText("…");
+            mBgExecutor.execute(() -> {
+                long bytes = 0;
+                try {
+                    File dir = Tools.getGameDirPath(mTempProfile);
+                    bytes = folderSizeCapped(dir, 0);
+                } catch (Throwable ignored) {}
+                final long total = bytes;
+                mMainHandler.post(() -> {
+                    if (mHdrSize == null || !isAdded()) return;
+                    mHdrSize.setText(total <= 0 ? "Empty" : formatBytes(total));
+                });
+            });
+        }
+    }
+
+    private static long folderSizeCapped(File dir, int depth) {
+        if (dir == null || depth > 6) return 0;
+        File[] files = dir.listFiles();
+        if (files == null) return 0;
+        long sum = 0;
+        for (File f : files) {
+            if (f == null) continue;
+            if (f.isFile()) sum += f.length();
+            else if (f.isDirectory()) sum += folderSizeCapped(f, depth + 1);
+            if (sum > 60L * 1024 * 1024 * 1024) return sum; // cap runaway walks
+        }
+        return sum;
+    }
+
+    private static String formatBytes(long bytes) {
+        double gb = bytes / (1024.0 * 1024 * 1024);
+        if (gb >= 1) return String.format(java.util.Locale.US, "%.1f GB", gb);
+        double mb = bytes / (1024.0 * 1024);
+        return String.format(java.util.Locale.US, "%.0f MB", Math.max(1, mb));
+    }
+
+    private static String formatRelativeTime(String isoDate) {
+        if (isoDate == null || isoDate.isEmpty()) return null;
+        try {
+            // launcher_profiles uses ISO-8601 (e.g. 2026-07-30T12:04:11.000Z)
+            java.time.Instant then = java.time.Instant.parse(isoDate);
+            long secs = java.time.Instant.now().getEpochSecond() - then.getEpochSecond();
+            if (secs < 0) secs = 0;
+            long days = secs / 86400;
+            if (days >= 1) return days + "d ago";
+            long hours = secs / 3600;
+            if (hours >= 1) return hours + "h ago";
+            long mins = secs / 60;
+            return mins >= 1 ? mins + "m ago" : "just now";
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    /** Staggered premium entrance for all section cards (60fps, one-shot). */
+    private void revealStudioCards(@NonNull View root) {
+        int delay = 0;
+        for (int id : mSectionIds) {
+            View card = root.findViewById(id);
+            if (card == null) continue;
+            card.setAlpha(0f);
+            card.setTranslationY(28f);
+            card.animate().alpha(1f).translationY(0f)
+                    .setStartDelay(90 + delay)
+                    .setDuration(300)
+                    .setInterpolator(new DecelerateInterpolator(1.4f))
+                    .start();
+            delay += 45;
+        }
     }
 }

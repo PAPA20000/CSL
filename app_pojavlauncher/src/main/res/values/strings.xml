@@ -895,4 +895,24 @@
     <string name="mp_import_action">Import Modpack</string>
     <string name="mp_paste_code">Paste from Clipboard</string>
 
+
+    <!-- CS Premium redesign — Studio / Store / Cursor -->
+    <string name="cs_studio_title">Profile Studio</string>
+    <string name="cs_cancel">Cancel</string>
+    <string name="cs_confirm_delete">Tap again to delete</string>
+    <string name="cs_installed_profile">Installed in this Profile</string>
+    <string name="cs_update_available">Update Available</string>
+    <string name="cs_installed_newer">Installed (Newer Version)</string>
+    <string name="cs_ram_global_hint">Global default • applies to every profile</string>
+    <string name="cs_section_general">General</string>
+    <string name="cs_section_java">Java</string>
+    <string name="cs_section_memory">Memory</string>
+    <string name="cs_section_graphics">Graphics</string>
+    <string name="cs_section_mods">Mods</string>
+    <string name="cs_section_rpacks">Resource Packs</string>
+    <string name="cs_section_shaders">Shaders</string>
+    <string name="cs_section_skin">Skin</string>
+    <string name="cs_section_cape">Cape</string>
+    <string name="cs_section_runtime">Runtime</string>
+    <string name="cs_section_advanced">Advanced</string>
 </resources>
