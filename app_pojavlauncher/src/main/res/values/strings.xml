@@ -928,6 +928,8 @@
     <string name="cs_world_sort_name">Name</string>
     <string name="cs_world_sort_size">Size</string>
     <string name="cs_world_sort_version">Version</string>
+    <string name="cs_world_loading">Scanning worlds…</string>
+    <string name="cs_world_refresh">Refresh worlds</string>
     <string name="cs_world_empty">No worlds found</string>
     <string name="cs_world_empty_search">No worlds match “%s”</string>
     <string name="cs_world_empty_hint">Play a world once, or import one below</string>

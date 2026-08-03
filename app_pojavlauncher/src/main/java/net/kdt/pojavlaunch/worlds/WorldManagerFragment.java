@@ -75,6 +75,23 @@ public class WorldManagerFragment extends Fragment implements WorldListAdapter.L
     private EditText mSearch;
     private TextView[] mSortChips = new TextView[4];
 
+    // ── Loading / refresh / race-proof scanning (Phase 4 fix) ──
+    private View mLoadingState;
+    private View mRefreshButton;
+    private android.widget.ImageView mRefreshIcon;
+    private final android.os.Handler mHandler =
+            new android.os.Handler(android.os.Looper.getMainLooper());
+    private boolean mScanInFlight;
+    private boolean mScanPending;
+    private int mScanGeneration;
+    private static final String PREF_WORLD_SORT = "world_sort_mode";
+    /** Search debounce: DiffUtil runs 150ms after the last keystroke, not per key. */
+    private final Runnable mSearchDebounce = () -> {
+        if (mAdapter != null && mSearch != null) {
+            mAdapter.setQuery(mSearch.getText() != null ? mSearch.getText().toString() : "");
+        }
+    };
+
     private AlertDialog mProgressDialog;
     private ProgressBar mProgressBar;
     private TextView mProgressText;
@@ -144,15 +161,29 @@ public class WorldManagerFragment extends Fragment implements WorldListAdapter.L
         mList.setHasFixedSize(false);
         mList.setItemViewCacheSize(10);
         mAdapter = new WorldListAdapter(this);
+        // Restore the user's last sort choice (prefers persisted mode over default).
+        mAdapter.setSortMode(LauncherPreferences.DEFAULT_PREF
+                .getInt(PREF_WORLD_SORT, WorldListAdapter.SORT_LAST_PLAYED));
         mList.setAdapter(mAdapter);
 
         setupSortChips(view);
 
+        // Loading veil + manual refresh button
+        mLoadingState = view.findViewById(R.id.world_loading_state);
+        mRefreshButton = view.findViewById(R.id.world_refresh_button);
+        mRefreshIcon = view.findViewById(R.id.world_refresh_icon);
+        if (mRefreshButton != null) {
+            UiMotion.pressFeedback(mRefreshButton);
+            mRefreshButton.setOnClickListener(v -> reloadWorlds(false));
+        }
+
+        // Debounced search: coalesce keystrokes, then run one DiffUtil pass.
         mSearch.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
             @Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
             @Override public void afterTextChanged(Editable s) {
-                if (mAdapter != null) mAdapter.setQuery(s != null ? s.toString() : "");
+                mHandler.removeCallbacks(mSearchDebounce);
+                mHandler.postDelayed(mSearchDebounce, 150);
             }
         });
 
@@ -171,27 +202,84 @@ public class WorldManagerFragment extends Fragment implements WorldListAdapter.L
     @Override
     public void onDestroyView() {
         if (mProgressDialog != null) mProgressDialog.dismiss();
+        mHandler.removeCallbacks(mSearchDebounce);
+        stopRefreshSpin();
         mList.setAdapter(null);
         mList = null;
         mAdapter = null;
+        mLoadingState = null;
+        mRefreshButton = null;
+        mRefreshIcon = null;
         super.onDestroyView();
     }
 
     // ══════════════════════ DATA ══════════════════════
 
+    /**
+     * Scan + enrich worlds off-thread with a generation gate.
+     * Out-of-order completions (double resume, op-finished callbacks) used to
+     * let STALE data overwrite FRESH state — e.g. a deleted world reappeared.
+     * Now every call bumps a generation; only the newest scan may touch the UI,
+     * and at most one re-scan is queued while one is in flight.
+     */
     private void reloadWorlds(boolean firstLoad) {
+        mScanGeneration++;
+        if (mScanInFlight) {
+            mScanPending = true;
+            return;
+        }
+        mScanInFlight = true;
+        final int generation = mScanGeneration;
+        final boolean showLoading = firstLoad || mAdapter == null || mAdapter.getItemCount() == 0;
+        if (showLoading) setLoadingVisible(true);
+        startRefreshSpin();
         final File saves = mSavesDir;
+        final long startedAt = android.os.SystemClock.elapsedRealtime();
         PojavApplication.sExecutorService.execute(() -> {
             List<WorldEntry> worlds = WorldOps.scanWorlds(saves);
             WorldOps.enrich(worlds);
+            long elapsedMs = android.os.SystemClock.elapsedRealtime() - startedAt;
+            android.util.Log.i(TAG, "World scan: " + worlds.size()
+                    + " worlds in " + elapsedMs + "ms from " + saves.getAbsolutePath());
             if (!isAdded()) return;
             requireActivity().runOnUiThread(() -> {
-                if (mAdapter == null || !isAdded()) return;
-                mAdapter.submit(worlds);
-                updateCountAndEmpty(worlds.size());
+                mScanInFlight = false;
+                stopRefreshSpin();
+                if (!isAdded()) return;
+                if (generation != mScanGeneration) {
+                    // A newer scan superseded this one — drop stale data entirely.
+                    runPendingScan();
+                    return;
+                }
+                if (mAdapter != null) mAdapter.submit(worlds);
+                setLoadingVisible(false);
+                updateCountAndEmpty(mAdapter != null ? mAdapter.getItemCount() : worlds.size());
                 refreshStorageCard(requireView());
+                runPendingScan();
             });
         });
+    }
+
+    private void runPendingScan() {
+        if (mScanPending) {
+            mScanPending = false;
+            reloadWorlds(false);
+        }
+    }
+
+    private void setLoadingVisible(boolean visible) {
+        if (mLoadingState != null) mLoadingState.setVisibility(visible ? View.VISIBLE : View.GONE);
+        if (visible && mEmptyState != null) mEmptyState.setVisibility(View.GONE);
+    }
+
+    private void startRefreshSpin() {
+        if (mRefreshIcon == null || mRefreshIcon.getAnimation() != null) return;
+        mRefreshIcon.startAnimation(android.view.animation.AnimationUtils
+                .loadAnimation(mRefreshIcon.getContext(), R.anim.world_refresh_spin));
+    }
+
+    private void stopRefreshSpin() {
+        if (mRefreshIcon != null) mRefreshIcon.clearAnimation();
     }
 
     private void updateCountAndEmpty(int count) {
@@ -248,6 +336,7 @@ public class WorldManagerFragment extends Fragment implements WorldListAdapter.L
             final int mode = i;
             mSortChips[i].setOnClickListener(v -> {
                 if (mAdapter != null) mAdapter.setSortMode(mode);
+                LauncherPreferences.DEFAULT_PREF.edit().putInt(PREF_WORLD_SORT, mode).apply();
                 updateSortChipStyles();
             });
             UiMotion.pressFeedback(mSortChips[i]);

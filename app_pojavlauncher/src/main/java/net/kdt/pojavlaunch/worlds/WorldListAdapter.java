@@ -56,6 +56,17 @@ public final class WorldListAdapter extends RecyclerView.Adapter<WorldListAdapte
     private String mQuery = "";
     private int mSortMode = SORT_LAST_PLAYED;
 
+    /**
+     * CRASH FIX — stable IDs must be UNIQUE per item, forever.
+     * The old implementation used {@code folderName.hashCode()}: two folders can
+     * collide ("Two different ViewHolders have the same stable ID" crash) and a
+     * hash may equal -1 == {@link RecyclerView#NO_ID}, which poisons the
+     * GridLayoutManager recycling path (the "tmp detached view" crash family).
+     * We assign a monotonically increasing long per folderName and skip NO_ID.
+     */
+    private final java.util.HashMap<String, Long> mStableIds = new java.util.HashMap<>();
+    private long mNextStableId = 1L;
+
     public WorldListAdapter(@NonNull Listener listener) {
         mListener = listener;
         setHasStableIds(true);
@@ -63,7 +74,14 @@ public final class WorldListAdapter extends RecyclerView.Adapter<WorldListAdapte
 
     @Override
     public long getItemId(int position) {
-        return mVisible.get(position).stableKey().hashCode();
+        String key = mVisible.get(position).stableKey();
+        Long id = mStableIds.get(key);
+        if (id == null) {
+            id = mNextStableId++;
+            if (id == RecyclerView.NO_ID) id = mNextStableId++; // never hand out NO_ID
+            mStableIds.put(key, id);
+        }
+        return id;
     }
 
     public void submit(@NonNull List<WorldEntry> worlds) {
@@ -185,7 +203,20 @@ public final class WorldListAdapter extends RecyclerView.Adapter<WorldListAdapte
     public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_world, parent, false);
-        return new VH(v);
+        VH vh = new VH(v);
+        // Click listeners are wired ONCE here (not per bind). onBindViewHolder
+        // then performs only pure data-binding — zero lambdas allocated per row.
+        vh.itemView.setOnClickListener(vw -> onHolderClick(vh, false));
+        vh.menu.setOnClickListener(vw -> onHolderClick(vh, true));
+        return vh;
+    }
+
+    private void onHolderClick(@NonNull VH vh, boolean menu) {
+        int pos = vh.getAbsoluteAdapterPosition();
+        if (pos == RecyclerView.NO_POSITION || pos >= mVisible.size()) return;
+        WorldEntry w = mVisible.get(pos);
+        if (menu) mListener.onWorldMenu(w, vh.menu);
+        else mListener.onWorldClick(w);
     }
 
     @Override
@@ -204,9 +235,6 @@ public final class WorldListAdapter extends RecyclerView.Adapter<WorldListAdapte
         h.datapacks.setVisibility(w.datapackCount > 0 ? View.VISIBLE : View.GONE);
 
         bindIcon(h.icon, w);
-
-        h.itemView.setOnClickListener(v -> mListener.onWorldClick(w));
-        h.menu.setOnClickListener(v -> mListener.onWorldMenu(w, v));
 
         // Phase 3 crash fix: the default RecyclerView ItemAnimator owns ALL
         // motion. We never start our own ViewPropertyAnimator on bound rows.
