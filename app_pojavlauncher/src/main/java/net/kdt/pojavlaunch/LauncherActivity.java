@@ -563,6 +563,10 @@ public class LauncherActivity extends BaseActivity {
         ProgressKeeper.addTaskCountListener((mProgressServiceKeeper = new ProgressServiceKeeper(this)));
 
         mSettingsButton.setOnClickListener(mSettingButtonListener);
+
+        // Notification per-download card tapped while the process was cold —
+        // surface the launcher at its downloads console (home root).
+        consumeOpenDownloadsIntent(getIntent());
         ProgressKeeper.addTaskCountListener(mProgressLayout);
         ExtraCore.addExtraListener(ExtraConstants.BACK_PREFERENCE, mBackPreferenceListener);
         ExtraCore.addExtraListener(ExtraConstants.SELECT_AUTH_METHOD, mSelectAuthMethod);
@@ -692,6 +696,21 @@ public class LauncherActivity extends BaseActivity {
         if (isShortcutLaunchRequested(intent)) {
             showBootOverlayInstant();
         }
+        consumeOpenDownloadsIntent(intent);
+    }
+
+    /** Notification tap: a per-download card asked to surface the launcher at
+     *  its downloads console — land on the home root, where the activity-level
+     *  Download Console overlay shows every active/recent download. */
+    private void consumeOpenDownloadsIntent(@Nullable Intent intent) {
+        if (intent == null || !intent.getBooleanExtra("cs_open_downloads", false)) return;
+        intent.removeExtra("cs_open_downloads");
+        if (mFragmentView == null) return;
+        mFragmentView.post(() -> {
+            try {
+                getSupportFragmentManager().popBackStackImmediate("ROOT", 0);
+            } catch (Throwable ignored) {}
+        });
     }
 
     @Override
