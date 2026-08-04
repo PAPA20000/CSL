@@ -212,9 +212,31 @@ public class JavaGUILauncherActivity extends BaseActivity implements View.OnTouc
         }
         Runtime selectedRuntime = MultiRTUtils.forceReread(nearestRuntime);
         int selectedJavaVersion = Math.max(javaVersion, selectedRuntime.javaVersion);
-        // Don't allow versions higher than Java 17 because our caciocavallo implementation does not allow for it
+        // The caciocavallo AWT shim only understands up to Java 17, BUT that cap
+        // applies to the shim JVM — not to the user's runtime fleet. A Java 25
+        // runtime merely happening to be "nearest" must never hard-block a .jar
+        // that only needs <= 17: re-pick the best installed runtime the shim can run.
         if(selectedJavaVersion > 17) {
-            finalErrorDialog(getString(R.string.execute_jar_incompatible_runtime, selectedJavaVersion));
+            Runtime compatibleRuntime = null;
+            for (Runtime candidate : MultiRTUtils.getInstalledRuntimes()) {
+                if (candidate == null) continue;
+                if (candidate.javaVersion > 17 || candidate.javaVersion < javaVersion) continue;
+                if (compatibleRuntime == null || candidate.javaVersion > compatibleRuntime.javaVersion) {
+                    compatibleRuntime = candidate;
+                }
+            }
+            if (compatibleRuntime != null) {
+                Log.i("JavaGUILauncher", "Re-picked Java " + compatibleRuntime.javaVersion
+                        + " for the .jar AWT shim (nearest was Java " + selectedJavaVersion + ")");
+                return compatibleRuntime;
+            }
+            if (javaVersion > 17) {
+                // The installer itself truly needs a newer JVM than the shim supports.
+                finalErrorDialog(getString(R.string.execute_jar_incompatible_runtime, selectedJavaVersion));
+            } else {
+                // Shim-compatible .jar, but nothing <= 17 installed to run it with.
+                finalErrorDialog(getString(R.string.execute_jar_no_compatible_runtime));
+            }
             return null;
         }
         return selectedRuntime;

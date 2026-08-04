@@ -104,4 +104,20 @@ public class ProgressKeeper {
     public static boolean hasOngoingTasks() {
         return getTaskCount() > 0;
     }
+
+    /** Read-only snapshot of every currently tracked record key (system notification layer). */
+    public static synchronized java.util.Set<String> getActiveRecords() {
+        return new java.util.HashSet<>(sProgressStates.keySet());
+    }
+
+    /** Read-only snapshot of a record's last submitted state; null when unknown/finished. */
+    public static synchronized ProgressState getProgressState(String progressRecord) {
+        ProgressState state = sProgressStates.get(progressRecord);
+        if (state == null) return null;
+        ProgressState copy = new ProgressState();
+        copy.progress = state.progress;
+        copy.resid = state.resid;
+        copy.varArg = state.varArg;
+        return copy;
+    }
 }

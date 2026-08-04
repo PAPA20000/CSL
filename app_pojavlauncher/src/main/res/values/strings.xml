@@ -266,6 +266,16 @@
     <string name="use_global_default">(Use global default)</string>
     <string name="default_control">Default controlmap</string>
     <string name="progresslayout_tasks_in_progress">%d tasks in progress</string>
+
+    <!-- ── Download notification actions / states (Phase 5) ── -->
+    <string name="cs_notif_pause">Pause</string>
+    <string name="cs_notif_resume">Resume</string>
+    <string name="cs_notif_stop">Stop</string>
+    <string name="cs_notif_open">Open</string>
+    <string name="cs_notif_paused">Paused</string>
+    <string name="cs_notif_complete_title">Download complete</string>
+    <string name="cs_notif_complete_text">%s finished successfully</string>
+    <string name="execute_jar_no_compatible_runtime">This .jar needs Java 17 or older for its installer UI, but no compatible runtime is installed. Install Java 17 from the Runtime manager and try again.</string>
     <!-- Download Console (v3) — pause / stop / hide controls -->
     <string name="download_console_pause">PAUSE</string>
     <string name="download_console_resume">RESUME</string>
