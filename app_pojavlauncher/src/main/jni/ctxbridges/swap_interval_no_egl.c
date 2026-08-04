@@ -224,9 +224,9 @@ struct ANativeWindow_real
 // endregion
 
 void setNativeWindowSwapInterval(struct ANativeWindow* nativeWindow, int swapInterval) {
-    if(!getenv("POJAV_VSYNC_IN_ZINK")) {
-        return;
-    }
+    // NOTE: the POJAV_VSYNC_IN_ZINK gate moved to the osm caller. This helper
+    // is shared with the GL bridge, which uses it to enforce interval 0
+    // (unlimited FPS) on OEM drivers that silently clamp eglSwapInterval().
     struct ANativeWindow_real* nativeWindowReal = (struct ANativeWindow_real*) nativeWindow;
     if(nativeWindowReal->common.magic != ANDROID_NATIVE_WINDOW_MAGIC) {
         LOGW("ANativeWindow magic does not match. Expected %i, got %i",

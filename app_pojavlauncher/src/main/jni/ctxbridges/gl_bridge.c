@@ -203,10 +203,27 @@ void gl_setup_window() {
     }
 }
 
+// Its not in a .h file because it is shared with osm_bridge.c (same pattern).
+extern void setNativeWindowSwapInterval(struct ANativeWindow* nativeWindow, int swapInterval);
+
 void gl_swap_interval(int swapInterval) {
-    if(pojav_environ->force_vsync) swapInterval = 1;
+    if(pojav_environ->force_vsync) {
+        if(swapInterval != 1) LOGI("VSync forced: clamping swap interval %d -> 1", swapInterval);
+        swapInterval = 1;
+    }
 
     eglSwapInterval_p(g_EglDisplay, swapInterval);
+
+    // Some OEM drivers silently clamp eglSwapInterval() to >= 1 — that was the
+    // exact "FPS stuck at 60/120 even on Unlimited" bug. When the game asks
+    // for UNLIMITED (0), drive the interval straight into the native window
+    // as well, so the request is honored on every driver.
+    if(swapInterval == 0
+       && pojav_environ->mainWindowBundle != NULL
+       && pojav_environ->mainWindowBundle->nativeSurface != NULL) {
+        LOGI("Unlimited FPS requested: forcing native window swap interval 0");
+        setNativeWindowSwapInterval(pojav_environ->mainWindowBundle->nativeSurface, 0);
+    }
 }
 
 JNIEXPORT void JNICALL

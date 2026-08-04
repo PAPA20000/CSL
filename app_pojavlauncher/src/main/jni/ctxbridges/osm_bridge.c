@@ -3,6 +3,7 @@
 //
 #include <malloc.h>
 #include <string.h>
+#include <stdlib.h>
 #include <environ/environ.h>
 #include "osm_bridge.h"
 #define TAG __FILE_NAME__
@@ -136,6 +137,11 @@ void osm_setup_window() {
 }
 
 void osm_swap_interval(int swapInterval) {
+    // The "VSync in Zink" toggle gate lives here (it used to be inside
+    // setNativeWindowSwapInterval, which is now shared with the GL bridge).
+    if(!getenv("POJAV_VSYNC_IN_ZINK")) {
+        return;
+    }
     if(pojav_environ->mainWindowBundle != NULL && pojav_environ->mainWindowBundle->nativeSurface != NULL) {
         setNativeWindowSwapInterval(pojav_environ->mainWindowBundle->nativeSurface, swapInterval);
     }
