@@ -68,9 +68,13 @@ public class LaunchStageView extends FrameLayout
     private boolean mStopped;
     private boolean mPrepareStarted;
     private boolean mRetriedWithStream;     // one cached→live retry, then black stage
+    private boolean mRetriedWithCache;      // one live→cache retry, then black stage
 
     private final Handler mHandler = new Handler(Looper.getMainLooper());
-    private final Runnable mWatchdog = this::fallbackToStatic;
+    private final Runnable mWatchdog = () -> {
+        Log.w(TAG, "video: watchdog timeout (" + WATCHDOG_MS + "ms) — classic stage");
+        fallbackToStatic();
+    };
 
     public LaunchStageView(@NonNull Context context) { super(context); }
     public LaunchStageView(@NonNull Context context, @Nullable AttributeSet attrs) { super(context, attrs); }
@@ -114,20 +118,42 @@ public class LaunchStageView extends FrameLayout
         if (mStaticStage == null && getChildCount() > 0) mStaticStage = getChildAt(0);
         if (sGameRendering) return;
 
+        // Step-logged gates: every decision lands in logcat (tag above), so a
+        // silently-black launch is diagnosable gate-by-gate.
         String mode;
         try {
-            mode = LauncherPreferences.DEFAULT_PREF != null
-                    ? LauncherPreferences.DEFAULT_PREF.getString(PREF_KEY_STYLE, STYLE_BLACK)
-                    : STYLE_BLACK;
-        } catch (Throwable t) { return; }
-        if (!STYLE_VIDEO.equals(mode)) return;          // user keeps black screen
+            android.content.SharedPreferences prefs = LauncherPreferences.DEFAULT_PREF;
+            String src = "DEFAULT_PREF";
+            if (prefs == null) { // robust: read the settings file directly
+                prefs = getContext().getSharedPreferences("cslauncher_settings", Context.MODE_PRIVATE);
+                src = "direct-file";
+            }
+            mode = prefs.getString(PREF_KEY_STYLE, STYLE_BLACK);
+            Log.i(TAG, "bind: loadingScreenStyle=" + mode + " (prefs=" + src + ")");
+        } catch (Throwable t) { Log.w(TAG, "bind: style read failed", t); return; }
+        if (!STYLE_VIDEO.equals(mode)) {
+            Log.i(TAG, "bind: classic stage (user picked black)");
+            return;
+        }
 
         String url = RemoteConfigManager.getLoadingVideoUrl(getContext());
-        if (url == null || url.trim().isEmpty()) return; // remotely disabled
-        try { if (!Tools.isOnline(getContext())) return; } catch (Throwable ignored) {}
+        Log.i(TAG, "bind: remote config url=" + url);
+        if (url == null || url.trim().isEmpty()) {
+            // Cold-start race: the launcher process fetch may not have
+            // persisted yet. Fetch HERE (this process) and upgrade mid-load
+            // if a fresh config lands before the game renders.
+            RemoteConfigManager.refreshAsync(getContext(), this::onRemoteConfigUpdated);
+            Log.i(TAG, "bind: classic stage for now (config absent — refresh kicked + rebind armed)");
+            return;
+        }
+        boolean online;
+        try { online = Tools.isOnline(getContext()); } catch (Throwable t) { online = false; }
+        Log.i(TAG, "bind: online=" + online);
+        if (!online) { Log.i(TAG, "bind: classic stage (offline)"); return; }
 
         mVideoUrl = url.trim();
         mRetriedWithStream = false;
+        mRetriedWithCache = false;
 
         // Cache-first resolution: same URL → play from cache instantly;
         // miss/changed URL → stream now and prefetch in the background so the
@@ -135,19 +161,32 @@ public class LaunchStageView extends FrameLayout
         File cached = LoadingVideoCache.getValidCache(getContext(), mVideoUrl);
         if (cached != null) {
             mVideoFile = cached;
+            Log.i(TAG, "bind: cache HIT (" + cached.length() + " bytes) — instant local play");
         } else {
             mVideoFile = null;
+            Log.i(TAG, "bind: cache MISS — streaming now, prefetch in background");
             LoadingVideoCache.downloadAsync(getContext(), mVideoUrl);
         }
 
         // TextureView (not SurfaceView): obeys normal view compositing, so the
         // static stage stays visible underneath until the first video frame.
         mVideoView = new TextureView(getContext());
-        mVideoView.setVisibility(View.GONE);
+        // VISIBLE + alpha 0 — a GONE TextureView NEVER receives a SurfaceTexture,
+        // so playback could never even start (this was the silent root cause of
+        // "video never shows"). The fade below handles the reveal instead.
+        mVideoView.setVisibility(View.VISIBLE);
+        mVideoView.setAlpha(0f);
         mVideoView.setSurfaceTextureListener(this);
         addView(mVideoView, new FrameLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         mHandler.postDelayed(mWatchdog, WATCHDOG_MS);
+    }
+
+    /** Fresh config landed after we had fallen back — upgrade mid-load if still safe. */
+    private void onRemoteConfigUpdated() {
+        if (mStopped || sGameRendering || mVideoView != null) return;
+        Log.i(TAG, "config updated during load — re-binding for video");
+        bind();
     }
 
     // ───────────────────────── streaming ─────────────────────────
@@ -166,6 +205,9 @@ public class LaunchStageView extends FrameLayout
         try {
             MediaPlayer mp = new MediaPlayer();
             mPlayer = mp;
+            Log.i(TAG, "video: preparing "
+                    + (mVideoFile != null ? "cache-file (" + mVideoFile.length() + " bytes)"
+                    : "stream " + mVideoUrl));
             if (mVideoFile != null) mp.setDataSource(mVideoFile.getAbsolutePath());
             else mp.setDataSource(getContext(), Uri.parse(mVideoUrl));
             mp.setSurface(new Surface(mSurface));
@@ -179,14 +221,18 @@ public class LaunchStageView extends FrameLayout
             });
             mp.setOnInfoListener((p, what, extra) -> {
                 if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START && mVideoView != null) {
+                    Log.i(TAG, "video: first frame rendered — revealing");
                     mHandler.removeCallbacks(mWatchdog);
-                    mVideoView.setVisibility(View.VISIBLE);
-                    mVideoView.setAlpha(0f);
                     mVideoView.animate().alpha(1f).setDuration(260).start();
                 }
                 return false;
             });
-            mp.setOnErrorListener((p, what, extra) -> { onPlaybackFailure(); return true; });
+            mp.setOnErrorListener((p, what, extra) -> {
+                Log.w(TAG, "video: onError what=" + what + " extra=" + extra
+                        + " src=" + (mVideoFile != null ? "cache" : "stream"));
+                onPlaybackFailure();
+                return true;
+            });
             mp.prepareAsync();
         } catch (Throwable t) {
             Log.w(TAG, "video prepare failed", t);
@@ -201,9 +247,10 @@ public class LaunchStageView extends FrameLayout
      * Never throws; the launcher can never crash from video.
      */
     private void onPlaybackFailure() {
+        // A broken CACHED copy gets exactly one retry as a live stream…
         if (mVideoFile != null && !mRetriedWithStream) {
             mRetriedWithStream = true;
-            Log.w(TAG, "cached video unplayable — retrying live stream");
+            Log.w(TAG, "video: cache unplayable — retrying live stream");
             try { LoadingVideoCache.invalidate(getContext()); } catch (Throwable ignored) {}
             mVideoFile = null;
             MediaPlayer old = mPlayer;
@@ -213,6 +260,22 @@ public class LaunchStageView extends FrameLayout
             startPlayer();
             return;
         }
+        // …and a failed STREAM gets one retry from the cache if the background
+        // prefetch has landed meanwhile (first-run / slow-network edge).
+        if (mVideoFile == null && !mRetriedWithCache && mVideoUrl != null) {
+            mRetriedWithCache = true;
+            File hit = LoadingVideoCache.getValidCache(getContext(), mVideoUrl);
+            if (hit != null) {
+                Log.w(TAG, "video: stream failed — retrying from fresh cache");
+                mVideoFile = hit;
+                MediaPlayer old = mPlayer;
+                mPlayer = null;
+                releaseQuietly(old);
+                startPlayer();
+                return;
+            }
+        }
+        Log.w(TAG, "video: giving up — classic black stage");
         fallbackToStatic();
     }
 
@@ -238,6 +301,8 @@ public class LaunchStageView extends FrameLayout
 
     /** Immediate stop — used when the game render begins (req-7). */
     private synchronized void stopVideoNow() {
+        if (mPlayer != null || mVideoView != null)
+            Log.i(TAG, "video: stop (game render / detach) — releasing player");
         innerStop(true);
     }
 

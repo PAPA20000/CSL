@@ -45,7 +45,8 @@ public final class LoadingVideoCache {
 
     private static final String DIR_NAME = "loading_video";
     private static final String FILE_NAME = "cached.mp4";
-    private static final String TMP_NAME = "download.tmp";
+    /** Temp files are unique per process: launcher (:ui) and game (:game) are separate processes. */
+    private static final String TMP_PREFIX = "download-";
 
     private static final int CONNECT_TIMEOUT_MS = 8000;
     private static final int READ_TIMEOUT_MS = 15000;
@@ -103,7 +104,12 @@ public final class LoadingVideoCache {
             prefs(ctx).edit().clear().apply();
             File dir = cacheDir(ctx);
             deleteQuietly(new File(dir, FILE_NAME));
-            deleteQuietly(new File(dir, TMP_NAME));
+            File[] leftovers = dir.listFiles();
+            if (leftovers != null) {
+                for (File f : leftovers) {
+                    if (f.getName().startsWith(TMP_PREFIX)) deleteQuietly(f);
+                }
+            }
         } catch (Throwable ignored) {}
     }
 
@@ -145,7 +151,9 @@ public final class LoadingVideoCache {
             File dir = cacheDir(ctx);
             //noinspection ResultOfMethodCallIgnored
             dir.mkdirs();
-            tmp = new File(dir, TMP_NAME);
+            // Unique per process — launcher and game may download concurrently;
+            // unique temp + atomic rename keeps concurrent downloads crash-safe.
+            tmp = new File(dir, TMP_PREFIX + android.os.Process.myPid() + ".tmp");
             deleteQuietly(tmp);
 
             conn = (HttpURLConnection) new URL(url).openConnection();

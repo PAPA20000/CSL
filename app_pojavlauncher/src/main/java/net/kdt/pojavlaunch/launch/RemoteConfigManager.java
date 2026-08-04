@@ -86,8 +86,16 @@ public final class RemoteConfigManager {
 
     // ══════════════════ Fetch (req 1 + 9) ══════════════════
 
+    /** Callback fired on the MAIN thread after a fresh config was fetched + saved. */
+    public interface RefreshListener { void onRefreshed(); }
+
     /** Kick an async refresh. Safe to call repeatedly; concurrent fetches collapse. */
     public static void refreshAsync(@NonNull final Context ctx) {
+        refreshAsync(ctx, null);
+    }
+
+    /** Async refresh; {@code listener} fires on the main thread after a successful save. */
+    public static void refreshAsync(@NonNull final Context ctx, @Nullable final RefreshListener listener) {
         if (sFetchInFlight) return;
         sFetchInFlight = true;
         final Context app = ctx.getApplicationContext();
@@ -112,6 +120,7 @@ public final class RemoteConfigManager {
                     if (parsed.loadingVideo != null && parsed.loadingVideo.enabled) {
                         LoadingVideoCache.syncAsync(app, parsed.loadingVideo.url);
                     }
+                    if (listener != null) Tools.MAIN_HANDLER.post(listener::onRefreshed);
                 }
             } catch (Throwable t) {
                 Log.w(TAG, "config fetch failed, keeping cache", t);

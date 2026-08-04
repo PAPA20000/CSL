@@ -9,7 +9,7 @@ compiled into the APK, so the APK size never changes when these files change.
 | File | Purpose |
 |---|---|
 | `config.json` | Remote switchboard. Fetched on every launcher start (and refreshed every 30 min in the background). |
-| `loading.mp4` | The loading-screen video. Current: **5.55 MB, H.264 (AVC) + AAC, MP4** — fully Android-compatible. |
+| `loading.mp4` | The loading-screen video. Current: **5.55 MB, H.264 (AVC) + AAC, MP4, faststart (moov first)** — instantly streamable + fully Android-compatible. |
 
 ## config.json format
 
@@ -43,6 +43,7 @@ compiled into the APK, so the APK size never changes when these files change.
 - Video codec: **H.264 (AVC)**, baseline/main/high profile
 - Audio: **AAC** (playback is muted by design)
 - Recommended: 720p or 1080p, 30 FPS, short loop (< ~15 s), ≤ ~10 MB
+- **faststart required**: moov atom must sit BEFORE mdat (e.g. `ffmpeg -movflags +faststart` or qtfaststart) — otherwise progressive streaming stalls on many devices
 
 ## Fail-safes (launcher side)
 
