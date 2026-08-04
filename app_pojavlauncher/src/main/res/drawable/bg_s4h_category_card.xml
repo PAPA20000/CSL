@@ -1,36 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Settings-HOME category card (hub grid):
-     layered graphite depth + platinum rim + press ripple -->
+<!-- ══════════════════════════════════════════════════════════════════
+     Settings-HOME category card — Phase-3 controller-page master recipe.
+     Exact panel spec: graphite 135° gradient (#F21B1B22 → #F2131318),
+     20dp corners, 0.75dp #2D2D35 stroke, top-light hairline,
+     platinum press ripple. One design language, everywhere.
+     ══════════════════════════════════════════════════════════════════ -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="#26E4E4EA">
     <item android:id="@android:id/background">
         <layer-list>
+            <!-- Master graphite panel -->
             <item>
                 <shape android:shape="rectangle">
                     <gradient
-                        android:angle="270"
-                        android:startColor="#1E1F26"
-                        android:centerColor="#17181E"
-                        android:endColor="#121316" />
+                        android:angle="135"
+                        android:startColor="#F21B1B22"
+                        android:endColor="#F2131318" />
                     <corners android:radius="20dp" />
-                    <stroke android:width="1dp" android:color="#2F2F38" />
+                    <stroke android:width="0.75dp" android:color="#2D2D35" />
                 </shape>
             </item>
-            <!-- soft top-light hairline -->
+            <!-- Soft top-light hairline (metallic sheen) -->
             <item android:top="0.8dp" android:left="1dp" android:right="1dp">
                 <shape android:shape="rectangle">
                     <solid android:color="#00000000" />
                     <corners android:radius="19dp" />
-                    <stroke android:width="0.8dp" android:color="#16FFFFFF" />
+                    <stroke android:width="0.8dp" android:color="#14FFFFFF" />
                 </shape>
             </item>
-            <!-- faint violet corner aura (brand whisper, not a recolor) -->
+            <!-- Faint silver corner sheen -->
             <item android:left="1dp" android:top="1dp" android:right="1dp" android:bottom="1dp">
                 <shape android:shape="rectangle">
                     <gradient
                         android:angle="315"
-                        android:startColor="#14C9CBD6"
-                        android:centerColor="#00C9CBD6"
-                        android:endColor="#00C9CBD6" />
+                        android:startColor="#10FFFFFF"
+                        android:centerColor="#00FFFFFF"
+                        android:endColor="#00FFFFFF" />
                     <corners android:radius="19dp" />
                 </shape>
             </item>

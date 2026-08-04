@@ -34,7 +34,7 @@
             android:layout_weight="1"
             android:letterSpacing="0.1"
             android:textAllCaps="true"
-            android:textColor="#7ADFFF"
+            android:textColor="#C9CBD6"
             android:textSize="11sp"
             android:textStyle="bold" />
 
@@ -47,7 +47,7 @@
             android:paddingTop="2dp"
             android:paddingEnd="8dp"
             android:paddingBottom="2dp"
-            android:textColor="#8FDFFF"
+            android:textColor="#E4E4EA"
             android:textSize="10sp"
             android:textStyle="bold"
             android:visibility="gone" />

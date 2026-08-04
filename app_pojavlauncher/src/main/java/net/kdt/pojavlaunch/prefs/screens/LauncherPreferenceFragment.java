@@ -1356,8 +1356,8 @@ public class LauncherPreferenceFragment extends Fragment {
                 card.setTranslationY(dp(12));
                 card.animate()
                         .alpha(1f).translationY(0f)
-                        .setStartDelay(28L * cardIndex)
-                        .setDuration(230)
+                        .setStartDelay(26L * cardIndex)
+                        .setDuration(260)
                         .setInterpolator(new android.view.animation.DecelerateInterpolator())
                         .start();
 
