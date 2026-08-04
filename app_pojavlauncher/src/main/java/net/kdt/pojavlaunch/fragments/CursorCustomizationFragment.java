@@ -58,6 +58,12 @@ public class CursorCustomizationFragment extends Fragment {
     // New variables for style and color
     private int mSelectedCursorStyleRes = R.drawable.ic_mouse_pointer;
     private boolean mUseCustomBitmap = false;
+    /** Req-14: distinguishes "custom bitmap produced by a pack" from a raw
+     *  user upload, so Save/restore can re-highlight the right owner. */
+    private boolean mCustomFromUpload = false;
+    /** Sentinel written to last_pack_id when the saved custom bitmap came from
+     *  the user's own image upload (no pack may claim the selection). */
+    private static final String PACK_ID_CUSTOM_UPLOAD = "__custom__";
     private int mGlowColor = android.graphics.Color.parseColor("#A6FF3D"); // Default neon green
 
     // ── CS Premium Cursor Studio — pack browser state ──
@@ -139,32 +145,39 @@ public class CursorCustomizationFragment extends Fragment {
         boolean enabled = LauncherPreferences.PREF_CUSTOM_CURSOR_ENABLED;
         String path = LauncherPreferences.PREF_CUSTOM_CURSOR_PATH;
 
+        boolean restored = false;
         if (enabled && path != null) {
             File file = new File(path);
             if (file.exists()) {
                 if (file.getName().contains("gamepad")) {
                     mSelectedCursorStyleRes = R.drawable.ic_gamepad_pointer;
                     mUseCustomBitmap = false;
-                    
+
                     applyStyleSelection(cardClassic, cardGamepad, cardCustom, 1);
+                    restored = true;
                 } else {
                     try {
                         mCurrentCursorBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
                         if (mCurrentCursorBitmap != null) {
                             mUseCustomBitmap = true;
                             applyStyleSelection(cardClassic, cardGamepad, cardCustom, 2);
-                            
-                            mHotspotX = mCurrentCursorBitmap.getWidth() / 2;
-                            mHotspotY = mCurrentCursorBitmap.getHeight() / 2;
+                            restored = true;
+                            // NOTE: the saved hotspot is kept (fixes Req-14 preview
+                            // drift) — it is no longer force-centered on reopen.
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
             }
-        } else {
+        }
+        if (!restored) {
+            // Req-14 fallbacks converge here: classic selected when (a) classic
+            // was saved, or (b) the saved cursor file vanished / won't decode —
+            // the studio must always show SOME active selection, never blank.
             mSelectedCursorStyleRes = R.drawable.ic_mouse_pointer;
             mUseCustomBitmap = false;
+            if (enabled) mCurrentCursorBitmap = null; // dead file: drop stale ref
             applyStyleSelection(cardClassic, cardGamepad, cardCustom, 0);
         }
 
@@ -185,6 +198,7 @@ public class CursorCustomizationFragment extends Fragment {
         // Style Selection Listeners
         cardClassic.setOnClickListener(v -> {
             mUseCustomBitmap = false;
+            mCustomFromUpload = false;
             mSelectedCursorStyleRes = R.drawable.ic_mouse_pointer;
             mHotspotX = 0;
             mHotspotY = 0;
@@ -194,6 +208,7 @@ public class CursorCustomizationFragment extends Fragment {
 
         cardGamepad.setOnClickListener(v -> {
             mUseCustomBitmap = false;
+            mCustomFromUpload = false;
             mSelectedCursorStyleRes = R.drawable.ic_gamepad_pointer;
             mHotspotX = 0;
             mHotspotY = 0;
@@ -397,6 +412,7 @@ public class CursorCustomizationFragment extends Fragment {
         mGlowRadius = 0;
         mGlowColor = android.graphics.Color.parseColor("#A6FF3D");
         mUseCustomBitmap = false;
+        mCustomFromUpload = false;
         mSelectedCursorStyleRes = R.drawable.ic_mouse_pointer;
 
         View root = getView();
@@ -571,6 +587,7 @@ public class CursorCustomizationFragment extends Fragment {
 
             if (mCurrentCursorBitmap != null) {
                 mUseCustomBitmap = true;
+                mCustomFromUpload = true; // Req-14: raw upload owns the cursor
 
                 View root = getView();
                 if (root != null) {
@@ -634,6 +651,23 @@ public class CursorCustomizationFragment extends Fragment {
                 .apply();
 
             // Load variables in memory
+            // Req-14: pin the saved cursor's OWNER so a reopen re-highlights it.
+            // Without this, the studio restored the LAST PREVIEWED pack instead
+            // of the actually-saved cursor (uploaded images showed no selection).
+            String savedPackId;
+            if (!enabled) {
+                savedPackId = "classic";
+            } else if (!mUseCustomBitmap && mSelectedCursorStyleRes == R.drawable.ic_gamepad_pointer) {
+                savedPackId = "gamepad";
+            } else if (mCustomFromUpload || mCurrentPack == null) {
+                savedPackId = PACK_ID_CUSTOM_UPLOAD;
+            } else {
+                savedPackId = mCurrentPack.id;
+            }
+            if (mFavPrefs != null) {
+                mFavPrefs.edit().putString("last_pack_id", savedPackId).apply();
+            }
+
             LauncherPreferences.PREF_CUSTOM_CURSOR_PATH = path;
             LauncherPreferences.PREF_CUSTOM_CURSOR_ENABLED = enabled;
             LauncherPreferences.PREF_CUSTOM_CURSOR_GLOW_RADIUS = mGlowRadius;
@@ -777,15 +811,30 @@ public class CursorCustomizationFragment extends Fragment {
         buildCategoryChips();
         buildPackGrid();
 
-        // Reflect whatever the loaded state says (classic/gamepad/custom bitmap)
+        // Reflect whatever the SAVED state says (classic/gamepad/custom bitmap).
+        // Req-14: for raw uploads no pack owns the cursor — never force a grid
+        // selection that would clobber the custom-style highlight with a stale
+        // "last previewed" pack and leave "nothing active".
         CursorPack initial = mPacks.get(0);
+        boolean skipInitialApply = false;
         if (mUseCustomBitmap) {
-            initial = findPackById(mFavPrefs.getString("last_pack_id", "classic"));
+            String lastPackId = mFavPrefs.getString("last_pack_id", "classic");
+            CursorPack pk = PACK_ID_CUSTOM_UPLOAD.equals(lastPackId) ? null : findPackById(lastPackId);
+            if (pk != null && !pk.isClassic && !pk.isGamepad) {
+                initial = pk; // saved from this pack — re-ring it in the grid
+            } else {
+                skipInitialApply = true;
+                mCurrentPack = null;
+                if (mPackName != null) mPackName.setText("Custom Cursor");
+                if (mPackCreator != null) mPackCreator.setText("your uploaded image");
+                if (mPackCategory != null) mPackCategory.setText("CUSTOM");
+                refreshFavoriteButton();
+            }
         } else if (mSelectedCursorStyleRes == R.drawable.ic_gamepad_pointer) {
             initial = findPackById("gamepad");
         }
         if (initial == null) initial = mPacks.get(0);
-        selectPack(initial, false);
+        if (!skipInitialApply) selectPack(initial, false);
 
         if (mFavButton != null) {
             mFavButton.setOnClickListener(v -> toggleFavorite());
@@ -942,6 +991,7 @@ public class CursorCustomizationFragment extends Fragment {
         View gamepad = root.findViewById(R.id.style_gamepad);
         View custom = root.findViewById(R.id.style_custom);
 
+        mCustomFromUpload = false; // a pack now owns the selection
         if (pack.isClassic) {
             mUseCustomBitmap = false;
             mSelectedCursorStyleRes = R.drawable.ic_mouse_pointer;

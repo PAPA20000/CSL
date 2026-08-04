@@ -38,9 +38,14 @@ public final class WorldEntry {
         return new File(folder, "datapacks");
     }
 
-    /** Stable identity used by icon caches / trackers. */
+    /**
+     * Stable identity used by icon caches / trackers.
+     * Req-15: absolute path, not folderName — two worlds living in different
+     * saves/ dirs can share a folder name (fallback sweep), and RecyclerView
+     * stable IDs must never collide.
+     */
     @NonNull
     public String stableKey() {
-        return folderName;
+        return folder.getAbsolutePath();
     }
 }

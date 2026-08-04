@@ -261,33 +261,62 @@ public final class WorldOps {
 
     // ══════════════════════ SCAN / FORMAT ══════════════════════
 
-    /** Enumerate valid worlds (folders containing level.dat) inside saves/. */
+    /**
+     * Enumerate valid worlds (folders containing level.dat) inside saves/.
+     * Req-15 hardening: every directory is processed in isolation — a corrupt,
+     * unreadable or deeply-nested level.dat must NEVER wipe the whole list
+     * (it used to kill the scan silently and surface as "no worlds").
+     */
     @NonNull
     public static List<WorldEntry> scanWorlds(@NonNull File savesDir) {
         List<WorldEntry> out = new ArrayList<>();
-        File[] dirs = savesDir.listFiles();
+        File[] dirs;
+        try {
+            dirs = savesDir.listFiles();
+        } catch (Throwable t) {
+            android.util.Log.w("WorldOps", "saves dir not listable: " + savesDir, t);
+            return out;
+        }
         if (dirs == null) return out;
         for (File d : dirs) {
-            if (!d.isDirectory()) continue;
-            if (!new File(d, "level.dat").exists() && !new File(d, "level.dat_old").exists()) continue;
-            WorldEntry w = new WorldEntry(d);
-            NbtIO.LevelInfo info = NbtIO.readLevelInfo(d);
-            if (info.levelName != null && !info.levelName.isEmpty()) w.displayName = info.levelName;
-            w.versionName = info.versionName;
-            w.lastPlayedMs = info.lastPlayedMs;
-            w.hasSeed = info.hasSeed;
-            w.seed = info.seed;
-            w.hardcore = info.hardcore;
-            out.add(w);
+            try {
+                if (!d.isDirectory()) continue;
+                if (!new File(d, "level.dat").exists() && !new File(d, "level.dat_old").exists()) continue;
+                WorldEntry w = new WorldEntry(d);
+                NbtIO.LevelInfo info = null;
+                try {
+                    info = NbtIO.readLevelInfo(d);
+                } catch (Throwable t) {
+                    // Broken NBT (truncated file, exotic modded tag, OOM on
+                    // absurd depth): keep the world, degrade to folder name.
+                    android.util.Log.w("WorldOps", "level.dat unreadable in " + d.getName(), t);
+                }
+                if (info != null) {
+                    if (info.levelName != null && !info.levelName.isEmpty()) w.displayName = info.levelName;
+                    w.versionName = info.versionName;
+                    w.lastPlayedMs = info.lastPlayedMs;
+                    w.hasSeed = info.hasSeed;
+                    w.seed = info.seed;
+                    w.hardcore = info.hardcore;
+                }
+                out.add(w);
+            } catch (Throwable t) {
+                android.util.Log.w("WorldOps", "skipping unreadable entry " + d, t);
+            }
         }
         return out;
     }
 
-    /** Fill size + datapack count for a batch of entries (call off-UI thread). */
+    /** Fill size + datapack count for a batch of entries (call off-UI thread).
+     *  Req-15: failures degrade per-entry instead of aborting the batch. */
     public static void enrich(@NonNull List<WorldEntry> worlds) {
         for (WorldEntry w : worlds) {
-            w.sizeBytes = folderSizeCapped(w.folder, SIZE_CAP);
-            w.datapackCount = countDatapacks(w);
+            try {
+                w.sizeBytes = folderSizeCapped(w.folder, SIZE_CAP);
+                w.datapackCount = countDatapacks(w);
+            } catch (Throwable t) {
+                android.util.Log.w("WorldOps", "enrich failed for " + w.folderName, t);
+            }
         }
     }
 

@@ -675,7 +675,9 @@ public class SkinManagerFragment extends Fragment {
             mRightLegLayer = new Cuboid(-2, -4, 0, -2, 2, -12, 0, -2, 2, 0, 32, 4, 12, 4, 64, 64, false, 0.25f);
             mLeftLeg = new Cuboid(2, -4, 0, -2, 2, -12, 0, -2, 2, 16, 48, 4, 12, 4, 64, 64, false, 0f);
             mLeftLegLayer = new Cuboid(2, -4, 0, -2, 2, -12, 0, -2, 2, 0, 48, 4, 12, 4, 64, 64, false, 0.25f);
-            mCape = new Cuboid(0, 0, 0, -5, 5, -16, 0, 0, 1, 0, 0, 10, 16, 1, 64, 32, true, 0f);
+            // Req-13: mirror=false — the visible outer cape face must read like
+            // it does in-game (lettered/artwork capes used to render flipped).
+            mCape = new Cuboid(0, 0, 0, -5, 5, -16, 0, 0, 1, 0, 0, 10, 16, 1, 64, 32, false, 0f);
         }
 
         private void clearCuboids() {
@@ -746,6 +748,15 @@ public class SkinManagerFragment extends Fragment {
 
         private int loadGLTexture(Bitmap bitmap) {
             if (bitmap == null) return 0;
+            // Req-13: legacy 64x32 (2:1) Steve-era skins lack the whole bottom
+            // half of the modern grid — left limbs and every v>0.5 region used
+            // to sample random torso/leg bands ("broken textures"). Expand to
+            // the square grid first, mirroring right limbs into the left limb
+            // boxes exactly like the 1.8+ client does.
+            if (bitmap.getHeight() * 2 == bitmap.getWidth()) {
+                Bitmap expanded = expandLegacySkin(bitmap);
+                if (expanded != null) bitmap = expanded;
+            }
             int[] textures = new int[1];
             GLES20.glGenTextures(1, textures, 0);
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
@@ -755,6 +766,42 @@ public class SkinManagerFragment extends Fragment {
             GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
             GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
             return textures[0];
+        }
+
+        /** 64x32 (Wx(W/2)) legacy grid → square grid with mirrored left limbs. */
+        private static Bitmap expandLegacySkin(@NonNull Bitmap src) {
+            int w = src.getWidth();
+            int h = src.getHeight();
+            if (w != h * 2) return null;
+            int s = w / 64;
+            if (s < 1) return null;
+
+            Bitmap out = Bitmap.createBitmap(w, w, Bitmap.Config.ARGB_8888);
+            int[] buf = new int[w * h];
+            src.getPixels(buf, 0, w, 0, 0, w, h);
+            out.setPixels(buf, 0, w, 0, 0, w, h);
+
+            // Right-arm box [40,16] → left-arm box [32,48];
+            // right-leg box [0,16]  → left-leg box [16,48]  (64-unit grid).
+            mirrorLimbBox(buf, out, w, 40, 16, 32, 48, s);
+            mirrorLimbBox(buf, out, w,  0, 16, 16, 48, s);
+            return out;
+        }
+
+        /** Horizontally flip one 16x16-unit limb unwrap box into its left-side slot. */
+        private static void mirrorLimbBox(int[] src, Bitmap out, int w,
+                                          int us, int vs, int du, int dv, int s) {
+            int bw = 16 * s;
+            int bh = 16 * s;
+            int[] tmp = new int[bw * bh];
+            int srcX0 = us * s, srcY0 = vs * s;
+            for (int y = 0; y < bh; y++) {
+                int srcRow = (srcY0 + y) * w;
+                for (int x = 0; x < bw; x++) {
+                    tmp[y * bw + x] = src[srcRow + srcX0 + (bw - 1 - x)];
+                }
+            }
+            out.setPixels(tmp, 0, bw, du * s, dv * s, bw, bh);
         }
 
         private static class Cuboid {

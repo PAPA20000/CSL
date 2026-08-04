@@ -26,10 +26,16 @@ public class SkinAnalyzer {
     public static SkinModelType detectSkinModel(int imageHeight, PixelAlphaProvider provider) {
         if (imageHeight == 32) return SkinModelType.STEVE;
 
-        if (allTransparent(50, 51, 16, 19, provider) &&
-            allTransparent(54, 55, 20, 31, provider) &&
-            allTransparent(42, 43, 48, 51, provider) &&
-            allTransparent(46, 47, 52, 63, provider)) {
+        // Req-13: probe coordinates live on the 64-unit texture grid — scale
+        // them for HD skins (128x, 256x) or the Alex arm-gap pixels are missed
+        // entirely and every HD Alex skin renders with wrong (Steve) arms.
+        int s = imageHeight / 64;
+        if (s < 1) s = 1;
+
+        if (allTransparent(50*s, 51*s, 16*s, 19*s, provider) &&
+            allTransparent(54*s, 55*s, 20*s, 31*s, provider) &&
+            allTransparent(42*s, 43*s, 48*s, 51*s, provider) &&
+            allTransparent(46*s, 47*s, 52*s, 63*s, provider)) {
             return SkinModelType.ALEX;
         }
         return SkinModelType.STEVE;

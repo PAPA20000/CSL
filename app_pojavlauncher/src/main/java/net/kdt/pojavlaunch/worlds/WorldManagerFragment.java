@@ -236,12 +236,26 @@ public class WorldManagerFragment extends Fragment implements WorldListAdapter.L
         final File saves = mSavesDir;
         final long startedAt = android.os.SystemClock.elapsedRealtime();
         PojavApplication.sExecutorService.execute(() -> {
-            List<WorldEntry> worlds = WorldOps.scanWorlds(saves);
-            WorldOps.enrich(worlds);
+            List<WorldEntry> worlds;
+            try {
+                worlds = WorldOps.scanWorlds(saves);
+                if (worlds.isEmpty()) {
+                    // Req-15 fallback sweep: the profile the user played may differ
+                    // from the profile/directory this manager was opened for. Try
+                    // the default instance dir and every known profile game dir,
+                    // so real worlds never present as an empty list.
+                    worlds = scanFallbackLocations(saves);
+                }
+                WorldOps.enrich(worlds);
+            } catch (Throwable t) {
+                android.util.Log.e(TAG, "world scan crashed", t);
+                worlds = new java.util.ArrayList<>();
+            }
             long elapsedMs = android.os.SystemClock.elapsedRealtime() - startedAt;
             android.util.Log.i(TAG, "World scan: " + worlds.size()
                     + " worlds in " + elapsedMs + "ms from " + saves.getAbsolutePath());
             if (!isAdded()) return;
+            final List<WorldEntry> finalWorlds = worlds;
             requireActivity().runOnUiThread(() -> {
                 mScanInFlight = false;
                 stopRefreshSpin();
@@ -251,9 +265,9 @@ public class WorldManagerFragment extends Fragment implements WorldListAdapter.L
                     runPendingScan();
                     return;
                 }
-                if (mAdapter != null) mAdapter.submit(worlds);
+                if (mAdapter != null) mAdapter.submit(finalWorlds);
                 setLoadingVisible(false);
-                updateCountAndEmpty(mAdapter != null ? mAdapter.getItemCount() : worlds.size());
+                updateCountAndEmpty(mAdapter != null ? mAdapter.getItemCount() : finalWorlds.size());
                 refreshStorageCard(requireView());
                 runPendingScan();
             });
@@ -265,6 +279,50 @@ public class WorldManagerFragment extends Fragment implements WorldListAdapter.L
             mScanPending = false;
             reloadWorlds(false);
         }
+    }
+
+    /**
+     * Req-15: when the primary saves/ dir has no worlds, search every other
+     * plausible location before declaring the list empty:
+     *  1. the default shared instance dir (DIR_GAME_NEW/saves)
+     *  2. every profile's own game dir (custom instances)
+     * Results are de-duplicated by absolute path and merged back with the
+     * primary location first. Runs off the UI thread (call from executor).
+     */
+    @NonNull
+    private List<WorldEntry> scanFallbackLocations(@NonNull File primarySaves) {
+        java.util.LinkedHashMap<String, WorldEntry> merged = new java.util.LinkedHashMap<>();
+        java.util.LinkedHashSet<File> candidates = new java.util.LinkedHashSet<>();
+        candidates.add(primarySaves);
+        try {
+            candidates.add(new File(new File(Tools.DIR_GAME_NEW), "saves"));
+        } catch (Throwable ignored) {}
+        try {
+            if (LauncherProfiles.mainProfileJson != null
+                    && LauncherProfiles.mainProfileJson.profiles != null) {
+                for (MinecraftProfile profile : LauncherProfiles.mainProfileJson.profiles.values()) {
+                    try {
+                        File gd = profile != null ? profile.resolveGameDir() : null;
+                        if (gd != null) candidates.add(new File(gd, "saves"));
+                    } catch (Throwable ignored) {}
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        for (File saves : candidates) {
+            try {
+                List<WorldEntry> found = WorldOps.scanWorlds(saves);
+                android.util.Log.i(TAG, "World scan sweep: " + found.size()
+                        + " worlds in " + saves.getAbsolutePath());
+                for (WorldEntry w : found) {
+                    merged.putIfAbsent(w.stableKey(), w);
+                }
+                if (!merged.isEmpty()) break; // first non-empty location wins
+            } catch (Throwable t) {
+                android.util.Log.w(TAG, "sweep failed for " + saves, t);
+            }
+        }
+        return new java.util.ArrayList<>(merged.values());
     }
 
     private void setLoadingVisible(boolean visible) {
