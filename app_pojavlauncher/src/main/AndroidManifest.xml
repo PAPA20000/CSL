@@ -88,7 +88,11 @@
             android:label="@string/app_short_name"
             android:hardwareAccelerated="true"
             android:screenOrientation="sensorLandscape"
-            android:windowSoftInputMode="adjustResize"/>
+            android:windowSoftInputMode="adjustPan"/>
+        <!-- adjustResize + FLAG_LAYOUT_NO_LIMITS got stuck after the IME closed:
+             the window frame kept the shrunken height, so returning from
+             Settings left the home screen partially resized/compressed.
+             adjustPan keeps the window frame fixed and pans content instead. -->
         <activity
             android:name=".ImportControlActivity"
             android:configChanges="keyboard|keyboardHidden"

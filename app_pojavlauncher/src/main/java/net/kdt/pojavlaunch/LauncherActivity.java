@@ -19,7 +19,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.DecelerateInterpolator;
+import android.graphics.Typeface;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -221,6 +225,7 @@ public class LauncherActivity extends BaseActivity {
 
     /* Listener for the settings fragment */
     private final View.OnClickListener mSettingButtonListener = v -> {
+        navTap(v, R.string.cs_navtip_settings);
         Fragment fragment = getSupportFragmentManager().findFragmentById(mFragmentView.getId());
         if (fragment instanceof MainMenuFragment) {
             MainMenuFragment mmf = (MainMenuFragment) fragment;
@@ -871,6 +876,80 @@ public class LauncherActivity extends BaseActivity {
 
     /** Stuff all the view boilerplate here */
 
+    // ── Req-10: premium top-toolbar micro-interactions ─────────────────────
+    // Every header icon click now produces (a) a small downward slide nudge on
+    // the icon and (b) a floating label pill that slides in under the header,
+    // holds briefly, then fades away. Purely cosmetic — actions are unchanged.
+
+    private void nudgeNavIcon(@NonNull View v) {
+        v.animate().cancel();
+        v.setTranslationY(0f);
+        float dip = 4f * getResources().getDisplayMetrics().density;
+        v.animate().translationY(dip).setDuration(90)
+                .withEndAction(() -> v.animate().translationY(0f)
+                        .setDuration(150)
+                        .setInterpolator(new DecelerateInterpolator())
+                        .start())
+                .start();
+    }
+
+    private void showNavChip(@NonNull View anchor, int labelRes) {
+        View content = findViewById(android.R.id.content);
+        if (!(content instanceof ViewGroup)) return;
+        View firstChild = ((ViewGroup) content).getChildAt(0);
+        if (!(firstChild instanceof ViewGroup)) return;
+        final ViewGroup root = (ViewGroup) firstChild;
+
+        final float density = getResources().getDisplayMetrics().density;
+        final TextView chip = new TextView(this);
+        chip.setText(labelRes);
+        chip.setTextColor(0xFFE4E4EA);
+        chip.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 11);
+        chip.setTypeface(Typeface.DEFAULT_BOLD);
+        chip.setLetterSpacing(0.06f);
+        chip.setPadding((int) (12 * density), (int) (6 * density),
+                (int) (12 * density), (int) (8 * density));
+        chip.setBackgroundResource(R.drawable.bg_cs_nav_tip);
+        chip.setElevation(12f);
+        chip.setClickable(false);
+        chip.setFocusable(false);
+        chip.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+
+        root.addView(chip, new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        chip.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+
+        int[] anchorPos = new int[2];
+        int[] rootPos = new int[2];
+        anchor.getLocationInWindow(anchorPos);
+        root.getLocationInWindow(rootPos);
+        float x = anchorPos[0] - rootPos[0]
+                + (anchor.getWidth() - chip.getMeasuredWidth()) / 2f;
+        float maxX = root.getWidth() - chip.getMeasuredWidth() - 8 * density;
+        x = Math.max(8 * density, Math.min(x, Math.max(8 * density, maxX)));
+        chip.setX(x);
+        chip.setY(anchorPos[1] - rootPos[1] + anchor.getHeight() + 4 * density);
+
+        chip.setAlpha(0f);
+        chip.setTranslationY(-6 * density);
+        chip.animate().alpha(1f).translationY(0f)
+                .setDuration(160)
+                .setInterpolator(new DecelerateInterpolator())
+                .withEndAction(() -> chip.animate()
+                        .alpha(0f).translationY(-6 * density)
+                        .setStartDelay(850)
+                        .setDuration(220)
+                        .withEndAction(() -> root.removeView(chip))
+                        .start())
+                .start();
+    }
+
+    /** Tap feedback bundle: icon nudge + floating label, then run the action. */
+    private void navTap(@NonNull View v, int labelRes) {
+        nudgeNavIcon(v);
+        showNavChip(v, labelRes);
+    }
+
     /** Wire up the landscape header bar navigation buttons. */
     private void setupNavButtons() {
         View navModStore       = findViewById(R.id.nav_mod_store);
@@ -881,6 +960,7 @@ public class LauncherActivity extends BaseActivity {
         View tvLauncherTitle    = findViewById(R.id.tv_launcher_title);
 
         View.OnClickListener homeListener = v -> {
+            navTap(v, R.string.cs_navtip_home);
             // Always pop to ROOT when clicking home
             getSupportFragmentManager().popBackStackImmediate("ROOT", 0);
             Fragment frag = getVisibleFragment("ROOT");
@@ -895,6 +975,7 @@ public class LauncherActivity extends BaseActivity {
 
         if (navModStore != null) {
             navModStore.setOnClickListener(v -> {
+                navTap(v, R.string.cs_navtip_mods);
                 Fragment frag = getVisibleFragment("ROOT");
                 if (frag instanceof MainMenuFragment) {
                     ((MainMenuFragment) frag).openChildPane(
@@ -906,19 +987,24 @@ public class LauncherActivity extends BaseActivity {
         }
 
         if (navCustomControls != null) {
-            navCustomControls.setOnClickListener(v ->
-                    startActivity(new Intent(this, CustomControlsActivity.class)));
+            navCustomControls.setOnClickListener(v -> {
+                navTap(v, R.string.cs_navtip_controls);
+                startActivity(new Intent(this, CustomControlsActivity.class));
+            });
         }
 
         if (navCursor != null) {
-            navCursor.setOnClickListener(v ->
-                    Tools.swapFragment(this, CursorCustomizationFragment.class,
-                            CursorCustomizationFragment.TAG, null));
+            navCursor.setOnClickListener(v -> {
+                navTap(v, R.string.cs_navtip_cursor);
+                Tools.swapFragment(this, CursorCustomizationFragment.class,
+                        CursorCustomizationFragment.TAG, null);
+            });
         }
 
         View navSkin = findViewById(R.id.nav_skin);
         if (navSkin != null) {
             navSkin.setOnClickListener(v -> {
+                navTap(v, R.string.cs_navtip_skins);
                 Fragment frag = getVisibleFragment("ROOT");
                 if (frag instanceof MainMenuFragment) {
                     ((MainMenuFragment) frag).openChildPane(

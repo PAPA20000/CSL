@@ -1287,25 +1287,33 @@ public class LauncherPreferenceFragment extends Fragment {
 
             holder.container.addView(createDashboardSectionHeader(
                     holder.itemView.getContext(),
-                    "SWIPE CATEGORIES",
-                    "Open a settings page",
-                    "Jump directly into the part of the launcher you want to tune."
+                    "SETTINGS HUB",
+                    "Browse categories",
+                    "Every tuning deck of CS Launcher V3 — tap a card to dive in."
             ));
 
-            android.widget.HorizontalScrollView categoryScroller = new android.widget.HorizontalScrollView(holder.itemView.getContext());
-            categoryScroller.setHorizontalScrollBarEnabled(false);
-            categoryScroller.setOverScrollMode(View.OVER_SCROLL_NEVER);
-            categoryScroller.setLayoutParams(new LinearLayout.LayoutParams(
+            // ══ Phase 5 (Req-6): 2-column hub grid — every category visible at
+            // once instead of a hidden horizontal swipe row. Cards keep their
+            // press-bounce and gain a staggered fade/slide entrance.
+            Context gridCtx = holder.itemView.getContext();
+            LinearLayout categoryGrid = new LinearLayout(gridCtx);
+            categoryGrid.setOrientation(LinearLayout.VERTICAL);
+            categoryGrid.setLayoutParams(new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
             ));
 
-            LinearLayout categoryRow = new LinearLayout(holder.itemView.getContext());
-            categoryRow.setOrientation(LinearLayout.HORIZONTAL);
-            categoryScroller.addView(categoryRow);
-
+            final int colGap = dp(8);
+            final int rowGap = dp(8);
+            LinearLayout currentRow = null;
+            int cardIndex = 0;
             for (SettingItem item : cat.items) {
-                View card = inflater.inflate(R.layout.item_setting_category_card, categoryRow, false);
+                if (cardIndex % 2 == 0) {
+                    currentRow = new LinearLayout(gridCtx);
+                    currentRow.setOrientation(LinearLayout.HORIZONTAL);
+                    categoryGrid.addView(currentRow);
+                }
+                View card = inflater.inflate(R.layout.item_setting_category_card, currentRow, false);
                 ImageView icon = card.findViewById(R.id.category_card_icon);
                 TextView title = card.findViewById(R.id.category_card_title);
                 TextView summary = card.findViewById(R.id.category_card_summary);
@@ -1323,9 +1331,26 @@ public class LauncherPreferenceFragment extends Fragment {
                                 openCategoryPage(item.categoryLinkTarget);
                             }).start();
                 });
-                categoryRow.addView(card);
+
+                LinearLayout.LayoutParams slot = new LinearLayout.LayoutParams(
+                        0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+                if (cardIndex % 2 == 0) slot.setMargins(0, 0, colGap / 2, rowGap);
+                else                      slot.setMargins(colGap / 2, 0, 0, rowGap);
+                currentRow.addView(card, slot);
+
+                // Lightweight staggered reveal (alpha/translate only — no layout work)
+                card.setAlpha(0f);
+                card.setTranslationY(dp(12));
+                card.animate()
+                        .alpha(1f).translationY(0f)
+                        .setStartDelay(28L * cardIndex)
+                        .setDuration(230)
+                        .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                        .start();
+
+                cardIndex++;
             }
-            holder.container.addView(categoryScroller);
+            holder.container.addView(categoryGrid);
 
             holder.container.addView(createDashboardSectionHeader(
                     holder.itemView.getContext(),

@@ -283,6 +283,14 @@
     <string name="mp_channel_beta">Beta</string>
     <string name="mp_channel_alpha">Alpha</string>
     <string name="mp_channel_old">Old</string>
+
+    <!-- ── Top-toolbar floating labels (Phase 5, Req-10) ── -->
+    <string name="cs_navtip_home">Home</string>
+    <string name="cs_navtip_mods">Mod Store</string>
+    <string name="cs_navtip_controls">Controls</string>
+    <string name="cs_navtip_cursor">Cursor</string>
+    <string name="cs_navtip_skins">Skins</string>
+    <string name="cs_navtip_settings">Settings</string>
     <!-- Download Console (v3) — pause / stop / hide controls -->
     <string name="download_console_pause">PAUSE</string>
     <string name="download_console_resume">RESUME</string>

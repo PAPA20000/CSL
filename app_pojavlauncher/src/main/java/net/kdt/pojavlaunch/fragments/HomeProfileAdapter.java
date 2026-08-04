@@ -153,6 +153,19 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         // RAM chip shows the effective global allocation (per-profile RAM was removed)
         holder.tvRam.setText("RAM: " + net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_RAM_ALLOCATION + " MB");
 
+        // Req-9: premium MC-version badge pinned at the card's top-right corner.
+        // Extracted from lastVersionId ("fabric-loader-0.15.11-1.20.4" → "1.20.4");
+        // hidden when the string carries no plain MC version (rare custom ids).
+        if (holder.tvVersionBadge != null) {
+            String mcVer = extractMcVersion(profile.lastVersionId);
+            if (mcVer != null) {
+                holder.tvVersionBadge.setText(mcVer);
+                holder.tvVersionBadge.setVisibility(View.VISIBLE);
+            } else {
+                holder.tvVersionBadge.setVisibility(View.GONE);
+            }
+        }
+
         bindIcon(holder.imgIcon, profileKey, profile);
         bindBackground(holder.imgBackground, profileKey, profile);
 
@@ -270,6 +283,21 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
                 || lower.contains("quilt") || lower.contains("liteloader") || lower.contains("optifine"));
     }
 
+    /**
+     * Pull a plain Minecraft version ("1.20.4", "1.8.9", snapshot "24w14a" is not
+     * matched — such ids simply hide the badge) out of a possibly compounded
+     * version id such as "fabric-loader-0.15.11-1.20.4" or "1.12.2-forge-14.23.5.2859".
+     * The first "1.x[.y]" token wins: loader ids always carry it exactly once.
+     */
+    @Nullable
+    static String extractMcVersion(@Nullable String lastVersionId) {
+        if (lastVersionId == null) return null;
+        java.util.regex.Matcher m =
+                java.util.regex.Pattern.compile("1\\.\\d+(?:\\.\\d+)?").matcher(lastVersionId);
+        if (m.find()) return m.group();
+        return null;
+    }
+
     private void bindBackground(ImageView target, String profileKey, MinecraftProfile profile) {
         Drawable drawable = null;
         try {
@@ -318,6 +346,7 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
         final TextView tvVersion;
         final TextView tvModCount;
         final TextView tvRam;
+        final TextView tvVersionBadge;
         final PremiumPlayButtonView btnPlay;
         final FrameLayout btnBrowse;
         final View btnShortcut;
@@ -331,6 +360,7 @@ public class HomeProfileAdapter extends RecyclerView.Adapter<HomeProfileAdapter.
             tvVersion = itemView.findViewById(R.id.tv_profile_version);
             tvModCount = itemView.findViewById(R.id.tv_profile_mod_count);
             tvRam = itemView.findViewById(R.id.tv_profile_ram);
+            tvVersionBadge = itemView.findViewById(R.id.tv_version_badge);
             btnPlay = itemView.findViewById(R.id.btn_profile_play);
             btnBrowse = itemView.findViewById(R.id.btn_profile_browse);
             btnShortcut = itemView.findViewById(R.id.btn_profile_shortcut);

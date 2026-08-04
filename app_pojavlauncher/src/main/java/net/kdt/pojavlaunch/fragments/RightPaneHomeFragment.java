@@ -44,14 +44,7 @@ public class RightPaneHomeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         loadCustomWallpaper(view);
 
-        // Smooth top bar entrance
-        View topBar = view.findViewById(R.id.home_top_bar);
-        if (topBar != null) {
-            topBar.setAlpha(0f);
-            topBar.setTranslationY(-24f);
-            topBar.animate().alpha(1f).translationY(0f)
-                    .setDuration(260).setInterpolator(new DecelerateInterpolator()).start();
-        }
+        // (Req-11: the big "Profiles" header bar is gone — cards own the screen.)
 
         mRecyclerView = view.findViewById(R.id.rv_home_profiles);
         mRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
