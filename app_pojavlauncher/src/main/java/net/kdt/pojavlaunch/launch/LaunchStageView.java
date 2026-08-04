@@ -149,7 +149,7 @@ public class LaunchStageView extends FrameLayout
             mp.setLooping(true);               // loop until the game renders
             mp.setOnPreparedListener(p -> {
                 if (mStopped || sGameRendering || mPlayer != p) { releaseQuietly(p); return; }
-                try { p.start(); } catch (Throwable t) { onError(p, 0, 0); }
+                try { p.start(); } catch (Throwable t) { fallbackToStatic(); }
             });
             mp.setOnInfoListener((p, what, extra) -> {
                 if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START && mVideoView != null) {
