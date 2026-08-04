@@ -18,8 +18,10 @@ import java.net.URL;
 /**
  * RemoteConfigManager — GitHub Remote Config for CS Launcher V3.
  *
- * Fetches and caches config.json from the public CDN:
- *   https://cdn.jsdelivr.net/gh/kolkataknightrider/CSL-SYSTEM@main/config.json
+ * Fetches and caches remote/config.json straight from the launcher repo via
+ * GitHub Raw:
+ *   https://raw.githubusercontent.com/PAPA20000/CSL/main/remote/config.json
+ * (a jsDelivr mirror of the same file is kept as a resilience fallback).
  *
  * Guarantees:
  *  - network strictly off the UI thread (executor), never on the launch path
@@ -33,8 +35,12 @@ import java.net.URL;
 public final class RemoteConfigManager {
 
     private static final String TAG = "RemoteConfig";
+    /** Primary: GitHub Raw serves the freshest content (CDN cache ~minutes). */
     public static final String CONFIG_URL =
-            "https://cdn.jsdelivr.net/gh/kolkataknightrider/CSL-SYSTEM@main/config.json";
+            "https://raw.githubusercontent.com/PAPA20000/CSL/main/remote/config.json";
+    /** Resilience fallback: jsDelivr mirror of the same file. */
+    private static final String FALLBACK_CONFIG_URL =
+            "https://cdn.jsdelivr.net/gh/PAPA20000/CSL@main/remote/config.json";
 
     private static final String PREFS = "csl_remote_config";
     private static final String KEY_JSON = "cached_json";
@@ -88,6 +94,7 @@ public final class RemoteConfigManager {
         PojavApplication.sExecutorService.execute(() -> {
             try {
                 String json = download(CONFIG_URL);
+                if (json == null) json = download(FALLBACK_CONFIG_URL);
                 Config parsed = parse(json);
                 if (json != null && parsed != null) {
                     sConfig = parsed;
@@ -99,6 +106,12 @@ public final class RemoteConfigManager {
                     Log.i(TAG, "config refreshed: loadingVideo="
                             + (parsed.loadingVideo != null && parsed.loadingVideo.enabled
                             ? parsed.loadingVideo.url : "disabled"));
+                    // Freshness sync: re-fetch the temp-cached video when the
+                    // remote file/URL changed (GitHub video replace → next
+                    // launcher start picks it up automatically).
+                    if (parsed.loadingVideo != null && parsed.loadingVideo.enabled) {
+                        LoadingVideoCache.syncAsync(app, parsed.loadingVideo.url);
+                    }
                 }
             } catch (Throwable t) {
                 Log.w(TAG, "config fetch failed, keeping cache", t);

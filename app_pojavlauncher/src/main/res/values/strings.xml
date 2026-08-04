@@ -293,7 +293,7 @@
     <string name="cs_navtip_settings">Settings</string>
 
     <!-- ── Loading screen style (Remote Config feature) ── -->
-    <string name="cs_loading_screen_style_title">Loading Screen Style</string>
+    <string name="cs_loading_screen_style_title">Loading Screen</string>
     <string name="cs_loading_screen_style_summary">Classic black screen, or a remotely streamed video until the game window opens.</string>
     <!-- Download Console (v3) — pause / stop / hide controls -->
     <string name="download_console_pause">PAUSE</string>

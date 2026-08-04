@@ -379,7 +379,7 @@ public class LauncherPreferenceFragment extends Fragment {
                             getString(R.string.cs_loading_screen_style_summary),
                             net.kdt.pojavlaunch.launch.LaunchStageView.STYLE_BLACK)
                             .setDropdownOptions(
-                                    new String[]{"Black Loading Screen", "Video Loading Screen"},
+                                    new String[]{"Classic Black Screen", "Video Loading Screen"},
                                     new String[]{net.kdt.pojavlaunch.launch.LaunchStageView.STYLE_BLACK,
                                             net.kdt.pojavlaunch.launch.LaunchStageView.STYLE_VIDEO}));
                     launcherItems.add(new SettingItem("verifyManifest", SettingItem.TYPE_SWITCH, getString(R.string.preference_verify_manifest_title), getString(R.string.preference_verify_manifest_description), true));

@@ -19,6 +19,7 @@ import androidx.annotation.Nullable;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 
+import java.io.File;
 import java.lang.ref.WeakReference;
 
 /**
@@ -30,11 +31,13 @@ import java.lang.ref.WeakReference;
  *   2. the remote config allows it (loadingVideo.enabled == true, url set)
  *   3. the device is online
  *
- * Streaming notes (req-3/4/8):
- *  - MediaPlayer + TextureView progressive playback: the MP4 is streamed with
- *    no permanent local copy (framework in-memory/throwaway buffering only),
- *    so nothing is ever downloaded to the device permanently and nothing ships
- *    inside the APK.
+ * Playback notes (req-3/4/8 + cache):
+ *  - MediaPlayer + TextureView. The FIRST contact with a URL is streamed
+ *    (progressive playback); a validated throwaway copy is then kept in the
+ *    app cache keyed by URL (see {@link LoadingVideoCache}): the same URL
+ *    plays instantly from cache with zero re-download, a changed URL or a
+ *    changed remote file re-fetches automatically. The video is never
+ *    permanent and nothing ships inside the APK.
  *  - Every failure path (offline, prepare error, 7 s watchdog stall) silently
  *    falls back to the existing static stage — the user always gets a loading
  *    screen, never a blank panel.
@@ -60,8 +63,11 @@ public class LaunchStageView extends FrameLayout
     @Nullable private TextureView mVideoView;
     @Nullable private MediaPlayer mPlayer;
     @Nullable private String mVideoUrl;
+    @Nullable private File mVideoFile;      // set when a validated cache hit exists
+    @Nullable private SurfaceTexture mSurface;
     private boolean mStopped;
     private boolean mPrepareStarted;
+    private boolean mRetriedWithStream;     // one cached→live retry, then black stage
 
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private final Runnable mWatchdog = this::fallbackToStatic;
@@ -121,6 +127,18 @@ public class LaunchStageView extends FrameLayout
         try { if (!Tools.isOnline(getContext())) return; } catch (Throwable ignored) {}
 
         mVideoUrl = url.trim();
+        mRetriedWithStream = false;
+
+        // Cache-first resolution: same URL → play from cache instantly;
+        // miss/changed URL → stream now and prefetch in the background so the
+        // next launch is instant and offline-tolerant.
+        File cached = LoadingVideoCache.getValidCache(getContext(), mVideoUrl);
+        if (cached != null) {
+            mVideoFile = cached;
+        } else {
+            mVideoFile = null;
+            LoadingVideoCache.downloadAsync(getContext(), mVideoUrl);
+        }
 
         // TextureView (not SurfaceView): obeys normal view compositing, so the
         // static stage stays visible underneath until the first video frame.
@@ -136,20 +154,28 @@ public class LaunchStageView extends FrameLayout
 
     @Override
     public void onSurfaceTextureAvailable(@NonNull SurfaceTexture st, int w, int h) {
+        mSurface = st;
         if (mStopped || sGameRendering || mVideoUrl == null || mPrepareStarted) return;
         mPrepareStarted = true;
+        startPlayer();
+    }
+
+    /** Build + arm the MediaPlayer against the current source (cache file or live URL). */
+    private void startPlayer() {
+        if (mStopped || sGameRendering || mVideoUrl == null || mSurface == null) return;
         try {
             MediaPlayer mp = new MediaPlayer();
             mPlayer = mp;
-            mp.setDataSource(getContext(), Uri.parse(mVideoUrl));
-            mp.setSurface(new Surface(st));
+            if (mVideoFile != null) mp.setDataSource(mVideoFile.getAbsolutePath());
+            else mp.setDataSource(getContext(), Uri.parse(mVideoUrl));
+            mp.setSurface(new Surface(mSurface));
             mp.setVideoScalingMode(
                     MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
             mp.setVolume(0f, 0f);              // loading screen stays silent
             mp.setLooping(true);               // loop until the game renders
             mp.setOnPreparedListener(p -> {
                 if (mStopped || sGameRendering || mPlayer != p) { releaseQuietly(p); return; }
-                try { p.start(); } catch (Throwable t) { fallbackToStatic(); }
+                try { p.start(); } catch (Throwable t) { onPlaybackFailure(); }
             });
             mp.setOnInfoListener((p, what, extra) -> {
                 if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START && mVideoView != null) {
@@ -160,12 +186,34 @@ public class LaunchStageView extends FrameLayout
                 }
                 return false;
             });
-            mp.setOnErrorListener((p, what, extra) -> { fallbackToStatic(); return true; });
+            mp.setOnErrorListener((p, what, extra) -> { onPlaybackFailure(); return true; });
             mp.prepareAsync();
         } catch (Throwable t) {
             Log.w(TAG, "video prepare failed", t);
-            fallbackToStatic();
+            onPlaybackFailure();
         }
+    }
+
+    /**
+     * Unified fail-safe. A broken CACHED copy (corrupt, evicted mid-flight)
+     * gets exactly one retry as a live stream — cache invalidated + refetched.
+     * Every other failure drops straight to the existing static stage.
+     * Never throws; the launcher can never crash from video.
+     */
+    private void onPlaybackFailure() {
+        if (mVideoFile != null && !mRetriedWithStream) {
+            mRetriedWithStream = true;
+            Log.w(TAG, "cached video unplayable — retrying live stream");
+            try { LoadingVideoCache.invalidate(getContext()); } catch (Throwable ignored) {}
+            mVideoFile = null;
+            MediaPlayer old = mPlayer;
+            mPlayer = null;
+            releaseQuietly(old);
+            LoadingVideoCache.downloadAsync(getContext(), mVideoUrl);
+            startPlayer();
+            return;
+        }
+        fallbackToStatic();
     }
 
     @Override
@@ -173,6 +221,7 @@ public class LaunchStageView extends FrameLayout
 
     @Override
     public boolean onSurfaceTextureDestroyed(@NonNull SurfaceTexture st) {
+        if (mSurface == st) mSurface = null;
         stopVideoNow();
         return true;
     }
