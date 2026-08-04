@@ -162,7 +162,6 @@
 
         <service android:name=".services.ProgressService"
             android:foregroundServiceType="dataSync"/>
-        <service android:name=".services.ProcessWarmService" android:process=":game" android:exported="false"/>
         <service android:name=".services.GameService" android:process=":game"
             android:foregroundServiceType="specialUse">
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
