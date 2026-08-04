@@ -58,7 +58,7 @@
     <color name="am_bg_bottom_bar">#1E1028</color>
     <color name="am_bg_status_bar">#0F0714</color>
     <color name="am_divider">#3A1F52</color>
-    <color name="am_accent">#9C27B0</color>
+    <color name="am_accent">#C9CBD6</color>
     <color name="am_text_primary">#F3E5F5</color>
     <color name="am_text_secondary">#CBA8D4</color>
 
@@ -87,9 +87,9 @@
     <!-- Accent colors (Neon Green + Purple) -->
     <color name="accent_primary">#E4E4EA</color>
     <color name="accent_light">#B9BBC4</color>
-    <color name="accent_purple">#9B59E8</color>
+    <color name="accent_purple">#C9CBD6</color>
     <color name="accent_purple_client">#9B59B6</color>
-    <color name="accent_purple_deep">#7B2FBE</color>
+    <color name="accent_purple_deep">#8E9099</color>
     <color name="accent_bg_subtle">#1A1C2C</color>
     <color name="accent_border">#E4E4EA</color>
 

@@ -116,7 +116,7 @@ public class PremiumPlayButtonView extends FrameLayout implements TaskCountListe
                 new int[]{0x00FFFFFF, 0x7FFFFFFF, 0x00FFFFFF},
                 new float[]{0f, 0.5f, 1f}, Shader.TileMode.CLAMP);
         mWaveGradient = new LinearGradient(0, 0, Math.max(1, w), 0,
-                new int[]{0x00E4E4EA, 0x66E4E4EA, 0xCC9B59E8, 0x66E4E4EA, 0x00E4E4EA},
+                new int[]{0x00E4E4EA, 0x66E4E4EA, 0xCCC9CBD6, 0x66E4E4EA, 0x00E4E4EA},
                 new float[]{0f, 0.28f, 0.5f, 0.72f, 1f}, Shader.TileMode.CLAMP);
         mBasePaint.setShader(mBaseGradient);
         mSheenPaint.setShader(mSheenGradient);
@@ -303,7 +303,7 @@ public class PremiumPlayButtonView extends FrameLayout implements TaskCountListe
         // Glow + edge highlight above content.
         if (mLaunching) {
             float pulse = 0.5f + 0.5f * (float) Math.sin(mLaunchFraction * Math.PI * 2.0);
-            mStrokePaint.setColor(0x559B59E8);
+            mStrokePaint.setColor(0x55C9CBD6);
             mStrokePaint.setStrokeWidth(dp(4.5f + pulse * 1.3f));
             canvas.drawPath(mRoundPath, mStrokePaint);
         }
@@ -343,7 +343,7 @@ public class PremiumPlayButtonView extends FrameLayout implements TaskCountListe
             int life = mPLife[i];
             if (life <= 0) continue;
             int alpha = Math.min(220, life * 9);
-            mParticlePaint.setColor((alpha << 24) | (i % 3 == 0 ? 0x9B59E8 : 0xE4E4EA));
+            mParticlePaint.setColor((alpha << 24) | (i % 3 == 0 ? 0xC9CBD6 : 0xE4E4EA));
             canvas.drawCircle(mPX[i], mPY[i], dp(i % 4 == 0 ? 1.7f : 1.1f), mParticlePaint);
         }
     }

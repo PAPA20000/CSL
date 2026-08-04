@@ -140,7 +140,7 @@
             android:orientation="vertical">
 
             <TextView android:id="@+id/wdd_play" style="@style/CsWorldActionRow" android:text="@string/cs_world_play" android:drawableStart="@drawable/ic_cs_play" android:drawablePadding="12dp" android:drawableTint="#E4E4EA" />
-            <TextView android:id="@+id/wdd_datapacks_browse" style="@style/CsWorldActionRow" android:text="@string/cs_world_browse_datapacks" android:drawableStart="@drawable/ic_cs_datapack" android:drawablePadding="12dp" android:drawableTint="#9B59E8" />
+            <TextView android:id="@+id/wdd_datapacks_browse" style="@style/CsWorldActionRow" android:text="@string/cs_world_browse_datapacks" android:drawableStart="@drawable/ic_cs_datapack" android:drawablePadding="12dp" android:drawableTint="#C9CBD6" />
             <TextView android:id="@+id/wdd_rename" style="@style/CsWorldActionRow" android:text="@string/cs_world_rename" android:drawableStart="@drawable/ic_edit_profile" android:drawablePadding="12dp" android:drawableTint="#E4E4EA" />
             <TextView android:id="@+id/wdd_duplicate" style="@style/CsWorldActionRow" android:text="@string/cs_world_duplicate" android:drawableStart="@drawable/ic_browse_resources" android:drawablePadding="12dp" android:drawableTint="#E4E4EA" />
             <TextView android:id="@+id/wdd_backup" style="@style/CsWorldActionRow" android:text="@string/cs_world_backup" android:drawableStart="@drawable/ic_cs_backup" android:drawablePadding="12dp" android:drawableTint="#E4E4EA" />

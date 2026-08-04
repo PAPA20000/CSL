@@ -34,6 +34,6 @@
 
     <!-- Violet energy beam -->
     <path
-        android:fillColor="#9B59E8"
+        android:fillColor="#C9CBD6"
         android:pathData="M8,37 L40,37 Q40,40 37,40 L11,40 Q8,40 8,37 Z" />
 </vector>

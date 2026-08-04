@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ═══════════════════════════════════════════════════════════════════
-     CS LAUNCHER V3 — Premium Design System (Phase 2, brand-matched)
-     Tokens are mapped 1:1 to the real launcher palette in colors.xml:
-       • Base obsidian   → bg_primary      #0B0B0E
-       • Surfaces        → bg_sidebar/card #121212 / #1C1C1C / #242424
-       • Primary accent  → accent_primary  #E4E4EA (platinum, PLAY button)
-       • Brand violet    → accent_purple   #9B59E8 (client-features glow)
-       • Success         → installed_color #22C55E
-       • Danger          → like_active     #FF4444
+     CS LAUNCHER V3 — Premium Design System (Phase-2 LOCK, final)
+     Master reference = Controller Customisation page:
+       • Base obsidian           #0B0B0E
+       • Graphite gradients      #F21B1B22 → #F2131318
+       • Accent platinum/silver  #E4E4EA / #C9CBD6 (metallic — NO violet)
+       • Card radius             20dp (unified across every card family)
+       • Stroke                  0.75–1dp #2D2D35 family
+       • Ripple                  platinum-alpha family (#1-3x E4E4EA/FFFFFF)
+       • Semantic                installed green #22C55E · danger #FF4444
+     Legacy token names (cs_violet / cs_cyan / accent_purple / am_accent)
+     are KEPT for ID compatibility but now resolve to metallic silver.
      ═══════════════════════════════════════════════════════════════════ -->
 <resources>
     <!-- Base layers (exact brand values) -->
@@ -29,13 +32,13 @@
     <color name="cs_accent_soft">#33E4E4EA</color>
     <color name="cs_accent_glow">#40E4E4EA</color>
 
-    <!-- Brand violet — reserved for hero glow / client features -->
-    <color name="cs_violet">#9B59E8</color>
-    <color name="cs_violet_deep">#7B2FBE</color>
-    <color name="cs_violet_soft">#339B59E8</color>
+    <!-- Glow accent — metallic silver (legacy name kept; brand has no violet) -->
+    <color name="cs_violet">#C9CBD6</color>
+    <color name="cs_violet_deep">#8E9099</color>
+    <color name="cs_violet_soft">#33C9CBD6</color>
 
     <!-- Legacy alias kept so Phase-1 references stay valid -->
-    <color name="cs_cyan">#9B59E8</color>
+    <color name="cs_cyan">#C9CBD6</color>
 
     <!-- Semantic -->
     <color name="cs_success">#22C55E</color>

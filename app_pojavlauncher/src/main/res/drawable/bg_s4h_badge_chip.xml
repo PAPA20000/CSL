@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Settings-HOME category badge chip: violet-tinted capsule -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#269B59E8" />
+    <solid android:color="#26C9CBD6" />
     <corners android:radius="999dp" />
-    <stroke android:width="1dp" android:color="#4D9B59E8" />
+    <stroke android:width="1dp" android:color="#4DC9CBD6" />
     <padding android:left="9dp" android:top="3dp" android:right="9dp" android:bottom="3dp" />
 </shape>

@@ -11,7 +11,7 @@
         <clip>
             <shape android:shape="rectangle">
                 <gradient android:angle="0"
-                    android:startColor="#7B2FBE" android:centerColor="#9B59E8" android:endColor="#D8D8E2" />
+                    android:startColor="#8E9099" android:centerColor="#C9CBD6" android:endColor="#D8D8E2" />
                 <corners android:radius="999dp" />
             </shape>
         </clip>

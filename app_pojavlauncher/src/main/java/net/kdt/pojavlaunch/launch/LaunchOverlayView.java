@@ -330,11 +330,11 @@ public final class LaunchOverlayView extends View {
         super.onSizeChanged(w, h, oldw, oldh);
         float beamWidth = Math.min(w - dp(64), dp(260));
         mBeamGradient = new LinearGradient(0, 0, beamWidth, 0,
-                new int[]{0x00E4E4EA, 0x88E4E4EA, 0xFF9B59E8, 0xFFE4E4EA, 0x00E4E4EA},
+                new int[]{0x00E4E4EA, 0x88E4E4EA, 0xFFC9CBD6, 0xFFE4E4EA, 0x00E4E4EA},
                 new float[]{0f, 0.30f, 0.52f, 0.72f, 1f}, Shader.TileMode.CLAMP);
         mBeamPaint.setShader(mBeamGradient);
         mGlowGradient = new RadialGradient(0, 0, dp(110),
-                new int[]{0x559B59E8, 0x229B59E8, 0x009B59E8},
+                new int[]{0x55C9CBD6, 0x22C9CBD6, 0x00C9CBD6},
                 new float[]{0f, 0.55f, 1f}, Shader.TileMode.CLAMP);
         mGlowPaint.setShader(mGlowGradient);
     }
@@ -419,7 +419,7 @@ public final class LaunchOverlayView extends View {
 
         // glowing tip dot
         float tipX = cx - beamW + sweepX - beamW * 0.5f + beamW;
-        mBeamGlowPaint.setColor(0xCC9B59E8);
+        mBeamGlowPaint.setColor(0xCCC9CBD6);
         float tipAlpha = tipX > cx - beamW * 0.5f && tipX < cx + beamW * 0.5f ? 1f : 0f;
         if (tipAlpha > 0f) {
             canvas.drawCircle(tipX, beamY + beamH * 0.5f, dp(6), mBeamGlowPaint);
@@ -430,7 +430,7 @@ public final class LaunchOverlayView extends View {
             int life = mPLife[i];
             if (life <= 0) continue;
             int alpha = Math.min(200, life * 8);
-            mParticlePaint.setColor((alpha << 24) | (i % 3 == 0 ? 0x9B59E8 : 0xE4E4EA));
+            mParticlePaint.setColor((alpha << 24) | (i % 3 == 0 ? 0xC9CBD6 : 0xE4E4EA));
             canvas.drawCircle(mPX[i], mPY[i], dp(i % 4 == 0 ? 1.8f : 1.1f), mParticlePaint);
         }
 

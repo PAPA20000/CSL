@@ -25,7 +25,7 @@
             <item android:top="1dp">
                 <shape android:shape="rectangle">
                     <corners android:radius="19dp" />
-                    <gradient android:angle="0" android:startColor="#1F9B59E8" android:centerColor="#089B59E8" android:endColor="#009B59E8" />
+                    <gradient android:angle="0" android:startColor="#1FC9CBD6" android:centerColor="#08C9CBD6" android:endColor="#00C9CBD6" />
                 </shape>
             </item>
         </layer-list>

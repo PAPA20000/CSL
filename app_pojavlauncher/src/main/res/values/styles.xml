@@ -139,7 +139,7 @@
         <item name="colorTextSecondary">@color/am_text_secondary</item>
         <item name="bgMainDrawable">#121212</item>
         <item name="android:windowBackground">#121212</item>
-        <item name="colorAccent">#9C27B0</item>
+        <item name="colorAccent">#C9CBD6</item>
         <item name="colorOnSurface">@color/am_text_primary</item>
         <item name="colorOnSurfaceVariant">@color/am_text_secondary</item>
         <item name="colorSurface">#121212</item>
@@ -152,7 +152,7 @@
         <item name="android:windowBackground">@drawable/bg_gradient_amethyst</item>
         <item name="colorBgBottomBar">@color/am_bg_bottom_bar</item>
         <item name="colorBgStatusBar">@color/am_bg_status_bar</item>
-        <item name="colorAccent">#9C27B0</item>
+        <item name="colorAccent">#C9CBD6</item>
     </style>
 
     <!-- ── Arctic ───────────────────────────────────────────── -->
