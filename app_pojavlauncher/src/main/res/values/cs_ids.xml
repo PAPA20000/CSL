@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- Stable tag keys for the CS cursor engine (avoid colliding with user tags). -->
-    <item name="cse_engine_root_tag" type="id" />
-</resources>

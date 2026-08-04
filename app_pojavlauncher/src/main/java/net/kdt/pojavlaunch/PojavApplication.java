@@ -79,8 +79,6 @@ public class PojavApplication extends Application {
 				// Implicitly initializes early constants and storage constants.
 				// Required to run the main activity properly.
 				LauncherPreferences.loadPreferences(this);
-				// Desktop-style launcher cursor engine (no-op below Android N / on the game activity).
-				net.kdt.pojavlaunch.cursor.CursorEngine.install(this);
 			} else {
 				// In other cases, only initialize enough for the basicmost basics to work
 				// and not explode.

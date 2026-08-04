@@ -287,6 +287,14 @@ public class LauncherActivity extends BaseActivity {
         // Begin the LAUNCH sequence — phases now drive a premium launch overlay
         // that is completely separate from the download experience.
         net.kdt.pojavlaunch.launch.LaunchTracker.begin(prof.name, normalizedVersionId);
+        // Pre-warm the ":game" process so MainActivity's window appears without
+        // the cold-start dead gap once the launch sequence finishes.
+        try {
+            startService(new android.content.Intent(this,
+                    net.kdt.pojavlaunch.services.ProcessWarmService.class));
+        } catch (Throwable ignored) {
+            // Warming is best-effort — a denied start must never block a launch.
+        }
         new MinecraftDownloader().start(
                 this,
                 mcVersion,
