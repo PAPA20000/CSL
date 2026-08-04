@@ -318,27 +318,40 @@ public class ModVersionPickerFragment extends Fragment {
         // Sort: latest MC version first
         java.util.Collections.sort(mAllVersions, sLatestFirst);
 
-        // Req-16: judge compatibility against the selected profile, then present
-        // compatible entries first (stable partition) and crown the top one as
-        // the Recommended pick.
-        boolean recommendedCrowned = false;
-        for (VersionEntry entry : mAllVersions) {
-            entry.compatible = isEntryCompatible(entry);
-        }
-        List<VersionEntry> compatible = new ArrayList<>();
-        List<VersionEntry> incompatible = new ArrayList<>();
-        for (VersionEntry entry : mAllVersions) {
-            (entry.compatible ? compatible : incompatible).add(entry);
-        }
-        for (VersionEntry entry : compatible) {
-            if (!recommendedCrowned) {
-                entry.recommended = true;
-                recommendedCrowned = true;
+        if (isModpackContent()) {
+            // MODPACKS are self-contained (each bundle pins its own MC version and
+            // loader) — they must NOT be judged or re-ordered against the selected
+            // profile, and no version may ever be force-crowned. Users pick freely;
+            // we only tag the release channel (Latest / Stable / Beta / Alpha / Old).
+            for (int i = 0; i < mAllVersions.size(); i++) {
+                VersionEntry entry = mAllVersions.get(i);
+                entry.compatible = true;
+                entry.recommended = false;
+                entry.channel = channelFor(entry, i);
             }
+        } else {
+            // Req-16: judge compatibility against the selected profile, then present
+            // compatible entries first (stable partition) and crown the top one as
+            // the Recommended pick.
+            boolean recommendedCrowned = false;
+            for (VersionEntry entry : mAllVersions) {
+                entry.compatible = isEntryCompatible(entry);
+            }
+            List<VersionEntry> compatible = new ArrayList<>();
+            List<VersionEntry> incompatible = new ArrayList<>();
+            for (VersionEntry entry : mAllVersions) {
+                (entry.compatible ? compatible : incompatible).add(entry);
+            }
+            for (VersionEntry entry : compatible) {
+                if (!recommendedCrowned) {
+                    entry.recommended = true;
+                    recommendedCrowned = true;
+                }
+            }
+            mAllVersions.clear();
+            mAllVersions.addAll(compatible);
+            mAllVersions.addAll(incompatible);
         }
-        mAllVersions.clear();
-        mAllVersions.addAll(compatible);
-        mAllVersions.addAll(incompatible);
 
         // Publish the store's latest-known version for card state resolution
         // (Installed / Update Available / Newer-than-store).
@@ -424,6 +437,28 @@ public class ModVersionPickerFragment extends Fragment {
 
     // ── Data class ────────────────────────────────────────────
 
+    private static final int CHANNEL_NONE = 0;
+    private static final int CHANNEL_LATEST = 1;
+    private static final int CHANNEL_STABLE = 2;
+    private static final int CHANNEL_BETA = 3;
+    private static final int CHANNEL_ALPHA = 4;
+    private static final int CHANNEL_OLD = 5;
+
+    private boolean isModpackContent() {
+        return "modpack".equals(mContentType);
+    }
+
+    /** Release-channel heuristic for modpack versions (display only). */
+    private static int channelFor(VersionEntry entry, int sortedIndex) {
+        if (sortedIndex == 0) return CHANNEL_LATEST;
+        String probe = (entry.name + " " + (entry.url != null ? entry.url : "")).toLowerCase(java.util.Locale.US);
+        if (probe.contains("alpha")) return CHANNEL_ALPHA;
+        if (probe.contains("beta") || probe.contains("snapshot")
+                || probe.contains("pre") || probe.contains("rc")) return CHANNEL_BETA;
+        // plain releases: newest handful read as stable, the long tail as old
+        return sortedIndex < 6 ? CHANNEL_STABLE : CHANNEL_OLD;
+    }
+
     static class VersionEntry {
         final String name;
         final String mcVersion;
@@ -436,6 +471,7 @@ public class ModVersionPickerFragment extends Fragment {
         final String[] loaders;  // supported loaders for this version
         boolean compatible = true;   // vs selected profile (Req-16)
         boolean recommended = false; // best compatible pick, pinned at top
+        int channel = 0;             // release channel (modpacks only)
 
         VersionEntry(String name, String mcVersion, String url, int index,
                      String hash, String[] depIds, String[] depTypes) {
@@ -487,27 +523,33 @@ public class ModVersionPickerFragment extends Fragment {
                 holder.mcBadge.setVisibility(View.GONE);
             }
 
-            // Compat badge: green ✓ / red ✕ / grey Unknown against the selected profile
-            boolean hasMcEvidence = (entry.mcList != null && entry.mcList.length > 0)
-                    || (entry.mcVersion != null && !entry.mcVersion.isEmpty());
-            if (mTargetMcVersion == null || !hasMcEvidence) {
-                holder.compatBadge.setVisibility(View.VISIBLE);
-                holder.compatBadge.setText("? Unknown");
-                holder.compatBadge.setTextColor(0xFF9C9CA8);
-                holder.compatBadge.setBackgroundResource(R.drawable.bg_stat_chip);
-                holder.itemView.setAlpha(1f);
-            } else if (entry.compatible) {
-                holder.compatBadge.setVisibility(View.VISIBLE);
-                holder.compatBadge.setText("✓ Compatible");
-                holder.compatBadge.setTextColor(0xFF9FD6AC); // muted success
-                holder.compatBadge.setBackgroundResource(R.drawable.bg_badge_compat_ok);
+            if (isModpackContent()) {
+                // Modpacks: no profile-compat judging, no dimming — channel tag instead
+                holder.compatBadge.setVisibility(View.GONE);
                 holder.itemView.setAlpha(1f);
             } else {
-                holder.compatBadge.setVisibility(View.VISIBLE);
-                holder.compatBadge.setText("✕ Incompatible");
-                holder.compatBadge.setTextColor(0xFFE5A0A6); // muted rose
-                holder.compatBadge.setBackgroundResource(R.drawable.bg_badge_compat_bad);
-                holder.itemView.setAlpha(0.62f); // visually de-emphasize
+                // Compat badge: green ✓ / red ✕ / grey Unknown against the selected profile
+                boolean hasMcEvidence = (entry.mcList != null && entry.mcList.length > 0)
+                        || (entry.mcVersion != null && !entry.mcVersion.isEmpty());
+                if (mTargetMcVersion == null || !hasMcEvidence) {
+                    holder.compatBadge.setVisibility(View.VISIBLE);
+                    holder.compatBadge.setText("? Unknown");
+                    holder.compatBadge.setTextColor(0xFF9C9CA8);
+                    holder.compatBadge.setBackgroundResource(R.drawable.bg_stat_chip);
+                    holder.itemView.setAlpha(1f);
+                } else if (entry.compatible) {
+                    holder.compatBadge.setVisibility(View.VISIBLE);
+                    holder.compatBadge.setText("✓ Compatible");
+                    holder.compatBadge.setTextColor(0xFF9FD6AC); // muted success
+                    holder.compatBadge.setBackgroundResource(R.drawable.bg_badge_compat_ok);
+                    holder.itemView.setAlpha(1f);
+                } else {
+                    holder.compatBadge.setVisibility(View.VISIBLE);
+                    holder.compatBadge.setText("✕ Incompatible");
+                    holder.compatBadge.setTextColor(0xFFE5A0A6); // muted rose
+                    holder.compatBadge.setBackgroundResource(R.drawable.bg_badge_compat_bad);
+                    holder.itemView.setAlpha(0.62f); // visually de-emphasize
+                }
             }
 
             // Loader chip(s): first loader, capitalized (Fabric/Forge/NeoForge/Quilt...)
@@ -523,8 +565,47 @@ public class ModVersionPickerFragment extends Fragment {
                 }
             }
 
-            // Recommended crown for the best compatible pick
-            holder.recBadge.setVisibility(entry.recommended ? View.VISIBLE : View.GONE);
+            // Mods: Recommended crown on the best compatible pick.
+            // Modpacks: release-channel tag on every row (never a forced pick).
+            if (isModpackContent()) {
+                switch (entry.channel) {
+                    case CHANNEL_LATEST:
+                        holder.recBadge.setVisibility(View.VISIBLE);
+                        holder.recBadge.setText(R.string.mp_channel_latest);
+                        holder.recBadge.setTextColor(0xFFC9A6FF);
+                        holder.recBadge.setBackgroundResource(R.drawable.bg_mp_tag_latest);
+                        break;
+                    case CHANNEL_STABLE:
+                        holder.recBadge.setVisibility(View.VISIBLE);
+                        holder.recBadge.setText(R.string.mp_channel_stable);
+                        holder.recBadge.setTextColor(0xFF7BE0A3);
+                        holder.recBadge.setBackgroundResource(R.drawable.bg_mp_tag_stable);
+                        break;
+                    case CHANNEL_BETA:
+                        holder.recBadge.setVisibility(View.VISIBLE);
+                        holder.recBadge.setText(R.string.mp_channel_beta);
+                        holder.recBadge.setTextColor(0xFFF6C177);
+                        holder.recBadge.setBackgroundResource(R.drawable.bg_mp_tag_beta);
+                        break;
+                    case CHANNEL_ALPHA:
+                        holder.recBadge.setVisibility(View.VISIBLE);
+                        holder.recBadge.setText(R.string.mp_channel_alpha);
+                        holder.recBadge.setTextColor(0xFFF9A8AE);
+                        holder.recBadge.setBackgroundResource(R.drawable.bg_mp_tag_alpha);
+                        break;
+                    case CHANNEL_OLD:
+                        holder.recBadge.setVisibility(View.VISIBLE);
+                        holder.recBadge.setText(R.string.mp_channel_old);
+                        holder.recBadge.setTextColor(0xFF9C9CA8);
+                        holder.recBadge.setBackgroundResource(R.drawable.bg_mp_tag_old);
+                        break;
+                    default:
+                        holder.recBadge.setVisibility(View.GONE);
+                        break;
+                }
+            } else {
+                holder.recBadge.setVisibility(entry.recommended ? View.VISIBLE : View.GONE);
+            }
 
             holder.itemView.setOnClickListener(v -> openInstallScreen(entry));
         }
