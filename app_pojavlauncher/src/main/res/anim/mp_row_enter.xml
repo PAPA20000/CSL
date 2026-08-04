@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MP row entrance — rise + settle for modpack flow lists -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@android:interpolator/accelerate_decelerate"
+    android:duration="280">
+    <alpha android:fromAlpha="0" android:toAlpha="1" />
+    <translate android:fromYDelta="16dp" android:toYDelta="0" />
+    <scale android:fromXScale="0.97" android:toXScale="1.0"
+        android:fromYScale="0.94" android:toYScale="1.0"
+        android:pivotX="50%" android:pivotY="50%" />
+</set>

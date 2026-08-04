@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_studio_page"
+    android:background="@drawable/bg_mp_page"
     android:orientation="vertical">
 
     <!-- ── HEADER (back + title + search bar) ── -->
@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@drawable/bg_studio_header"
+        android:background="@drawable/bg_mp_header"
         android:paddingTop="8dp"
         android:paddingBottom="8dp">
 
@@ -60,7 +60,7 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:background="@drawable/search_bar_bg">
+                android:background="@drawable/bg_mp_search">
 
                 <EditText
                     android:id="@+id/search_mod_edittext"
@@ -92,7 +92,7 @@
                 android:layout_width="36dp"
                 android:layout_height="36dp"
                 android:layout_marginStart="8dp"
-                android:background="@drawable/background_card"
+                android:background="@drawable/bg_mp_card"
                 android:padding="7dp"
                 android:src="@drawable/ic_filter"
                 android:tint="#E4E4EA" />
@@ -113,6 +113,7 @@
 
     <!-- Mod list -->
     <androidx.recyclerview.widget.RecyclerView
+        android:layoutAnimation="@anim/mp_rows_layout"
         android:id="@+id/search_mod_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"

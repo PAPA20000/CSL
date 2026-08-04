@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:minHeight="64dp"
-        android:background="@drawable/bg_version_list_item"
+        android:background="@drawable/bg_mp_version_row"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="14dp"
@@ -19,7 +19,7 @@
         <FrameLayout
             android:layout_width="38dp"
             android:layout_height="38dp"
-            android:background="@drawable/bg_deck_icon_tile">
+            android:background="@drawable/bg_mp_icon_tile">
 
             <ImageView
                 android:id="@+id/mod_icon"

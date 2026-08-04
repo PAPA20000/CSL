@@ -128,11 +128,11 @@ public class ModVersionAdapter extends RecyclerView.Adapter<ModVersionAdapter.Vi
         if (type.equalsIgnoreCase("release")) {
             holder.tvBadgeStable.setText("Stable");
             holder.tvBadgeStable.setTextColor(0xFFE4E4EA);
-            holder.tvBadgeStable.setBackgroundResource(R.drawable.bg_stable_pill);
+            holder.tvBadgeStable.setBackgroundResource(R.drawable.bg_mp_stable_pill);
         } else {
             holder.tvBadgeStable.setText(type.substring(0, 1).toUpperCase() + type.substring(1));
             holder.tvBadgeStable.setTextColor(0xFFFFC107);
-            holder.tvBadgeStable.setBackgroundResource(R.drawable.bg_badge_pill);
+            holder.tvBadgeStable.setBackgroundResource(R.drawable.bg_mp_pill);
         }
 
         String date = version.date_published != null ? version.date_published : "";

@@ -8,13 +8,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_browse_page">
+    android:background="@drawable/bg_mp_page">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/mod_store_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_browse_header"
+        android:background="@drawable/bg_mp_header"
         app:elevation="4dp">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
@@ -58,7 +58,7 @@
                             android:id="@+id/mod_store_back"
                             android:layout_width="40dp"
                             android:layout_height="40dp"
-                            android:background="@drawable/bg_browse_filter_btn"
+                            android:background="@drawable/bg_mp_filter"
                             android:contentDescription="@string/global_back"
                             android:padding="10dp"
                             android:src="@drawable/ic_arrow_back_white"
@@ -98,7 +98,7 @@
                                 android:id="@+id/search_mod_filter"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
-                                android:background="@drawable/bg_browse_filter_btn"
+                                android:background="@drawable/bg_mp_filter"
                                 android:contentDescription="@string/browse_filter_cd"
                                 android:padding="10dp"
                                 android:src="@drawable/ic_filter"
@@ -110,7 +110,7 @@
                                 android:layout_height="7dp"
                                 android:layout_gravity="top|end"
                                 android:layout_margin="7dp"
-                                android:background="@drawable/bg_browse_filter_dot"
+                                android:background="@drawable/bg_mp_filter_dot"
                                 android:visibility="gone" />
                         </FrameLayout>
                     </LinearLayout>
@@ -121,7 +121,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="38dp"
                         android:layout_marginTop="8dp"
-                        android:background="@drawable/bg_browse_search_capsule"
+                        android:background="@drawable/bg_mp_search"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
@@ -167,7 +167,7 @@
                 android:id="@+id/tab_bar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_browse_tabs_track"
+                android:background="@drawable/bg_mp_tabs_track"
                 android:gravity="center_vertical"
                 android:orientation="horizontal" />
         </HorizontalScrollView>

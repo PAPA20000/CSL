@@ -5,6 +5,7 @@
     android:background="@android:color/transparent">
 
     <androidx.recyclerview.widget.RecyclerView
+        android:layoutAnimation="@anim/mp_rows_layout"
         android:id="@+id/download_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -18,7 +19,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="top|center_horizontal"
         android:layout_marginTop="16dp"
-        android:background="@drawable/bg_browse_loading_card"
+        android:background="@drawable/bg_mp_skeleton"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="16dp"
@@ -50,7 +51,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:background="@drawable/bg_browse_loading_card"
+        android:background="@drawable/bg_mp_skeleton"
         android:paddingStart="18dp"
         android:paddingTop="13dp"
         android:paddingEnd="18dp"
