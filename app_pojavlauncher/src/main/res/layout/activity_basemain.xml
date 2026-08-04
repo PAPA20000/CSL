@@ -15,60 +15,65 @@
 		android:layout_width="match_parent"
 		android:layout_height="match_parent">
 
-		<!-- ══ Launch stage backdrop (Phase 5, Req-3/4) ══
-		     Branded "opening window" stage that sits BEHIND the game surface:
-		     the moment MainActivity appears there is never a blank black wait,
-		     and as soon as the GL surface starts drawing it fully covers this. -->
-		<LinearLayout
+		<!-- ══ Launch stage (Phase 5 Req-3/4 + Remote Config feature) ══
+		     Shows the existing static "Opening game window…" stage, or — when
+		     the remote config enables it AND the user picked Video Loading
+		     Screen — a streamed MP4 behind the game surface. -->
+		<net.kdt.pojavlaunch.launch.LaunchStageView
 			android:id="@+id/launch_stage_backdrop"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
-			android:background="@drawable/bg_runtime_setup_page"
-			android:gravity="center"
-			android:orientation="vertical"
-			android:clickable="false"
-			android:focusable="false">
+			android:background="@drawable/bg_runtime_setup_page">
 
-			<ImageView
-				android:layout_width="64dp"
-				android:layout_height="64dp"
-				android:src="@mipmap/ic_launcher_round"
-				android:contentDescription="@null" />
+			<LinearLayout
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:gravity="center"
+				android:orientation="vertical"
+				android:clickable="false"
+				android:focusable="false">
 
-			<TextView
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_marginTop="16dp"
-				android:letterSpacing="0.22"
-				android:text="CS LAUNCHER V3"
-				android:textColor="#B9BBC4"
-				android:textSize="10sp"
-				android:textStyle="bold" />
+				<ImageView
+					android:layout_width="64dp"
+					android:layout_height="64dp"
+					android:src="@mipmap/ic_launcher_round"
+					android:contentDescription="@null" />
 
-			<TextView
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_marginTop="6dp"
-				android:text="@string/cs_stage_title"
-				android:textColor="#F2F2F6"
-				android:textSize="17sp"
-				android:textStyle="bold" />
+				<TextView
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginTop="16dp"
+					android:letterSpacing="0.22"
+					android:text="CS LAUNCHER V3"
+					android:textColor="#B9BBC4"
+					android:textSize="10sp"
+					android:textStyle="bold" />
 
-			<ProgressBar
-				android:layout_width="28dp"
-				android:layout_height="28dp"
-				android:layout_marginTop="14dp"
-				android:indeterminate="true"
-				android:indeterminateTint="#B9BBC4" />
+				<TextView
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginTop="6dp"
+					android:text="@string/cs_stage_title"
+					android:textColor="#F2F2F6"
+					android:textSize="17sp"
+					android:textStyle="bold" />
 
-			<TextView
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_marginTop="12dp"
-				android:text="@string/cs_stage_sub"
-				android:textColor="#8E8E9A"
-				android:textSize="11.5sp" />
-		</LinearLayout>
+				<ProgressBar
+					android:layout_width="28dp"
+					android:layout_height="28dp"
+					android:layout_marginTop="14dp"
+					android:indeterminate="true"
+					android:indeterminateTint="#B9BBC4" />
+
+				<TextView
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginTop="12dp"
+					android:text="@string/cs_stage_sub"
+					android:textColor="#8E8E9A"
+					android:textSize="11.5sp" />
+			</LinearLayout>
+		</net.kdt.pojavlaunch.launch.LaunchStageView>
 
 		<net.kdt.pojavlaunch.customcontrols.ControlLayout
 			android:id="@+id/main_control_layout"

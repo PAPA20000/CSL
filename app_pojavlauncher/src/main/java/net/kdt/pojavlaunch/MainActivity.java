@@ -277,6 +277,10 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             final String finalVersion = version;
             minecraftGLView.setSurfaceReadyListener(() -> {
                 try {
+                    // Game render starts now: stop any streaming loading video
+                    // on this exact frame (Remote Config feature, req: no delay).
+                    net.kdt.pojavlaunch.launch.LaunchStageView.onGameRenderStarted();
+
                     // Setup virtual mouse right before launching
                     if (PREF_VIRTUAL_MOUSE_START) {
                         touchpad.post(() -> touchpad.switchState());

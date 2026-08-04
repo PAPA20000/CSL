@@ -369,6 +369,19 @@ public class LauncherPreferenceFragment extends Fragment {
                     launcherItems.add(new SettingItem("notification_permission_request", SettingItem.TYPE_SWITCH, getString(R.string.preference_ask_for_notification_title), getString(R.string.preference_ask_for_notification_description), false));
                     launcherItems.add(new SettingItem("microphone_permission_request", SettingItem.TYPE_SWITCH, getString(R.string.preference_ask_for_microphone_title), getString(R.string.preference_ask_for_microphone_description), false));
                     launcherItems.add(new SettingItem("downloadSource", SettingItem.TYPE_DROPDOWN, getString(R.string.preference_download_source_title), getString(R.string.preference_download_source_description), "default").setDropdownOptions(new String[]{"Default", "Mirror (China)"}, new String[]{"default", "china"}));
+                    // Remote Config feature — Black vs Video loading screen (req 5/6).
+                    // Written by the settings save flow into cslauncher_settings and read
+                    // live by LaunchStageView as loadingScreenStyle = black|video.
+                    launcherItems.add(new SettingItem(
+                            net.kdt.pojavlaunch.launch.LaunchStageView.PREF_KEY_STYLE,
+                            SettingItem.TYPE_DROPDOWN,
+                            getString(R.string.cs_loading_screen_style_title),
+                            getString(R.string.cs_loading_screen_style_summary),
+                            net.kdt.pojavlaunch.launch.LaunchStageView.STYLE_BLACK)
+                            .setDropdownOptions(
+                                    new String[]{"Black Loading Screen", "Video Loading Screen"},
+                                    new String[]{net.kdt.pojavlaunch.launch.LaunchStageView.STYLE_BLACK,
+                                            net.kdt.pojavlaunch.launch.LaunchStageView.STYLE_VIDEO}));
                     launcherItems.add(new SettingItem("verifyManifest", SettingItem.TYPE_SWITCH, getString(R.string.preference_verify_manifest_title), getString(R.string.preference_verify_manifest_description), true));
                     categories.add(new SettingCategory("Launcher Configurations", launcherItems));
                     break;
