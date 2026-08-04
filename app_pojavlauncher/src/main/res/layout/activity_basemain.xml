@@ -15,6 +15,61 @@
 		android:layout_width="match_parent"
 		android:layout_height="match_parent">
 
+		<!-- ══ Launch stage backdrop (Phase 5, Req-3/4) ══
+		     Branded "opening window" stage that sits BEHIND the game surface:
+		     the moment MainActivity appears there is never a blank black wait,
+		     and as soon as the GL surface starts drawing it fully covers this. -->
+		<LinearLayout
+			android:id="@+id/launch_stage_backdrop"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:background="@drawable/bg_runtime_setup_page"
+			android:gravity="center"
+			android:orientation="vertical"
+			android:clickable="false"
+			android:focusable="false">
+
+			<ImageView
+				android:layout_width="64dp"
+				android:layout_height="64dp"
+				android:src="@mipmap/ic_launcher_round"
+				android:contentDescription="@null" />
+
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="16dp"
+				android:letterSpacing="0.22"
+				android:text="CS LAUNCHER V3"
+				android:textColor="#B9BBC4"
+				android:textSize="10sp"
+				android:textStyle="bold" />
+
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="6dp"
+				android:text="@string/cs_stage_title"
+				android:textColor="#F2F2F6"
+				android:textSize="17sp"
+				android:textStyle="bold" />
+
+			<ProgressBar
+				android:layout_width="28dp"
+				android:layout_height="28dp"
+				android:layout_marginTop="14dp"
+				android:indeterminate="true"
+				android:indeterminateTint="#B9BBC4" />
+
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="12dp"
+				android:text="@string/cs_stage_sub"
+				android:textColor="#8E8E9A"
+				android:textSize="11.5sp" />
+		</LinearLayout>
+
 		<net.kdt.pojavlaunch.customcontrols.ControlLayout
 			android:id="@+id/main_control_layout"
 			android:layout_width="match_parent"
@@ -72,12 +127,21 @@
 
 	</FrameLayout>
 
+	<!-- Req-4: obsidian glass control panel hosting Keyboard/Mouse/Logs/ForceClose -->
 	<ListView
-		android:layout_width="200dp"
+		android:layout_width="232dp"
 		android:layout_height="match_parent"
 		android:layout_gravity="right"
-		android:background="?attr/colorBackgroundFloating"
+		android:background="@drawable/bg_ingame_nav_glass"
 		android:fitsSystemWindows="false"
+		android:clipToPadding="false"
+		android:paddingStart="10dp"
+		android:paddingEnd="12dp"
+		android:paddingTop="18dp"
+		android:paddingBottom="18dp"
+		android:divider="@null"
+		android:dividerHeight="0dp"
+		android:overScrollMode="never"
 		android:id="@+id/main_navigation_view"/>
 
 </androidx.drawerlayout.widget.DrawerLayout>

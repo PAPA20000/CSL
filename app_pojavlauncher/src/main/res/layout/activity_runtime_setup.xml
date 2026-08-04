@@ -131,6 +131,12 @@
                 android:layout_width="104dp"
                 android:layout_height="104dp">
 
+                <!-- violet halo behind the aggregate ring (Req-5 loading visual) -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_rs_ring_halo" />
+
                 <net.kdt.pojavlaunch.multirt.RuntimeRingView
                     android:id="@+id/rs_ring"
                     android:layout_width="match_parent"
@@ -175,20 +181,41 @@
             </LinearLayout>
         </LinearLayout>
 
-        <ScrollView
+        <!-- Req-5: HORIZONTAL stage carousel replaces the old vertical row
+             stack. Each runtime downloads inside a wide gradient stage card;
+             swipe sideways through queued → downloading → ready stages. -->
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_marginTop="18dp"
-            android:layout_weight="1"
-            android:overScrollMode="never"
-            android:scrollbars="none">
+            android:layout_marginTop="16dp"
+            android:layout_weight="1">
 
-            <LinearLayout
-                android:id="@+id/rs_install_rows"
+            <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical" />
-        </ScrollView>
+                android:layout_gravity="center_vertical"
+                android:clipToPadding="false"
+                android:paddingEnd="26dp"
+                android:overScrollMode="never"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/rs_install_rows"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
+
+            <!-- edge fade hinting at more stages past the fold -->
+            <View
+                android:layout_width="30dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:background="@drawable/bg_rs_fade_edge"
+                android:clickable="false"
+                android:focusable="false" />
+        </FrameLayout>
 
         <Button
             android:id="@+id/rs_btn_done"

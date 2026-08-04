@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- In-game drawer menu tile (Phase 5, Req-4): violet spine + refined type.
+     ArrayAdapter contract: contains a TextView with @android:id/text1. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="46dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@drawable/bg_ingame_menu_ripple"
+    android:paddingStart="12dp"
+    android:paddingEnd="10dp">
+
+    <!-- violet spine -->
+    <View
+        android:layout_width="3dp"
+        android:layout_height="18dp"
+        android:background="@drawable/bg_ingame_menu_spine" />
+
+    <TextView
+        android:id="@android:id/text1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="11dp"
+        android:textColor="#ECECF2"
+        android:textSize="13sp"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="0.01"
+        android:ellipsize="end"
+        android:maxLines="1" />
+
+    <ImageView
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:layout_marginStart="8dp"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_chevron_right"
+        app:tint="#6A6A75" />
+</LinearLayout>

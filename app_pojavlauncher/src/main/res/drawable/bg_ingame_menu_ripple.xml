@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Press ripple for in-game menu tiles -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="#2E9B59E8" />

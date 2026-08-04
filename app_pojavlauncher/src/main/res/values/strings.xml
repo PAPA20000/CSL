@@ -955,10 +955,12 @@
     <string name="cs_world_sort_version">Version</string>
     <string name="cs_world_loading">Scanning worlds…</string>
     <string name="cs_world_refresh">Refresh worlds</string>
+    <string name="cs_stage_title">Opening game window…</string>
+    <string name="cs_stage_sub">Minecraft is starting — controls appear automatically.</string>
     <string name="cs_launch_preparing">Preparing launcher…</string>
     <string name="cs_launch_verifying">Verifying assets…</string>
     <string name="cs_launch_runtime">Checking runtime…</string>
-    <string name="cs_launch_starting">Starting Minecraft…</string>
+    <string name="cs_launch_starting">Opening game window…</string>
     <string name="cs_world_empty">No worlds found</string>
     <string name="cs_world_empty_search">No worlds match “%s”</string>
     <string name="cs_world_empty_hint">Play a world once, or import one below</string>

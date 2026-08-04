@@ -76,6 +76,7 @@ public class RuntimeSetupActivity extends BaseActivity {
 
     private static class InstallRow {
         int major; View root; TextView chip; TextView stats; TextView stepText;
+        TextView bigPercent;
         ProgressBar bar; View spinner; View check;
         NewJREUtil.ExternalRuntime runtime;
         int state; // 0 queued, 1 downloading, 2 installing, 3 ready, 4 failed
@@ -175,6 +176,14 @@ public class RuntimeSetupActivity extends BaseActivity {
             }
             mCards.add(st);
             mCardContainer.addView(st.root);
+            if (st.root.getVisibility() == View.VISIBLE) {
+                float dd = getResources().getDisplayMetrics().density;
+                st.root.setAlpha(0f);
+                st.root.setTranslationX(36f * dd);
+                st.root.animate().alpha(1f).translationX(0f)
+                        .setStartDelay(70L + i * 70L).setDuration(300)
+                        .setInterpolator(new DecelerateInterpolator(1.4f)).start();
+            }
         }
     }
 
@@ -211,16 +220,16 @@ public class RuntimeSetupActivity extends BaseActivity {
         buildInstallRows(queue);
 
         // State transition: selection slides out, install deck rises in
-        mSelectContainer.animate().alpha(0f).translationY(-18f *
+        mSelectContainer.animate().alpha(0f).translationX(-56f *
                 getResources().getDisplayMetrics().density).setDuration(220)
                 .withEndAction(() -> {
             mSelectContainer.setVisibility(View.GONE);
             mInstallContainer.setVisibility(View.VISIBLE);
             mInstallContainer.setAlpha(0f);
-            mInstallContainer.setTranslationY(26f *
+            mInstallContainer.setTranslationX(64f *
                     getResources().getDisplayMetrics().density);
-            mInstallContainer.animate().alpha(1f).translationY(0f)
-                    .setDuration(340).setInterpolator(new DecelerateInterpolator(1.5f)).start();
+            mInstallContainer.animate().alpha(1f).translationX(0f)
+                    .setDuration(360).setInterpolator(new DecelerateInterpolator(1.5f)).start();
             staggerRows();
         }).start();
 
@@ -248,6 +257,8 @@ public class RuntimeSetupActivity extends BaseActivity {
             row.bar = row.root.findViewById(R.id.install_progress_bar);
             row.spinner = row.root.findViewById(R.id.install_spinner);
             row.check = row.root.findViewById(R.id.install_check);
+            row.bigPercent = row.root.findViewById(R.id.install_big_percent);
+            if (row.bigPercent != null) row.bigPercent.setText("0%");
             ((TextView) row.root.findViewById(R.id.install_major_text)).setText(String.valueOf(c.major));
             ((TextView) row.root.findViewById(R.id.install_name_text)).setText("Java " + c.major);
             setRowChip(row, getString(R.string.rw_queued), 0xFF9C9CA8, R.drawable.bg_runtime_chip_neutral);
@@ -263,9 +274,9 @@ public class RuntimeSetupActivity extends BaseActivity {
         for (int i = 0; i < mRows.size(); i++) {
             View r = mRows.get(i).root;
             r.setAlpha(0f);
-            r.setTranslationY(16 * d);
-            r.animate().alpha(1f).translationY(0f).setStartDelay(120L + i * 90L)
-                    .setDuration(280).setInterpolator(new DecelerateInterpolator(1.5f)).start();
+            r.setTranslationX(42 * d);
+            r.animate().alpha(1f).translationX(0f).setStartDelay(120L + i * 110L)
+                    .setDuration(320).setInterpolator(new DecelerateInterpolator(1.5f)).start();
         }
     }
 
@@ -297,6 +308,7 @@ public class RuntimeSetupActivity extends BaseActivity {
                     Double remain = va != null && va.length > 4 && va[4] instanceof Number ? ((Number) va[4]).doubleValue() : -1;
                     mCurrentPct = progress;
                     setBarProgress(current.bar, progress);
+                    if (current.bigPercent != null) current.bigPercent.setText(progress + "%");
                     if (totMb > 0) {
                         String s = String.format(Locale.US, "%.1f / %.0f MB", curMb, totMb);
                         if (speed > 0) s += String.format(Locale.US, "  •  %.1f MB/s", speed);
@@ -329,7 +341,7 @@ public class RuntimeSetupActivity extends BaseActivity {
             runOnUiThreadSafe(() -> {
                 row.state = 1;
                 mCurrentPct = 0;
-                row.root.setBackgroundResource(R.drawable.bg_runtime_card_selected);
+                row.root.setBackgroundResource(R.drawable.bg_rs_stage_card_active);
                 row.spinner.setVisibility(View.VISIBLE);
                 setRowChip(row, getString(R.string.rw_downloading), 0xFFD8C79A,
                         R.drawable.bg_runtime_chip_recommended);
@@ -353,6 +365,8 @@ public class RuntimeSetupActivity extends BaseActivity {
                 if (success) {
                     row.state = 3;
                     setBarProgress(row.bar, 100);
+                    if (row.bigPercent != null) row.bigPercent.setText("100%");
+                    row.root.setBackgroundResource(R.drawable.bg_rs_stage_card_success);
                     setRowChip(row, getString(R.string.rw_ready), 0xFF9FD6AC,
                             R.drawable.bg_runtime_chip_installed);
                     row.stats.setText(R.string.rs_stats_ready);
@@ -362,7 +376,7 @@ public class RuntimeSetupActivity extends BaseActivity {
                             .setInterpolator(new android.view.animation.OvershootInterpolator()).start();
                 } else {
                     row.state = 4;
-                    row.root.setBackgroundResource(R.drawable.bg_runtime_card);
+                    row.root.setBackgroundResource(R.drawable.bg_rs_stage_card_failed);
                     setRowChip(row, getString(R.string.rw_failed), 0xFFE5A0A6,
                             R.drawable.bg_runtime_chip_installed);
                     row.stats.setText(R.string.rs_stats_failed);
@@ -379,6 +393,7 @@ public class RuntimeSetupActivity extends BaseActivity {
         row.state = 1;
         row.root.setOnClickListener(null);
         runOnUiThreadSafe(() -> {
+            row.root.setBackgroundResource(R.drawable.bg_rs_stage_card_active);
             row.spinner.setVisibility(View.VISIBLE);
             setRowChip(row, getString(R.string.rw_downloading), 0xFFD8C79A,
                     R.drawable.bg_runtime_chip_recommended);
@@ -395,6 +410,8 @@ public class RuntimeSetupActivity extends BaseActivity {
                 if (success) {
                     row.state = 3;
                     setBarProgress(row.bar, 100);
+                    if (row.bigPercent != null) row.bigPercent.setText("100%");
+                    row.root.setBackgroundResource(R.drawable.bg_rs_stage_card_success);
                     setRowChip(row, getString(R.string.rw_ready), 0xFF9FD6AC,
                             R.drawable.bg_runtime_chip_installed);
                     row.stats.setText(R.string.rs_stats_ready);
@@ -404,6 +421,7 @@ public class RuntimeSetupActivity extends BaseActivity {
                             .setInterpolator(new android.view.animation.OvershootInterpolator()).start();
                 } else {
                     row.state = 4;
+                    row.root.setBackgroundResource(R.drawable.bg_rs_stage_card_failed);
                     setRowChip(row, getString(R.string.rw_failed), 0xFFE5A0A6,
                             R.drawable.bg_runtime_chip_installed);
                     row.stats.setText(R.string.rs_stats_failed);
