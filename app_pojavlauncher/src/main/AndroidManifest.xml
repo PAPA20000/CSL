@@ -43,10 +43,13 @@
             android:exported="false" />
 
         <!-- Full-screen first-launch Java runtime installer -->
+        <!-- sensorLandscape: the launcher itself is landscape (Task 2); the
+             runtime setup page follows with its dedicated layout-land split. -->
         <activity
             android:name=".multirt.RuntimeSetupActivity"
             android:exported="false"
-            android:launchMode="singleTop" />
+            android:launchMode="singleTop"
+            android:screenOrientation="sensorLandscape" />
 
         <meta-data
             android:name="android.max_aspect"

@@ -68,6 +68,8 @@
     <string name="mcl_setting_renderer_gles2_4">Holy GL4ES - (1.21.4&lt; only, fast)</string>
     <string name="mcl_setting_renderer_vulkan_zink">Zink (Vulkan) - (all versions, mid)</string>
     <string name="mcl_setting_renderer_mobileglues">MobileGlues (OpenGL ES) - (1.17+ only, fast)</string>
+    <string name="mcl_setting_renderer_freedreno">Freedreno (Adreno) - (1.20.x, fast, experimental)</string>
+    <string name="mcl_setting_renderer_panfrost">Panfrost (Mali) - (up to 1.21.4, experimental)</string>
     <string name="mcl_setting_renderer_ltw">LTW (OpenGL ES 3) - 1.17+ only</string>
     <string name="mcl_setting_renderer_KW">Krypton Wrapper - (all versions, fast)</string>
     <string name="mcl_setting_veroption_release">Release</string>

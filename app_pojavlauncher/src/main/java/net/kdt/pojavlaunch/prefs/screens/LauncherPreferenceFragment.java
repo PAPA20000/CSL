@@ -387,7 +387,7 @@ public class LauncherPreferenceFragment extends Fragment {
                     launcherItems.add(new SettingItem("set_launch_gif", SettingItem.TYPE_ACTION,
                             getString(R.string.cs_launch_gif_title),
                             getString(R.string.cs_launch_gif_summary), null)
-                            .setAction(() -> mGifPickerLauncher.launch("image/*")));
+                            .setAction(() -> mGifPickerLauncher.launch("image/gif")));
                     launcherItems.add(new SettingItem("remove_launch_gif", SettingItem.TYPE_ACTION,
                             getString(R.string.cs_launch_gif_remove_title),
                             getString(R.string.cs_launch_gif_remove_summary), null)

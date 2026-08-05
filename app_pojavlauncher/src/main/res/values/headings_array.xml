@@ -6,6 +6,8 @@
         <item name="3">@string/mcl_setting_renderer_mobileglues</item>
         <item name="4">@string/mcl_setting_renderer_ltw</item>
         <item name="5">@string/mcl_setting_renderer_KW</item>
+        <item name="6">@string/mcl_setting_renderer_freedreno</item>
+        <item name="7">@string/mcl_setting_renderer_panfrost</item>
     </string-array>
 
     <string-array name="menu_customcontrol">
@@ -44,7 +46,8 @@
         <item>opengles_mobileglues</item>
         <item>opengles3_ltw</item>
         <item>opengles3_KW</item>
-        
+        <item>gallium_freedreno</item> <!-- OSMesa gallium, Adreno (arm64) -->
+        <item>gallium_panfrost</item> <!-- OSMesa gallium, Mali (arm64), up to 1.21.4 -->
     </string-array>
     <string-array name="download_source_names">
         <item>@string/global_default</item>

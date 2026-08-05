@@ -668,7 +668,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
 
         if (hasMods("sodium"))
             Logger.appendToLog("WARNING: Sodium is being used. CS Launcher V3 supports it, but if you encounter visual glitches or crashes, report them in our community!");
-        Tools.printLauncherInfo(versionId, Tools.isValidString(minecraftProfile.javaArgs) ? minecraftProfile.javaArgs : LauncherPreferences.PREF_CUSTOM_JAVA_ARGS);
+        Tools.printLauncherInfo(versionId, Tools.isValidString(minecraftProfile.javaArgs) ? minecraftProfile.javaArgs : LauncherPreferences.PREF_CUSTOM_JAVA_ARGS, Tools.getTotalDeviceMemory(this));
         if(Tools.LOCAL_RENDERER.equals("opengles_mobileglues")) {
             try {
                 // MobileGlues needs its config.json freshly written before every launch,
