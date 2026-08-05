@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ═══════════════════════════════════════════════════════════════════
-     PERFORMANCE — one-tap device presets (user req).
-     LOW-END / HIGH-END cards apply a curated bundle of REAL prefs
-     (RAM allocation, resolution scale, vsync, zink vsync, sustained mode).
-     Controller-page master recipe: graphite gradient, 20dp, hairline stroke.
+     PERFORMANCE — one-tap device presets (user req, v2 redesign).
+     Two FULL-WIDTH stacked rows (nothing can overflow on narrow widths),
+     Controller-page master recipe: graphite gradient card, 20dp, hairline
+     stroke, platinum APPLY pills. No trailing filler — the card ends where
+     the content ends.
      ═══════════════════════════════════════════════════════════════════ -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -55,7 +56,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="One tap tunes RAM, resolution, vsync and sustained mode for your device class"
+                android:text="One tap tunes RAM, resolution and vsync for your device class"
                 android:textColor="#9A9AA6"
                 android:textSize="10.5sp" />
         </LinearLayout>
@@ -76,22 +77,22 @@
             android:visibility="gone" />
     </LinearLayout>
 
-    <!-- Preset cards -->
+    <!-- LOW-END row (full width — label column can't squeeze the pill) -->
     <LinearLayout
+        android:id="@+id/preset_low_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:orientation="horizontal">
+        android:background="@drawable/bg_s4_value"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="12dp">
 
-        <!-- LOW-END -->
         <LinearLayout
-            android:id="@+id/preset_low_card"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/bg_s4_value"
-            android:orientation="vertical"
-            android:padding="11dp">
+            android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -99,46 +100,54 @@
                 android:letterSpacing="0.08"
                 android:text="LOW-END MOBILE"
                 android:textColor="#C9CBD6"
-                android:textSize="10sp"
+                android:textSize="11sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/preset_low_points"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:lineSpacingMultiplier="1.25"
-                android:text="1280 MB RAM\n70% resolution\nVSync off (both)\nSustained mode off"
+                android:layout_marginTop="3dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="1280 MB RAM • 70% resolution • VSync off • Sustained off"
                 android:textColor="#8E8E9A"
                 android:textSize="9.5sp" />
-
-            <TextView
-                android:id="@+id/preset_low_apply"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="9dp"
-                android:background="@drawable/bg_cs_tab_pill_idle"
-                android:letterSpacing="0.1"
-                android:paddingStart="14dp"
-                android:paddingEnd="14dp"
-                android:paddingTop="6dp"
-                android:paddingBottom="7dp"
-                android:text="APPLY"
-                android:textColor="#E4E4EA"
-                android:textSize="9sp"
-                android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- HIGH-END -->
+        <TextView
+            android:id="@+id/preset_low_apply"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/bg_cs_tab_pill_idle"
+            android:letterSpacing="0.1"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="7dp"
+            android:text="APPLY"
+            android:textColor="#E4E4EA"
+            android:textSize="9sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- HIGH-END row -->
+    <LinearLayout
+        android:id="@+id/preset_high_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_s4_value"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
         <LinearLayout
-            android:id="@+id/preset_high_card"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
             android:layout_weight="1"
-            android:background="@drawable/bg_s4_value"
-            android:orientation="vertical"
-            android:padding="11dp">
+            android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -146,43 +155,36 @@
                 android:letterSpacing="0.08"
                 android:text="HIGH-END MOBILE"
                 android:textColor="#F0F0F3"
-                android:textSize="10sp"
+                android:textSize="11sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/preset_high_points"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:lineSpacingMultiplier="1.25"
-                android:text="— MB RAM\n100% resolution\nVSync off (both)\nSustained mode ON"
+                android:layout_marginTop="3dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="—"
                 android:textColor="#9C9CA8"
                 android:textSize="9.5sp" />
-
-            <TextView
-                android:id="@+id/preset_high_apply"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="9dp"
-                android:background="@drawable/bg_cs_tab_pill_active"
-                android:letterSpacing="0.1"
-                android:paddingStart="14dp"
-                android:paddingEnd="14dp"
-                android:paddingTop="6dp"
-                android:paddingBottom="7dp"
-                android:text="APPLY"
-                android:textColor="#151518"
-                android:textSize="9sp"
-                android:textStyle="bold" />
         </LinearLayout>
-    </LinearLayout>
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="Applies instantly and refreshes live values. Fine-tune individual options afterwards in their own sections."
-        android:textColor="#6E7078"
-        android:textSize="8.5sp" />
+        <TextView
+            android:id="@+id/preset_high_apply"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/bg_cs_tab_pill_active"
+            android:letterSpacing="0.1"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="7dp"
+            android:text="APPLY"
+            android:textColor="#151518"
+            android:textSize="9sp"
+            android:textStyle="bold" />
+    </LinearLayout>
 
 </LinearLayout>

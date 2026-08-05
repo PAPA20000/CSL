@@ -340,8 +340,12 @@ public final class Tools {
             String renderDistanceString = MCOptionUtils.get("renderDistance");
             renderDistance = Integer.parseInt(renderDistanceString);
         }catch (Exception e) {
+            // CS fix: a missing/unparseable key must NEVER trigger a rewrite of
+            // the user's options.txt (assuming "12" could force renderDistance=7
+            // onto a profile that never asked for it — user report: render
+            // distance keeps changing). No key → not affected → do not touch.
             Log.e("Tools", "Failed to check render distance", e);
-            renderDistance = 12; // Assume Minecraft's default render distance
+            return false;
         }
         // 7 is the render distance "magic number" above which MC creates too many buffers
         // for Adreno's OpenGL ES implementation

@@ -27,24 +27,26 @@ import java.lang.ref.WeakReference;
 /**
  * LaunchStageView — the pre-render stage + bundled loading video.
  *
- * v3 (real visibility fix): earlier versions attached the video INSIDE this
- * view, which sits BELOW the game surface in the layout. On SurfaceView mode
- * the punched surface hides the whole view hierarchy; on TextureView mode the
- * game texture composites BLACK even before frames. Either way the video was
- * running but could NEVER be seen. The video now attaches into
- * {@code @id/video_stage_host} — a dedicated layer ABOVE the game surface
- * (and below the log console) — which is what finally makes it visible.
+ * v4 — the two remaining root causes why the video NEVER actually played:
  *
- * Release contract (user req):
- *  - Video plays continuously across the whole boot (JVM start + MC init,
- *    which used to be dead-black seconds) until the game PRESENTS ITS FIRST
- *    FRAME. That moment is detected natively: every GL/OSMesa bridge
- *    increments FpsCounter's cumulative presents counter per swap; when it
- *    first advances past the baseline armed at surface-ready, the player is
- *    released immediately (≤250 ms poll). A hard safety cap covers bridges
- *    without a Java-visible swap hook (e.g. zink/vulkan).
- *  - No black flash (alpha-0 until MEDIA_INFO_VIDEO_RENDERING_START), no leak
- *    (full listener-null + stop/reset/release chain).
+ *  ① PREPARE-RACE (fatal): MainActivity's surface-ready callback fires within
+ *    ~100–500 ms of the layout attach — LONG BEFORE the JVM exists. v2/v3 set
+ *    sGameRendering there, and the MediaPlayer's onPrepared gate then read
+ *    "game already rendering" and silently RELEASED the freshly prepared
+ *    player without ever starting it. Every launch. The fix: surface-ready
+ *    only ARMS the first-frame release watch; it never gates prepare/start.
+ *
+ *  ② SURFACE GC RACE: the Surface wrapper handed to MediaPlayer was created
+ *    inline (new Surface(mSurface)) with no strong reference — the wrapper
+ *    could be garbage-collected → native surface released mid-play → blank.
+ *    The Surface is now held for the player's whole lifetime.
+ *
+ * Visibility (v3, kept): the video lives in @id/video_stage_host — ABOVE the
+ * game surface, below the log console, touch-transparent.
+ *
+ * Release contract kept exactly as user asked: the video plays across the
+ * whole boot and is released on the FIRST PRESENTED FRAME (native presents
+ * counter, 250 ms latch; 18 s hard cap for bridges without a present hook).
  */
 public class LaunchStageView extends FrameLayout
         implements TextureView.SurfaceTextureListener {
@@ -61,13 +63,13 @@ public class LaunchStageView extends FrameLayout
     private static final long FIRST_FRAME_POLL_MS = 250L;
 
     // ── static launch-session registry ──
-    private static volatile boolean sGameRendering;
     @Nullable private static WeakReference<LaunchStageView> sActive;
 
     private View mStaticStage;
     @Nullable private TextureView mVideoView;
     @Nullable private ViewGroup mVideoHost;
     @Nullable private MediaPlayer mPlayer;
+    @Nullable private Surface mPlayerSurface;   // strong ref — root-cause ②
     @Nullable private SurfaceTexture mSurface;
     private boolean mStopped;
     private boolean mPrepareStarted;
@@ -104,12 +106,12 @@ public class LaunchStageView extends FrameLayout
     // ───────────────────────── public statics ─────────────────────────
 
     /**
-     * Game surface is ready (called from MainActivity). This is NOT the first
-     * frame yet — MC still needs its init seconds — so we ARM the first-frame
-     * watch here and release the video exactly when a real frame presents.
+     * Game surface created (called from MainActivity). NOTE: this fires LONG
+     * before the game draws anything (pre-JVM). It only ARMS the first-frame
+     * watch — the video keeps playing through JVM start + MC init and is
+     * released exactly when a real frame presents.
      */
     public static void onGameRenderStarted() {
-        sGameRendering = true;
         LaunchStageView v = sActive != null ? sActive.get() : null;
         if (v != null) v.armFirstFrameWatch();
     }
@@ -125,7 +127,6 @@ public class LaunchStageView extends FrameLayout
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-        sGameRendering = false;                 // fresh launch session
         sActive = new WeakReference<>(this);
         bind();
     }
@@ -141,7 +142,6 @@ public class LaunchStageView extends FrameLayout
 
     private void bind() {
         if (mStaticStage == null && getChildCount() > 0) mStaticStage = getChildAt(0);
-        if (sGameRendering) return;
 
         // Step-logged gates: every decision lands in logcat (tag above), so a
         // silently-black launch is diagnosable gate-by-gate.
@@ -156,7 +156,7 @@ public class LaunchStageView extends FrameLayout
             mode = prefs.getString(PREF_KEY_STYLE, STYLE_BLACK);
             Log.i(TAG, "bind: loadingScreenStyle=" + mode + " (prefs=" + src + ")");
         } catch (Throwable t) { Log.w(TAG, "bind: style read failed", t); return; }
-        if (!STYLE_VIDEO.equals(mode)) {
+        if (mode == null || !mode.toLowerCase().contains(STYLE_VIDEO)) {
             Log.i(TAG, "bind: classic stage (user picked black)");
             return;
         }
@@ -174,7 +174,7 @@ public class LaunchStageView extends FrameLayout
             if (probe != null) try { probe.close(); } catch (IOException ignored) {}
         }
 
-        // THE v3 fix: attach above the game surface via the dedicated host.
+        // v3 fix (kept): attach above the game surface via the dedicated host.
         ViewGroup host = null;
         try {
             View root = getRootView();
@@ -200,14 +200,16 @@ public class LaunchStageView extends FrameLayout
     @Override
     public void onSurfaceTextureAvailable(@NonNull SurfaceTexture st, int w, int h) {
         mSurface = st;
-        if (mStopped || sGameRendering || mPrepareStarted) return;
+        // v4: only mStopped gates anymore — surface readiness of the GAME is a
+        // release signal, never a "don't start" signal (root-cause ①).
+        if (mStopped || mPrepareStarted) return;
         mPrepareStarted = true;
         startPlayer();
     }
 
     /** Build + arm the MediaPlayer against the bundled asset. */
     private void startPlayer() {
-        if (mStopped || sGameRendering || mSurface == null) return;
+        if (mStopped || mSurface == null) return;
         AssetFileDescriptor afd = null;
         try {
             afd = getContext().getAssets().openFd(ASSET_VIDEO);
@@ -218,14 +220,20 @@ public class LaunchStageView extends FrameLayout
             // mp owns the media position now; closing the afd is safe per docs.
             try { afd.close(); } catch (IOException ignored) {}
             afd = null;
-            mp.setSurface(new Surface(mSurface));
+            // Hold the Surface STRONGLY for the player's lifetime (root-cause ②).
+            mPlayerSurface = new Surface(mSurface);
+            mp.setSurface(mPlayerSurface);
             mp.setVideoScalingMode(
                     MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
             mp.setVolume(0f, 0f);              // loading screen stays silent
             mp.setLooping(true);               // loop until the first REAL frame
             mp.setOnPreparedListener(p -> {
-                if (mStopped || sGameRendering || mPlayer != p) { releaseQuietly(p); return; }
-                try { p.start(); } catch (Throwable t) { onPlaybackFailure(); }
+                if (mStopped || mPlayer != p) { releaseQuietly(p); return; }
+                try {
+                    p.start();
+                    // Surface became ready while we were preparing (common):
+                    // the first-frame watch may already be armed elsewhere.
+                } catch (Throwable t) { onPlaybackFailure(); }
             });
             mp.setOnInfoListener((p, what, extra) -> {
                 if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START && mVideoView != null) {
@@ -305,6 +313,9 @@ public class LaunchStageView extends FrameLayout
         MediaPlayer p = mPlayer;
         mPlayer = null;
         releaseQuietly(p);
+        Surface s = mPlayerSurface;    // release only after the player is dead
+        mPlayerSurface = null;
+        if (s != null) try { s.release(); } catch (Throwable ignored) {}
         if (removeView && mVideoView != null) {
             TextureView v = mVideoView;
             mVideoView = null;

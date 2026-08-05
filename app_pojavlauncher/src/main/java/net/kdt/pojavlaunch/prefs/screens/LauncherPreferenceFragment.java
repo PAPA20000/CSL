@@ -306,7 +306,7 @@ public class LauncherPreferenceFragment extends Fragment {
         rootItems.add(new SettingItem("cat_controls", SettingItem.TYPE_CATEGORY_LINK, "Controls", "Customize touch overlays, cursors, and gyroscope controls", "Controls"));
         rootItems.add(new SettingItem("cat_java", SettingItem.TYPE_CATEGORY_LINK, "Java Runtime", "Manage memory allocations, JREs, and Java options", "Java Runtime"));
         rootItems.add(new SettingItem("cat_audio", SettingItem.TYPE_CATEGORY_LINK, "Audio", "Adjust volume levels and sound output parameters", "Audio"));
-        rootItems.add(new SettingItem("cat_account", SettingItem.TYPE_CATEGORY_LINK, "Account", "Check active profile accounts and skin logs", "Account"));
+        // User req: Account category hidden from the settings deck (redundant — login flow owns it; page code stays dormant).
         rootItems.add(new SettingItem("cat_experimental", SettingItem.TYPE_CATEGORY_LINK, "Experimental", "Test launcher orientations, wall-papers, and colors", "Experimental"));
         rootItems.add(new SettingItem("cat_advanced", SettingItem.TYPE_CATEGORY_LINK, "Advanced", "Perform debug clears and database resets", "Advanced"));
         rootItems.add(new SettingItem("cat_misc", SettingItem.TYPE_CATEGORY_LINK, "Miscellaneous", "Library verifications, system drivers, and in-game capes", "Miscellaneous"));
@@ -1573,7 +1573,7 @@ public class LauncherPreferenceFragment extends Fragment {
 
             TextView points = panel.findViewById(R.id.preset_high_points);
             if (points != null) points.setText(
-                    highRam + " MB RAM\n100% resolution\nVSync off (both)\nSustained mode ON");
+                    highRam + " MB RAM • 100% resolution • VSync off • Sustained ON");
 
             View lowApply = panel.findViewById(R.id.preset_low_apply);
             View highApply = panel.findViewById(R.id.preset_high_apply);
@@ -1594,8 +1594,8 @@ public class LauncherPreferenceFragment extends Fragment {
                 android.content.SharedPreferences.Editor e = p.edit();
                 e.putInt("allocation", high ? highRam : 1280);
                 e.putInt("resolutionRatio", high ? 100 : 70);
-                e.putBoolean("force_vsync", false);        // never panel-lock
-                e.putBoolean("vsync_in_zink", false);      // never FIFO-lock on zink
+                e.putBoolean("force_vsync", false);        // never panel-lock via EGL
+                e.putBoolean("vsync_in_zink", true);       // env present → driver obeys game swapInterval (0 = unlocked); absent env would FORCE driver vsync — the real 60/120 lock on zink
                 e.putBoolean("sustainedPerformance", high);
                 e.putString("perfPreset", high ? "high" : "low");
                 e.commit();
@@ -1607,7 +1607,7 @@ public class LauncherPreferenceFragment extends Fragment {
                     d.putInt("allocation", high ? highRam : 1280);
                     d.putInt("resolutionRatio", high ? 100 : 70);
                     d.putBoolean("force_vsync", false);
-                    d.putBoolean("vsync_in_zink", false);
+                    d.putBoolean("vsync_in_zink", true);
                     d.putBoolean("sustainedPerformance", high);
                     d.apply();
                 } catch (Throwable ignored) {}

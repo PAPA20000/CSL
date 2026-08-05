@@ -77,17 +77,49 @@
         tools:text="Setting up runtimes (1/2) — keep the app open"
         tools:visibility="visible" />
 
-    <!-- Cards (static 4: Java 8 / 17 / 21 / 25) -->
+    <!-- Cards (static 4: Java 8 / 17 / 21 / 25) — HORIZONTAL row (user req),
+         compact stacked cards sharing equal width, staggered rise handled
+         in-code via the shared entrance animation -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="14dp"
-        android:orientation="vertical">
+        android:orientation="horizontal"
+        android:weightSum="4">
 
-        <include layout="@layout/item_runtime_choice" android:id="@+id/rw_card_8" />
-        <include layout="@layout/item_runtime_choice" android:id="@+id/rw_card_17" />
-        <include layout="@layout/item_runtime_choice" android:id="@+id/rw_card_21" />
-        <include layout="@layout/item_runtime_choice" android:id="@+id/rw_card_25" />
+        <include
+            layout="@layout/item_runtime_choice_h"
+            android:id="@+id/rw_card_8"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="4dp" />
+
+        <include
+            layout="@layout/item_runtime_choice_h"
+            android:id="@+id/rw_card_17"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="4dp" />
+
+        <include
+            layout="@layout/item_runtime_choice_h"
+            android:id="@+id/rw_card_21"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="4dp" />
+
+        <include
+            layout="@layout/item_runtime_choice_h"
+            android:id="@+id/rw_card_25"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="2dp" />
     </LinearLayout>
 
     <!-- Footer actions -->

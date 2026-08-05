@@ -256,6 +256,23 @@ public class RuntimeWizardDialog {
                 .setDuration(340)
                 .setInterpolator(new android.view.animation.DecelerateInterpolator(1.6f))
                 .start();
+
+        // Horizontal redesign (user req): the 4 cards rise as one staggered
+        // wave under the sheet entrance — fast-out path easing, no overshoot.
+        final float cd = activity.getResources().getDisplayMetrics().density;
+        for (int i = 0; i < CARD_IDS.length; i++) {
+            View card = dialogView.findViewById(CARD_IDS[i]);
+            if (card == null || card.getVisibility() != View.VISIBLE) continue;
+            card.setAlpha(0f);
+            card.setTranslationY(cd * 18);
+            card.setScaleX(0.96f);
+            card.setScaleY(0.96f);
+            card.animate().alpha(1f).translationY(0f).scaleX(1f).scaleY(1f)
+                    .setStartDelay(120L + i * 55L)
+                    .setDuration(300)
+                    .setInterpolator(new android.view.animation.PathInterpolator(0.22f, 1f, 0.36f, 1f))
+                    .start();
+        }
     }
 
     /** After any state change: if every selectable runtime is installed, offer Finish. */

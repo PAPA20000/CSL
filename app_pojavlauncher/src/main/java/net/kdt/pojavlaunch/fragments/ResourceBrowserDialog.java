@@ -75,11 +75,19 @@ public final class ResourceBrowserDialog extends DialogFragment {
 
     /** One catalogue row. */
     private static final class Entry {
-        String id, title, author, desc;
+        String id, title, author, desc, iconUrl;
         long downloads;
         int state = ST_IDLE;
         int progress; // 0..100 while ST_BUSY
     }
+
+    /** Exact project icons, off-thread — 64-entry LRU + disk cache. */
+    private final java.util.LinkedHashMap<String, android.graphics.Bitmap> mIconCache =
+            new java.util.LinkedHashMap<String, android.graphics.Bitmap>(48, 0.75f, true) {
+                @Override protected boolean removeEldestEntry(Map.Entry<String, android.graphics.Bitmap> eldest) {
+                    return size() > 64;
+                }
+            };
 
     private final List<Entry> mEntries = new ArrayList<>();
     private ResourceAdapter mAdapter;
@@ -288,6 +296,7 @@ public final class ResourceBrowserDialog extends DialogFragment {
                         e.title = h.optString("title");
                         e.author = h.optString("author");
                         e.desc = h.optString("description");
+                        e.iconUrl = h.optString("icon_url");
                         e.downloads = h.optLong("downloads");
                         if (!e.id.isEmpty() && !e.title.isEmpty()) page.add(e);
                     }
@@ -436,6 +445,7 @@ public final class ResourceBrowserDialog extends DialogFragment {
             h.meta.setText((e.author == null || e.author.isEmpty() ? "Unknown" : e.author)
                     + "  •  " + formatDownloads(e.downloads) + " downloads");
             h.desc.setText(e.desc == null ? "" : e.desc);
+            bindIcon(h.icon, e);
             bindInstallPill(h, e);
             h.install.setOnClickListener(v -> {
                 int pos = h.getBindingAdapterPosition();
@@ -477,8 +487,10 @@ public final class ResourceBrowserDialog extends DialogFragment {
 
         final class RowVH extends RecyclerView.ViewHolder {
             final TextView title, meta, desc, install;
+            final android.widget.ImageView icon;
             RowVH(@NonNull View itemView) {
                 super(itemView);
+                icon = itemView.findViewById(R.id.row_rb_icon);
                 title = itemView.findViewById(R.id.row_rb_title);
                 meta = itemView.findViewById(R.id.row_rb_meta);
                 desc = itemView.findViewById(R.id.row_rb_desc);
@@ -507,6 +519,95 @@ public final class ResourceBrowserDialog extends DialogFragment {
         if (raw == null) return null;
         Matcher m = Pattern.compile("1\\.\\d{1,2}(\\.\\d{1,2})?").matcher(raw);
         return m.find() ? m.group() : null;
+    }
+
+    /** Binds the Modrinth project icon: memory cache → disk cache → network (bg thread). */
+    private void bindIcon(@NonNull android.widget.ImageView target, @NonNull Entry e) {
+        final String iconUrl = e.iconUrl;
+        if (iconUrl == null || iconUrl.isEmpty()) {
+            target.setTag(null);
+            target.setImageDrawable(null);
+            return;
+        }
+        android.graphics.Bitmap cached;
+        synchronized (mIconCache) { cached = mIconCache.get(iconUrl); }
+        if (cached != null && !cached.isRecycled()) {
+            target.setTag(null);
+            target.setImageBitmap(cached);
+            return;
+        }
+        target.setImageDrawable(null);
+        target.setTag(iconUrl); // stale-response guard for recycled rows
+        PojavApplication.sExecutorService.execute(() -> {
+            android.graphics.Bitmap bmp = null;
+            try {
+                File cacheDir = new File(getContextSafeCacheDir(), "rb_icons");
+                File f = new File(cacheDir, md5(iconUrl) + ".png");
+                if (f.isFile() && f.length() > 0) {
+                    bmp = android.graphics.BitmapFactory.decodeFile(f.getAbsolutePath());
+                }
+                if (bmp == null) {
+                    byte[] data = httpGetBytes(iconUrl);
+                    if (data != null && data.length > 0) {
+                        bmp = android.graphics.BitmapFactory.decodeByteArray(data, 0, data.length);
+                        if (bmp != null) {
+                            try {
+                                if (!cacheDir.isDirectory()) cacheDir.mkdirs();
+                                try (java.io.FileOutputStream fos = new java.io.FileOutputStream(f)) {
+                                    fos.write(data);
+                                }
+                            } catch (Throwable ignored) {}
+                        }
+                    }
+                }
+            } catch (Throwable ignored) {}
+            if (bmp == null) return;
+            synchronized (mIconCache) { mIconCache.put(iconUrl, bmp); }
+            final android.graphics.Bitmap finalBmp = bmp;
+            target.post(() -> {
+                if (mClosed) return;
+                if (iconUrl.equals(target.getTag())) target.setImageBitmap(finalBmp);
+            });
+        });
+    }
+
+    private File getContextSafeCacheDir() {
+        try {
+            android.content.Context c = getContext();
+            if (c != null) return c.getCacheDir();
+        } catch (Throwable ignored) {}
+        return new File(requireActivity().getCacheDir().getAbsolutePath());
+    }
+
+    private static String md5(String s) {
+        try {
+            java.security.MessageDigest d = java.security.MessageDigest.getInstance("MD5");
+            byte[] hash = d.digest(s.getBytes("UTF-8"));
+            StringBuilder sb = new StringBuilder(32);
+            for (byte b : hash) sb.append(Character.forDigit((b >> 4) & 0xF, 16)).append(Character.forDigit(b & 0xF, 16));
+            return sb.toString();
+        } catch (Throwable t) {
+            return Integer.toHexString(s.hashCode());
+        }
+    }
+
+    private static byte[] httpGetBytes(String url) throws IOException {
+        HttpURLConnection c = null;
+        try {
+            c = (HttpURLConnection) new URL(url).openConnection();
+            c.setRequestProperty("User-Agent", UA);
+            c.setConnectTimeout(8000);
+            c.setReadTimeout(10000);
+            try (InputStream in = new BufferedInputStream(c.getInputStream());
+                 ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+                byte[] buf = new byte[8192];
+                int n;
+                while ((n = in.read(buf)) != -1) bos.write(buf, 0, n);
+                return bos.toByteArray();
+            }
+        } finally {
+            if (c != null) c.disconnect();
+        }
     }
 
     private static String httpGet(String url) throws IOException {
