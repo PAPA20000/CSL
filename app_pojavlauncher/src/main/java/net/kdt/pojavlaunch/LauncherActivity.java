@@ -5,6 +5,8 @@ import static net.kdt.pojavlaunch.Tools.hasNoOnlineProfileDialog;
 
 import android.Manifest;
 import android.app.NotificationManager;
+import android.database.Cursor;
+import android.provider.OpenableColumns;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -70,6 +72,9 @@ import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
 import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.util.Locale;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.security.NoSuchAlgorithmException;
@@ -91,15 +96,46 @@ public class LauncherActivity extends BaseActivity {
             registerForActivityResult(new OpenDocumentWithExtension(new String[]{"zip", "mrpack"}), (data)->{
                 if(data != null) {
                     PojavApplication.sExecutorService.execute(() -> {
+                        // O3 (Copper port): stream the DocumentsUI content into a
+                        // cache file ONCE (with copy progress), then run the whole
+                        // import against the local file. The old path re-opened the
+                        // content:// URI 3+ times, which is very slow on SAF providers.
                         try {
-                            ModLoader loaderInfo = new CommonApi(getString(R.string.curseforge_api_key)).importModpack(this, data);
+                            long fileSize = -1;
+                            try (Cursor returnCursor = getContentResolver().query(data, new String[]{OpenableColumns.SIZE}, null, null, null)) {
+                                if (returnCursor != null && returnCursor.moveToFirst()) {
+                                    fileSize = returnCursor.getLong(0);
+                                }
+                            }
+                            File modpackFile = new File(Tools.DIR_CACHE, "import_modpack_placeholdername.cf");
+                            try (InputStream inputStream = getContentResolver().openInputStream(data)) {
+                                FileOutputStream output = new FileOutputStream(modpackFile);
+                                byte[] b = new byte[262144];
+                                int read;
+                                int readTotal = 0;
+                                while ((read = inputStream.read(b)) != -1) {
+                                    output.write(b, 0, read);
+                                    readTotal += read;
+                                    String readMB = fileSize > 0 ? String.format(Locale.US, "%.2f", readTotal / (1024.0 * 1024.0)) : "unknown";
+                                    String totalMB = fileSize > 0 ? String.format(Locale.US, "%.2f", fileSize / (1024.0 * 1024.0)) : "unknown";
+                                    int progress = fileSize > 0 ? (int) ((readTotal * 100L) / fileSize) : 0;
+                                    ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, progress, R.string.import_modpack_copy, readMB, totalMB);
+                                }
+                                output.flush();
+                                output.close();
+                            }
+                            ModLoader loaderInfo = new CommonApi(getString(R.string.curseforge_api_key)).importModpack(modpackFile);
+                            modpackFile.delete();
                             if (loaderInfo == null) return;
                             loaderInfo.getDownloadTask(new NotificationDownloadListener(this, loaderInfo)).run();
                         } catch (IOException e) {
+                            ProgressLayout.clearProgress(ProgressLayout.INSTALL_MODPACK);
                             Tools.showErrorRemote(this, R.string.modpack_install_download_failed, e);
                         } catch (IllegalArgumentException e) {
+                            ProgressLayout.clearProgress(ProgressLayout.INSTALL_MODPACK);
                             Tools.showError(this, R.string.not_modpack_file, e);
                         } catch (NoSuchAlgorithmException e) {
+                            ProgressLayout.clearProgress(ProgressLayout.INSTALL_MODPACK);
                             // Should literally never happen because SHA-1 is required Java spec
                             throw new RuntimeException(e);
                         }

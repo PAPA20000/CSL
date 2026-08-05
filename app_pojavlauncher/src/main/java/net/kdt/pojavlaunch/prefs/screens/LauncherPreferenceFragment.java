@@ -393,6 +393,11 @@ public class LauncherPreferenceFragment extends Fragment {
                             getString(R.string.cs_launch_gif_remove_summary), null)
                             .setAction(this::removeLaunchGif));
                     launcherItems.add(new SettingItem("verifyManifest", SettingItem.TYPE_SWITCH, getString(R.string.preference_verify_manifest_title), getString(R.string.preference_verify_manifest_description), true));
+                    // A9: global animation speed (concept port from Zalith). One
+                    // slider retimes every UiMotion animation via MotionSpeed.
+                    launcherItems.add(new SettingItem("launcher_animate_speed", SettingItem.TYPE_SLIDER,
+                            "Animation Speed", "Global animation duration multiplier for the launcher UI",
+                            100).setSliderConfig(50, 200, 10, " %"));
                     categories.add(new SettingCategory("Launcher Configurations", launcherItems));
                     break;
 
@@ -1202,6 +1207,39 @@ public class LauncherPreferenceFragment extends Fragment {
                             mPrefs.edit().putInt(item.key, finalVal).apply();
                             markDirty();
                         }
+                    });
+
+                    // O9 (Copper concept port): tapping the value chip (e.g.
+                    // "4096 MB") opens a dialog to type an exact number, clamped
+                    // to the slider's min/max — no more dragging through steps.
+                    tvVal.setClickable(true);
+                    tvVal.setFocusable(true);
+                    tvVal.setOnClickListener(v -> {
+                        final EditText editText = new EditText(requireContext());
+                        editText.setInputType(InputType.TYPE_CLASS_NUMBER);
+                        editText.setText(String.valueOf(mPrefs.getInt(item.key, (Integer) item.defaultValue)));
+                        editText.setSelection(editText.getText().length());
+                        new AlertDialog.Builder(requireContext())
+                                .setTitle(item.title)
+                                .setView(editText)
+                                .setNegativeButton(android.R.string.cancel, null)
+                                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                                    String input = editText.getText().toString().trim();
+                                    if (input.isEmpty()) return;
+                                    int newValue;
+                                    try {
+                                        newValue = Integer.parseInt(input);
+                                    } catch (NumberFormatException e) {
+                                        return;
+                                    }
+                                    if (newValue < item.minVal) newValue = item.minVal;
+                                    if (newValue > item.maxVal) newValue = item.maxVal;
+                                    mPrefs.edit().putInt(item.key, newValue).apply();
+                                    tvVal.setText(newValue + item.unitSuffix);
+                                    seekBar.setProgress((newValue - item.minVal) / item.stepVal);
+                                    markDirty();
+                                })
+                                .show();
                     });
 
                 } else if (item.type == SettingItem.TYPE_DROPDOWN) {

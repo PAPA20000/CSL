@@ -1,14 +1,19 @@
 package net.kdt.pojavlaunch;
 
 import android.animation.TimeInterpolator;
+import android.animation.ValueAnimator;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
+import android.view.animation.LinearInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
 
 import androidx.recyclerview.widget.RecyclerView;
+
+import net.kdt.pojavlaunch.utils.animation.JellyBounceInterpolator;
+import net.kdt.pojavlaunch.utils.animation.MotionSpeed;
 
 /**
  * Small, dependency-free motion system used by launcher screens.
@@ -16,11 +21,15 @@ import androidx.recyclerview.widget.RecyclerView;
  * It deliberately uses view-property animations: they are hardware accelerated on
  * API 21+, cancel safely when a fragment is replaced, and do not keep a reference
  * to an Activity. Motion is short enough to feel responsive on low-end devices.
+ *
+ * All durations run through {@link MotionSpeed} so the global "Animation Speed"
+ * setting (launcher_animate_speed, A9) retimes every surface from one place.
  */
 public final class UiMotion {
     private static final long ENTER_DURATION = 300L;
     private static final TimeInterpolator ENTER = new DecelerateInterpolator(1.7f);
     private static final TimeInterpolator PRESS_OUT = new OvershootInterpolator(1.6f);
+    private static final JellyBounceInterpolator JELLY = new JellyBounceInterpolator();
 
     private UiMotion() { }
 
@@ -37,7 +46,7 @@ public final class UiMotion {
                 .translationY(0f)
                 .scaleX(1f)
                 .scaleY(1f)
-                .setDuration(ENTER_DURATION)
+                .setDuration(MotionSpeed.scale(ENTER_DURATION))
                 .setInterpolator(ENTER)
                 .withEndAction(() -> {
                     root.setAlpha(1f);
@@ -74,8 +83,8 @@ public final class UiMotion {
                     .translationY(originalTranslationY)
                     .scaleX(originalScaleX)
                     .scaleY(originalScaleY)
-                    .setStartDelay(animated * 38L)
-                    .setDuration(260L)
+                    .setStartDelay(MotionSpeed.scale(animated * 38L))
+                    .setDuration(MotionSpeed.scale(260L))
                     .setInterpolator(ENTER)
                     .start();
             animated++;
@@ -90,7 +99,7 @@ public final class UiMotion {
             chrome.setAlpha(0f);
             chrome.setTranslationY(-dp(chrome, 12));
             chrome.animate().alpha(1f).translationY(0f)
-                    .setDuration(280L).setInterpolator(ENTER).start();
+                    .setDuration(MotionSpeed.scale(280L)).setInterpolator(ENTER).start();
         });
     }
 
@@ -127,10 +136,50 @@ public final class UiMotion {
         view.setAlpha(0f);
         view.setTranslationY(-dp(view, 10));
         view.animate().alpha(1f).translationY(0f)
-                .setStartDelay(startDelay)
-                .setDuration(280L)
+                .setStartDelay(MotionSpeed.scale(startDelay))
+                .setDuration(MotionSpeed.scale(280L))
                 .setInterpolator(ENTER)
                 .start();
+    }
+
+    /**
+     * Success/check "pop" (A3) — jelly-bounce overshoot on scale, used for
+     * moments like a runtime install completing or a check badge appearing.
+     * Cancel-safe: callers may pass views that get recycled.
+     */
+    public static void popIn(View view) {
+        if (view == null) return;
+        view.animate().cancel();
+        view.setScaleX(0.3f);
+        view.setScaleY(0.3f);
+        view.setAlpha(1f);
+        view.animate()
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(MotionSpeed.scale(520L))
+                .setInterpolator(JELLY)
+                .start();
+    }
+
+    /**
+     * Skeleton/shimmer pulse (A7) — infinite alpha pulse 0.3 ↔ 0.6 on a
+     * 1000 ms linear loop, reversed. Start it on loading placeholders
+     * (runtime download deck, download cards); {@link #stopPulse} on detach.
+     */
+    public static ValueAnimator pulseSkeleton(View view) {
+        if (view == null) return null;
+        ValueAnimator animator = ValueAnimator.ofFloat(0.3f, 0.6f);
+        animator.setDuration(MotionSpeed.scale(1000L));
+        animator.setInterpolator(new LinearInterpolator());
+        animator.setRepeatCount(ValueAnimator.INFINITE);
+        animator.setRepeatMode(ValueAnimator.REVERSE);
+        animator.addUpdateListener(a -> view.setAlpha((Float) a.getAnimatedValue()));
+        animator.start();
+        return animator;
+    }
+
+    public static void stopPulse(ValueAnimator animator) {
+        if (animator != null) animator.cancel();
     }
 
     /** Staggered child entrance for RecyclerViews (layout animation). */

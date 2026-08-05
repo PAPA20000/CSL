@@ -470,6 +470,10 @@
     <string name="search_modpack_download_error">Failed to download modpack metadata</string>
 
     <string name="modpack_download_downloading_metadata">Downloading modpack metadata (%.2f MB / %.2f MB)</string>
+    <string name="import_modpack_start">Importing modpack…</string>
+    <string name="import_modpack_hash">Hashing modpack file… (%s MB/ %s MB)</string>
+    <string name="import_modpack_json">Reading modpack info…</string>
+    <string name="import_modpack_copy">Copying modpack file to cache… (%s MB/ %s MB)</string>
     <string name="modpack_download_downloading_mods">Downloading mods (%.2f MB / %.2f MB)</string>
     <string name="modpack_download_downloading_mods_fc">Downloading mods (File %d out of %d)</string>
     <string name="modpack_download_applying_overrides">Applying overrides (%d/%d)</string>

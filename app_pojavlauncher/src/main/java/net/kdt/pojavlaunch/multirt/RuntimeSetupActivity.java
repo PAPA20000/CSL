@@ -17,6 +17,7 @@ import net.kdt.pojavlaunch.NewJREUtil;
 import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.UiMotion;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.progresskeeper.ProgressKeeper;
 import net.kdt.pojavlaunch.progresskeeper.ProgressListener;
@@ -371,9 +372,8 @@ public class RuntimeSetupActivity extends BaseActivity {
                             R.drawable.bg_runtime_chip_installed);
                     row.stats.setText(R.string.rs_stats_ready);
                     row.check.setVisibility(View.VISIBLE);
-                    row.check.setScaleX(0f); row.check.setScaleY(0f);
-                    row.check.animate().scaleX(1f).scaleY(1f).setDuration(240)
-                            .setInterpolator(new android.view.animation.OvershootInterpolator()).start();
+                    // A3: jelly-bounce success pop (Zalith concept recreated via UiMotion)
+                    UiMotion.popIn(row.check);
                 } else {
                     row.state = 4;
                     row.root.setBackgroundResource(R.drawable.bg_rs_stage_card_failed);
@@ -416,9 +416,8 @@ public class RuntimeSetupActivity extends BaseActivity {
                             R.drawable.bg_runtime_chip_installed);
                     row.stats.setText(R.string.rs_stats_ready);
                     row.check.setVisibility(View.VISIBLE);
-                    row.check.setScaleX(0f); row.check.setScaleY(0f);
-                    row.check.animate().scaleX(1f).scaleY(1f).setDuration(240)
-                            .setInterpolator(new android.view.animation.OvershootInterpolator()).start();
+                    // A3: jelly-bounce success pop (Zalith concept recreated via UiMotion)
+                    UiMotion.popIn(row.check);
                 } else {
                     row.state = 4;
                     row.root.setBackgroundResource(R.drawable.bg_rs_stage_card_failed);
