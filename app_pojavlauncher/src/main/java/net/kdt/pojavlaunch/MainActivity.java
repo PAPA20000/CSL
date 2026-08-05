@@ -635,6 +635,35 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             }
         }
 
+        // CS FPS-unlock guard (user req: some devices stuck at 60/120): an
+        // installed instance's own options.txt can still carry enableVsync:true
+        // or a legacy frame cap (missing maxFps = vanilla 120 cap on old
+        // profiles). Patch only when needed — never clobber an explicit
+        // "unlimited" (0) or an already-high cap.
+        try {
+            String vsync = MCOptionUtils.get("enableVsync");
+            boolean dirty = false;
+            if ("true".equals(vsync)) {
+                MCOptionUtils.set("enableVsync", "false");
+                dirty = true;
+            }
+            String maxFpsRaw = MCOptionUtils.get("maxFps");
+            int maxFps = -1;
+            if (maxFpsRaw != null) {
+                try { maxFps = Integer.parseInt(maxFpsRaw.trim()); } catch (Throwable ignored) {}
+            }
+            if (maxFpsRaw == null || (maxFps > 0 && maxFps < 240)) {
+                MCOptionUtils.set("maxFps", "260"); // 260 = uncapped for any retail panel
+                dirty = true;
+            }
+            if (dirty) {
+                MCOptionUtils.save();
+                Log.i("runCraft", "CS FPS-unlock: options.txt patched (vsync off, maxFps 260)");
+            }
+        } catch (Throwable t) {
+            Log.w("runCraft", "CS FPS-unlock: options patch failed (non-fatal)", t);
+        }
+
         MinecraftAccount minecraftAccount = PojavProfile.getCurrentProfileContent(this, null);
         JREUtils.redirectAndPrintJRELog();
         LauncherProfiles.load();

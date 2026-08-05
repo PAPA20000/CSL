@@ -11,37 +11,40 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
+import net.kdt.pojavlaunch.utils.FpsCounter;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 
 /**
- * LaunchStageView — the pre-render stage behind the game surface.
+ * LaunchStageView — the pre-render stage + bundled loading video.
  *
- * Holds the classic (existing) static loading stage as its XML child and can
- * upgrade it to a BUNDLED loading video when the user picked
- * "Video Loading Screen" (loadingScreenStyle == video).
+ * v3 (real visibility fix): earlier versions attached the video INSIDE this
+ * view, which sits BELOW the game surface in the layout. On SurfaceView mode
+ * the punched surface hides the whole view hierarchy; on TextureView mode the
+ * game texture composites BLACK even before frames. Either way the video was
+ * running but could NEVER be seen. The video now attaches into
+ * {@code @id/video_stage_host} — a dedicated layer ABOVE the game surface
+ * (and below the log console) — which is what finally makes it visible.
  *
- * Item-5 redesign: the video now ships INSIDE the APK as
- * assets/csl_loading.mp4 (~2.7 MB, 720p, H.264, no audio track, faststart).
- * No network, no remote config, no cache layer — playback starts instantly and
- * identically on every device and every launch. The remote streaming system
- * (RemoteConfigManager / LoadingVideoCache) is left in place but no longer
- * consulted here.
- *
- * Playback contract (user req):
- *  - Loops continuously until the game renders its first frame.
- *  - {@link #onGameRenderStarted()} fires on the surface-ready signal and the
- *    player is released on that exact frame — no delay, no leak.
- *  - TextureView stays alpha-0 until the first decoded frame is on screen
- *    (MEDIA_INFO_VIDEO_RENDERING_START), so there is never a black flash.
- *  - Every failure path silently keeps the existing static stage.
+ * Release contract (user req):
+ *  - Video plays continuously across the whole boot (JVM start + MC init,
+ *    which used to be dead-black seconds) until the game PRESENTS ITS FIRST
+ *    FRAME. That moment is detected natively: every GL/OSMesa bridge
+ *    increments FpsCounter's cumulative presents counter per swap; when it
+ *    first advances past the baseline armed at surface-ready, the player is
+ *    released immediately (≤250 ms poll). A hard safety cap covers bridges
+ *    without a Java-visible swap hook (e.g. zink/vulkan).
+ *  - No black flash (alpha-0 until MEDIA_INFO_VIDEO_RENDERING_START), no leak
+ *    (full listener-null + stop/reset/release chain).
  */
 public class LaunchStageView extends FrameLayout
         implements TextureView.SurfaceTextureListener {
@@ -52,7 +55,10 @@ public class LaunchStageView extends FrameLayout
     public static final String STYLE_VIDEO = "video";
     /** Bundled loading video (uncompressed entry — mp4 is noCompress in AGP). */
     private static final String ASSET_VIDEO = "csl_loading.mp4";
-    private static final long WATCHDOG_MS = 7000L;
+    private static final long PREP_WATCHDOG_MS = 7000L;
+    /** Safety cap for bridges without a present hook (zink/vulkan). */
+    private static final long FIRST_FRAME_CAP_MS = 18000L;
+    private static final long FIRST_FRAME_POLL_MS = 250L;
 
     // ── static launch-session registry ──
     private static volatile boolean sGameRendering;
@@ -60,15 +66,35 @@ public class LaunchStageView extends FrameLayout
 
     private View mStaticStage;
     @Nullable private TextureView mVideoView;
+    @Nullable private ViewGroup mVideoHost;
     @Nullable private MediaPlayer mPlayer;
     @Nullable private SurfaceTexture mSurface;
     private boolean mStopped;
     private boolean mPrepareStarted;
+    private long mPresentBaseline = -1;  // armed at surface-ready
+    private boolean mFirstFrameWatch;
 
     private final Handler mHandler = new Handler(Looper.getMainLooper());
-    private final Runnable mWatchdog = () -> {
-        Log.w(TAG, "video: watchdog timeout (" + WATCHDOG_MS + "ms) — classic stage");
+    private final Runnable mPrepWatchdog = () -> {
+        Log.w(TAG, "video: prepare watchdog — classic stage");
         fallbackToStatic();
+    };
+    private final Runnable mFirstFrameCap = () -> {
+        Log.i(TAG, "video: first-frame cap reached — releasing player");
+        stopVideoNow();
+    };
+    private final Runnable mFirstFramePoll = new Runnable() {
+        @Override public void run() {
+            if (mStopped) return;
+            long total = FpsCounter.getTotalPresents();
+            if (mPresentBaseline < 0) mPresentBaseline = total; // native late — keep baselining
+            if (total >= 0 && mPresentBaseline >= 0 && total > mPresentBaseline) {
+                Log.i(TAG, "video: FIRST FRAME presented — releasing player now");
+                stopVideoNow();
+                return;
+            }
+            mHandler.postDelayed(this, FIRST_FRAME_POLL_MS);
+        }
     };
 
     public LaunchStageView(@NonNull Context context) { super(context); }
@@ -77,11 +103,15 @@ public class LaunchStageView extends FrameLayout
 
     // ───────────────────────── public statics ─────────────────────────
 
-    /** Game render started (surface-ready) — kill the video immediately. */
+    /**
+     * Game surface is ready (called from MainActivity). This is NOT the first
+     * frame yet — MC still needs its init seconds — so we ARM the first-frame
+     * watch here and release the video exactly when a real frame presents.
+     */
     public static void onGameRenderStarted() {
         sGameRendering = true;
         LaunchStageView v = sActive != null ? sActive.get() : null;
-        if (v != null) v.stopVideoNow();
+        if (v != null) v.armFirstFrameWatch();
     }
 
     // ───────────────────────── lifecycle ─────────────────────────
@@ -144,8 +174,15 @@ public class LaunchStageView extends FrameLayout
             if (probe != null) try { probe.close(); } catch (IOException ignored) {}
         }
 
-        // TextureView (not SurfaceView): obeys normal view compositing, so the
-        // static stage stays visible underneath until the first video frame.
+        // THE v3 fix: attach above the game surface via the dedicated host.
+        ViewGroup host = null;
+        try {
+            View root = getRootView();
+            if (root != null) host = root.findViewById(R.id.video_stage_host);
+        } catch (Throwable ignored) {}
+        mVideoHost = host != null ? host : this; // defensive fallback
+
+        // TextureView (not SurfaceView): obeys normal view compositing.
         mVideoView = new TextureView(getContext());
         // VISIBLE + alpha 0 — a GONE TextureView NEVER receives a SurfaceTexture,
         // so playback could never even start. The reveal fades in on the first
@@ -153,9 +190,9 @@ public class LaunchStageView extends FrameLayout
         mVideoView.setVisibility(View.VISIBLE);
         mVideoView.setAlpha(0f);
         mVideoView.setSurfaceTextureListener(this);
-        addView(mVideoView, new FrameLayout.LayoutParams(
+        mVideoHost.addView(mVideoView, new FrameLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-        mHandler.postDelayed(mWatchdog, WATCHDOG_MS);
+        mHandler.postDelayed(mPrepWatchdog, PREP_WATCHDOG_MS);
     }
 
     // ───────────────────────── playback ─────────────────────────
@@ -185,15 +222,15 @@ public class LaunchStageView extends FrameLayout
             mp.setVideoScalingMode(
                     MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
             mp.setVolume(0f, 0f);              // loading screen stays silent
-            mp.setLooping(true);               // loop until the game renders
+            mp.setLooping(true);               // loop until the first REAL frame
             mp.setOnPreparedListener(p -> {
                 if (mStopped || sGameRendering || mPlayer != p) { releaseQuietly(p); return; }
                 try { p.start(); } catch (Throwable t) { onPlaybackFailure(); }
             });
             mp.setOnInfoListener((p, what, extra) -> {
                 if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START && mVideoView != null) {
-                    Log.i(TAG, "video: first frame rendered — revealing");
-                    mHandler.removeCallbacks(mWatchdog);
+                    Log.i(TAG, "video: first decoded frame on screen — revealing");
+                    mHandler.removeCallbacks(mPrepWatchdog);
                     mVideoView.animate().alpha(1f).setDuration(260).start();
                 }
                 return false;
@@ -217,7 +254,7 @@ public class LaunchStageView extends FrameLayout
      * launcher can never crash from the loading video.
      */
     private void onPlaybackFailure() {
-        Log.w(TAG, "video: giving up — classic black stage");
+        Log.w(TAG, "video: giving up — classic stage");
         fallbackToStatic();
     }
 
@@ -234,6 +271,18 @@ public class LaunchStageView extends FrameLayout
     @Override
     public void onSurfaceTextureUpdated(@NonNull SurfaceTexture st) {}
 
+    // ───────────────────────── first-frame release ─────────────────────────
+
+    /** Armed at surface-ready; releases the player on the FIRST presented frame. */
+    private synchronized void armFirstFrameWatch() {
+        if (mStopped || mVideoView == null || mFirstFrameWatch) return;
+        mFirstFrameWatch = true;
+        mPresentBaseline = FpsCounter.getTotalPresents();
+        Log.i(TAG, "video: first-frame watch armed (baseline=" + mPresentBaseline + ", cap=" + FIRST_FRAME_CAP_MS + "ms)");
+        mHandler.postDelayed(mFirstFramePoll, FIRST_FRAME_POLL_MS);
+        mHandler.postDelayed(mFirstFrameCap, FIRST_FRAME_CAP_MS); // zink/vulkan safety
+    }
+
     // ───────────────────────── stop / fallback ─────────────────────────
 
     /** Absolute fallback: tear down all video state, keep the static stage. */
@@ -241,16 +290,18 @@ public class LaunchStageView extends FrameLayout
         innerStop(true);
     }
 
-    /** Immediate stop — used when the game render begins (req: no delay). */
+    /** Immediate stop — first frame presented / detach / surface destroyed. */
     private synchronized void stopVideoNow() {
         if (mPlayer != null || mVideoView != null)
-            Log.i(TAG, "video: stop (game render / detach) — releasing player");
+            Log.i(TAG, "video: stop — releasing player");
         innerStop(true);
     }
 
     private void innerStop(boolean removeView) {
         mStopped = true;
-        mHandler.removeCallbacks(mWatchdog);
+        mHandler.removeCallbacks(mPrepWatchdog);
+        mHandler.removeCallbacks(mFirstFramePoll);
+        mHandler.removeCallbacks(mFirstFrameCap);
         MediaPlayer p = mPlayer;
         mPlayer = null;
         releaseQuietly(p);
@@ -260,9 +311,11 @@ public class LaunchStageView extends FrameLayout
             try {
                 v.setSurfaceTextureListener(null);
                 v.animate().cancel();
-                removeView(v);
+                ViewGroup parent = (ViewGroup) v.getParent();
+                if (parent != null) parent.removeView(v);
             } catch (Throwable ignored) {}
         }
+        mVideoHost = null;
     }
 
     private static void releaseQuietly(@Nullable MediaPlayer p) {

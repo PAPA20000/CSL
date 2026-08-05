@@ -228,6 +228,10 @@ EXTERNAL_API void pojavSetWindowHint(int hint, int value) {
 // ── CS Perf: swap-boundary frame counter (feeds the in-game FPS overlay) ──
 static volatile uint64_t sCsFrames;
 static volatile uint64_t sCsWindowStartMs;
+// Cumulative presented frames (never reset). Shared with osm_bridge.c so the
+// loading-video release can latch onto the FIRST real frame for every
+// software/GL bridge. Extern (non-static) by design — osm_bridge increments it.
+volatile uint64_t g_csPresentsTotal;
 
 static uint64_t cs_time_ms(void) {
     struct timespec ts;
@@ -237,6 +241,7 @@ static uint64_t cs_time_ms(void) {
 
 EXTERNAL_API void pojavSwapBuffers() {
     sCsFrames++;
+    g_csPresentsTotal++;
     br_swap_buffers();
 }
 
@@ -255,6 +260,13 @@ Java_net_kdt_pojavlaunch_utils_FpsCounter_nativeGetFps(JNIEnv* env, jclass clazz
     sCsWindowStartMs = now;
     sCsFrames = 0;
     return fps;
+}
+
+/* Cumulative presented frames — loading-video "first frame" latch. */
+JNIEXPORT jlong JNICALL
+Java_net_kdt_pojavlaunch_utils_FpsCounter_nativeGetTotalPresents(JNIEnv* env, jclass clazz) {
+    (void) env; (void) clazz;
+    return (jlong) g_csPresentsTotal;
 }
 
 

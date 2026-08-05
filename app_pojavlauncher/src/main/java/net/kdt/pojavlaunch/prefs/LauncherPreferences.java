@@ -131,7 +131,7 @@ public class LauncherPreferences {
         PREF_DOWNLOAD_SOURCE = DEFAULT_PREF.getString("downloadSource", "default");
         PREF_VERIFY_MANIFEST = DEFAULT_PREF.getBoolean("verifyManifest", true);
         PREF_SKIP_NOTIFICATION_PERMISSION_CHECK = DEFAULT_PREF.getBoolean(PREF_KEY_SKIP_NOTIFICATION_CHECK, false);
-        PREF_VSYNC_IN_ZINK = DEFAULT_PREF.getBoolean("vsync_in_zink", true);
+        PREF_VSYNC_IN_ZINK = DEFAULT_PREF.getBoolean("vsync_in_zink", false); // false: zink may present uncapped (FIFO = panel-locked)
         PREF_FORCE_ENABLE_TOUCHCONTROLLER = DEFAULT_PREF.getBoolean("forceEnableTouchController", false);
         PREF_TOUCHCONTROLLER_VIBRATE_LENGTH = DEFAULT_PREF.getInt("touchControllerVibrateLength", 100);
         PREF_MOUSE_GRAB_FORCE = DEFAULT_PREF.getBoolean("always_grab_mouse", false);

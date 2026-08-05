@@ -4,8 +4,13 @@
 #include <malloc.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <environ/environ.h>
 #include "osm_bridge.h"
+
+// Shared with egl_bridge.c — cumulative presented frames for every bridge
+// (loading-video "first frame" latch). Defined once in egl_bridge.c.
+extern volatile uint64_t g_csPresentsTotal;
 #define TAG __FILE_NAME__
 #include <log.h>
 
@@ -126,6 +131,7 @@ void osm_swap_buffers() {
     if(currentBundle->nativeSurface != NULL && !currentBundle->disable_rendering)
         if(ANativeWindow_unlockAndPost(currentBundle->nativeSurface) != 0)
             osm_release_window();
+    g_csPresentsTotal++; // a frame was presented on this bridge
 }
 
 void osm_setup_window() {

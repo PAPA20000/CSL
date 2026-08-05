@@ -123,6 +123,18 @@
 
 		</net.kdt.pojavlaunch.customcontrols.ControlLayout>
 
+		<!-- CS Loading video host (item-5/v3): ABOVE the game surface so the
+		     bundled video is actually visible (this was the real reason the
+		     video never showed — it used to sit BELOW the opaque SurfaceView/
+		     TextureView). Removed exactly on the first presented frame.
+		     Not clickable: touches fall through to the controls below. -->
+		<FrameLayout
+			android:id="@+id/video_stage_host"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:clickable="false"
+			android:focusable="false" />
+
 		<com.kdt.LoggerView
 			android:id="@+id/mainLoggerView"
 			android:layout_width="match_parent"
