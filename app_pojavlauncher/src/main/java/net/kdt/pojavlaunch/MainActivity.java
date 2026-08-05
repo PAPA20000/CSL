@@ -444,8 +444,77 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
 
     private void startFpsTicker() {
         if (mFpsChip == null) mFpsChip = findViewById(R.id.fps_counter_chip);
+        if (mFpsChip != null) armFpsChipDrag(mFpsChip);
         Tools.MAIN_HANDLER.removeCallbacks(mFpsTicker);
         Tools.MAIN_HANDLER.postDelayed(mFpsTicker, 500);
+    }
+
+    // Item-2: the live FPS overlay is user-draggable anywhere on screen.
+    // Position persists per device (cslauncher_settings → fpsChipTx/Ty) and is
+    // restored the next time the chip appears. Clamp keeps the chip fully
+    // inside the content frame; a light press-scale gives premium feedback.
+    private boolean mFpsDragArmed;
+
+    private void armFpsChipDrag(final TextView chip) {
+        if (mFpsDragArmed) return;
+        mFpsDragArmed = true;
+        chip.setOnTouchListener(new View.OnTouchListener() {
+            private float mDx, mDy;
+            @Override public boolean onTouch(View v, MotionEvent ev) {
+                switch (ev.getActionMasked()) {
+                    case MotionEvent.ACTION_DOWN:
+                        mDx = ev.getRawX() - v.getTranslationX();
+                        mDy = ev.getRawY() - v.getTranslationY();
+                        v.animate().scaleX(1.06f).scaleY(1.06f).setDuration(110).start();
+                        return true;
+                    case MotionEvent.ACTION_MOVE:
+                        View parent = (View) v.getParent();
+                        if (parent == null) return true;
+                        float tx = ev.getRawX() - mDx;
+                        float ty = ev.getRawY() - mDy;
+                        tx = Math.max(-v.getLeft(), Math.min(tx, parent.getWidth() - v.getWidth() - v.getLeft()));
+                        ty = Math.max(-v.getTop(), Math.min(ty, parent.getHeight() - v.getHeight() - v.getTop()));
+                        v.setTranslationX(tx);
+                        v.setTranslationY(ty);
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        v.animate().scaleX(1f).scaleY(1f).setDuration(140).start();
+                        try {
+                            SharedPreferences p = LauncherPreferences.DEFAULT_PREF != null
+                                    ? LauncherPreferences.DEFAULT_PREF
+                                    : getSharedPreferences("cslauncher_settings", MODE_PRIVATE);
+                            p.edit()
+                                    .putInt("fpsChipTx", (int) v.getTranslationX())
+                                    .putInt("fpsChipTy", (int) v.getTranslationY())
+                                    .apply();
+                        } catch (Throwable ignored) {}
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+        });
+    }
+
+    /** Restore the saved chip offset (clamped to the current frame) once laid out. */
+    private void restoreFpsChipPosition(final TextView chip) {
+        chip.post(() -> {
+            try {
+                SharedPreferences p = LauncherPreferences.DEFAULT_PREF != null
+                        ? LauncherPreferences.DEFAULT_PREF
+                        : getSharedPreferences("cslauncher_settings", MODE_PRIVATE);
+                float tx = p.getInt("fpsChipTx", 0);
+                float ty = p.getInt("fpsChipTy", 0);
+                View parent = (View) chip.getParent();
+                if (parent != null) {
+                    tx = Math.max(-chip.getLeft(), Math.min(tx, parent.getWidth() - chip.getWidth() - chip.getLeft()));
+                    ty = Math.max(-chip.getTop(), Math.min(ty, parent.getHeight() - chip.getHeight() - chip.getTop()));
+                }
+                chip.setTranslationX(tx);
+                chip.setTranslationY(ty);
+            } catch (Throwable ignored) {}
+        });
     }
 
     private void stopFpsTicker() {
@@ -467,7 +536,10 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             Tools.MAIN_HANDLER.postDelayed(mFpsTicker, 1500); // lazy poll while hidden
             return;
         }
-        if (chip.getVisibility() != View.VISIBLE) chip.setVisibility(View.VISIBLE);
+        if (chip.getVisibility() != View.VISIBLE) {
+            chip.setVisibility(View.VISIBLE);
+            restoreFpsChipPosition(chip); // Item-2: reapply the saved drag offset
+        }
         int fps = net.kdt.pojavlaunch.utils.FpsCounter.getFps();
         if (fps >= 0) chip.setText(fps + " FPS");
         Tools.MAIN_HANDLER.postDelayed(mFpsTicker, 500);

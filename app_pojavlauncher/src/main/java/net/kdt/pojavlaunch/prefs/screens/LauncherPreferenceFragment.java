@@ -1421,7 +1421,12 @@ public class LauncherPreferenceFragment extends Fragment {
             }
         }
 
-        // ══ Performance: live RAM stats — 1 Hz, attach-gated (zero leaks) ══
+        // ══ Performance: live RAM stats — 1 Hz, attach-gated (zero leaks),
+        //    PSS-accurate (launcher / :game process / available), with smooth
+        //    animated transitions between readings (item-2 + item-7) ══
+        private final java.util.WeakHashMap<View, android.animation.ValueAnimator> mPerfAnims =
+                new java.util.WeakHashMap<>();
+
         private void bindPerformancePanel(@NonNull View panel) {
             updateMemoryStats(panel);
             final Runnable tick = new Runnable() {
@@ -1442,35 +1447,104 @@ public class LauncherPreferenceFragment extends Fragment {
         }
 
         private void updateMemoryStats(@NonNull View panel) {
-            long nativeMb = android.os.Debug.getNativeHeapAllocatedSize() / 1048576L;
-            Runtime rt = Runtime.getRuntime();
-            long javaMb = (rt.totalMemory() - rt.freeMemory()) / 1048576L;
-            long deviceFreeMb = 0, deviceTotalMb = 0;
+            long launcherMb = -1, gameMb = -1, availMb = 0, totalMb = 0;
             try {
-                android.app.ActivityManager.MemoryInfo mi = new android.app.ActivityManager.MemoryInfo();
                 android.app.ActivityManager am = (android.app.ActivityManager)
                         panel.getContext().getSystemService(Context.ACTIVITY_SERVICE);
                 if (am != null) {
+                    // Real launcher RAM — this process' total PSS (native+dalvik+shared).
+                    android.os.Debug.MemoryInfo[] mine =
+                            am.getProcessMemoryInfo(new int[]{android.os.Process.myPid()});
+                    if (mine != null && mine.length > 0 && mine[0] != null)
+                        launcherMb = mine[0].getTotalPss() / 1024L;
+                    // Real game RAM — the separate ":game" process, when alive
+                    // (getRunningAppProcesses always reports our own app's processes).
+                    int gamePid = -1;
+                    java.util.List<android.app.ActivityManager.RunningAppProcessInfo> procs =
+                            am.getRunningAppProcesses();
+                    if (procs != null) {
+                        for (android.app.ActivityManager.RunningAppProcessInfo p : procs) {
+                            if (p != null && p.processName != null && p.processName.endsWith(":game")) {
+                                gamePid = p.pid;
+                                break;
+                            }
+                        }
+                    }
+                    if (gamePid > 0) {
+                        android.os.Debug.MemoryInfo[] g = am.getProcessMemoryInfo(new int[]{gamePid});
+                        if (g != null && g.length > 0 && g[0] != null)
+                            gameMb = g[0].getTotalPss() / 1024L;
+                    }
+                    android.app.ActivityManager.MemoryInfo mi = new android.app.ActivityManager.MemoryInfo();
                     am.getMemoryInfo(mi);
-                    deviceFreeMb = mi.availMem / 1048576L;
-                    deviceTotalMb = mi.totalMem / 1048576L;
+                    availMb = mi.availMem / 1048576L;
+                    totalMb = mi.totalMem / 1048576L;
                 }
             } catch (Throwable ignored) {}
             TextView v;
-            if ((v = panel.findViewById(R.id.perf_native_value)) != null) v.setText(nativeMb + " MB");
-            if ((v = panel.findViewById(R.id.perf_java_value)) != null) v.setText(javaMb + " MB");
-            if ((v = panel.findViewById(R.id.perf_device_value)) != null) v.setText(deviceFreeMb + " MB");
+            if ((v = panel.findViewById(R.id.perf_native_value)) != null)
+                animatePerfValue(v, launcherMb);                    // LAUNCHER chip
+            if ((v = panel.findViewById(R.id.perf_java_value)) != null)
+                animatePerfValue(v, gameMb);                        // GAME chip ("Idle" when not running)
+            if ((v = panel.findViewById(R.id.perf_device_value)) != null)
+                animatePerfValue(v, Math.max(0, availMb));          // AVAILABLE chip
             View fill = panel.findViewById(R.id.perf_meter_fill);
             View spacer = panel.findViewById(R.id.perf_meter_spacer);
-            if (fill != null && spacer != null && deviceTotalMb > 0) {
-                int used = (int) Math.min(100, Math.max(0, 100 - (deviceFreeMb * 100L) / deviceTotalMb));
-                LinearLayout.LayoutParams fp = (LinearLayout.LayoutParams) fill.getLayoutParams();
-                fp.weight = used;
-                fill.setLayoutParams(fp);
-                LinearLayout.LayoutParams sp = (LinearLayout.LayoutParams) spacer.getLayoutParams();
-                sp.weight = 100 - used;
-                spacer.setLayoutParams(sp);
+            if (fill != null && spacer != null && totalMb > 0) {
+                int used = (int) Math.min(100, Math.max(0, 100 - (availMb * 100L) / totalMb));
+                animatePerfMeter(fill, spacer, used);
             }
+        }
+
+        /** Smooth value count between readings — no sudden text jumps (item-7). */
+        private void animatePerfValue(@NonNull TextView v, long newMb) {
+            if (newMb < 0) { // game process not running
+                android.animation.ValueAnimator old = mPerfAnims.remove(v);
+                if (old != null) old.cancel();
+                v.setTag(-1);
+                v.setText("Idle");
+                return;
+            }
+            Object last = v.getTag();
+            if (!(last instanceof Integer) || (Integer) last < 0) {
+                v.setTag((int) newMb);
+                v.setText(newMb + " MB");
+                return;
+            }
+            final int from = (Integer) last;
+            v.setTag((int) newMb);
+            android.animation.ValueAnimator old = mPerfAnims.remove(v);
+            if (old != null) old.cancel();
+            if (from == (int) newMb) { v.setText(newMb + " MB"); return; }
+            android.animation.ValueAnimator a = android.animation.ValueAnimator.ofInt(from, (int) newMb);
+            a.setDuration(420);
+            a.setInterpolator(new android.view.animation.DecelerateInterpolator());
+            a.addUpdateListener(anim -> v.setText(anim.getAnimatedValue() + " MB"));
+            mPerfAnims.put(v, a);
+            a.start();
+        }
+
+        /** Meter fill glides between used-% readings instead of snapping. */
+        private void animatePerfMeter(@NonNull final View fill, @NonNull final View spacer, int used) {
+            LinearLayout.LayoutParams fp = (LinearLayout.LayoutParams) fill.getLayoutParams();
+            final float from = fp.weight;
+            if (from == used) return;
+            android.animation.ValueAnimator old = mPerfAnims.remove(fill);
+            if (old != null) old.cancel();
+            android.animation.ValueAnimator a = android.animation.ValueAnimator.ofFloat(from, used);
+            a.setDuration(420);
+            a.setInterpolator(new android.view.animation.DecelerateInterpolator());
+            a.addUpdateListener(anim -> {
+                float w = (Float) anim.getAnimatedValue();
+                LinearLayout.LayoutParams p1 = (LinearLayout.LayoutParams) fill.getLayoutParams();
+                p1.weight = w;
+                fill.setLayoutParams(p1);
+                LinearLayout.LayoutParams p2 = (LinearLayout.LayoutParams) spacer.getLayoutParams();
+                p2.weight = 100f - w;
+                spacer.setLayoutParams(p2);
+            });
+            mPerfAnims.put(fill, a);
+            a.start();
         }
 
         private void populateThemeSelector(@NonNull View itemView, @NonNull LayoutInflater inflater) {

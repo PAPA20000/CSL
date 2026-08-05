@@ -55,7 +55,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="Real RAM footprint — refreshed every second while this page is open"
+                android:text="Launcher, game process and free RAM — accurate PSS, refreshed every second"
                 android:textColor="#9A9AA6"
                 android:textSize="10.5sp" />
         </LinearLayout>
@@ -94,7 +94,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:letterSpacing="0.08"
-                android:text="NATIVE HEAP"
+                android:text="LAUNCHER"
                 android:textColor="#9C9CA8"
                 android:textSize="8.5sp"
                 android:textStyle="bold" />
@@ -123,7 +123,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:letterSpacing="0.08"
-                android:text="JAVA HEAP"
+                android:text="GAME"
                 android:textColor="#9C9CA8"
                 android:textSize="8.5sp"
                 android:textStyle="bold" />
@@ -152,7 +152,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:letterSpacing="0.08"
-                android:text="DEVICE FREE"
+                android:text="AVAILABLE"
                 android:textColor="#9C9CA8"
                 android:textSize="8.5sp"
                 android:textStyle="bold" />
