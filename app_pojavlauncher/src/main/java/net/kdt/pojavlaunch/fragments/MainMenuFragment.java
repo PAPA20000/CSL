@@ -189,6 +189,13 @@ public class MainMenuFragment extends Fragment {
             }
         }
 
+        Button mBrowserResourcesButton = view.findViewById(R.id.browser_resources_button);
+        if (mBrowserResourcesButton != null) mBrowserResourcesButton.setOnClickListener(v -> {
+            // Item-3: premium glass browser (Modrinth → current profile's folders)
+            if (getActivity() instanceof androidx.fragment.app.FragmentActivity) {
+                ResourceBrowserDialog.show((androidx.fragment.app.FragmentActivity) getActivity());
+            }
+        });
         if (mHomeButton != null) mHomeButton.setOnClickListener(v -> refreshHomeState());
         if (mNewsButton != null) mNewsButton.setOnClickListener(v -> Tools.openURL(requireActivity(), Tools.URL_HOME));
         if (mDiscordButton != null) mDiscordButton.setOnClickListener(v -> Tools.openURL(requireActivity(), getString(R.string.discord_invite)));
@@ -216,7 +223,7 @@ public class MainMenuFragment extends Fragment {
         if (isTwoPane() && mVersionSpinner != null) mVersionSpinner.setOnClickListener(v -> openPane(InstancePickerFragment.class, InstancePickerFragment.TAG, null));
         if (isTwoPane()) setBottomBarVisible(getChildFragmentManager().getBackStackEntryCount() == 0);
 
-        applyPremiumTouchAnimation(mHomeButton, mCursorCustomButton, mCustomControlButton, mInstallJarButton, mShareLogsButton, mOpenDirectoryButton, mPlayBtn, mEditProfileBtn, mVersionSpinner, mManageSkinButton);
+        applyPremiumTouchAnimation(mHomeButton, mCursorCustomButton, mCustomControlButton, mBrowserResourcesButton, mInstallJarButton, mShareLogsButton, mOpenDirectoryButton, mPlayBtn, mEditProfileBtn, mVersionSpinner, mManageSkinButton);
 
         if (mPlayBtn != null) mPlayBtn.setOnClickListener(v -> ExtraCore.setValue(ExtraConstants.LAUNCH_GAME, true));
     }

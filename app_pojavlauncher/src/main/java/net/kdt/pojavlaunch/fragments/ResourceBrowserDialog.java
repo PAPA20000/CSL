@@ -1,0 +1,550 @@
+package net.kdt.pojavlaunch.fragments;
+
+import android.app.Dialog;
+import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.PathInterpolator;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import net.kdt.pojavlaunch.PojavApplication;
+import net.kdt.pojavlaunch.R;
+import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
+import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * ResourceBrowserDialog — items 3+4. Premium glass popup (NOT a stock Android
+ * dialog) that browses the Modrinth catalogue and installs straight into the
+ * CURRENT selected profile:
+ *
+ *   Tabs:  RESOURCE PACKS → <gameDir>/resourcepacks/
+ *          SHADER PACKS   → <gameDir>/shaderpacks/
+ *   (Mods are intentionally absent, per user directive.)
+ *
+ * Item-4 surface contract: rounded 20dp master card, translucent glass tint,
+ * blur-behind window (API 31+; graceful dim fallback below), spring-feel open
+ * and close motion (fast-out / decelerate, no overshoot, no jank), platinum
+ * ripples, elevation shadow — identical to the controller-page language.
+ *
+ * Networking: everything off-thread on PojavApplication.sExecutorService; UI
+ * updates re-marshalled onto the main thread and are lifecycle-guarded (the
+ * dialog can be dismissed mid-flight without leaks).
+ */
+public final class ResourceBrowserDialog extends DialogFragment {
+
+    public static final String TAG = "cs_resource_browser";
+
+    private static final String UA = "CSLauncherV3 (github.com/PAPA20000/CSL)";
+    private static final String API = "https://api.modrinth.com/v2";
+    private static final int PAGE = 24;
+    private static final int TYPE_PACKS = 0;
+    private static final int TYPE_SHADERS = 1;
+
+    private static final int ST_IDLE = 0, ST_BUSY = 1, ST_INSTALLED = 2, ST_ERROR = 3;
+
+    /** One catalogue row. */
+    private static final class Entry {
+        String id, title, author, desc;
+        long downloads;
+        int state = ST_IDLE;
+        int progress; // 0..100 while ST_BUSY
+    }
+
+    private final List<Entry> mEntries = new ArrayList<>();
+    private ResourceAdapter mAdapter;
+
+    private View mContent;
+    private TextView mSubtitle, mVersionNote, mTabPacks, mTabShaders, mEmpty;
+    private ProgressBar mLoading;
+    private RecyclerView mList;
+
+    private int mType = TYPE_PACKS;
+    private int mOffset;
+    private boolean mFetching, mEndReached, mClosing, mClosed;
+    private int mFetchEpoch; // stale-response guard for tab switches
+
+    @Nullable private MinecraftProfile mProfile;
+    @Nullable private File mGameDir;
+    @Nullable private String mMcVersion;
+
+    public static void show(@NonNull FragmentActivity activity) {
+        new ResourceBrowserDialog().show(activity.getSupportFragmentManager(), TAG);
+    }
+
+    // ───────────────────────── dialog + glass surface ─────────────────────────
+
+    @NonNull
+    @Override
+    public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+        resolveCurrentProfile();
+        Dialog dialog = new Dialog(requireContext());
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        mContent = LayoutInflater.from(dialog.getContext())
+                .inflate(R.layout.dialog_resource_browser, null);
+        dialog.setContentView(mContent);
+        bindViews(mContent);
+        bindInteractions();
+        applyTabVisuals();
+        startFetch(true);
+        return dialog;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        Dialog d = getDialog();
+        if (d == null || d.getWindow() == null) return;
+        Window w = d.getWindow();
+        w.setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+        WindowManager.LayoutParams lp = w.getAttributes();
+        lp.width = (int) (getResources().getDisplayMetrics().widthPixels * 0.92f);
+        lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
+        lp.dimAmount = 0.55f;
+        // Blur behind (effective on Android 12+/API 31+); dim is the graceful
+        // fallback everywhere else. blurBehindRadius is a plain public field.
+        lp.flags |= WindowManager.LayoutParams.FLAG_BLUR_BEHIND;
+        lp.blurBehindRadius = 16;
+        w.setAttributes(lp);
+        if (mContent != null) {
+            // Item-4: soft shadow ring around the rounded glass card.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mContent.setElevation(dp(18));
+            }
+            playEnterAnimation(mContent);
+        }
+    }
+
+    /** Spring-feel open: scale 0.94→1 + rise 14dp + fade, fast-out settle. */
+    private void playEnterAnimation(@NonNull View v) {
+        v.setAlpha(0f);
+        v.setScaleX(0.94f);
+        v.setScaleY(0.94f);
+        v.setTranslationY(dp(14));
+        v.animate()
+                .alpha(1f).scaleX(1f).scaleY(1f).translationY(0f)
+                .setDuration(300)
+                .setInterpolator(new PathInterpolator(0.22f, 1f, 0.36f, 1f))
+                .start();
+    }
+
+    /** Smooth close mirrors the open (short accelerate-in, no snap). */
+    @Override
+    public void dismiss() {
+        if (mClosing) return;
+        View v = mContent;
+        if (v == null || !v.isAttachedToWindow() || getDialog() == null
+                || getDialog().getWindow() == null) {
+            super.dismissAllowingStateLoss();
+            return;
+        }
+        mClosing = true;
+        v.animate().cancel();
+        v.animate()
+                .alpha(0f).scaleX(0.96f).scaleY(0.96f).translationY(dp(8))
+                .setDuration(150)
+                .setInterpolator(new AccelerateInterpolator())
+                .withEndAction(() -> {
+                    try { ResourceBrowserDialog.super.dismissAllowingStateLoss(); }
+                    catch (Throwable ignored) {}
+                })
+                .start();
+    }
+
+    @Override
+    public void onDestroyView() {
+        mClosed = true;
+        if (mContent != null) mContent.animate().cancel();
+        mContent = null; mAdapter = null; mList = null;
+        mSubtitle = null; mVersionNote = null; mTabPacks = null; mTabShaders = null;
+        mEmpty = null; mLoading = null;
+        super.onDestroyView();
+    }
+
+    // ───────────────────────── views + interactions ─────────────────────────
+
+    private void bindViews(@NonNull View root) {
+        mSubtitle = root.findViewById(R.id.cs_rb_subtitle);
+        mVersionNote = root.findViewById(R.id.cs_rb_version_note);
+        mTabPacks = root.findViewById(R.id.cs_rb_tab_packs);
+        mTabShaders = root.findViewById(R.id.cs_rb_tab_shaders);
+        mEmpty = root.findViewById(R.id.cs_rb_empty);
+        mLoading = root.findViewById(R.id.cs_rb_loading);
+        mList = root.findViewById(R.id.cs_rb_list);
+
+        String prof = mProfile != null && mProfile.name != null ? mProfile.name : "Instance";
+        String ver = mProfile != null && mProfile.lastVersionId != null ? mProfile.lastVersionId : "";
+        mSubtitle.setText("Installing into: " + prof + (ver.isEmpty() ? "" : "  •  " + ver));
+        mVersionNote.setText(mMcVersion != null
+                ? "Filtered for Minecraft " + mMcVersion
+                : "Showing packs for all game versions");
+
+        mAdapter = new ResourceAdapter();
+        mList.setLayoutManager(new LinearLayoutManager(getContext()));
+        mList.setAdapter(mAdapter);
+        mList.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override public void onScrolled(@NonNull RecyclerView rv, int dx, int dy) {
+                if (dy <= 0 || mFetching || mEndReached) return;
+                LinearLayoutManager lm = (LinearLayoutManager) rv.getLayoutManager();
+                if (lm == null) return;
+                if (lm.findLastVisibleItemPosition() >= mAdapter.getItemCount() - 4) {
+                    startFetch(false);
+                }
+            }
+        });
+    }
+
+    private void bindInteractions() {
+        View close = mContent.findViewById(R.id.cs_rb_close);
+        if (close != null) close.setOnClickListener(v -> dismiss());
+        mTabPacks.setOnClickListener(v -> selectTab(TYPE_PACKS));
+        mTabShaders.setOnClickListener(v -> selectTab(TYPE_SHADERS));
+    }
+
+    private void selectTab(int type) {
+        if (mType == type && !mEntries.isEmpty()) return;
+        mType = type;
+        mEntries.clear();
+        mAdapter.notifyDataSetChanged();
+        mOffset = 0;
+        mEndReached = false;
+        mFetchEpoch++;
+        // Force-clear: a stale in-flight fetch from the old tab must NOT block
+        // this tab's fetch (its completion is epoch-guarded and drops safely).
+        mFetching = false;
+        applyTabVisuals();
+        startFetch(true);
+    }
+
+    private void applyTabVisuals() {
+        if (mTabPacks == null || mTabShaders == null) return;
+        boolean packs = mType == TYPE_PACKS;
+        mTabPacks.setBackgroundResource(packs ? R.drawable.bg_cs_tab_pill_active : R.drawable.bg_cs_tab_pill_idle);
+        mTabShaders.setBackgroundResource(packs ? R.drawable.bg_cs_tab_pill_idle : R.drawable.bg_cs_tab_pill_active);
+        mTabPacks.setTextColor(packs ? 0xFF151518 : 0xFFC9CBD6);
+        mTabShaders.setTextColor(packs ? 0xFFC9CBD6 : 0xFF151518);
+    }
+
+    // ───────────────────────── Modrinth catalogue ─────────────────────────
+
+    private void startFetch(final boolean reset) {
+        if (mFetching) return;
+        mFetching = true;
+        final int epoch = ++mFetchEpoch;
+        final int offset = reset ? 0 : mOffset;
+        final String projectType = mType == TYPE_PACKS ? "resourcepack" : "shader";
+        if (mLoading != null) mLoading.setVisibility(View.VISIBLE);
+        if (mEmpty != null) mEmpty.setVisibility(View.GONE);
+
+        PojavApplication.sExecutorService.execute(() -> {
+            final List<Entry> page = new ArrayList<>();
+            String error = null;
+            try {
+                StringBuilder facets = new StringBuilder("[[\"project_type:" + projectType + "\"]");
+                if (mMcVersion != null) facets.append(",[\"versions:").append(mMcVersion).append("\"]");
+                facets.append("]");
+                String url = API + "/search?limit=" + PAGE + "&offset=" + offset
+                        + "&index=downloads&facets=" + URLEncoder.encode(facets.toString(), "UTF-8");
+                JSONObject root = new JSONObject(httpGet(url));
+                JSONArray hits = root.optJSONArray("hits");
+                if (hits != null) {
+                    for (int i = 0; i < hits.length(); i++) {
+                        JSONObject h = hits.optJSONObject(i);
+                        if (h == null) continue;
+                        Entry e = new Entry();
+                        e.id = h.optString("project_id");
+                        e.title = h.optString("title");
+                        e.author = h.optString("author");
+                        e.desc = h.optString("description");
+                        e.downloads = h.optLong("downloads");
+                        if (!e.id.isEmpty() && !e.title.isEmpty()) page.add(e);
+                    }
+                }
+            } catch (Throwable t) {
+                error = t.getMessage();
+            }
+            final String err = error;
+            Tools.MAIN_HANDLER.post(() -> {
+                if (mClosed || mAdapter == null || epoch != mFetchEpoch) return;
+                mFetching = false;
+                if (mLoading != null) mLoading.setVisibility(View.GONE);
+                if (err != null) {
+                    if (mEntries.isEmpty() && mEmpty != null) {
+                        mEmpty.setText("Couldn't reach Modrinth.\nCheck your connection and reopen.");
+                        mEmpty.setVisibility(View.VISIBLE);
+                    }
+                    return;
+                }
+                if (reset) { mEntries.clear(); }
+                int start = mEntries.size();
+                mEntries.addAll(page);
+                mOffset = mEntries.size();
+                if (page.size() < PAGE) mEndReached = true;
+                if (reset) mAdapter.notifyDataSetChanged();
+                else mAdapter.notifyItemRangeInserted(start, page.size());
+                if (mEntries.isEmpty() && mEmpty != null) {
+                    mEmpty.setText("Nothing found for this game version.");
+                    mEmpty.setVisibility(View.VISIBLE);
+                }
+            });
+        });
+    }
+
+    // ───────────────────────── install engine ─────────────────────────
+
+    private void install(@NonNull Entry e) {
+        if (e.state == ST_BUSY || e.state == ST_INSTALLED || mGameDir == null) return;
+        e.state = ST_BUSY; e.progress = 0;
+        mAdapter.notifyChanged(e);
+        final int epoch = mFetchEpoch;
+        final String projectType = mType == TYPE_PACKS ? "resourcepacks" : "shaderpacks";
+        final String projectId = e.id;
+
+        PojavApplication.sExecutorService.execute(() -> {
+            Throwable failure = null;
+            try {
+                String vurl = API + "/project/" + projectId + "/version";
+                if (mMcVersion != null) {
+                    vurl += "?game_versions=" + URLEncoder.encode("[\"" + mMcVersion + "\"]", "UTF-8");
+                }
+                JSONArray versions = new JSONArray(httpGet(vurl));
+                JSONObject file = null;
+                for (int i = 0; i < versions.length() && file == null; i++) {
+                    JSONObject v = versions.optJSONObject(i);
+                    JSONArray files = v != null ? v.optJSONArray("files") : null;
+                    if (files == null || files.length() == 0) continue;
+                    for (int f = 0; f < files.length(); f++) {
+                        JSONObject fo = files.optJSONObject(f);
+                        if (fo != null && fo.optBoolean("primary", false)) { file = fo; break; }
+                    }
+                    if (file == null) file = files.optJSONObject(0);
+                }
+                if (file == null) throw new IOException("no downloadable file");
+                String fname = file.optString("filename");
+                int slash = fname.lastIndexOf('/');
+                if (slash >= 0) fname = fname.substring(slash + 1);
+                if (fname.isEmpty()) fname = projectId + ".zip";
+                String furl = file.getString("url");
+
+                File dir = new File(mGameDir, projectType);
+                //noinspection ResultOfMethodCallIgnored
+                dir.mkdirs();
+                File out = new File(dir, fname);
+                if (out.exists() && out.length() > 0) {
+                    postProgress(e, epoch, 100); // already on disk
+                } else {
+                    downloadTo(furl, out, e, epoch);
+                }
+            } catch (Throwable t) {
+                failure = t;
+            }
+            final Throwable err = failure;
+            Tools.MAIN_HANDLER.post(() -> {
+                if (mClosed || mAdapter == null || epoch != mFetchEpoch) return;
+                e.state = err == null ? ST_INSTALLED : ST_ERROR;
+                mAdapter.notifyChanged(e);
+            });
+        });
+    }
+
+    private void downloadTo(String furl, File out, Entry e, int epoch) throws IOException {
+        HttpURLConnection c = null;
+        File tmp = new File(out.getParentFile(), out.getName() + ".cstmp");
+        try {
+            c = (HttpURLConnection) new URL(furl).openConnection();
+            c.setRequestProperty("User-Agent", UA);
+            c.setConnectTimeout(8000);
+            c.setReadTimeout(15000);
+            long total = c.getContentLengthLong();
+            long read = 0; int lastPct = -1;
+            try (InputStream in = new BufferedInputStream(c.getInputStream());
+                 FileOutputStream fos = new FileOutputStream(tmp)) {
+                byte[] buf = new byte[16384];
+                int n;
+                while ((n = in.read(buf)) != -1) {
+                    if (mClosed) throw new IOException("dialog closed");
+                    fos.write(buf, 0, n);
+                    read += n;
+                    if (total > 0) {
+                        int pct = (int) ((read * 100L) / total);
+                        if (pct != lastPct && pct % 5 == 0) {
+                            lastPct = pct;
+                            postProgress(e, epoch, pct);
+                        }
+                    }
+                }
+            }
+            if (out.exists() && !out.delete()) throw new IOException("replace failed");
+            if (!tmp.renameTo(out)) throw new IOException("finalize failed");
+        } finally {
+            if (c != null) c.disconnect();
+            //noinspection ResultOfMethodCallIgnored
+            tmp.delete();
+        }
+    }
+
+    private void postProgress(Entry e, int epoch, int pct) {
+        Tools.MAIN_HANDLER.post(() -> {
+            if (mClosed || mAdapter == null || epoch != mFetchEpoch || e.state != ST_BUSY) return;
+            e.progress = pct;
+            mAdapter.notifyChanged(e);
+        });
+    }
+
+    // ───────────────────────── adapter ─────────────────────────
+
+    private final class ResourceAdapter extends RecyclerView.Adapter<ResourceAdapter.RowVH> {
+
+        void notifyChanged(Entry e) {
+            int idx = mEntries.indexOf(e);
+            if (idx >= 0) notifyItemChanged(idx);
+        }
+
+        @NonNull
+        @Override
+        public RowVH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View v = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_resource_row, parent, false);
+            return new RowVH(v);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull RowVH h, int position) {
+            Entry e = mEntries.get(position);
+            h.title.setText(e.title);
+            h.meta.setText((e.author == null || e.author.isEmpty() ? "Unknown" : e.author)
+                    + "  •  " + formatDownloads(e.downloads) + " downloads");
+            h.desc.setText(e.desc == null ? "" : e.desc);
+            bindInstallPill(h, e);
+            h.install.setOnClickListener(v -> {
+                int pos = h.getBindingAdapterPosition();
+                if (pos < 0 || pos >= mEntries.size()) return;
+                install(mEntries.get(pos));
+            });
+        }
+
+        private void bindInstallPill(@NonNull RowVH h, @NonNull Entry e) {
+            switch (e.state) {
+                case ST_BUSY:
+                    h.install.setEnabled(false);
+                    h.install.setText(e.progress > 0 ? e.progress + "%" : "…");
+                    h.install.setBackgroundResource(R.drawable.bg_cs_tab_pill_idle);
+                    h.install.setTextColor(0xFFC9CBD6);
+                    break;
+                case ST_INSTALLED:
+                    h.install.setEnabled(false);
+                    h.install.setText("INSTALLED");
+                    h.install.setBackgroundResource(R.drawable.bg_cs_installed_pill);
+                    h.install.setTextColor(0xFF7BE3A8);
+                    break;
+                case ST_ERROR:
+                    h.install.setEnabled(true);
+                    h.install.setText("RETRY");
+                    h.install.setBackgroundResource(R.drawable.bg_cs_tab_pill_active);
+                    h.install.setTextColor(0xFF151518);
+                    break;
+                default:
+                    h.install.setEnabled(true);
+                    h.install.setText("INSTALL");
+                    h.install.setBackgroundResource(R.drawable.bg_cs_tab_pill_active);
+                    h.install.setTextColor(0xFF151518);
+            }
+        }
+
+        @Override
+        public int getItemCount() { return mEntries.size(); }
+
+        final class RowVH extends RecyclerView.ViewHolder {
+            final TextView title, meta, desc, install;
+            RowVH(@NonNull View itemView) {
+                super(itemView);
+                title = itemView.findViewById(R.id.row_rb_title);
+                meta = itemView.findViewById(R.id.row_rb_meta);
+                desc = itemView.findViewById(R.id.row_rb_desc);
+                install = itemView.findViewById(R.id.row_rb_install);
+            }
+        }
+    }
+
+    // ───────────────────────── helpers ─────────────────────────
+
+    private void resolveCurrentProfile() {
+        try {
+            mProfile = LauncherProfiles.getCurrentProfile();
+            if (mProfile != null) {
+                mGameDir = Tools.getGameDirPath(mProfile);
+                mMcVersion = extractMcVersion(mProfile.lastVersionId);
+            }
+        } catch (Throwable t) {
+            mProfile = null; mGameDir = null; mMcVersion = null;
+        }
+    }
+
+    /** Extract a release-looking version ("1.20.1") out of any version id. */
+    @Nullable
+    private static String extractMcVersion(@Nullable String raw) {
+        if (raw == null) return null;
+        Matcher m = Pattern.compile("1\\.\\d{1,2}(\\.\\d{1,2})?").matcher(raw);
+        return m.find() ? m.group() : null;
+    }
+
+    private static String httpGet(String url) throws IOException {
+        HttpURLConnection c = null;
+        try {
+            c = (HttpURLConnection) new URL(url).openConnection();
+            c.setRequestProperty("User-Agent", UA);
+            c.setConnectTimeout(8000);
+            c.setReadTimeout(10000);
+            try (InputStream in = new BufferedInputStream(c.getInputStream());
+                 ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+                byte[] buf = new byte[8192];
+                int n;
+                while ((n = in.read(buf)) != -1) bos.write(buf, 0, n);
+                return bos.toString("UTF-8");
+            }
+        } finally {
+            if (c != null) c.disconnect();
+        }
+    }
+
+    private static String formatDownloads(long n) {
+        if (n >= 1_000_000) return (n / 100_000) / 10f + "M";
+        if (n >= 1_000) return (n / 100) / 10f + "K";
+        return String.valueOf(n);
+    }
+
+    private float dp(float v) {
+        return v * getResources().getDisplayMetrics().density;
+    }
+}
