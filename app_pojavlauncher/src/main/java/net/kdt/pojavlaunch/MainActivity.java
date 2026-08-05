@@ -269,6 +269,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
                     case 2: dialogSendCustomKey(); break;
                     case 3: openQuickSettings(); break;
                     case 4: openCustomControls(); break;
+                    case 5: openResourceBrowser(); break; // user req: packs/shaders without leaving the game
                 }
                 drawerLayout.closeDrawers();
             };
@@ -442,9 +443,13 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         @Override public void run() { tickFpsOverlay(); }
     };
 
+    private TextView mMemChip;
+
     private void startFpsTicker() {
         if (mFpsChip == null) mFpsChip = findViewById(R.id.fps_counter_chip);
-        if (mFpsChip != null) armFpsChipDrag(mFpsChip);
+        if (mMemChip == null) mMemChip = findViewById(R.id.mem_counter_chip);
+        if (mFpsChip != null) armFpsChipDrag(mFpsChip, "fpsChipTx", "fpsChipTy");
+        if (mMemChip != null) armFpsChipDrag(mMemChip, "memChipTx", "memChipTy");
         Tools.MAIN_HANDLER.removeCallbacks(mFpsTicker);
         Tools.MAIN_HANDLER.postDelayed(mFpsTicker, 500);
     }
@@ -454,10 +459,18 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     // restored the next time the chip appears. Clamp keeps the chip fully
     // inside the content frame; a light press-scale gives premium feedback.
     private boolean mFpsDragArmed;
+    private boolean mMemDragArmed;
 
-    private void armFpsChipDrag(final TextView chip) {
-        if (mFpsDragArmed) return;
-        mFpsDragArmed = true;
+    /** Long-press-free drag for the HUD chips (user req: place them anywhere).
+     *  @param keyX/keyY per-chip persistence keys so every chip remembers its spot. */
+    private void armFpsChipDrag(final TextView chip, final String keyX, final String keyY) {
+        if ("fpsChipTx".equals(keyX)) {
+            if (mFpsDragArmed) return;
+            mFpsDragArmed = true;
+        } else {
+            if (mMemDragArmed) return;
+            mMemDragArmed = true;
+        }
         chip.setOnTouchListener(new View.OnTouchListener() {
             private float mDx, mDy;
             @Override public boolean onTouch(View v, MotionEvent ev) {
@@ -485,8 +498,8 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
                                     ? LauncherPreferences.DEFAULT_PREF
                                     : getSharedPreferences("cslauncher_settings", MODE_PRIVATE);
                             p.edit()
-                                    .putInt("fpsChipTx", (int) v.getTranslationX())
-                                    .putInt("fpsChipTy", (int) v.getTranslationY())
+                                    .putInt(keyX, (int) v.getTranslationX())
+                                    .putInt(keyY, (int) v.getTranslationY())
                                     .apply();
                         } catch (Throwable ignored) {}
                         return true;
@@ -498,14 +511,14 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     }
 
     /** Restore the saved chip offset (clamped to the current frame) once laid out. */
-    private void restoreFpsChipPosition(final TextView chip) {
+    private void restoreFpsChipPosition(final TextView chip, final String keyX, final String keyY) {
         chip.post(() -> {
             try {
                 SharedPreferences p = LauncherPreferences.DEFAULT_PREF != null
                         ? LauncherPreferences.DEFAULT_PREF
                         : getSharedPreferences("cslauncher_settings", MODE_PRIVATE);
-                float tx = p.getInt("fpsChipTx", 0);
-                float ty = p.getInt("fpsChipTy", 0);
+                float tx = p.getInt(keyX, 0);
+                float ty = p.getInt(keyY, 0);
                 View parent = (View) chip.getParent();
                 if (parent != null) {
                     tx = Math.max(-chip.getLeft(), Math.min(tx, parent.getWidth() - chip.getWidth() - chip.getLeft()));
@@ -524,25 +537,56 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     private void tickFpsOverlay() {
         TextView chip = mFpsChip;
         if (chip == null || isFinishing() || isDestroyed()) return;
-        boolean show = false;
+        boolean showFps = false, showMem = false;
         try {
             SharedPreferences p = LauncherPreferences.DEFAULT_PREF != null
                     ? LauncherPreferences.DEFAULT_PREF
                     : getSharedPreferences("cslauncher_settings", MODE_PRIVATE);
-            show = p.getBoolean("showFpsCounter", false);
+            showFps = p.getBoolean("showFpsCounter", false);
+            showMem = p.getBoolean("showMemoryChip", false);
         } catch (Throwable ignored) {}
-        if (!show) {
+
+        if (!showFps) {
             if (chip.getVisibility() != View.GONE) chip.setVisibility(View.GONE);
-            Tools.MAIN_HANDLER.postDelayed(mFpsTicker, 1500); // lazy poll while hidden
-            return;
+        } else {
+            if (chip.getVisibility() != View.VISIBLE) {
+                chip.setVisibility(View.VISIBLE);
+                restoreFpsChipPosition(chip, "fpsChipTx", "fpsChipTy");
+            }
+            int fps = net.kdt.pojavlaunch.utils.FpsCounter.getFps();
+            if (fps >= 0) chip.setText(fps + " FPS");
         }
-        if (chip.getVisibility() != View.VISIBLE) {
-            chip.setVisibility(View.VISIBLE);
-            restoreFpsChipPosition(chip); // Item-2: reapply the saved drag offset
+
+        // CS HUD memory chip — real PSS of THIS (game) process, 1 Hz via the same ticker
+        TextView mem = mMemChip;
+        if (mem != null) {
+            if (!showMem) {
+                if (mem.getVisibility() != View.GONE) mem.setVisibility(View.GONE);
+            } else {
+                if (mem.getVisibility() != View.VISIBLE) {
+                    mem.setVisibility(View.VISIBLE);
+                    restoreFpsChipPosition(mem, "memChipTx", "memChipTy");
+                }
+                mem.setText(buildMemoryText());
+            }
         }
-        int fps = net.kdt.pojavlaunch.utils.FpsCounter.getFps();
-        if (fps >= 0) chip.setText(fps + " FPS");
-        Tools.MAIN_HANDLER.postDelayed(mFpsTicker, 500);
+
+        Tools.MAIN_HANDLER.postDelayed(mFpsTicker, (showFps || showMem) ? 500 : 1500);
+    }
+
+    /** "RAM 1234 MB" — real total PSS of the game process (includes everything). */
+    private String buildMemoryText() {
+        long mb = -1;
+        try {
+            android.app.ActivityManager am = (android.app.ActivityManager) getSystemService(ACTIVITY_SERVICE);
+            if (am != null) {
+                android.os.Debug.MemoryInfo[] mi =
+                        am.getProcessMemoryInfo(new int[]{android.os.Process.myPid()});
+                if (mi != null && mi.length > 0 && mi[0] != null)
+                    mb = mi[0].getTotalPss() / 1024L;
+            }
+        } catch (Throwable ignored) {}
+        return mb < 0 ? "RAM —" : "RAM " + mb + " MB";
     }
 
     @Override
@@ -682,6 +726,17 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     }
 
     boolean isInEditor;
+
+    /** User req: browse & install resource/shader packs from INSIDE the game
+     *  (in-game drawer) into the current profile — never leave the session. */
+    private void openResourceBrowser() {
+        try {
+            net.kdt.pojavlaunch.fragments.ResourceBrowserDialog.show(this);
+        } catch (Throwable t) {
+            Tools.showError(this, t);
+        }
+    }
+
     private void openCustomControls() {
         if(ingameControlsEditorListener == null || ingameControlsEditorArrayAdapter == null) return;
 

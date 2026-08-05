@@ -542,11 +542,9 @@ public class LauncherActivity extends BaseActivity {
 
         IconCacheJanitor.runJanitor();
 
-        // Remote Config: startup fetch (never blocks UI) + periodic background
-        // refresh so video URLs / remote switches can change without an update.
-        net.kdt.pojavlaunch.launch.RemoteConfigManager.get(this); // warm cache
-        net.kdt.pojavlaunch.launch.RemoteConfigManager.refreshAsync(this);
-        startRemoteConfigRefreshLoop();
+        // Remote Config retired (item-5/feedback): the loading video is bundled
+        // in-APK now. No warm fetch, no periodic refresh loop — zero background
+        // network/battery cost. RemoteConfigManager stays in the tree, dormant.
 
         mRequestNotificationPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
@@ -770,26 +768,8 @@ public class LauncherActivity extends BaseActivity {
         getSupportFragmentManager().registerFragmentLifecycleCallbacks(mFragmentCallbackListener, true);
     }
 
-    // ── Remote Config periodic refresh (req: background config updates) ──
-    private final android.os.Handler mRemoteConfigHandler =
-            new android.os.Handler(android.os.Looper.getMainLooper());
-    private final Runnable mRemoteConfigRefresh = new Runnable() {
-        @Override public void run() {
-            net.kdt.pojavlaunch.launch.RemoteConfigManager.refreshAsync(LauncherActivity.this);
-            mRemoteConfigHandler.postDelayed(this,
-                    net.kdt.pojavlaunch.launch.RemoteConfigManager.REFRESH_INTERVAL_MS);
-        }
-    };
-
-    private void startRemoteConfigRefreshLoop() {
-        mRemoteConfigHandler.removeCallbacks(mRemoteConfigRefresh);
-        mRemoteConfigHandler.postDelayed(mRemoteConfigRefresh,
-                net.kdt.pojavlaunch.launch.RemoteConfigManager.REFRESH_INTERVAL_MS);
-    }
-
     @Override
     protected void onDestroy() {
-        mRemoteConfigHandler.removeCallbacks(mRemoteConfigRefresh);
         super.onDestroy();
         if (mBootOverlay != null) {
             mBootOverlay.removeCallbacks(mBootFailsafe);

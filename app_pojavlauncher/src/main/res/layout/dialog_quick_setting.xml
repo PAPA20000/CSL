@@ -211,7 +211,54 @@
 
 
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editGestureDelay_seekbar"
+        app:layout_constraintTop_toBottomOf="@+id/osd_hint"
         tools:ignore="UseSwitchCompatOrMaterialXml" />
+
+    <!-- ══ CS On-Screen Display (user req): live in-game HUD chips — each one
+         toggleable HERE, draggable anywhere on screen, translucent by design ══ -->
+    <TextView
+        android:id="@+id/osd_caption"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:letterSpacing="0.1"
+        android:text="@string/cs_osd_caption"
+        android:textColor="#B9BBC4"
+        android:textSize="@dimen/_10ssp"
+        android:textStyle="bold"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editGestureDelay_seekbar" />
+
+    <Switch
+        android:id="@+id/osd_show_fps"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_36sdp"
+        android:text="@string/cs_osd_show_fps"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/osd_caption"
+        tools:ignore="UseSwitchCompatOrMaterialXml" />
+
+    <Switch
+        android:id="@+id/osd_show_memory"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_36sdp"
+        android:text="@string/cs_osd_show_memory"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/osd_show_fps"
+        tools:ignore="UseSwitchCompatOrMaterialXml" />
+
+    <TextView
+        android:id="@+id/osd_hint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/cs_osd_hint"
+        android:textColor="#8E8E9A"
+        android:textSize="@dimen/_9ssp"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/osd_show_memory" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

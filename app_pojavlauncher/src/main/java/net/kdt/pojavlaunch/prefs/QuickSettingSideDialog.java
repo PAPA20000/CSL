@@ -33,6 +33,7 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
     private SharedPreferences.Editor mEditor;
     @SuppressLint("UseSwitchCompatOrMaterialCode")
     private Switch mGyroSwitch, mGyroXSwitch, mGyroYSwitch, mGestureSwitch, mMouseGrabSwitch;
+    private Switch mOsdFpsSwitch, mOsdMemSwitch; // CS On-Screen Display (user req)
     private CustomSeekbar mGyroSensitivityBar, mMouseSpeedBar, mGestureDelayBar, mResolutionBar;
     private TextView mGyroSensitivityText, mGyroSensitivityDisplayText, mMouseSpeedText, mGestureDelayText, mGestureDelayDisplayText, mResolutionText;
 
@@ -67,6 +68,23 @@ public abstract class QuickSettingSideDialog extends com.kdt.SideDialogView {
         mGyroYSwitch = mDialogContent.findViewById(R.id.checkboxGyroY);
         mGestureSwitch = mDialogContent.findViewById(R.id.checkboxGesture);
         mMouseGrabSwitch = mDialogContent.findViewById(R.id.always_grab_mouse_side_dialog);
+        // CS On-Screen Display toggles (user req: FPS/Memory chips managed here)
+        mOsdFpsSwitch = mDialogContent.findViewById(R.id.osd_show_fps);
+        mOsdMemSwitch = mDialogContent.findViewById(R.id.osd_show_memory);
+        if (mOsdFpsSwitch != null) {
+            mOsdFpsSwitch.setChecked(LauncherPreferences.DEFAULT_PREF.getBoolean("showFpsCounter", false));
+            mOsdFpsSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                mEditor.putBoolean("showFpsCounter", isChecked).apply();
+                showSaveFeedback(buttonView.getContext());
+            });
+        }
+        if (mOsdMemSwitch != null) {
+            mOsdMemSwitch.setChecked(LauncherPreferences.DEFAULT_PREF.getBoolean("showMemoryChip", false));
+            mOsdMemSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                mEditor.putBoolean("showMemoryChip", isChecked).apply();
+                showSaveFeedback(buttonView.getContext());
+            });
+        }
 
         mGyroSensitivityBar = mDialogContent.findViewById(R.id.editGyro_seekbar);
         mMouseSpeedBar = mDialogContent.findViewById(R.id.editMouseSpeed_seekbar);

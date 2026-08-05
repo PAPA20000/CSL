@@ -160,7 +160,7 @@ public class ModDownloadHelper {
         }
     }
 
-    private static String sanitizeName(String name) {
+    public static String sanitizeName(String name) {
         return name.replaceAll("[^a-zA-Z0-9._-]", "_");
     }
 }

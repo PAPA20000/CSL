@@ -294,6 +294,11 @@
 
     <!-- ── Loading screen style (Remote Config feature) ── -->
     <string name="cs_loading_screen_style_title">Loading Screen</string>
+    <string name="cs_browse_resources">Browse Resources</string>
+    <string name="cs_osd_caption">ON-SCREEN DISPLAY</string>
+    <string name="cs_osd_show_fps">Show FPS chip</string>
+    <string name="cs_osd_show_memory">Show Memory chip</string>
+    <string name="cs_osd_hint">Chips are translucent — long-press-drag them anywhere on screen.</string>
     <string name="cs_loading_screen_style_summary">Classic black screen, or the bundled CS video that plays until the game window opens.</string>
     <!-- Download Console (v3) — pause / stop / hide controls -->
     <string name="download_console_pause">PAUSE</string>

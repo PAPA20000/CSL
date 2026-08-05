@@ -33,7 +33,6 @@ import org.json.JSONObject;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -325,15 +324,23 @@ public final class ResourceBrowserDialog extends DialogFragment {
 
     // ───────────────────────── install engine ─────────────────────────
 
+    /**
+     * Install the selected pack through the LAUNCHER'S EXISTING download
+     * system ({@link ModDownloadHelper} → android DownloadManager with the
+     * standard notification/toast flow) into the current profile's folder —
+     * per user directive we reuse the proven pipeline instead of a bespoke
+     * inline downloader.
+     */
     private void install(@NonNull Entry e) {
         if (e.state == ST_BUSY || e.state == ST_INSTALLED || mGameDir == null) return;
         e.state = ST_BUSY; e.progress = 0;
         mAdapter.notifyChanged(e);
         final int epoch = mFetchEpoch;
-        final String projectType = mType == TYPE_PACKS ? "resourcepacks" : "shaderpacks";
         final String projectId = e.id;
+        final String title = e.title;
 
         PojavApplication.sExecutorService.execute(() -> {
+            String fileUrl = null;
             Throwable failure = null;
             try {
                 String vurl = API + "/project/" + projectId + "/version";
@@ -353,75 +360,56 @@ public final class ResourceBrowserDialog extends DialogFragment {
                     if (file == null) file = files.optJSONObject(0);
                 }
                 if (file == null) throw new IOException("no downloadable file");
-                String fname = file.optString("filename");
-                int slash = fname.lastIndexOf('/');
-                if (slash >= 0) fname = fname.substring(slash + 1);
-                if (fname.isEmpty()) fname = projectId + ".zip";
-                String furl = file.getString("url");
-
-                File dir = new File(mGameDir, projectType);
-                //noinspection ResultOfMethodCallIgnored
-                dir.mkdirs();
-                File out = new File(dir, fname);
-                if (out.exists() && out.length() > 0) {
-                    postProgress(e, epoch, 100); // already on disk
-                } else {
-                    downloadTo(furl, out, e, epoch);
-                }
+                fileUrl = file.getString("url");
             } catch (Throwable t) {
                 failure = t;
             }
+            final String furl = fileUrl;
             final Throwable err = failure;
             Tools.MAIN_HANDLER.post(() -> {
                 if (mClosed || mAdapter == null || epoch != mFetchEpoch) return;
-                e.state = err == null ? ST_INSTALLED : ST_ERROR;
+                if (err != null) {
+                    e.state = ST_ERROR;
+                    mAdapter.notifyChanged(e);
+                    return;
+                }
+                String contentType = mType == TYPE_PACKS ? "resourcepack" : "shader";
+                String profileKey = currentProfileKey();
+                // Already on disk? (same filename the existing system uses)
+                try {
+                    File dir = ModDownloadHelper.getDestinationDir(getContext(), contentType, profileKey);
+                    File expected = new File(dir, ModDownloadHelper.sanitizeName(title)
+                            + ModDownloadHelper.getFileExtension(contentType));
+                    if (expected.exists() && expected.length() > 0) {
+                        e.state = ST_INSTALLED;
+                        mAdapter.notifyChanged(e);
+                        return;
+                    }
+                } catch (Throwable ignored) {}
+                try {
+                    ModDownloadHelper.downloadAndExtract(getContext(), title, furl, contentType, profileKey);
+                    e.state = ST_INSTALLED;
+                } catch (Throwable t) {
+                    e.state = ST_ERROR;
+                }
                 mAdapter.notifyChanged(e);
             });
         });
     }
 
-    private void downloadTo(String furl, File out, Entry e, int epoch) throws IOException {
-        HttpURLConnection c = null;
-        File tmp = new File(out.getParentFile(), out.getName() + ".cstmp");
+    /** currentProfile key, DEFAULT_PREF-null robust (game process edge). */
+    @Nullable
+    private String currentProfileKey() {
         try {
-            c = (HttpURLConnection) new URL(furl).openConnection();
-            c.setRequestProperty("User-Agent", UA);
-            c.setConnectTimeout(8000);
-            c.setReadTimeout(15000);
-            long total = c.getContentLengthLong();
-            long read = 0; int lastPct = -1;
-            try (InputStream in = new BufferedInputStream(c.getInputStream());
-                 FileOutputStream fos = new FileOutputStream(tmp)) {
-                byte[] buf = new byte[16384];
-                int n;
-                while ((n = in.read(buf)) != -1) {
-                    if (mClosed) throw new IOException("dialog closed");
-                    fos.write(buf, 0, n);
-                    read += n;
-                    if (total > 0) {
-                        int pct = (int) ((read * 100L) / total);
-                        if (pct != lastPct && pct % 5 == 0) {
-                            lastPct = pct;
-                            postProgress(e, epoch, pct);
-                        }
-                    }
-                }
+            android.content.SharedPreferences p = net.kdt.pojavlaunch.prefs.LauncherPreferences.DEFAULT_PREF;
+            if (p == null && getContext() != null) {
+                p = getContext().getSharedPreferences("cslauncher_settings", android.content.Context.MODE_PRIVATE);
             }
-            if (out.exists() && !out.delete()) throw new IOException("replace failed");
-            if (!tmp.renameTo(out)) throw new IOException("finalize failed");
-        } finally {
-            if (c != null) c.disconnect();
-            //noinspection ResultOfMethodCallIgnored
-            tmp.delete();
+            return p != null ? p.getString(
+                    net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_KEY_CURRENT_PROFILE, null) : null;
+        } catch (Throwable t) {
+            return null;
         }
-    }
-
-    private void postProgress(Entry e, int epoch, int pct) {
-        Tools.MAIN_HANDLER.post(() -> {
-            if (mClosed || mAdapter == null || epoch != mFetchEpoch || e.state != ST_BUSY) return;
-            e.progress = pct;
-            mAdapter.notifyChanged(e);
-        });
     }
 
     // ───────────────────────── adapter ─────────────────────────

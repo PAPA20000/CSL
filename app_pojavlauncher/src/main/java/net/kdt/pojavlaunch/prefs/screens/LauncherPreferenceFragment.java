@@ -523,12 +523,14 @@ public class LauncherPreferenceFragment extends Fragment {
 
                 case "Performance":
                     List<SettingItem> perfItems = new ArrayList<>();
+                    // User req: device-class presets replace the old live-memory panel
+                    // (live HUD chips now live in the in-game Quick Settings dialog).
+                    perfItems.add(new SettingItem("perf_presets", SettingItem.TYPE_PRESET_PANEL,
+                            "Performance Presets", "", null));
                     perfItems.add(new SettingItem("showFpsCounter", SettingItem.TYPE_SWITCH,
                             "Show FPS",
-                            "Live frame counter in the top-left corner while playing — measured at the GL swap boundary",
+                            "Live frame counter while playing — measured at the GL swap boundary (also toggleable in-game via Quick Settings)",
                             false));
-                    perfItems.add(new SettingItem("perf_live_panel", SettingItem.TYPE_PERFORMANCE_PANEL,
-                            "Live Memory", "", null));
                     categories.add(new SettingCategory("Performance", perfItems));
                     break;
 
@@ -1021,6 +1023,12 @@ public class LauncherPreferenceFragment extends Fragment {
                 } else if (item.type == SettingItem.TYPE_PERFORMANCE_PANEL) {
                     itemView = inflater.inflate(R.layout.item_setting_performance, holder.container, false);
                     bindPerformancePanel(itemView);
+                    holder.container.addView(itemView);
+                    continue;
+
+                } else if (item.type == SettingItem.TYPE_PRESET_PANEL) {
+                    itemView = inflater.inflate(R.layout.item_setting_presets, holder.container, false);
+                    bindPresetPanel(itemView);
                     holder.container.addView(itemView);
                     continue;
 
@@ -1547,6 +1555,95 @@ public class LauncherPreferenceFragment extends Fragment {
             a.start();
         }
 
+        // ══ Performance presets (user req): LOW-END / HIGH-END one-tap bundles ══
+        private void bindPresetPanel(@NonNull View panel) {
+            final android.content.Context ctx = panel.getContext();
+            // HIGH preset RAM: device-aware (35% of total, min 4096, max 6144, /256 step)
+            int totalMb = 6144;
+            try {
+                android.app.ActivityManager am = (android.app.ActivityManager)
+                        ctx.getSystemService(Context.ACTIVITY_SERVICE);
+                if (am != null) {
+                    android.app.ActivityManager.MemoryInfo mi = new android.app.ActivityManager.MemoryInfo();
+                    am.getMemoryInfo(mi);
+                    totalMb = (int) (mi.totalMem / 1048576L);
+                }
+            } catch (Throwable ignored) {}
+            final int highRam = Math.min(6144, Math.max(4096, (int) ((totalMb * 0.35f) / 256f) * 256));
+
+            TextView points = panel.findViewById(R.id.preset_high_points);
+            if (points != null) points.setText(
+                    highRam + " MB RAM\n100% resolution\nVSync off (both)\nSustained mode ON");
+
+            View lowApply = panel.findViewById(R.id.preset_low_apply);
+            View highApply = panel.findViewById(R.id.preset_high_apply);
+            if (lowApply != null) lowApply.setOnClickListener(v -> applyPreset(panel, false, highRam));
+            if (highApply != null) highApply.setOnClickListener(v -> applyPreset(panel, true, highRam));
+            refreshPresetMarker(panel);
+        }
+
+        /** Apply a preset bundle to the REAL prefs, mirror into the settings draft
+         *  store (so a later SAVE can never silently revert it), refresh the live
+         *  pref statics, and flash APPLIED on the tapped pill. */
+        private void applyPreset(@NonNull View panel, boolean high, int highRam) {
+            android.content.Context ctx = panel.getContext();
+            try {
+                android.content.SharedPreferences p = LauncherPreferences.DEFAULT_PREF != null
+                        ? LauncherPreferences.DEFAULT_PREF
+                        : ctx.getSharedPreferences("cslauncher_settings", Context.MODE_PRIVATE);
+                android.content.SharedPreferences.Editor e = p.edit();
+                e.putInt("allocation", high ? highRam : 1280);
+                e.putInt("resolutionRatio", high ? 100 : 70);
+                e.putBoolean("force_vsync", false);        // never panel-lock
+                e.putBoolean("vsync_in_zink", false);      // never FIFO-lock on zink
+                e.putBoolean("sustainedPerformance", high);
+                e.putString("perfPreset", high ? "high" : "low");
+                e.commit();
+                // Draft-store mirror: the settings SAVE flow commits its draft
+                // map later — mirror the bundle there too so it survives.
+                try {
+                    android.content.SharedPreferences.Editor d =
+                            SettingsSaveManager.getDraftPrefs(ctx).edit();
+                    d.putInt("allocation", high ? highRam : 1280);
+                    d.putInt("resolutionRatio", high ? 100 : 70);
+                    d.putBoolean("force_vsync", false);
+                    d.putBoolean("vsync_in_zink", false);
+                    d.putBoolean("sustainedPerformance", high);
+                    d.apply();
+                } catch (Throwable ignored) {}
+                LauncherPreferences.loadPreferences(ctx.getApplicationContext()); // refresh statics
+            } catch (Throwable t) {
+                android.widget.Toast.makeText(ctx, "Preset failed to apply", android.widget.Toast.LENGTH_SHORT).show();
+                return;
+            }
+            View pill = panel.findViewById(high ? R.id.preset_high_apply : R.id.preset_low_apply);
+            if (pill instanceof TextView) {
+                final TextView tv = (TextView) pill;
+                tv.setText("APPLIED ✓");
+                Tools.MAIN_HANDLER.postDelayed(() -> tv.setText("APPLY"), 1200);
+            }
+            refreshPresetMarker(panel);
+            android.widget.Toast.makeText(ctx,
+                    high ? "High-End preset applied — restart the game for full effect"
+                            : "Low-End preset applied — restart the game for full effect",
+                    android.widget.Toast.LENGTH_LONG).show();
+        }
+
+        private void refreshPresetMarker(@NonNull View panel) {
+            TextView state = panel.findViewById(R.id.preset_state);
+            if (state == null) return;
+            String cur = null;
+            try {
+                android.content.SharedPreferences p = LauncherPreferences.DEFAULT_PREF != null
+                        ? LauncherPreferences.DEFAULT_PREF
+                        : panel.getContext().getSharedPreferences("cslauncher_settings", Context.MODE_PRIVATE);
+                cur = p.getString("perfPreset", null);
+            } catch (Throwable ignored) {}
+            if ("low".equals(cur)) { state.setText("LOW-END ACTIVE"); state.setVisibility(View.VISIBLE); }
+            else if ("high".equals(cur)) { state.setText("HIGH-END ACTIVE"); state.setVisibility(View.VISIBLE); }
+            else state.setVisibility(View.GONE);
+        }
+
         private void populateThemeSelector(@NonNull View itemView, @NonNull LayoutInflater inflater) {
             LinearLayout swatchesContainer = itemView.findViewById(R.id.theme_swatches_container);
             if (swatchesContainer == null) return;
@@ -1854,6 +1951,7 @@ public class LauncherPreferenceFragment extends Fragment {
         public static final int TYPE_CATEGORY_LINK = 8;
         public static final int TYPE_THEME_SELECTOR = 9;
         public static final int TYPE_PERFORMANCE_PANEL = 10;
+        public static final int TYPE_PRESET_PANEL = 11;
 
         String key;
         int type;
