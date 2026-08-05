@@ -84,7 +84,7 @@ public final class ResourceBrowserDialog extends DialogFragment {
     /** Exact project icons, off-thread — 64-entry LRU + disk cache. */
     private final java.util.LinkedHashMap<String, android.graphics.Bitmap> mIconCache =
             new java.util.LinkedHashMap<String, android.graphics.Bitmap>(48, 0.75f, true) {
-                @Override protected boolean removeEldestEntry(Map.Entry<String, android.graphics.Bitmap> eldest) {
+                @Override protected boolean removeEldestEntry(java.util.Map.Entry<String, android.graphics.Bitmap> eldest) {
                     return size() > 64;
                 }
             };
