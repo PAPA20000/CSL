@@ -42,11 +42,20 @@ public final class LaunchTracker {
     private static volatile Phase sPhase = Phase.IDLE;
     private static volatile String sProfileName;
     private static volatile String sVersionId;
+    /**
+     * Bumped on every {@link #begin}. The STARTING auto-idle timer carries the
+     * sequence it was armed for, so a stale timer can never release a NEWER
+     * launch sequence early.
+     */
+    private static int sLaunchSeq;
+    /** Grace window for the game handoff before the tracker self-heals to IDLE. */
+    private static final long STARTING_AUTO_IDLE_MS = 1500L;
 
     private LaunchTracker() {}
 
     /** Begin a fresh launch sequence (called right before MinecraftDownloader.start). */
     public static synchronized void begin(@Nullable String profileName, @Nullable String versionId) {
+        sLaunchSeq++;
         sProfileName = profileName;
         sVersionId = versionId;
         setPhase(Phase.PREPARING);
@@ -59,7 +68,23 @@ public final class LaunchTracker {
     /** Real download bytes started flowing — console takes over the chrome. */
     public static void downloading() { advance(Phase.DOWNLOADING); }
     /** Everything checked out — the game process is about to start. */
-    public static void starting() { advance(Phase.STARTING); }
+    public static void starting() {
+        advance(Phase.STARTING);
+        // Self-healing handoff (item-1/6 root fix): STARTING is terminal for the
+        // SEQUENCE, not for the tracker. Previously nothing ever returned the
+        // tracker to IDLE after a successful launch — the phase wedged at
+        // STARTING forever, which (a) kept the launch overlay up and swallowing
+        // every navigation tap when the launcher process survived the handoff,
+        // and (b) kept suppressesDownloadConsole() true so later real downloads
+        // could never surface the console. Arm an auto-idle for THIS sequence.
+        final int seq;
+        synchronized (LaunchTracker.class) { seq = sLaunchSeq; }
+        MAIN.postDelayed(() -> {
+            synchronized (LaunchTracker.class) {
+                if (seq == sLaunchSeq && sPhase == Phase.STARTING) setPhase(Phase.IDLE);
+            }
+        }, STARTING_AUTO_IDLE_MS);
+    }
 
     /** Launch aborted (error or user cancel). Auto-clears to IDLE shortly. */
     public static void fail() {

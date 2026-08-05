@@ -244,6 +244,17 @@ public class LauncherActivity extends BaseActivity {
             Toast.makeText(this, R.string.tasks_ongoing, Toast.LENGTH_LONG).show();
             return false;
         }
+        // Relaunch guard (item-1/6 companion fix): the launch overlay no longer
+        // eats taps, so PLAY stays reachable mid-launch — a second tap must be
+        // absorbed here semantically. Any non-IDLE/non-FAILED phase means a
+        // launch sequence is ACTIVE; refuse quiet double-starts.
+        net.kdt.pojavlaunch.launch.LaunchTracker.Phase csPhase =
+                net.kdt.pojavlaunch.launch.LaunchTracker.getPhase();
+        if (csPhase != net.kdt.pojavlaunch.launch.LaunchTracker.Phase.IDLE
+                && csPhase != net.kdt.pojavlaunch.launch.LaunchTracker.Phase.FAILED) {
+            Toast.makeText(this, R.string.tasks_ongoing, Toast.LENGTH_LONG).show();
+            return false;
+        }
 
         String selectedProfile = LauncherPreferences.DEFAULT_PREF.getString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE,"");
         if (LauncherProfiles.mainProfileJson == null || !LauncherProfiles.mainProfileJson.profiles.containsKey(selectedProfile)){
@@ -735,6 +746,15 @@ public class LauncherActivity extends BaseActivity {
         });
         mInstallTracker.attach();
         updateNavSkinIcon();
+        // Launch-overlay recovery (item-1/6 root fix): when we regain the
+        // foreground (returning from the game, process survived the handoff),
+        // the tracker may already have settled back to IDLE while our listener
+        // notice raced the activity swap. A still-visible overlay would wedge
+        // over the whole UI — hide it on settle. Zero-op when nothing is up.
+        if (net.kdt.pojavlaunch.launch.LaunchTracker.getPhase()
+                == net.kdt.pojavlaunch.launch.LaunchTracker.Phase.IDLE) {
+            hideLaunchOverlay();
+        }
     }
 
     @Override

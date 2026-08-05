@@ -41,6 +41,8 @@ public abstract class SideDialogView {
     protected boolean mDisplaying = false;
     /* Whether the layout is built */
     private boolean mIsInstantiated = false;
+    /* Bounded re-posts while the freshly inflated panel awaits its first layout */
+    private int mAppearLayoutRetries;
 
     /* UI elements */
     private Button mStartButton, mEndButton;
@@ -153,7 +155,7 @@ public abstract class SideDialogView {
      * Slide the layout into the visible screen area
      */
     @CallSuper
-    public final void appear(boolean fromRight) {
+    public final void appear(final boolean fromRight) {
         if (!mIsInstantiated) {
             inflateLayout();
             onInflate();
@@ -162,6 +164,18 @@ public abstract class SideDialogView {
         // To avoid UI sizing issue when the dialog is not fully inflated
         onAppear();
         Tools.runOnUiThread(() -> {
+            // First-appearance race (item-1/6 root fix): when the panel was
+            // inflated THIS frame its measured width is still 0, so the slide
+            // target computed below lands fully OFF-SCREEN — the classic
+            // "quick settings sometimes never opens during launch" bug. Wait
+            // one layout pass (bounded 3 tries), then animate for real.
+            int measured = fromRight ? mScrollView.getWidth() : mDialogLayout.getWidth();
+            if (measured == 0 && mAppearLayoutRetries < 3) {
+                mAppearLayoutRetries++;
+                mDialogLayout.post(() -> appear(fromRight));
+                return;
+            }
+            mAppearLayoutRetries = 0;
             if (fromRight) {
                 if (!mDisplaying || !isAtRight()) {
                     mSideDialogAnimator.setFloatValues(currentDisplayMetrics.widthPixels, currentDisplayMetrics.widthPixels - mScrollView.getWidth() - mMargin);

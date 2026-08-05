@@ -104,7 +104,14 @@ public final class LaunchOverlayView extends View {
     public LaunchOverlayView(@NonNull Context context) {
         super(context);
         setVisibility(GONE);
-        setClickable(true); // swallow touches under the overlay
+        // Touches PASS THROUGH (item-1/6 root fix): launcher navigation —
+        // Menu / Settings / Logs / every rail button — must stay usable in
+        // every launch state. Previously clickable=true swallowed ALL taps
+        // under the scrim for the whole PREPARING→STARTING window, so buttons
+        // "sometimes worked, sometimes not" (they came back only when the
+        // Download Console took over the chrome). Relaunch safety is enforced
+        // semantically in LauncherActivity via LaunchTracker.getPhase().
+        setClickable(false);
         setFocusable(false);
         setWillNotDraw(false);
         setLayerType(View.LAYER_TYPE_HARDWARE, null);
