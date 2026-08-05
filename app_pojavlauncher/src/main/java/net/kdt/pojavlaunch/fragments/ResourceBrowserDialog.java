@@ -132,10 +132,12 @@ public final class ResourceBrowserDialog extends DialogFragment {
         lp.width = (int) (getResources().getDisplayMetrics().widthPixels * 0.92f);
         lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
         lp.dimAmount = 0.55f;
-        // Blur behind (effective on Android 12+/API 31+); dim is the graceful
-        // fallback everywhere else. blurBehindRadius is a plain public field.
+        // Blur behind — effective on Android 12+/API 31+ (setter is 31+);
+        // dim is the graceful fallback everywhere below.
         lp.flags |= WindowManager.LayoutParams.FLAG_BLUR_BEHIND;
-        lp.blurBehindRadius = 16;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            lp.setBlurBehindRadius(16);
+        }
         w.setAttributes(lp);
         if (mContent != null) {
             // Item-4: soft shadow ring around the rounded glass card.
