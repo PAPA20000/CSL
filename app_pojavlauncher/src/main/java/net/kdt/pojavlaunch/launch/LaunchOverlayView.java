@@ -162,7 +162,9 @@ public final class LaunchOverlayView extends View {
             mCardScale = 0.92f;
             ValueAnimator cardEnter = ValueAnimator.ofFloat(0.92f, 1f);
             cardEnter.setDuration(300);
-            cardEnter.setInterpolator(new android.view.animation.OvershootInterpolator(1.4f));
+            // Item-7: spring retained but restrained (0.85 tension — premium
+            // settle instead of a bouncy overshoot).
+            cardEnter.setInterpolator(new android.view.animation.OvershootInterpolator(0.85f));
             cardEnter.addUpdateListener(a -> {
                 mCardScale = (Float) a.getAnimatedValue();
                 invalidate();

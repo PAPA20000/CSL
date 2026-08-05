@@ -10,7 +10,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -108,8 +107,10 @@ public abstract class SideDialogView {
         // Attach layouts
         mParent.addView(mDialogLayout);
 
-        mSideDialogAnimator = ObjectAnimator.ofFloat(mDialogLayout, "x", 0).setDuration(600);
-        mSideDialogAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+        // Item-7: spring-feel slide — fast-out path easing (no sudden stop,
+        // no overshoot), 400ms beats the old 600ms AccelerateDecelerate.
+        mSideDialogAnimator = ObjectAnimator.ofFloat(mDialogLayout, "x", 0).setDuration(400);
+        mSideDialogAnimator.setInterpolator(new android.view.animation.PathInterpolator(0.22f, 1f, 0.36f, 1f));
 
         mDialogLayout.setElevation(10);
         mDialogLayout.setTranslationZ(10);

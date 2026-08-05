@@ -256,9 +256,11 @@ public class MainMenuFragment extends Fragment {
             if (v == null) continue;
             v.setOnTouchListener((view, event) -> {
                 switch (event.getAction()) {
-                    case android.view.MotionEvent.ACTION_DOWN: view.animate().scaleX(0.94f).scaleY(0.94f).alpha(0.85f).setDuration(70).start(); break;
+                    // Item-7: snappier press, lighter alpha dip (no fade spam),
+                    // fast-out spring-feel release (view anims are HW-accelerated).
+                    case android.view.MotionEvent.ACTION_DOWN: view.animate().scaleX(0.94f).scaleY(0.94f).alpha(0.9f).setDuration(70).setInterpolator(new android.view.animation.AccelerateInterpolator()).start(); break;
                     case android.view.MotionEvent.ACTION_UP:
-                    case android.view.MotionEvent.ACTION_CANCEL: view.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(120).start(); break;
+                    case android.view.MotionEvent.ACTION_CANCEL: view.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(160).setInterpolator(new android.view.animation.PathInterpolator(0.22f, 1f, 0.36f, 1f)).start(); break;
                 }
                 return false;
             });
