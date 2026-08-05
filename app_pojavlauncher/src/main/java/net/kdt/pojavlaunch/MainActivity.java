@@ -61,6 +61,8 @@ import net.kdt.pojavlaunch.customcontrols.mouse.HotbarView;
 import net.kdt.pojavlaunch.customcontrols.mouse.Touchpad;
 import net.kdt.pojavlaunch.lifecycle.ContextExecutor;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
+import android.content.SharedPreferences;
+import android.widget.TextView;
 import net.kdt.pojavlaunch.prefs.QuickSettingSideDialog;
 import net.kdt.pojavlaunch.services.GameService;
 import net.kdt.pojavlaunch.utils.JREUtils;
@@ -403,6 +405,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        stopFpsTicker(); // CS Perf
         CallbackBridge.removeGrabListener(touchpad);
         CallbackBridge.removeGrabListener(minecraftGLView);
         ContextExecutor.clearActivity();
@@ -430,6 +433,44 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         super.onPostResume();
         if(minecraftGLView != null)  // Useful when backing out of the app
             Tools.MAIN_HANDLER.postDelayed(() -> minecraftGLView.refreshSize(), 500);
+        startFpsTicker(); // CS Perf: live FPS overlay (pref-gated, cosmetic only)
+    }
+
+    // ── CS Perf: FPS overlay chip — purely cosmetic, launch chain untouched ──
+    private TextView mFpsChip;
+    private final Runnable mFpsTicker = new Runnable() {
+        @Override public void run() { tickFpsOverlay(); }
+    };
+
+    private void startFpsTicker() {
+        if (mFpsChip == null) mFpsChip = findViewById(R.id.fps_counter_chip);
+        Tools.MAIN_HANDLER.removeCallbacks(mFpsTicker);
+        Tools.MAIN_HANDLER.postDelayed(mFpsTicker, 500);
+    }
+
+    private void stopFpsTicker() {
+        Tools.MAIN_HANDLER.removeCallbacks(mFpsTicker);
+    }
+
+    private void tickFpsOverlay() {
+        TextView chip = mFpsChip;
+        if (chip == null || isFinishing() || isDestroyed()) return;
+        boolean show = false;
+        try {
+            SharedPreferences p = LauncherPreferences.DEFAULT_PREF != null
+                    ? LauncherPreferences.DEFAULT_PREF
+                    : getSharedPreferences("cslauncher_settings", MODE_PRIVATE);
+            show = p.getBoolean("showFpsCounter", false);
+        } catch (Throwable ignored) {}
+        if (!show) {
+            if (chip.getVisibility() != View.GONE) chip.setVisibility(View.GONE);
+            Tools.MAIN_HANDLER.postDelayed(mFpsTicker, 1500); // lazy poll while hidden
+            return;
+        }
+        if (chip.getVisibility() != View.VISIBLE) chip.setVisibility(View.VISIBLE);
+        int fps = net.kdt.pojavlaunch.utils.FpsCounter.getFps();
+        if (fps >= 0) chip.setText(fps + " FPS");
+        Tools.MAIN_HANDLER.postDelayed(mFpsTicker, 500);
     }
 
     @Override

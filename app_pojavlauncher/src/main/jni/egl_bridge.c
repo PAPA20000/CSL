@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <time.h>
 
 #include <EGL/egl.h>
 #include <GL/osmesa.h>
@@ -224,8 +225,36 @@ EXTERNAL_API void pojavSetWindowHint(int hint, int value) {
     }
 }
 
+// ── CS Perf: swap-boundary frame counter (feeds the in-game FPS overlay) ──
+static volatile uint64_t sCsFrames;
+static volatile uint64_t sCsWindowStartMs;
+
+static uint64_t cs_time_ms(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (uint64_t) ts.tv_sec * 1000ull + (uint64_t) ts.tv_nsec / 1000000ull;
+}
+
 EXTERNAL_API void pojavSwapBuffers() {
+    sCsFrames++;
     br_swap_buffers();
+}
+
+JNIEXPORT jint JNICALL
+Java_net_kdt_pojavlaunch_utils_FpsCounter_nativeGetFps(JNIEnv* env, jclass clazz) {
+    (void) env; (void) clazz;
+    uint64_t now = cs_time_ms();
+    if(sCsWindowStartMs == 0 || now < sCsWindowStartMs) {
+        sCsWindowStartMs = now;
+        sCsFrames = 0;
+        return (jint) 0;
+    }
+    uint64_t elapsed = now - sCsWindowStartMs;
+    if(elapsed < 200) return (jint) -1; // window too small — caller keeps last value
+    jint fps = (jint) ((sCsFrames * 1000ull) / (elapsed == 0 ? 1 : elapsed));
+    sCsWindowStartMs = now;
+    sCsFrames = 0;
+    return fps;
 }
 
 

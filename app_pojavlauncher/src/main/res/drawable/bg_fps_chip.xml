@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- In-game FPS overlay chip — obsidian glass capsule, metallic stroke -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:angle="135"
+        android:startColor="#E61B1B22"
+        android:endColor="#E6131318" />
+    <corners android:radius="999dp" />
+    <stroke android:width="0.75dp" android:color="#2D2D35" />
+</shape>

@@ -179,6 +179,7 @@ public class LauncherPreferenceFragment extends Fragment {
             case "Advanced": return R.drawable.ic_settings_advanced;
             case "Miscellaneous": return R.drawable.ic_settings_misc;
             case "Sponsors": return R.drawable.ic_infrawire_mark_white;
+            case "Performance": return R.drawable.ic_settings_performance;
             default: return R.drawable.ic_menu_settings;
         }
     }
@@ -293,6 +294,7 @@ public class LauncherPreferenceFragment extends Fragment {
             case "Advanced": return "TOOLS";
             case "Miscellaneous": return "EXTRA";
             case "Sponsors": return "PARTNER";
+            case "Performance": return "LIVE";
             default: return "PAGE";
         }
     }
@@ -309,6 +311,7 @@ public class LauncherPreferenceFragment extends Fragment {
         rootItems.add(new SettingItem("cat_advanced", SettingItem.TYPE_CATEGORY_LINK, "Advanced", "Perform debug clears and database resets", "Advanced"));
         rootItems.add(new SettingItem("cat_misc", SettingItem.TYPE_CATEGORY_LINK, "Miscellaneous", "Library verifications, system drivers, and in-game capes", "Miscellaneous"));
         rootItems.add(new SettingItem("cat_sponsors", SettingItem.TYPE_CATEGORY_LINK, "Sponsors", "Official partners backing CS Launcher with cloud power", "Sponsors"));
+        rootItems.add(new SettingItem("cat_performance", SettingItem.TYPE_CATEGORY_LINK, "Performance", "FPS overlay, live memory, and next-gen engine dials", "Performance"));
         return rootItems;
     }
 
@@ -515,6 +518,17 @@ public class LauncherPreferenceFragment extends Fragment {
                     miscItems.add(new SettingItem("arc_capes", SettingItem.TYPE_SWITCH, getString(R.string.arc_capes_title), getString(R.string.arc_capes_desc), false));
                     miscItems.add(new SettingItem("zinkPreferSystemDriver", SettingItem.TYPE_SWITCH, getString(R.string.preference_vulkan_driver_system_title), getString(R.string.preference_vulkan_driver_system_description), false));
                     categories.add(new SettingCategory("Miscellaneous Settings", miscItems));
+                    break;
+
+                case "Performance":
+                    List<SettingItem> perfItems = new ArrayList<>();
+                    perfItems.add(new SettingItem("showFpsCounter", SettingItem.TYPE_SWITCH,
+                            "Show FPS",
+                            "Live frame counter in the top-left corner while playing — measured at the GL swap boundary",
+                            false));
+                    perfItems.add(new SettingItem("perf_live_panel", SettingItem.TYPE_PERFORMANCE_PANEL,
+                            "Live Memory", "", null));
+                    categories.add(new SettingCategory("Performance", perfItems));
                     break;
 
                 case "Sponsors":
@@ -1003,6 +1017,12 @@ public class LauncherPreferenceFragment extends Fragment {
                     holder.container.addView(itemView);
                     continue;
 
+                } else if (item.type == SettingItem.TYPE_PERFORMANCE_PANEL) {
+                    itemView = inflater.inflate(R.layout.item_setting_performance, holder.container, false);
+                    bindPerformancePanel(itemView);
+                    holder.container.addView(itemView);
+                    continue;
+
                 } else if (item.type == SettingItem.TYPE_CATEGORY_LINK) {
                     itemView = inflater.inflate(R.layout.item_setting_button, holder.container, false);
                     TextView tvTitle = itemView.findViewById(R.id.setting_title);
@@ -1400,6 +1420,58 @@ public class LauncherPreferenceFragment extends Fragment {
             }
         }
 
+        // ══ Performance: live RAM stats — 1 Hz, attach-gated (zero leaks) ══
+        private void bindPerformancePanel(@NonNull View panel) {
+            updateMemoryStats(panel);
+            final Runnable tick = new Runnable() {
+                @Override public void run() {
+                    if (!panel.isAttachedToWindow()) return;
+                    updateMemoryStats(panel);
+                    Tools.MAIN_HANDLER.postDelayed(this, 1000);
+                }
+            };
+            panel.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+                @Override public void onViewAttachedToWindow(@NonNull View v) {
+                    Tools.MAIN_HANDLER.postDelayed(tick, 1000);
+                }
+                @Override public void onViewDetachedFromWindow(@NonNull View v) {
+                    Tools.MAIN_HANDLER.removeCallbacks(tick);
+                }
+            });
+        }
+
+        private void updateMemoryStats(@NonNull View panel) {
+            long nativeMb = android.os.Debug.getNativeHeapAllocatedSize() / 1048576L;
+            Runtime rt = Runtime.getRuntime();
+            long javaMb = (rt.totalMemory() - rt.freeMemory()) / 1048576L;
+            long deviceFreeMb = 0, deviceTotalMb = 0;
+            try {
+                android.app.ActivityManager.MemoryInfo mi = new android.app.ActivityManager.MemoryInfo();
+                android.app.ActivityManager am = (android.app.ActivityManager)
+                        panel.getContext().getSystemService(Context.ACTIVITY_SERVICE);
+                if (am != null) {
+                    am.getMemoryInfo(mi);
+                    deviceFreeMb = mi.availMem / 1048576L;
+                    deviceTotalMb = mi.totalMem / 1048576L;
+                }
+            } catch (Throwable ignored) {}
+            TextView v;
+            if ((v = panel.findViewById(R.id.perf_native_value)) != null) v.setText(nativeMb + " MB");
+            if ((v = panel.findViewById(R.id.perf_java_value)) != null) v.setText(javaMb + " MB");
+            if ((v = panel.findViewById(R.id.perf_device_value)) != null) v.setText(deviceFreeMb + " MB");
+            View fill = panel.findViewById(R.id.perf_meter_fill);
+            View spacer = panel.findViewById(R.id.perf_meter_spacer);
+            if (fill != null && spacer != null && deviceTotalMb > 0) {
+                int used = (int) Math.min(100, Math.max(0, 100 - (deviceFreeMb * 100L) / deviceTotalMb));
+                LinearLayout.LayoutParams fp = (LinearLayout.LayoutParams) fill.getLayoutParams();
+                fp.weight = used;
+                fill.setLayoutParams(fp);
+                LinearLayout.LayoutParams sp = (LinearLayout.LayoutParams) spacer.getLayoutParams();
+                sp.weight = 100 - used;
+                spacer.setLayoutParams(sp);
+            }
+        }
+
         private void populateThemeSelector(@NonNull View itemView, @NonNull LayoutInflater inflater) {
             LinearLayout swatchesContainer = itemView.findViewById(R.id.theme_swatches_container);
             if (swatchesContainer == null) return;
@@ -1706,6 +1778,7 @@ public class LauncherPreferenceFragment extends Fragment {
         public static final int TYPE_CUSTOM_FASTCLIENT = 7;
         public static final int TYPE_CATEGORY_LINK = 8;
         public static final int TYPE_THEME_SELECTOR = 9;
+        public static final int TYPE_PERFORMANCE_PANEL = 10;
 
         String key;
         int type;
