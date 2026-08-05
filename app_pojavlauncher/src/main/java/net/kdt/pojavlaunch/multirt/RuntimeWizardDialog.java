@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -248,6 +249,15 @@ public class RuntimeWizardDialog {
 
         dialog.setOnCancelListener(d -> finishOnce.run());
         dialog.show();
+
+        // Fully-horizontal page (user req): the wizard is a wide landscape
+        // deck, not a portrait sheet — ~94% of screen width, capped at 820dp
+        // so tablets don't stretch it comically. Height stays content-wrapped.
+        if (dialog.getWindow() != null) {
+            android.util.DisplayMetrics dm = activity.getResources().getDisplayMetrics();
+            int targetWidth = Math.min((int) (dm.widthPixels * 0.94f), (int) (820 * dm.density));
+            dialog.getWindow().setLayout(targetWidth, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
 
         // Entrance: sheet rises softly
         dialogView.setAlpha(0f);

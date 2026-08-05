@@ -96,6 +96,13 @@ public class LauncherPreferenceFragment extends Fragment {
                 if (uri != null) copyImageToBgFile(uri);
             });
 
+    // Launch-screen GIF picker launcher (video removed per user directive; the
+    // launch stage is black unless the user imports a GIF of their own)
+    private final ActivityResultLauncher<String> mGifPickerLauncher =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+                if (uri != null) copyGifToStageFile(uri);
+            });
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -372,20 +379,19 @@ public class LauncherPreferenceFragment extends Fragment {
                     launcherItems.add(new SettingItem("notification_permission_request", SettingItem.TYPE_SWITCH, getString(R.string.preference_ask_for_notification_title), getString(R.string.preference_ask_for_notification_description), false));
                     launcherItems.add(new SettingItem("microphone_permission_request", SettingItem.TYPE_SWITCH, getString(R.string.preference_ask_for_microphone_title), getString(R.string.preference_ask_for_microphone_description), false));
                     launcherItems.add(new SettingItem("downloadSource", SettingItem.TYPE_DROPDOWN, getString(R.string.preference_download_source_title), getString(R.string.preference_download_source_description), "default").setDropdownOptions(new String[]{"Default", "Mirror (China)"}, new String[]{"default", "china"}));
-                    // Black vs bundled-Video loading screen (item-5: the video ships
-                    // inside the APK at assets/csl_loading.mp4 — no network involved).
-                    // Written by the settings save flow into cslauncher_settings and read
-                    // live by LaunchStageView as loadingScreenStyle = black|video.
-                    launcherItems.add(new SettingItem(
-                            net.kdt.pojavlaunch.launch.LaunchStageView.PREF_KEY_STYLE,
-                            SettingItem.TYPE_DROPDOWN,
-                            getString(R.string.cs_loading_screen_style_title),
-                            getString(R.string.cs_loading_screen_style_summary),
-                            net.kdt.pojavlaunch.launch.LaunchStageView.STYLE_BLACK)
-                            .setDropdownOptions(
-                                    new String[]{"Classic Black Screen", "Video Loading Screen"},
-                                    new String[]{net.kdt.pojavlaunch.launch.LaunchStageView.STYLE_BLACK,
-                                            net.kdt.pojavlaunch.launch.LaunchStageView.STYLE_VIDEO}));
+                    // Launch screen: classic BLACK stage by default (the bundled
+                    // video was removed per user directive). The user MAY import
+                    // any GIF from storage; if files/launch_gif.gif exists,
+                    // LaunchStageView paints it in place of the black stage with
+                    // the exact same first-presented-frame release contract.
+                    launcherItems.add(new SettingItem("set_launch_gif", SettingItem.TYPE_ACTION,
+                            getString(R.string.cs_launch_gif_title),
+                            getString(R.string.cs_launch_gif_summary), null)
+                            .setAction(() -> mGifPickerLauncher.launch("image/*")));
+                    launcherItems.add(new SettingItem("remove_launch_gif", SettingItem.TYPE_ACTION,
+                            getString(R.string.cs_launch_gif_remove_title),
+                            getString(R.string.cs_launch_gif_remove_summary), null)
+                            .setAction(this::removeLaunchGif));
                     launcherItems.add(new SettingItem("verifyManifest", SettingItem.TYPE_SWITCH, getString(R.string.preference_verify_manifest_title), getString(R.string.preference_verify_manifest_description), true));
                     categories.add(new SettingCategory("Launcher Configurations", launcherItems));
                     break;
@@ -869,6 +875,62 @@ public class LauncherPreferenceFragment extends Fragment {
         MultiRTConfigDialog dialogScreen = new MultiRTConfigDialog();
         dialogScreen.prepare(getContext(), mVmInstallLauncher);
         dialogScreen.show();
+    }
+
+    /**
+     * Imports a user GIF into files/launch_gif.gif — the ONE file
+     * LaunchStageView looks at. Stream-copied with a hard 50 MB cap and
+     * validated by GIF magic bytes (GIF87a/GIF89a) because "image/*" pickers on
+     * some OEMs don't filter properly. Any failure deletes the partial file —
+     * the launch stage can never be handed a broken GIF.
+     */
+    private void copyGifToStageFile(@NonNull Uri uri) {
+        final long MAX_GIF_BYTES = 50L * 1024L * 1024L;
+        final File target = net.kdt.pojavlaunch.launch.LaunchStageView.gifFileFor(requireContext());
+        try (InputStream in = requireContext().getContentResolver().openInputStream(uri);
+             OutputStream out = new FileOutputStream(target)) {
+            if (in == null) throw new Exception("Cannot open URI");
+            byte[] head = new byte[6];
+            int headLen = safeReadFully(in, head, 6);
+            if (headLen == 6) out.write(head);
+            boolean magicOk = headLen == 6 && head[0] == 'G' && head[1] == 'I' && head[2] == 'F'
+                    && head[3] == '8' && (head[4] == '7' || head[4] == '9') && head[5] == 'a';
+            if (!magicOk) throw new Exception("Not a GIF");
+            byte[] buf = new byte[8192];
+            int len; long total = headLen;
+            while ((len = in.read(buf)) != -1) {
+                total += len;
+                if (total > MAX_GIF_BYTES) throw new Exception("GIF too large");
+                out.write(buf, 0, len);
+            }
+            Toast.makeText(requireContext(), R.string.cs_launch_gif_set_ok, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            if (target.exists()) target.delete();
+            String msg = "GIF too large".equals(e.getMessage())
+                    ? getString(R.string.cs_launch_gif_too_big)
+                    : getString(R.string.cs_launch_gif_invalid);
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private static int safeReadFully(InputStream in, byte[] dst, int want) throws java.io.IOException {
+        int off = 0;
+        while (off < want) {
+            int n = in.read(dst, off, want - off);
+            if (n < 0) break;
+            off += n;
+        }
+        return off;
+    }
+
+    /** Removes the imported launch GIF; the next launch is pure black again. */
+    private void removeLaunchGif() {
+        final File target = net.kdt.pojavlaunch.launch.LaunchStageView.gifFileFor(requireContext());
+        boolean was = target.exists();
+        if (was) target.delete();
+        Toast.makeText(requireContext(),
+                was ? R.string.cs_launch_gif_removed : R.string.cs_launch_gif_none_set,
+                Toast.LENGTH_SHORT).show();
     }
 
     private void copyImageToBgFile(@NonNull Uri uri) {

@@ -292,14 +292,21 @@
     <string name="cs_navtip_skins">Skins</string>
     <string name="cs_navtip_settings">Settings</string>
 
-    <!-- ── Loading screen style (Remote Config feature) ── -->
-    <string name="cs_loading_screen_style_title">Loading Screen</string>
+    <!-- ── Launch screen: black stage + optional user GIF (video removed) ── -->
+    <string name="cs_launch_gif_title">Launch Screen GIF</string>
+    <string name="cs_launch_gif_summary">Launch stays a clean black screen. Pick any GIF from storage to play on it while the game loads (up to 50 MB).</string>
+    <string name="cs_launch_gif_remove_title">Remove Launch GIF</string>
+    <string name="cs_launch_gif_remove_summary">Delete the imported GIF — the launch screen goes back to pure black.</string>
+    <string name="cs_launch_gif_set_ok">Launch GIF set ✓ It will play the next time the game loads.</string>
+    <string name="cs_launch_gif_invalid">That file is not a valid GIF — pick a .gif image.</string>
+    <string name="cs_launch_gif_too_big">That GIF is over 50 MB — pick a smaller one.</string>
+    <string name="cs_launch_gif_removed">Launch GIF removed — back to the black screen.</string>
+    <string name="cs_launch_gif_none_set">No launch GIF is set.</string>
     <string name="cs_browse_resources">Browse Resources</string>
     <string name="cs_osd_caption">ON-SCREEN DISPLAY</string>
     <string name="cs_osd_show_fps">Show FPS chip</string>
     <string name="cs_osd_show_memory">Show Memory chip</string>
     <string name="cs_osd_hint">Chips are translucent — long-press-drag them anywhere on screen.</string>
-    <string name="cs_loading_screen_style_summary">Classic black screen, or the bundled CS video that plays until the game window opens.</string>
     <!-- Download Console (v3) — pause / stop / hide controls -->
     <string name="download_console_pause">PAUSE</string>
     <string name="download_console_resume">RESUME</string>
