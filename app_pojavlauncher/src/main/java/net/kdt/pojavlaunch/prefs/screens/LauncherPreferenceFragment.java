@@ -372,7 +372,8 @@ public class LauncherPreferenceFragment extends Fragment {
                     launcherItems.add(new SettingItem("notification_permission_request", SettingItem.TYPE_SWITCH, getString(R.string.preference_ask_for_notification_title), getString(R.string.preference_ask_for_notification_description), false));
                     launcherItems.add(new SettingItem("microphone_permission_request", SettingItem.TYPE_SWITCH, getString(R.string.preference_ask_for_microphone_title), getString(R.string.preference_ask_for_microphone_description), false));
                     launcherItems.add(new SettingItem("downloadSource", SettingItem.TYPE_DROPDOWN, getString(R.string.preference_download_source_title), getString(R.string.preference_download_source_description), "default").setDropdownOptions(new String[]{"Default", "Mirror (China)"}, new String[]{"default", "china"}));
-                    // Remote Config feature — Black vs Video loading screen (req 5/6).
+                    // Black vs bundled-Video loading screen (item-5: the video ships
+                    // inside the APK at assets/csl_loading.mp4 — no network involved).
                     // Written by the settings save flow into cslauncher_settings and read
                     // live by LaunchStageView as loadingScreenStyle = black|video.
                     launcherItems.add(new SettingItem(
