@@ -15,6 +15,10 @@ import androidx.core.content.res.ResourcesCompat;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.customcontrols.buttons.ControlInterface;
 
+import androidx.core.math.MathUtils;
+
+import org.lwjgl.glfw.CallbackBridge;
+
 public class ControlHandleView extends View {
     public ControlHandleView(Context context) {
         super(context);
@@ -28,7 +32,7 @@ public class ControlHandleView extends View {
 
     private final Drawable mDrawable = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_view_handle, getContext().getTheme());
     private ControlInterface mView;
-    private float mXOffset, mYOffset;
+    private float mDownRawX, mDownRawY, mStartW, mStartH;
     private final ViewTreeObserver.OnPreDrawListener mPositionListener = new ViewTreeObserver.OnPreDrawListener() {
         @Override
         public boolean onPreDraw() {
@@ -68,19 +72,24 @@ public class ControlHandleView extends View {
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getActionMasked()){
             case MotionEvent.ACTION_DOWN:
-                mXOffset = event.getX();
-                mYOffset = event.getY();
+                mDownRawX = event.getRawX();
+                mDownRawY = event.getRawY();
+                mStartW = mView.getControlView().getWidth();
+                mStartH = mView.getControlView().getHeight();
                 break;
             case MotionEvent.ACTION_MOVE:
-                setX(getX() + event.getX() - mXOffset);
-                setY(getY() + event.getY() - mYOffset);
-
-                System.out.println(getX() - mView.getControlView().getX());
-                System.out.println(getY() - mView.getControlView().getY());
-
-
-                mView.getProperties().setWidth(getX() - mView.getControlView().getX());
-                mView.getProperties().setHeight(getY() - mView.getControlView().getY());
+                if (mView == null) break;
+                View v = mView.getControlView();
+                float minPx = 22f * getResources().getDisplayMetrics().density;
+                // Sizing deltas come from the finger, not from the handle's own
+                // (following) position — no self-referential jitter. Clamped so
+                // a control can never go below 22dp or past the screen edges.
+                float newW = MathUtils.clamp(mStartW + (event.getRawX() - mDownRawX),
+                        minPx, CallbackBridge.physicalWidth - v.getX());
+                float newH = MathUtils.clamp(mStartH + (event.getRawY() - mDownRawY),
+                        minPx, CallbackBridge.physicalHeight - v.getY());
+                mView.getProperties().setWidth(newW);
+                mView.getProperties().setHeight(newH);
                 mView.regenerateDynamicCoordinates();
                 break;
         }

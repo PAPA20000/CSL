@@ -9,6 +9,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
@@ -339,6 +340,7 @@ public interface ControlInterface extends View.OnLongClickListener, GrabListener
             private boolean mCanTriggerLongClick = true;
             private float downX, downY;
             private float downRawX, downRawY;
+            private float mTouchSlop = 8f;
 
             @SuppressLint("ClickableViewAccessibility")
             @Override
@@ -360,6 +362,7 @@ public interface ControlInterface extends View.OnLongClickListener, GrabListener
                 switch (event.getActionMasked()) {
                     case MotionEvent.ACTION_DOWN:
                         mCanTriggerLongClick = true;
+                        mTouchSlop = ViewConfiguration.get(view.getContext()).getScaledTouchSlop();
                         downRawX = event.getRawX();
                         downRawY = event.getRawY();
                         downX = downRawX - view.getX();
@@ -367,7 +370,9 @@ public interface ControlInterface extends View.OnLongClickListener, GrabListener
                         break;
 
                     case MotionEvent.ACTION_MOVE:
-                        if (Math.abs(event.getRawX() - downRawX) > 8 || Math.abs(event.getRawY() - downRawY) > 8)
+                        // Density-aware slop (was a raw 8px): FCL-smooth drag start,
+                        // no micro-jitter, no accidental cancel of the edit tap.
+                        if (Math.abs(event.getRawX() - downRawX) > mTouchSlop || Math.abs(event.getRawY() - downRawY) > mTouchSlop)
                             mCanTriggerLongClick = false;
                         getControlLayoutParent().adaptPanelPosition();
                         snapAndAlign(
