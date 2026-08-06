@@ -320,7 +320,9 @@ public class LauncherPreferenceFragment extends Fragment {
         rootItems.add(new SettingItem("cat_experimental", SettingItem.TYPE_CATEGORY_LINK, "Experimental", "Test launcher orientations, wall-papers, and colors", "Experimental"));
         rootItems.add(new SettingItem("cat_advanced", SettingItem.TYPE_CATEGORY_LINK, "Advanced", "Perform debug clears and database resets", "Advanced"));
         rootItems.add(new SettingItem("cat_misc", SettingItem.TYPE_CATEGORY_LINK, "Miscellaneous", "Library verifications, system drivers, and in-game capes", "Miscellaneous"));
-        rootItems.add(new SettingItem("cat_sponsors", SettingItem.TYPE_CATEGORY_LINK, "Sponsors", "Official partners backing CS Launcher with cloud power", "Sponsors"));
+        if (net.kdt.pojavlaunch.remote.FirebaseSyncManager.isSponsorshipEnabled()) {
+            rootItems.add(new SettingItem("cat_sponsors", SettingItem.TYPE_CATEGORY_LINK, "Sponsors", "Official partners backing CS Launcher with cloud power", "Sponsors"));
+        }
         rootItems.add(new SettingItem("cat_performance", SettingItem.TYPE_CATEGORY_LINK, "Performance", "FPS overlay, live memory, and next-gen engine dials", "Performance"));
         return rootItems;
     }

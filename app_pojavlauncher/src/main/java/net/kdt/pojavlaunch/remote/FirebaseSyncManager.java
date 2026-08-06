@@ -253,14 +253,16 @@ public final class FirebaseSyncManager {
         List<JSONObject> list = new ArrayList<>();
         while (keys.hasNext()) {
             try {
-                JSONObject a = sAnnouncements.optJSONObject(keys.next());
+                String k = keys.next();
+                JSONObject a = sAnnouncements.optJSONObject(k);
                 if (a == null || !a.optBoolean("enabled", true)) continue;
+                if (!a.has("id")) a.put("id", k);
                 list.add(a);
             } catch (Throwable ignored) {}
         }
         list.sort((a, b) -> Boolean.compare(b.optBoolean("pinned"), a.optBoolean("pinned")));
         for (JSONObject a : list) {
-            String id = a.optString("id", "");
+            String id = a.optString("id", "ann_" + a.optLong("createdAt", 0));
             if (id.isEmpty() || sSeenAnn.contains(id + ";")) continue;
             sSeenAnn += id + ";";
             persistCache(act.getApplicationContext());
@@ -276,8 +278,10 @@ public final class FirebaseSyncManager {
         List<JSONObject> list = new ArrayList<>();
         while (keys.hasNext()) {
             try {
-                JSONObject n = sNotifications.optJSONObject(keys.next());
+                String k = keys.next();
+                JSONObject n = sNotifications.optJSONObject(k);
                 if (n == null || !n.optBoolean("enabled", true)) continue;
+                if (!n.has("id")) n.put("id", k);
                 long exp = n.optLong("expiresAt", 0);
                 if (exp > 0 && exp < System.currentTimeMillis()) continue;
                 list.add(n);
@@ -285,7 +289,7 @@ public final class FirebaseSyncManager {
         }
         list.sort((a, b) -> Long.compare(b.optLong("createdAt", 0), a.optLong("createdAt", 0)));
         for (JSONObject n : list) {
-            String id = n.optString("id", "");
+            String id = n.optString("id", "ntf_" + n.optLong("createdAt", 0));
             if (id.isEmpty() || sSeenNtf.contains(id + ";")) continue;
             sSeenNtf += id + ";";
             persistCache(act.getApplicationContext());
@@ -324,19 +328,29 @@ public final class FirebaseSyncManager {
     // ─────────────────────────── markdown dialog ───────────────────────────
 
     public static void showMarkdownDialog(Activity act, String title, String markdown) {
-        TextView tv = new TextView(act);
-        tv.setPadding(dp(act, 22), dp(act, 10), dp(act, 22), dp(act, 10));
-        tv.setTextSize(13.5f);
-        tv.setTextColor(0xFFE4E4EA);
-        tv.setMovementMethod(LinkMovementMethod.getInstance());
-        tv.setText(Markdown.render(act, markdown));
-        ScrollView sv = new ScrollView(act);
-        sv.addView(tv);
-        new AlertDialog.Builder(act)
-                .setTitle(title)
-                .setView(sv)
-                .setPositiveButton(android.R.string.ok, null)
-                .show();
+        try {
+            final android.app.Dialog dialog = new android.app.Dialog(act, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0));
+            }
+            dialog.setContentView(R.layout.page_announcement_popup);
+
+            TextView tvTitle = dialog.findViewById(R.id.tv_ann_page_title);
+            TextView tvBody = dialog.findViewById(R.id.tv_ann_page_body);
+            View btnClose = dialog.findViewById(R.id.btn_ann_page_close);
+
+            if (tvTitle != null) tvTitle.setText(title);
+            if (tvBody != null) {
+                tvBody.setMovementMethod(LinkMovementMethod.getInstance());
+                tvBody.setText(Markdown.render(act, markdown));
+            }
+            if (btnClose != null) {
+                btnClose.setOnClickListener(v -> dialog.dismiss());
+            }
+            dialog.show();
+        } catch (Throwable t) {
+            Log.w(TAG, "showXmlDialog failed", t);
+        }
     }
 
     private static int dp(Context ctx, float v) {
@@ -378,9 +392,11 @@ public final class FirebaseSyncManager {
         List<JSONObject> nList = new ArrayList<>();
         while (nKeys.hasNext()) {
             try {
-                JSONObject n = sNotifications.optJSONObject(nKeys.next());
+                String k = nKeys.next();
+                JSONObject n = sNotifications.optJSONObject(k);
                 if (n == null || !n.optBoolean("enabled", true)) continue;
-                String id = n.optString("id", "");
+                if (!n.has("id")) n.put("id", k);
+                String id = n.optString("id", k);
                 if (id.isEmpty() || sDismissedBanners.contains(id)) continue;
                 long exp = n.optLong("expiresAt", 0);
                 if (exp > 0 && exp < System.currentTimeMillis()) continue;
@@ -391,7 +407,7 @@ public final class FirebaseSyncManager {
         if (!nList.isEmpty()) {
             JSONObject n = nList.get(0);
             return new HomeBannerItem(
-                    n.optString("id", ""),
+                    n.optString("id", "ntf"),
                     n.optString("icon", "🔔"),
                     n.optString("title", ""),
                     n.optString("message", ""),
@@ -404,9 +420,11 @@ public final class FirebaseSyncManager {
         List<JSONObject> aList = new ArrayList<>();
         while (aKeys.hasNext()) {
             try {
-                JSONObject a = sAnnouncements.optJSONObject(aKeys.next());
+                String k = aKeys.next();
+                JSONObject a = sAnnouncements.optJSONObject(k);
                 if (a == null || !a.optBoolean("enabled", true)) continue;
-                String id = a.optString("id", "");
+                if (!a.has("id")) a.put("id", k);
+                String id = a.optString("id", k);
                 if (id.isEmpty() || sDismissedBanners.contains(id)) continue;
                 aList.add(a);
             } catch (Throwable ignored) {}
@@ -415,7 +433,7 @@ public final class FirebaseSyncManager {
         if (!aList.isEmpty()) {
             JSONObject a = aList.get(0);
             return new HomeBannerItem(
-                    a.optString("id", ""),
+                    a.optString("id", "ann"),
                     "📢",
                     a.optString("title", "Announcement"),
                     a.optString("body", ""),

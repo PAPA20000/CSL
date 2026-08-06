@@ -152,6 +152,22 @@ main .sub { color: var(--muted); font-size: 13px; margin-bottom: 22px; }
     main { padding: 18px 14px; }
 }
 
+@media (max-width: 768px) {
+    #app-view { flex-direction: column; }
+    .sidebar {
+        width: 100%; height: auto; position: static; border-right: none;
+        border-bottom: 1px solid var(--stroke); padding: 10px;
+        display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    }
+    .sidebar .brand { width: 100%; margin-bottom: 4px; font-size: 15px; }
+    .nav-item span.txt { display: inline; }
+    .nav-item { flex: 1 1 110px; justify-content: center; margin-bottom: 0; padding: 10px 8px; font-size: 12px; }
+    .sidebar .logout { display: none !important; }
+    main { padding: 16px 14px; width: 100%; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .update-live { grid-template-columns: 1fr !important; }
+    .modal-box { width: 95% !important; margin: 10px; padding: 16px !important; }
+}
 </style>
 <script>
 // CS Launcher V3 — Firebase configuration (prefilled from google-services.json)
@@ -169,22 +185,8 @@ const FIREBASE_CONFIG = {
 </head>
 <body>
 
-<!-- ══════════ LOGIN ══════════ -->
-<div id="login-view">
-    <div class="login-card">
-        <h1>💠 CS Launcher <span style="color:var(--accent)">V3</span></h1>
-        <p>Admin Panel — sign in with your Firebase Auth account.</p>
-        <form id="login-form">
-            <div class="login-error" id="login-error"></div>
-            <input type="email" id="login-email" placeholder="Email" autocomplete="username" required>
-            <input type="password" id="login-pass" placeholder="Password" autocomplete="current-password" required>
-            <button class="btn primary" type="submit" style="background:var(--accent);color:#14111f">Sign In</button>
-        </form>
-    </div>
-</div>
-
 <!-- ══════════ APP ══════════ -->
-<div id="app-view" class="hidden">
+<div id="app-view">
     <aside class="sidebar">
         <div class="brand">💠 CS <span>V3</span> Admin</div>
         <div class="nav-item active" data-view="dashboard"><span class="dot"></span><span class="txt">Dashboard</span></div>
@@ -192,7 +194,6 @@ const FIREBASE_CONFIG = {
         <div class="nav-item" data-view="notifications"><span class="dot"></span><span class="txt">Notifications</span></div>
         <div class="nav-item" data-view="sponsorship"><span class="dot"></span><span class="txt">Sponsorship</span></div>
         <div class="nav-item" data-view="update"><span class="dot"></span><span class="txt">Update Manager</span></div>
-        <div class="logout" id="logout-btn">⏻ Sign out</div>
     </aside>
 
     <main>
@@ -490,6 +491,7 @@ async function saveAnn() {
     const id = document.getElementById("ann-id").value;
     const key = id || `ann_${Date.now()}`;
     const data = {
+        id: key,
         title: document.getElementById("ann-title").value.trim(),
         body: document.getElementById("ann-body").value,
         type: document.getElementById("ann-type").value,
@@ -551,6 +553,7 @@ async function saveNotif() {
     const key = id || `ntf_${Date.now()}`;
     const exp = document.getElementById("notif-expires").value;
     const data = {
+        id: key,
         title: document.getElementById("notif-title").value.trim(),
         message: document.getElementById("notif-message").value,
         icon: document.getElementById("notif-icon").value || "🔔",
@@ -595,12 +598,14 @@ function renderUpdate() {
         <div class="card"><div class="body">${md(u.changelog || "No changelog.")}</div></div>
     ` : `<div class="card"><div class="body">No published update yet — the launcher runs the latest published version.</div></div>`;
 
-    document.getElementById("upd-version").value = u.version || "";
-    document.getElementById("upd-min").value = u.minVersion || "";
-    document.getElementById("upd-url").value = u.url || "";
-    document.getElementById("upd-changelog").value = u.changelog || "";
-    document.getElementById("upd-force").checked = u.force === true;
-    document.getElementById("upd-preview").innerHTML = md(u.changelog || "");
+    if (!document.activeElement || !["upd-version", "upd-min", "upd-url", "upd-changelog", "upd-force"].includes(document.activeElement.id)) {
+        document.getElementById("upd-version").value = u.version || "";
+        document.getElementById("upd-min").value = u.minVersion || "";
+        document.getElementById("upd-url").value = u.url || "";
+        document.getElementById("upd-changelog").value = u.changelog || "";
+        document.getElementById("upd-force").checked = u.force === true;
+        document.getElementById("upd-preview").innerHTML = md(u.changelog || "");
+    }
 }
 function previewUpdate() { document.getElementById("upd-preview").innerHTML = md(document.getElementById("upd-changelog").value); }
 
@@ -634,28 +639,14 @@ function flash(msg, err) {
 
 // ── Boot ─────────────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
-    // Login
-    document.getElementById("login-form").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        document.getElementById("login-error").textContent = "";
-        try {
-            await login(document.getElementById("login-email").value, document.getElementById("login-pass").value);
-            document.getElementById("login-view").classList.add("hidden");
-            document.getElementById("app-view").classList.remove("hidden");
-            showView("dashboard");
-            await refreshAll();
-            pollTimer = setInterval(refreshAll, 4000);
-        } catch (err) {
-            document.getElementById("login-error").textContent = "Login failed — check email/password and Firebase config.";
-            console.error(err);
+    showView("dashboard");
+    refreshAll();
+    pollTimer = setInterval(() => {
+        if (!document.activeElement || !["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement.tagName)) {
+            refreshAll();
         }
-    });
-    document.getElementById("logout-btn").addEventListener("click", () => {
-        idToken = null; clearInterval(pollTimer);
-        document.getElementById("app-view").classList.add("hidden");
-        document.getElementById("login-view").classList.remove("hidden");
-        document.getElementById("login-pass").value = "";
-    });
+    }, 12000);
+
     document.querySelectorAll(".nav-item").forEach(n => n.addEventListener("click", () => showView(n.dataset.view)));
 
     // Modal buttons
