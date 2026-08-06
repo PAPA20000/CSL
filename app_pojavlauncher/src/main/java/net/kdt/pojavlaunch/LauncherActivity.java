@@ -14,6 +14,7 @@ import android.graphics.BitmapFactory;
 import android.widget.ImageView;
 import net.kdt.pojavlaunch.value.MinecraftAccount;
 import net.kdt.pojavlaunch.fragments.ModsSearchFragment;
+import net.kdt.pojavlaunch.fragments.AboutFragment;
 import net.kdt.pojavlaunch.fragments.CursorCustomizationFragment;
 import net.kdt.pojavlaunch.fragments.SkinManagerFragment;
 import android.content.pm.PackageManager;
@@ -1110,26 +1111,12 @@ public class LauncherActivity extends BaseActivity {
         if (btnHomeLogo != null)     btnHomeLogo.setOnClickListener(homeListener);
         if (tvLauncherTitle != null) tvLauncherTitle.setOnClickListener(homeListener);
 
-        // About placeholder — full page comes later; for now a compact
-        // info dialog with launcher/device details.
+        // About — opens the full premium About page (credits, links, legal).
         ImageButton btnAbout = findViewById(R.id.btn_about);
         if (btnAbout != null) {
             btnAbout.setOnClickListener(v -> {
-                StringBuilder info = new StringBuilder();
-                info.append("CS Launcher V3\n");
-                try {
-                    info.append("Version: ").append(BuildConfig.VERSION_NAME).append("\n");
-                    info.append("Build: ").append(BuildConfig.VERSION_CODE).append("\n");
-                } catch (Throwable ignored) {}
-                info.append("Device: ").append(android.os.Build.MANUFACTURER).append(" ")
-                        .append(android.os.Build.MODEL).append("\n");
-                info.append("Android: ").append(android.os.Build.VERSION.RELEASE)
-                        .append(" (API ").append(android.os.Build.VERSION.SDK_INT).append(")");
-                new android.app.AlertDialog.Builder(this)
-                        .setTitle(R.string.cs_about_title)
-                        .setMessage(getString(R.string.cs_about_coming_soon, info.toString()))
-                        .setPositiveButton(android.R.string.ok, null)
-                        .show();
+                navTap(v, R.string.cs_about_title);
+                Tools.swapFragment(this, AboutFragment.class, AboutFragment.TAG, null);
             });
         }
 

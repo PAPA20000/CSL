@@ -298,6 +298,31 @@
     <string name="cs_about_title">About CS Launcher</string>
     <string name="cs_launch_color_set">Launch color set</string>
     <string name="cs_launch_color_reset">Launch color reset to black</string>
+    <string name="cs_about_name">CS Launcher V3</string>
+    <string name="cs_about_tagline">YOUR MINECRAFT. REIMAGINED.</string>
+    <string name="cs_about_made_for">MADE WITH ❤ FOR MINECRAFT: JAVA EDITION ON ANDROID</string>
+    <string name="cs_about_credits_heading">Built on Legends</string>
+    <string name="cs_about_credit_badge">CREDIT</string>
+    <string name="cs_about_pojav_name">PojavLauncher — "Puja"</string>
+    <string name="cs_about_pojav_role">THE ENGINE THAT STARTED IT ALL</string>
+    <string name="cs_about_pojav_desc">PojavLauncher is the legendary open-source Minecraft: Java Edition launcher for Android — the very engine that proved Java Edition can run beautifully on phones. Almost every mobile launcher today stands on the shoulders of this project, and CS Launcher is honoured to carry its spirit forward. Based on the original Boardwalk concept by zhuowei, PojavLauncher brought the dream of portable Java Edition to millions of players.</string>
+    <string name="cs_about_amethyst_name">Amethyst — "Amit"</string>
+    <string name="cs_about_amethyst_role">THE UPSTREAM WE GREW FROM</string>
+    <string name="cs_about_amethyst_desc">Amethyst is the modern, polished fork of PojavLauncher that gave CS Launcher its direct DNA — its architecture, its renderer stack and its commitment to performance. From Amethyst we inherited the rock-solid launch pipeline and the multi-renderer engine (GL4ES, Zink, MobileGlues and more), and then we rebuilt the whole experience on top of it. Thank you, Amethyst team.</string>
+    <string name="cs_about_links_heading">Find Us</string>
+    <string name="cs_about_discord_title">Discord Community</string>
+    <string name="cs_about_discord_sub">Join the server — help, mods, builds &amp; friends</string>
+    <string name="cs_about_website_title">Official Website</string>
+    <string name="cs_about_website_sub">cs-launcher.netlify.app — news, guides &amp; downloads</string>
+    <string name="cs_about_github_title">GitHub</string>
+    <string name="cs_about_github_sub">craftstudioteam — open source, free forever</string>
+    <string name="cs_about_legal_heading">Legal Notice</string>
+    <string name="cs_about_legal_text">CS Launcher V3 is free, open-source software released under the GNU General Public License v3.0 (GPL v3). It is a fork of Amethyst (AngelAuraMC/Amethyst-Android), which itself builds upon PojavLauncher (PojavLauncherTeam/PojavLauncher) and the original Boardwalk by zhuowei. We are deeply grateful to all of these projects and their contributors.
+
+Minecraft is a trademark of Mojang Synergies AB / Microsoft Corporation. CS Launcher is an independent community project and is NOT affiliated with, endorsed by, or sponsored by Mojang or Microsoft. All Minecraft assets and content belong to their respective owners. To play online you need a legitimate Minecraft: Java Edition account.
+
+Third-party components (GL4ES, MobileGlues, ANGLE, Zink/Mesa, LWJGL, OpenJDK, SDL, and more) remain under their own respective licenses. See the NOTICE and LICENSE files inside the repository for full details.</string>
+    <string name="cs_about_footer">CRAFT STUDIO • FREE FOREVER • MADE WITH PASSION</string>
     <string name="cs_about_coming_soon">The full About page is coming soon. For now: %1$s</string>
     <string name="cs_launch_gif_title">Launch Screen GIF</string>
     <string name="cs_launch_gif_summary">Launch stays a clean black screen. Pick any GIF from storage to play on it while the game loads (up to 50 MB).</string>
