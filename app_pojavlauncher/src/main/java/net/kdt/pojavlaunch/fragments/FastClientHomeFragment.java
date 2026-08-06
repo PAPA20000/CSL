@@ -89,6 +89,8 @@ public class FastClientHomeFragment extends Fragment {
         net.kdt.pojavlaunch.remote.FirebaseSyncManager.gateSponsorView(
                 view.findViewById(R.id.infrawire_card_feed));
 
+        updateNotificationBanner(view);
+
         // Home entrance choreography (user req: nice home animation) —
         // deferred one frame so the window token is ready; internally
         // no-ops when animations are turned Off.
@@ -97,6 +99,65 @@ public class FastClientHomeFragment extends Fragment {
                 net.kdt.pojavlaunch.UiMotion.revealScreen(view);
             }
         });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        updateNotificationBanner(getView());
+        net.kdt.pojavlaunch.remote.FirebaseSyncManager.setHomeBannerListener(() -> updateNotificationBanner(getView()));
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        net.kdt.pojavlaunch.remote.FirebaseSyncManager.setHomeBannerListener(null);
+    }
+
+    private void updateNotificationBanner(View root) {
+        if (root == null || getActivity() == null) return;
+        View card = root.findViewById(R.id.card_notification);
+        if (card == null) return;
+
+        net.kdt.pojavlaunch.remote.FirebaseSyncManager.HomeBannerItem banner =
+                net.kdt.pojavlaunch.remote.FirebaseSyncManager.getLatestHomeBanner();
+        if (banner == null) {
+            card.setVisibility(View.GONE);
+            return;
+        }
+
+        TextView tvIcon = root.findViewById(R.id.tv_notification_icon);
+        TextView tvTitle = root.findViewById(R.id.tv_notification_title);
+        TextView tvBody = root.findViewById(R.id.tv_notification_body);
+        View btnClose = root.findViewById(R.id.btn_dismiss_notification);
+
+        if (tvIcon != null) tvIcon.setText(banner.icon);
+        if (tvTitle != null) tvTitle.setText(banner.title);
+        if (tvBody != null) {
+            String snippet = banner.body.replaceAll("[#*`>\\[\\]()-_]", "").trim();
+            if (snippet.isEmpty()) {
+                tvBody.setVisibility(View.GONE);
+            } else {
+                tvBody.setVisibility(View.VISIBLE);
+                tvBody.setText(snippet);
+            }
+        }
+
+        card.setVisibility(View.VISIBLE);
+        card.setOnClickListener(v -> {
+            if (banner.isAnnouncement || banner.body.length() > 60 || banner.body.contains("\n") || banner.body.contains("#") || banner.body.contains("*")) {
+                net.kdt.pojavlaunch.remote.FirebaseSyncManager.showMarkdownDialog(requireActivity(), banner.title, banner.body);
+            } else {
+                net.kdt.pojavlaunch.utils.CsPopup.show(requireActivity(), banner.icon + "  " + banner.title + "\n\n" + banner.body);
+            }
+        });
+
+        if (btnClose != null) {
+            btnClose.setOnClickListener(v -> {
+                net.kdt.pojavlaunch.remote.FirebaseSyncManager.dismissBanner(banner.id, requireContext());
+                card.setVisibility(View.GONE);
+            });
+        }
     }
 
     /**

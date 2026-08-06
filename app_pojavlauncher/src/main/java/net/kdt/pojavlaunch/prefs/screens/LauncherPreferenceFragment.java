@@ -442,6 +442,12 @@ public class LauncherPreferenceFragment extends Fragment {
 
                 case "Launcher Settings":
                     List<SettingItem> launcherItems = new ArrayList<>();
+                    launcherItems.add(new SettingItem("check_for_update_btn", SettingItem.TYPE_ACTION,
+                            "Check for Update",
+                            "Check online for the latest CS Launcher V3 release via Firebase",
+                            null).setAction(() -> {
+                        net.kdt.pojavlaunch.remote.FirebaseSyncManager.checkForUpdateManual(requireActivity());
+                    }));
                     launcherItems.add(new SettingItem("force_english", SettingItem.TYPE_SWITCH, getString(R.string.preference_force_english_title), getString(R.string.preference_force_english_description), false));
                     launcherItems.add(new SettingItem("notification_permission_request", SettingItem.TYPE_SWITCH, getString(R.string.preference_ask_for_notification_title), getString(R.string.preference_ask_for_notification_description), false));
                     launcherItems.add(new SettingItem("microphone_permission_request", SettingItem.TYPE_SWITCH, getString(R.string.preference_ask_for_microphone_title), getString(R.string.preference_ask_for_microphone_description), false));
@@ -546,6 +552,12 @@ public class LauncherPreferenceFragment extends Fragment {
 
                 case "Advanced":
                     List<SettingItem> advItems = new ArrayList<>();
+                    advItems.add(new SettingItem("check_for_update_adv_btn", SettingItem.TYPE_ACTION,
+                            "Check for Update",
+                            "Check online for the latest CS Launcher V3 release via Firebase",
+                            null).setAction(() -> {
+                        net.kdt.pojavlaunch.remote.FirebaseSyncManager.checkForUpdateManual(requireActivity());
+                    }));
                     // Firebase real-time sync (admin panel) — off by default.
                     advItems.add(new SettingItem("firebase_sync_enabled", SettingItem.TYPE_SWITCH,
                             "Firebase Sync",

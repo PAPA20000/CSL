@@ -69,6 +69,9 @@ public final class FirebaseSyncManager {
     private static volatile String sSeenAnn = "";
     private static volatile String sSeenNtf = "";
 
+    private static final java.util.Set<String> sDismissedBanners = new java.util.concurrent.CopyOnWriteArraySet<>();
+    private static volatile Runnable sHomeBannerListener;
+
     private FirebaseSyncManager() { }
 
     // ─────────────────────────── lifecycle ───────────────────────────
@@ -125,8 +128,8 @@ public final class FirebaseSyncManager {
         try {
             FirebaseDatabase dbInst = FirebaseDatabase.getInstance(db);
             try { dbInst.setPersistenceEnabled(true); } catch (Throwable ignored) {}
-            attach(dbInst, "/announcements", json -> { sAnnouncements = json; persistCache(ctx); });
-            attach(dbInst, "/notifications", json -> { sNotifications = json; persistCache(ctx); });
+            attach(dbInst, "/announcements", json -> { sAnnouncements = json; persistCache(ctx); notifyHomeBanner(); });
+            attach(dbInst, "/notifications", json -> { sNotifications = json; persistCache(ctx); notifyHomeBanner(); });
             attach(dbInst, "/settings", json -> { sSettings = json; persistCache(ctx); });
             attach(dbInst, "/update", json -> { sUpdate = json; persistCache(ctx); });
         } catch (Throwable t) {
@@ -300,7 +303,7 @@ public final class FirebaseSyncManager {
 
     // ─────────────────────────── markdown dialog ───────────────────────────
 
-    private static void showMarkdownDialog(Activity act, String title, String markdown) {
+    public static void showMarkdownDialog(Activity act, String title, String markdown) {
         TextView tv = new TextView(act);
         tv.setPadding(dp(act, 22), dp(act, 10), dp(act, 22), dp(act, 10));
         tv.setTextSize(13.5f);
@@ -318,5 +321,105 @@ public final class FirebaseSyncManager {
 
     private static int dp(Context ctx, float v) {
         return (int) (v * ctx.getResources().getDisplayMetrics().density);
+    }
+
+    // ─────────────────────────── Home Banner (Mini Notifications & Announcements) ───────────────────────────
+
+    public static class HomeBannerItem {
+        public final String id;
+        public final String icon;
+        public final String title;
+        public final String body;
+        public final boolean isAnnouncement;
+
+        public HomeBannerItem(String id, String icon, String title, String body, boolean isAnnouncement) {
+            this.id = id;
+            this.icon = icon;
+            this.title = title;
+            this.body = body;
+            this.isAnnouncement = isAnnouncement;
+        }
+    }
+
+    public static void setHomeBannerListener(Runnable listener) {
+        sHomeBannerListener = listener;
+        notifyHomeBanner();
+    }
+
+    private static void notifyHomeBanner() {
+        UI.post(() -> {
+            if (sHomeBannerListener != null) sHomeBannerListener.run();
+        });
+    }
+
+    public static HomeBannerItem getLatestHomeBanner() {
+        // 1. Check notifications
+        Iterator<String> nKeys = sNotifications.keys();
+        List<JSONObject> nList = new ArrayList<>();
+        while (nKeys.hasNext()) {
+            try {
+                JSONObject n = sNotifications.optJSONObject(nKeys.next());
+                if (n == null || !n.optBoolean("enabled", true)) continue;
+                String id = n.optString("id", "");
+                if (id.isEmpty() || sDismissedBanners.contains(id)) continue;
+                long exp = n.optLong("expiresAt", 0);
+                if (exp > 0 && exp < System.currentTimeMillis()) continue;
+                nList.add(n);
+            } catch (Throwable ignored) {}
+        }
+        nList.sort((a, b) -> Long.compare(b.optLong("createdAt", 0), a.optLong("createdAt", 0)));
+        if (!nList.isEmpty()) {
+            JSONObject n = nList.get(0);
+            return new HomeBannerItem(
+                    n.optString("id", ""),
+                    n.optString("icon", "🔔"),
+                    n.optString("title", ""),
+                    n.optString("message", ""),
+                    false
+            );
+        }
+
+        // 2. Check announcements
+        Iterator<String> aKeys = sAnnouncements.keys();
+        List<JSONObject> aList = new ArrayList<>();
+        while (aKeys.hasNext()) {
+            try {
+                JSONObject a = sAnnouncements.optJSONObject(aKeys.next());
+                if (a == null || !a.optBoolean("enabled", true)) continue;
+                String id = a.optString("id", "");
+                if (id.isEmpty() || sDismissedBanners.contains(id)) continue;
+                aList.add(a);
+            } catch (Throwable ignored) {}
+        }
+        aList.sort((a, b) -> Boolean.compare(b.optBoolean("pinned"), a.optBoolean("pinned")));
+        if (!aList.isEmpty()) {
+            JSONObject a = aList.get(0);
+            return new HomeBannerItem(
+                    a.optString("id", ""),
+                    "📢",
+                    a.optString("title", "Announcement"),
+                    a.optString("body", ""),
+                    true
+            );
+        }
+
+        return null;
+    }
+
+    public static void dismissBanner(String id, Context ctx) {
+        if (id != null && !id.isEmpty()) {
+            sDismissedBanners.add(id);
+            notifyHomeBanner();
+        }
+    }
+
+    // ─────────────────────────── Manual Update Check (Settings) ───────────────────────────
+
+    public static void checkForUpdateManual(Activity act) {
+        if (hasUpdate()) {
+            checkForUpdate(act);
+        } else {
+            CsPopup.show(act, "✅ CS Launcher V3 is up to date!");
+        }
     }
 }
