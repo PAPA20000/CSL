@@ -9,9 +9,13 @@ on:
     types: [opened, reopened]
   workflow_dispatch:
 
+concurrency:
+  group: ci-main
+  cancel-in-progress: false
+
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     env:
