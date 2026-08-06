@@ -393,6 +393,16 @@ public class LauncherPreferenceFragment extends Fragment {
                                 net.kdt.pojavlaunch.utils.CsPopup.show(requireActivity(),
                                         getString(R.string.preference_custom_bg_removed));
                             }));
+                    // ── Launch screen GIF (set/remove — moved here so ALL
+                    // customisation lives in ONE page, user req) ──
+                    custItems.add(new SettingItem("set_launch_gif", SettingItem.TYPE_ACTION,
+                            getString(R.string.cs_launch_gif_title),
+                            getString(R.string.cs_launch_gif_summary), null)
+                            .setAction(() -> mGifPickerLauncher.launch("image/gif")));
+                    custItems.add(new SettingItem("remove_launch_gif", SettingItem.TYPE_ACTION,
+                            getString(R.string.cs_launch_gif_remove_title),
+                            getString(R.string.cs_launch_gif_remove_summary), null)
+                            .setAction(this::removeLaunchGif));
                     // ── Launch screen (which screen shows while the game loads) ──
                     custItems.add(new SettingItem("launch_screen_style", SettingItem.TYPE_DROPDOWN,
                             "Launch Screen",
@@ -436,19 +446,6 @@ public class LauncherPreferenceFragment extends Fragment {
                     launcherItems.add(new SettingItem("notification_permission_request", SettingItem.TYPE_SWITCH, getString(R.string.preference_ask_for_notification_title), getString(R.string.preference_ask_for_notification_description), false));
                     launcherItems.add(new SettingItem("microphone_permission_request", SettingItem.TYPE_SWITCH, getString(R.string.preference_ask_for_microphone_title), getString(R.string.preference_ask_for_microphone_description), false));
                     launcherItems.add(new SettingItem("downloadSource", SettingItem.TYPE_DROPDOWN, getString(R.string.preference_download_source_title), getString(R.string.preference_download_source_description), "default").setDropdownOptions(new String[]{"Default", "Mirror (China)"}, new String[]{"default", "china"}));
-                    // Launch screen: classic BLACK stage by default (the bundled
-                    // video was removed per user directive). The user MAY import
-                    // any GIF from storage; if files/launch_gif.gif exists,
-                    // LaunchStageView paints it in place of the black stage with
-                    // the exact same first-presented-frame release contract.
-                    launcherItems.add(new SettingItem("set_launch_gif", SettingItem.TYPE_ACTION,
-                            getString(R.string.cs_launch_gif_title),
-                            getString(R.string.cs_launch_gif_summary), null)
-                            .setAction(() -> mGifPickerLauncher.launch("image/gif")));
-                    launcherItems.add(new SettingItem("remove_launch_gif", SettingItem.TYPE_ACTION,
-                            getString(R.string.cs_launch_gif_remove_title),
-                            getString(R.string.cs_launch_gif_remove_summary), null)
-                            .setAction(this::removeLaunchGif));
                     launcherItems.add(new SettingItem("verifyManifest", SettingItem.TYPE_SWITCH, getString(R.string.preference_verify_manifest_title), getString(R.string.preference_verify_manifest_description), true));
                     // A9: global animation speed (concept port from Zalith). One
                     // slider retimes every UiMotion animation via MotionSpeed.
@@ -544,14 +541,6 @@ public class LauncherPreferenceFragment extends Fragment {
                     expItems.add(new SettingItem("bigCoreAffinity", SettingItem.TYPE_SWITCH, getString(R.string.preference_force_big_core_title), getString(R.string.preference_force_big_core_desc), false));
                     expItems.add(new SettingItem("force_landscape", SettingItem.TYPE_SWITCH, getString(R.string.preference_force_landscape_title), getString(R.string.preference_force_landscape_summary), false));
                     expItems.add(new SettingItem("enable_bg_gradient", SettingItem.TYPE_SWITCH, getString(R.string.preference_bg_gradient_title), getString(R.string.preference_bg_gradient_summary), false));
-                    expItems.add(new SettingItem("set_custom_launcher_bg", SettingItem.TYPE_ACTION, getString(R.string.preference_set_custom_bg_title), getString(R.string.preference_set_custom_bg_summary), null).setAction(() -> mImagePickerLauncher.launch("image/*")));
-                    expItems.add(new SettingItem("remove_custom_launcher_bg", SettingItem.TYPE_ACTION, getString(R.string.preference_remove_custom_bg_title), getString(R.string.preference_remove_custom_bg_summary), null).setAction(() -> {
-                        File bgFile = new File(RightPaneHomeFragment.CUSTOM_BG_PATH);
-                        if (bgFile.exists()) bgFile.delete();
-                        notifyHomeFragmentBgChanged();
-                        net.kdt.pojavlaunch.utils.CsPopup.show(requireActivity(),
-                                getString(R.string.preference_custom_bg_removed));
-                    }));
                     categories.add(new SettingCategory("Experimental Settings", expItems));
                     break;
 

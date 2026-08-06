@@ -963,12 +963,13 @@ public class LauncherActivity extends BaseActivity {
 
     private void nudgeNavIcon(@NonNull View v) {
         v.animate().cancel();
-        v.setTranslationY(0f);
-        float dip = 4f * getResources().getDisplayMetrics().density;
-        v.animate().translationY(dip).setDuration(90)
-                .withEndAction(() -> v.animate().translationY(0f)
-                        .setDuration(150)
-                        .setInterpolator(new DecelerateInterpolator())
+        v.setScaleX(1f);
+        v.setScaleY(1f);
+        // User req: the pressed button GROWS (scale pop) instead of nudging.
+        v.animate().scaleX(1.14f).scaleY(1.14f).setDuration(90)
+                .withEndAction(() -> v.animate().scaleX(1f).scaleY(1f)
+                        .setDuration(170)
+                        .setInterpolator(new OvershootInterpolator(1.5f))
                         .start())
                 .start();
     }
@@ -984,13 +985,13 @@ public class LauncherActivity extends BaseActivity {
         final TextView chip = new TextView(this);
         chip.setText(labelRes);
         chip.setTextColor(0xFFE4E4EA);
-        chip.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 11);
+        chip.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 10.5f);
         chip.setTypeface(Typeface.DEFAULT_BOLD);
-        chip.setLetterSpacing(0.06f);
-        chip.setPadding((int) (12 * density), (int) (6 * density),
-                (int) (12 * density), (int) (8 * density));
+        chip.setLetterSpacing(0.05f);
+        chip.setPadding((int) (10 * density), (int) (4 * density),
+                (int) (10 * density), (int) (5 * density));
         chip.setBackgroundResource(R.drawable.bg_cs_nav_tip);
-        chip.setElevation(12f);
+        chip.setElevation(14f);
         chip.setClickable(false);
         chip.setFocusable(false);
         chip.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
@@ -1003,36 +1004,45 @@ public class LauncherActivity extends BaseActivity {
         int[] rootPos = new int[2];
         anchor.getLocationInWindow(anchorPos);
         root.getLocationInWindow(rootPos);
+        // User req: the label appears WRITTEN ON TOP OF the pressed button
+        // (overlay centered on it), not floating near the home edge.
         float x = anchorPos[0] - rootPos[0]
                 + (anchor.getWidth() - chip.getMeasuredWidth()) / 2f;
         float maxX = root.getWidth() - chip.getMeasuredWidth() - 8 * density;
         x = Math.max(8 * density, Math.min(x, Math.max(8 * density, maxX)));
+        float y = anchorPos[1] - rootPos[1]
+                + (anchor.getHeight() - chip.getMeasuredHeight()) / 2f;
+        float maxY = root.getHeight() - chip.getMeasuredHeight() - 8 * density;
+        y = Math.max(8 * density, Math.min(y, Math.max(8 * density, maxY)));
         chip.setX(x);
-        chip.setY(anchorPos[1] - rootPos[1] + anchor.getHeight() + 4 * density);
+        chip.setY(y);
 
-        // The name SLIDES OUT of the tapped button (horizontal slide + light
-        // pop) — user req: no always-on labels, only on tap.
+        // Pops open from the button itself, then fades away.
         chip.setAlpha(0f);
-        chip.setScaleX(0.6f);
-        chip.setScaleY(0.6f);
-        chip.setTranslationX(-26 * density);
-        chip.animate().alpha(1f).translationX(0f).scaleX(1f).scaleY(1f)
-                .setDuration(220)
-                .setInterpolator(new DecelerateInterpolator(1.6f))
+        chip.setScaleX(0.4f);
+        chip.setScaleY(0.4f);
+        chip.animate().alpha(1f).scaleX(1f).scaleY(1f)
+                .setDuration(200)
+                .setInterpolator(new OvershootInterpolator(1.6f))
                 .withEndAction(() -> chip.animate()
-                        .alpha(0f).translationX(10 * density)
-                        .setStartDelay(900)
-                        .setDuration(200)
+                        .alpha(0f).scaleX(0.85f).scaleY(0.85f)
+                        .setStartDelay(950)
+                        .setDuration(180)
                         .withEndAction(() -> root.removeView(chip))
                         .start())
                 .start();
     }
 
-    /** Tap feedback bundle: icon nudge + nav light + sliding label, then run the action. */
+    /** Tap feedback bundle: icon nudge + nav light + floating label, then run the action. */
     private void navTap(@NonNull View v, int labelRes) {
-        nudgeNavIcon(v);
-        setActiveNavIndicator(labelRes);
-        showNavChip(v, labelRes);
+        // Honor the global animation switch (Launcher Customisation).
+        if (net.kdt.pojavlaunch.utils.animation.MotionSpeed.isEnabled()) {
+            nudgeNavIcon(v);
+            setActiveNavIndicator(labelRes);
+            showNavChip(v, labelRes);
+        } else {
+            setActiveNavIndicator(labelRes);
+        }
     }
 
     /** Maps a nav label to its green indicator line under the icon. */
@@ -1079,12 +1089,20 @@ public class LauncherActivity extends BaseActivity {
 
         View.OnClickListener homeListener = v -> {
             navTap(v, R.string.cs_navtip_home);
-            // Always pop to ROOT when clicking home
-            getSupportFragmentManager().popBackStackImmediate("ROOT", 0);
-            Fragment frag = getVisibleFragment("ROOT");
-            if (frag instanceof MainMenuFragment) {
-                ((MainMenuFragment) frag).refreshHomeState();
+            // Jank fix (user req): skip the pop when already at root, and
+            // defer the home refresh one frame so the press animation and the
+            // fragment pop never fight on the same frame (smooth "geach"-free
+            // home return even when pressed fast from a child page).
+            if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                getSupportFragmentManager().popBackStackImmediate("ROOT", 0);
             }
+            v.post(() -> {
+                if (isFinishing() || isDestroyed()) return;
+                Fragment frag = getVisibleFragment("ROOT");
+                if (frag instanceof MainMenuFragment) {
+                    ((MainMenuFragment) frag).refreshHomeState();
+                }
+            });
         };
 
         if (navHome != null)         navHome.setOnClickListener(homeListener);

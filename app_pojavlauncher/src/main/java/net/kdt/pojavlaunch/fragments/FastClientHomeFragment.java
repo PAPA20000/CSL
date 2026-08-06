@@ -81,6 +81,15 @@ public class FastClientHomeFragment extends Fragment {
         // Infrawire Official Partner cards (home card below Play + feed card in right pane)
         setupInfrawireCard(view.findViewById(R.id.infrawire_card_play), 350);
         setupInfrawireCard(view.findViewById(R.id.infrawire_card_feed), 450);
+
+        // Home entrance choreography (user req: nice home animation) —
+        // deferred one frame so the window token is ready; internally
+        // no-ops when animations are turned Off.
+        view.post(() -> {
+            if (isAdded() && !isRemoving()) {
+                net.kdt.pojavlaunch.UiMotion.revealScreen(view);
+            }
+        });
     }
 
     /**

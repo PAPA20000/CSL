@@ -187,6 +187,14 @@ public class MainMenuFragment extends Fragment {
                 getChildFragmentManager().beginTransaction().setReorderingAllowed(true)
                         .replace(R.id.right_pane_container, RightPaneHomeFragment.class, null, RightPaneHomeFragment.TAG).commit();
             }
+
+        // Home entrance choreography — deferred one frame (window token),
+        // no-op when animations are Off.
+        view.post(() -> {
+            if (isAdded() && !isRemoving()) {
+                net.kdt.pojavlaunch.UiMotion.revealScreen(view);
+            }
+        });
         }
 
         Button mBrowserResourcesButton = view.findViewById(R.id.browser_resources_button);
