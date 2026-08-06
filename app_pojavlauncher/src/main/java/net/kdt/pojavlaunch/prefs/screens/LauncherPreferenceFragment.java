@@ -408,7 +408,8 @@ public class LauncherPreferenceFragment extends Fragment {
                             "Reset Launch Color",
                             "Back to pure black", null)
                             .setAction(() -> {
-                                mPrefs.edit().putInt("launch_stage_color", 0xFF000000).apply();
+                                LauncherPreferences.DEFAULT_PREF.edit()
+                                        .putInt("launch_stage_color", 0xFF000000).apply();
                                 net.kdt.pojavlaunch.utils.CsPopup.show(requireActivity(),
                                         getString(R.string.cs_launch_color_reset));
                             }));
@@ -952,11 +953,12 @@ public class LauncherPreferenceFragment extends Fragment {
             if (parent == null) return;
             net.kdt.pojavlaunch.colorselector.ColorSelector selector =
                     new net.kdt.pojavlaunch.colorselector.ColorSelector(requireContext(), parent, color -> {
-                        mPrefs.edit().putInt("launch_stage_color", color | 0xFF000000).apply();
+                        LauncherPreferences.DEFAULT_PREF.edit()
+                                .putInt("launch_stage_color", color | 0xFF000000).apply();
                         net.kdt.pojavlaunch.utils.CsPopup.show(requireActivity(),
                                 getString(R.string.cs_launch_color_set), android.R.drawable.ic_menu_edit);
                     });
-            int current = mPrefs.getInt("launch_stage_color", 0xFF000000);
+            int current = LauncherPreferences.DEFAULT_PREF.getInt("launch_stage_color", 0xFF000000);
             selector.show(true, current == 0 ? 0xFF000000 : current);
         } catch (Throwable t) {
             Tools.showError(requireContext(), t);
