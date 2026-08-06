@@ -1010,24 +1010,62 @@ public class LauncherActivity extends BaseActivity {
         chip.setX(x);
         chip.setY(anchorPos[1] - rootPos[1] + anchor.getHeight() + 4 * density);
 
+        // The name SLIDES OUT of the tapped button (horizontal slide + light
+        // pop) — user req: no always-on labels, only on tap.
         chip.setAlpha(0f);
-        chip.setTranslationY(-6 * density);
-        chip.animate().alpha(1f).translationY(0f)
-                .setDuration(160)
-                .setInterpolator(new DecelerateInterpolator())
+        chip.setScaleX(0.6f);
+        chip.setScaleY(0.6f);
+        chip.setTranslationX(-26 * density);
+        chip.animate().alpha(1f).translationX(0f).scaleX(1f).scaleY(1f)
+                .setDuration(220)
+                .setInterpolator(new DecelerateInterpolator(1.6f))
                 .withEndAction(() -> chip.animate()
-                        .alpha(0f).translationY(-6 * density)
-                        .setStartDelay(850)
-                        .setDuration(220)
+                        .alpha(0f).translationX(10 * density)
+                        .setStartDelay(900)
+                        .setDuration(200)
                         .withEndAction(() -> root.removeView(chip))
                         .start())
                 .start();
     }
 
-    /** Tap feedback bundle: icon nudge + floating label, then run the action. */
+    /** Tap feedback bundle: icon nudge + nav light + sliding label, then run the action. */
     private void navTap(@NonNull View v, int labelRes) {
         nudgeNavIcon(v);
+        setActiveNavIndicator(labelRes);
         showNavChip(v, labelRes);
+    }
+
+    /** Maps a nav label to its green indicator line under the icon. */
+    private View indicatorForLabel(int labelRes) {
+        if (labelRes == R.string.cs_navtip_home) return findViewById(R.id.nav_home_indicator);
+        if (labelRes == R.string.cs_navtip_mods) return findViewById(R.id.nav_mod_store_indicator);
+        if (labelRes == R.string.cs_navtip_controls) return findViewById(R.id.nav_controls_indicator);
+        if (labelRes == R.string.cs_navtip_cursor) return findViewById(R.id.nav_cursor_indicator);
+        if (labelRes == R.string.cs_navtip_skins) return findViewById(R.id.nav_skin_indicator);
+        return null;
+    }
+
+    /**
+     * Only the tapped nav button stays "lit" (green indicator); every other
+     * indicator returns to invisible — selected vs normal state (user req).
+     */
+    private void setActiveNavIndicator(int labelRes) {
+        View[] indicators = {
+                findViewById(R.id.nav_home_indicator),
+                findViewById(R.id.nav_mod_store_indicator),
+                findViewById(R.id.nav_controls_indicator),
+                findViewById(R.id.nav_cursor_indicator),
+                findViewById(R.id.nav_skin_indicator)
+        };
+        for (View ind : indicators) {
+            if (ind != null) ind.setVisibility(View.INVISIBLE);
+        }
+        View active = indicatorForLabel(labelRes);
+        if (active != null) {
+            active.setVisibility(View.VISIBLE);
+            active.setAlpha(0.3f);
+            active.animate().alpha(1f).setDuration(220).start();
+        }
     }
 
     /** Wire up the landscape header bar navigation buttons. */

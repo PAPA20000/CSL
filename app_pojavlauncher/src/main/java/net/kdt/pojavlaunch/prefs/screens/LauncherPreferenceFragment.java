@@ -309,6 +309,9 @@ public class LauncherPreferenceFragment extends Fragment {
     private List<SettingItem> buildRootCategoryItems() {
         List<SettingItem> rootItems = new ArrayList<>();
         rootItems.add(new SettingItem("cat_launcher", SettingItem.TYPE_CATEGORY_LINK, "Launcher Settings", "Configure language, updates, and downloads", "Launcher Settings"));
+        // User req: one place for every look-and-feel switch — home background,
+        // launch screen, theme and language.
+        rootItems.add(new SettingItem("cat_customisation", SettingItem.TYPE_CATEGORY_LINK, "Launcher Customisation", "Home background, launch screen, theme & language", "Launcher Customisation"));
         rootItems.add(new SettingItem("cat_video", SettingItem.TYPE_CATEGORY_LINK, "Video & Graphics", "Configure renderers, resolution, and VSync options", "Video & Graphics"));
         rootItems.add(new SettingItem("cat_controls", SettingItem.TYPE_CATEGORY_LINK, "Controls", "Customize touch overlays, cursors, and gyroscope controls", "Controls"));
         rootItems.add(new SettingItem("cat_java", SettingItem.TYPE_CATEGORY_LINK, "Java Runtime", "Manage memory allocations, JREs, and Java options", "Java Runtime"));
@@ -373,6 +376,54 @@ public class LauncherPreferenceFragment extends Fragment {
     private void addCategoryPageTo(List<SettingCategory> categories, String catName) {
         // Subcategory Pages Detail (100% Real Authentic Launcher Options)
             switch (catName) {
+                case "Launcher Customisation":
+                    List<SettingItem> custItems = new ArrayList<>();
+                    // ── Home screen background (the HOME page bg, not cards) ──
+                    custItems.add(new SettingItem("set_custom_launcher_bg", SettingItem.TYPE_ACTION,
+                            "Home Screen Background",
+                            "Set an image as the home screen background", null)
+                            .setAction(() -> mImagePickerLauncher.launch("image/*")));
+                    custItems.add(new SettingItem("remove_custom_launcher_bg", SettingItem.TYPE_ACTION,
+                            "Remove Home Background",
+                            "Back to the default gradient background", null)
+                            .setAction(() -> {
+                                File bgFile = new File(RightPaneHomeFragment.CUSTOM_BG_PATH);
+                                if (bgFile.exists()) bgFile.delete();
+                                notifyHomeFragmentBgChanged();
+                                net.kdt.pojavlaunch.utils.CsPopup.show(requireActivity(),
+                                        getString(R.string.preference_custom_bg_removed));
+                            }));
+                    // ── Launch screen (which screen shows while the game loads) ──
+                    custItems.add(new SettingItem("launch_screen_style", SettingItem.TYPE_DROPDOWN,
+                            "Launch Screen",
+                            "Classic black, or the custom GIF you imported (Set/Remove in Launcher Settings)",
+                            "gif")
+                            .setDropdownOptions(new String[]{"Classic Black", "Custom GIF"},
+                                    new String[]{"black", "gif"}));
+                    custItems.add(new SettingItem("launch_stage_color_action", SettingItem.TYPE_ACTION,
+                            "Launch Screen Color",
+                            "Pick the loading screen background color", null)
+                            .setAction(this::pickLaunchStageColor));
+                    custItems.add(new SettingItem("launch_stage_color_reset", SettingItem.TYPE_ACTION,
+                            "Reset Launch Color",
+                            "Back to pure black", null)
+                            .setAction(() -> {
+                                mPrefs.edit().putInt("launch_stage_color", 0xFF000000).apply();
+                                net.kdt.pojavlaunch.utils.CsPopup.show(requireActivity(),
+                                        getString(R.string.cs_launch_color_reset));
+                            }));
+                    // ── Launcher theme ──
+                    custItems.add(new SettingItem("launcher_theme", SettingItem.TYPE_THEME_SELECTOR,
+                            "Launcher Theme", "Accent theme presets", null));
+                    // ── Language (English only for now — Android default) ──
+                    custItems.add(new SettingItem("launcher_language", SettingItem.TYPE_DROPDOWN,
+                            "Language",
+                            "English only for now — the launcher keeps the system default",
+                            "en")
+                            .setDropdownOptions(new String[]{"English"}, new String[]{"en"}));
+                    categories.add(new SettingCategory("Customisation", custItems));
+                    break;
+
                 case "Launcher Settings":
                     List<SettingItem> launcherItems = new ArrayList<>();
                     launcherItems.add(new SettingItem("force_english", SettingItem.TYPE_SWITCH, getString(R.string.preference_force_english_title), getString(R.string.preference_force_english_description), false));
@@ -492,7 +543,8 @@ public class LauncherPreferenceFragment extends Fragment {
                         File bgFile = new File(RightPaneHomeFragment.CUSTOM_BG_PATH);
                         if (bgFile.exists()) bgFile.delete();
                         notifyHomeFragmentBgChanged();
-                        Toast.makeText(requireContext(), R.string.preference_custom_bg_removed, Toast.LENGTH_SHORT).show();
+                        net.kdt.pojavlaunch.utils.CsPopup.show(requireActivity(),
+                                getString(R.string.preference_custom_bg_removed));
                     }));
                     categories.add(new SettingCategory("Experimental Settings", expItems));
                     break;
@@ -893,6 +945,24 @@ public class LauncherPreferenceFragment extends Fragment {
      * some OEMs don't filter properly. Any failure deletes the partial file —
      * the launch stage can never be handed a broken GIF.
      */
+    /** ColorSelector dialog for the launch stage background color. */
+    private void pickLaunchStageColor() {
+        try {
+            ViewGroup parent = requireActivity().findViewById(android.R.id.content);
+            if (parent == null) return;
+            net.kdt.pojavlaunch.colorselector.ColorSelector selector =
+                    new net.kdt.pojavlaunch.colorselector.ColorSelector(requireContext(), parent, color -> {
+                        mPrefs.edit().putInt("launch_stage_color", color | 0xFF000000).apply();
+                        net.kdt.pojavlaunch.utils.CsPopup.show(requireActivity(),
+                                getString(R.string.cs_launch_color_set), android.R.drawable.ic_menu_edit);
+                    });
+            int current = mPrefs.getInt("launch_stage_color", 0xFF000000);
+            selector.show(true, current == 0 ? 0xFF000000 : current);
+        } catch (Throwable t) {
+            Tools.showError(requireContext(), t);
+        }
+    }
+
     private void copyGifToStageFile(@NonNull Uri uri) {
         final long MAX_GIF_BYTES = 50L * 1024L * 1024L;
         final File target = net.kdt.pojavlaunch.launch.LaunchStageView.gifFileFor(requireContext());
@@ -912,13 +982,14 @@ public class LauncherPreferenceFragment extends Fragment {
                 if (total > MAX_GIF_BYTES) throw new Exception("GIF too large");
                 out.write(buf, 0, len);
             }
-            Toast.makeText(requireContext(), R.string.cs_launch_gif_set_ok, Toast.LENGTH_SHORT).show();
+            net.kdt.pojavlaunch.utils.CsPopup.show(requireActivity(),
+                    getString(R.string.cs_launch_gif_set_ok), android.R.drawable.ic_menu_gallery);
         } catch (Exception e) {
             if (target.exists()) target.delete();
             String msg = "GIF too large".equals(e.getMessage())
                     ? getString(R.string.cs_launch_gif_too_big)
                     : getString(R.string.cs_launch_gif_invalid);
-            Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show();
+            net.kdt.pojavlaunch.utils.CsPopup.show(requireActivity(), msg);
         }
     }
 
@@ -951,10 +1022,12 @@ public class LauncherPreferenceFragment extends Fragment {
             int len;
             while ((len = in.read(buf)) != -1) out.write(buf, 0, len);
             notifyHomeFragmentBgChanged();
-            Toast.makeText(requireContext(), R.string.preference_custom_bg_set_success, Toast.LENGTH_SHORT).show();
+            net.kdt.pojavlaunch.utils.CsPopup.show(requireActivity(),
+                    getString(R.string.preference_custom_bg_set_success), android.R.drawable.ic_menu_gallery);
         } catch (Exception e) {
             if (bgFile.exists()) bgFile.delete();
-            Toast.makeText(requireContext(), R.string.preference_custom_bg_error, Toast.LENGTH_SHORT).show();
+            net.kdt.pojavlaunch.utils.CsPopup.show(requireActivity(),
+                    getString(R.string.preference_custom_bg_error));
         }
     }
 

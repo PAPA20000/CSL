@@ -51,7 +51,7 @@
             android:layout_marginStart="@dimen/_8sdp"
             android:text="@string/cs_launcher_title"
             android:textSize="@dimen/_14ssp"
-                android:fontFamily="@font/minecraft_ten"
+                android:fontFamily="@font/minecraftia"
                 android:includeFontPadding="false"
             android:textStyle="bold"
             android:textColor="@color/neon_green"
@@ -147,19 +147,19 @@
         </FrameLayout>
 
         <!-- About Button (placeholder — full About page comes later).
-             Opens a small dialog with launcher/device info. -->
+             Matches the other header nav buttons: no custom background,
+             plain ripple + icon. -->
         <ImageButton
             android:id="@+id/btn_about"
             android:layout_width="@dimen/_38sdp"
             android:layout_height="@dimen/_38sdp"
             android:layout_marginHorizontal="@dimen/_4sdp"
             android:layout_gravity="center_vertical"
-            android:background="@drawable/bg_settings_btn"
+            android:background="?android:attr/selectableItemBackground"
             android:contentDescription="@string/cs_about_title"
             android:padding="@dimen/_7sdp"
             android:scaleType="fitCenter"
-            android:src="@drawable/ic_info"
-            app:tint="#B39DDB" />
+            android:src="@drawable/ic_info" />
 
         <!-- Nav Skin -->
         <FrameLayout

@@ -142,6 +142,26 @@ public class LaunchStageView extends FrameLayout {
     private void bind() {
         if (mStaticStage == null && getChildCount() > 0) mStaticStage = getChildAt(0);
 
+        // CS Customisation: launch stage background color (default pure black).
+        try {
+            int stageColor = net.kdt.pojavlaunch.prefs.LauncherPreferences.DEFAULT_PREF
+                    .getInt("launch_stage_color", 0xFF000000);
+            setBackgroundColor(stageColor);
+            if (mStaticStage != null) mStaticStage.setBackgroundColor(stageColor);
+        } catch (Throwable ignored) {}
+
+        // CS Customisation: user can force the classic black stage even when a
+        // GIF file exists (Settings → Launcher Customisation → Launch Screen).
+        String style = "gif";
+        try {
+            style = net.kdt.pojavlaunch.prefs.LauncherPreferences.DEFAULT_PREF
+                    .getString("launch_screen_style", "gif");
+        } catch (Throwable ignored) {}
+        if ("black".equals(style)) {
+            Log.i(TAG, "bind: launch screen style = black (user choice) — skipping GIF");
+            return;
+        }
+
         // No GIF imported → classic black stage, absolutely nothing to do.
         File gif = gifFileFor(getContext());
         if (!gif.isFile() || gif.length() <= 0) {

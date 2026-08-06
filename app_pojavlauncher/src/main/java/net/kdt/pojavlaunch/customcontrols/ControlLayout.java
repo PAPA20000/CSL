@@ -505,7 +505,9 @@ public class ControlLayout extends FrameLayout {
 			}
 			try {
 				String jsonPath = saveToDirectory(mEditText.getText().toString());
-				Toast.makeText(context, context.getString(R.string.global_save) + ": " + jsonPath, Toast.LENGTH_SHORT).show();
+				net.kdt.pojavlaunch.utils.CsPopup.show(context,
+						context.getString(R.string.global_save) + ": " + jsonPath,
+						android.R.drawable.ic_menu_save);
 				mDialog.dismiss();
 				if(mListener != null) mListener.exitEditor();
 			} catch (Throwable th) {

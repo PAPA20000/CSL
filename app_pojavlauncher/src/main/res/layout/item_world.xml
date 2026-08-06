@@ -50,7 +50,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
-                android:fontFamily="@font/minecraft_ten"
+                android:fontFamily="@font/minecraftia"
                 android:includeFontPadding="false"
                 android:letterSpacing="0.02"
                 android:maxLines="1"

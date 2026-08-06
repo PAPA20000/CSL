@@ -88,7 +88,7 @@
                     android:layout_height="wrap_content"
                     android:textColor="#F4F4F8"
                     android:textSize="15sp"
-                    android:fontFamily="@font/minecraft_ten"
+                    android:fontFamily="@font/minecraftia"
                     android:includeFontPadding="false"
                     android:letterSpacing="0.02"
                     android:ellipsize="end"
