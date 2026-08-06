@@ -546,6 +546,15 @@ public class LauncherPreferenceFragment extends Fragment {
 
                 case "Advanced":
                     List<SettingItem> advItems = new ArrayList<>();
+                    // Firebase real-time sync (admin panel) — off by default.
+                    advItems.add(new SettingItem("firebase_sync_enabled", SettingItem.TYPE_SWITCH,
+                            "Firebase Sync",
+                            "Real-time announcements, notifications, sponsorship & updates from the admin panel",
+                            false));
+                    advItems.add(new SettingItem("firebase_db_url", SettingItem.TYPE_INPUT,
+                            "Firebase Database URL",
+                            "Paste the Realtime Database URL shown in your Firebase console (e.g. https://xxx-default-rtdb.firebaseio.com)",
+                            ""));
                     advItems.add(new SettingItem("clear_cache_files", SettingItem.TYPE_ACTION, "Clear Shader & Temporary Caches", "Free up storage by deleting temporary rendering files", null).setAction(() -> {
                         try {
                             clearCacheLocal(requireContext());
@@ -598,6 +607,16 @@ public class LauncherPreferenceFragment extends Fragment {
 
                 case "Sponsors":
                     List<SettingItem> sponsorItems = new ArrayList<>();
+                    // Global sponsorship gate (Firebase admin panel): when the
+                    // admin disables sponsorship, this page shows a notice instead.
+                    if (!net.kdt.pojavlaunch.remote.FirebaseSyncManager.isSponsorshipEnabled()) {
+                        sponsorItems.add(new SettingItem("sponsors_disabled", SettingItem.TYPE_INFO,
+                                "Sponsorship Disabled",
+                                "The admin has turned sponsorship off — sponsor content is hidden across the launcher.",
+                                null));
+                        categories.add(new SettingCategory("Sponsors", sponsorItems));
+                        break;
+                    }
                     sponsorItems.add(new SettingItem("infrawire_partner_info", SettingItem.TYPE_INFO,
                             "Infrawire — Official Hosting Partner",
                             "High-Performance VPS & Cloud Hosting • Official Cloud Hosting Partner of CS Launcher V3", null));
