@@ -7,6 +7,7 @@ import android.text.Spanned;
 import android.text.style.AbsoluteSizeSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
+import android.text.style.TypefaceSpan;
 import android.text.style.URLSpan;
 import android.text.style.BulletSpan;
 
@@ -27,7 +28,7 @@ public final class Markdown {
         if (md == null) return sb;
 
         // code blocks → plain pre block styling
-        md = md.replaceAll("```[\\s\\S]*?```", m -> "« " + m.group(0).replaceAll("`", "").replaceAll("\\s+", " ").trim() + " »");
+        md = replaceCodeBlocks(md);
 
         String[] lines = md.split("\n");
         for (String line : lines) {
@@ -67,7 +68,7 @@ public final class Markdown {
         Pattern code = Pattern.compile("`([^`]+)`");
         m = code.matcher(sb);
         while (m.find()) {
-            sb.setSpan(new StyleSpan(Typeface.MONOSPACE), m.start(), m.end(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            sb.setSpan(new TypefaceSpan("monospace"), m.start(), m.end(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             sb.setSpan(new ForegroundColorSpan(0xFFB39DDB), m.start(), m.end(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
 
@@ -76,5 +77,18 @@ public final class Markdown {
         while (m.find()) {
             sb.setSpan(new URLSpan(m.group(2)), m.start(), m.end(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
+    }
+
+    private static String replaceCodeBlocks(String input) {
+        if (input == null) return "";
+        Pattern pattern = Pattern.compile("```[\\s\\S]*?```");
+        Matcher matcher = pattern.matcher(input);
+        StringBuffer sb = new StringBuffer();
+        while (matcher.find()) {
+            String text = matcher.group(0).replaceAll("`", "").replaceAll("\\s+", " ").trim();
+            matcher.appendReplacement(sb, Matcher.quoteReplacement("« " + text + " »"));
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
     }
 }
