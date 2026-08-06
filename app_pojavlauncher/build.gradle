@@ -1,6 +1,5 @@
 plugins {
     id 'com.android.application' version '8.7.2'
-    id 'com.google.gms.google-services'
 }
 
 static def getDate() { return new Date().format('yyyyMMdd') }
@@ -80,7 +79,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.craftstudio.cslauncherv3"
+        applicationId "com.craftstudio.cslauncher"
         minSdkVersion 21
         targetSdkVersion 34
         versionCode 10000000
@@ -104,9 +103,9 @@ android {
             signingConfig signingConfigs.customDebug
             resValue "string", "app_name", "CS Launcher V3"
             resValue "string", "app_short_name", "CS Launcher V3"
-            resValue 'string', 'application_package', 'com.craftstudio.cslauncherv3.debug'
-            resValue 'string', 'storageProviderAuthorities', 'com.craftstudio.cslauncherv3.scoped.gamefolder.debug'
-            resValue 'string', 'shareProviderAuthority', 'com.craftstudio.cslauncherv3.scoped.controlfolder.debug'
+            resValue 'string', 'application_package', 'com.craftstudio.cslauncher.debug'
+            resValue 'string', 'storageProviderAuthorities', 'com.craftstudio.cslauncher.scoped.gamefolder.debug'
+            resValue 'string', 'shareProviderAuthority', 'com.craftstudio.cslauncher.scoped.controlfolder.debug'
         }
         proguard {
             initWith debug
@@ -130,8 +129,8 @@ android {
             }
             resValue "string", "app_name", "CS Launcher V3"
             resValue "string", "app_short_name", "CS Launcher V3"
-            resValue 'string', 'storageProviderAuthorities', 'com.craftstudio.cslauncherv3.gamefolder'
-            resValue 'string', 'application_package', 'com.craftstudio.cslauncherv3'
+            resValue 'string', 'storageProviderAuthorities', 'com.craftstudio.cslauncher.gamefolder'
+            resValue 'string', 'application_package', 'com.craftstudio.cslauncher'
         }
         gplay {
             initWith release
@@ -183,10 +182,6 @@ afterEvaluate {
 }
 
 dependencies {
-    // Firebase real-time sync (admin panel): announcements, notifications,
-    // sponsorship toggle and update management.
-    implementation platform('com.google.firebase:firebase-bom:32.8.1')
-    implementation 'com.google.firebase:firebase-database'
     implementation 'javax.annotation:javax.annotation-api:1.3.2'
     implementation 'commons-codec:commons-codec:1.15'
     // implementation 'com.wu-man:android-bsf-api:3.1.3'

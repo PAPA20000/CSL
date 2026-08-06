@@ -771,13 +771,6 @@ public class LauncherActivity extends BaseActivity {
     protected void onResume() {
         super.onResume();
         ContextExecutor.setActivity(this);
-        // Firebase real-time sync (admin panel): announcements, notifications,
-        // sponsorship toggle, update checks. No-op when disabled (default).
-        try {
-            net.kdt.pojavlaunch.remote.FirebaseSyncManager.onResume(this);
-        } catch (Throwable t) {
-            android.util.Log.w("LauncherActivity", "firebase sync skipped", t);
-        }
         // Load profiles on background thread to keep UI responsive during resume
         net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles.loadAsync(() -> {
             if (isDestroyed() || isFinishing()) return;
