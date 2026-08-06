@@ -37,7 +37,35 @@ public class ModpackCreateFragment extends Fragment {
             if (!(launcheractivity instanceof LauncherActivity))
                     throw new IllegalStateException("Cannot import modpack without LauncherActivity");
             ((LauncherActivity) launcheractivity).modpackImportLauncher.launch(null);
-        });;
+        });
+
+        // Fix (user report): this page had NO back button at all.
+        View backButton = view.findViewById(R.id.mp_back_button);
+        if (backButton != null) {
+            net.kdt.pojavlaunch.UiMotion.pressFeedback(backButton);
+            backButton.setOnClickListener(v -> navigateBack());
+        }
+        // System back key takes the same path.
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(),
+                new androidx.activity.OnBackPressedCallback(true) {
+                    @Override public void handleOnBackPressed() { navigateBack(); }
+                });
+
+        net.kdt.pojavlaunch.UiMotion.pressFeedback(
+                view.findViewById(R.id.button_browse_modpacks),
+                view.findViewById(R.id.button_import_modpack));
+        net.kdt.pojavlaunch.UiMotion.revealScreen(view);
+    }
+
+    private void navigateBack() {
+        Fragment parent = getParentFragment();
+        if (parent instanceof MainMenuFragment) {
+            ((MainMenuFragment) parent).refreshHomeState();
+        } else if (parent != null) {
+            parent.getChildFragmentManager().popBackStackImmediate();
+        } else {
+            Tools.removeCurrentFragment(requireActivity());
+        }
     }
 
     private void tryInstall(Class<? extends Fragment> fragmentClass, String tag){

@@ -152,12 +152,15 @@ public class WorldManagerFragment extends Fragment implements WorldListAdapter.L
             try { mImportLauncher.launch(null); } catch (Throwable t) { Tools.showError(getContext(), t); }
         });
 
-        // RecyclerView: list portrait / 2-col grid landscape, recycling on.
+        // RecyclerView: list portrait / 2-3 col grid landscape, recycling on.
         boolean landscape = getResources().getConfiguration().orientation
                 == Configuration.ORIENTATION_LANDSCAPE;
-        mList.setLayoutManager(landscape
-                ? new GridLayoutManager(getContext(), 2)
-                : new LinearLayoutManager(getContext()));
+        if (landscape) {
+            int cols = getResources().getConfiguration().screenWidthDp >= 960 ? 3 : 2;
+            mList.setLayoutManager(new GridLayoutManager(getContext(), cols));
+        } else {
+            mList.setLayoutManager(new LinearLayoutManager(getContext()));
+        }
         mList.setHasFixedSize(false);
         mList.setItemViewCacheSize(10);
         mAdapter = new WorldListAdapter(this);

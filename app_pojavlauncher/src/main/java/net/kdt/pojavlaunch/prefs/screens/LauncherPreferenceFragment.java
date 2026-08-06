@@ -542,6 +542,10 @@ public class LauncherPreferenceFragment extends Fragment {
                             "Show FPS",
                             "Live frame counter while playing — measured at the GL swap boundary (also toggleable in-game via Quick Settings)",
                             false));
+                    perfItems.add(new SettingItem("low_pause_gc", SettingItem.TYPE_SWITCH,
+                            "Low-Pause GC (Stable FPS)",
+                            "G1GC with an 80ms pause target — cuts stutter from long garbage-collection pauses during chunk loads. FPS cap untouched.",
+                            true));
                     categories.add(new SettingCategory("Performance", perfItems));
                     break;
 

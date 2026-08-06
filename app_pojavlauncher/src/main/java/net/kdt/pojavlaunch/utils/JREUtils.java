@@ -405,6 +405,21 @@ public class JREUtils {
         userArgs.add("-Xmx" + effectiveRam + "M");
         Log.i("ProfileLaunch", "Effective JVM RAM: -Xms" + effectiveRam
                 + "M -Xmx" + effectiveRam + "M");
+
+        // CS Perf (user req — stable FPS, no cap): low-pause GC smoothing.
+        // G1GC + a pause target cuts long stop-the-world pauses during chunk
+        // loads / autosaves, which reads as stutter. The 260-FPS unlock stays
+        // untouched. User-provided GC flags are respected (purged first so we
+        // never double-add).
+        if (LauncherPreferences.DEFAULT_PREF.getBoolean("low_pause_gc", true)) {
+            purgeArg(userArgs, "-XX:+UseG1GC");
+            purgeArg(userArgs, "-XX:+UseSerialGC");
+            purgeArg(userArgs, "-XX:+UseParallelGC");
+            purgeArg(userArgs, "-XX:MaxGCPauseMillis");
+            userArgs.add("-XX:+UseG1GC");
+            userArgs.add("-XX:MaxGCPauseMillis=80");
+            Log.i("ProfileLaunch", "CS Perf: low-pause GC enabled (G1GC, 80ms pause target)");
+        }
         if(LOCAL_RENDERER != null) userArgs.add("-Dorg.lwjgl.opengl.libname=" + graphicsLib);
 
         // Force LWJGL to use the Freetype library intended for it, instead of using the one

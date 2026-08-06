@@ -1,37 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Modpack Profiles — premium redesign (glass cards + back button + font).
+     Theme colors unchanged; IDs preserved (R5). -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_launcher_dark">
+    android:background="@drawable/bg_cs_page_bg">
 
-    <!-- ── Header ── -->
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <!-- ── Header (back + title) ── -->
+    <LinearLayout
         android:id="@+id/profile_header"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/_52sdp"
-        android:background="@color/bg_header"
+        android:layout_height="52dp"
+        android:background="@drawable/bg_cs_header_bar"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="14dp"
         app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:id="@+id/mp_back_button"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@drawable/bg_cs_settings_row"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center">
+
+            <ImageView
+                android:layout_width="17dp"
+                android:layout_height="17dp"
+                android:contentDescription="@string/global_back"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="#E4E4EA" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/padding_medium"
-                    android:text="Modpack Profiles"
-            android:textColor="@color/text_primary_light"
-            android:textSize="@dimen/_15ssp"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/minecraft_ten"
+                android:includeFontPadding="false"
+                android:letterSpacing="0.02"
+                android:text="Modpack Profiles"
+                android:textColor="#FFFFFF"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Browse, search or import modpacks"
+                android:textColor="#8B90A6"
+                android:textSize="10.5sp" />
+        </LinearLayout>
+    </LinearLayout>
 
     <!-- ── Card Grid ── -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:clipToPadding="false"
-        android:padding="@dimen/padding_medium"
+        android:padding="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/profile_header">
 
@@ -44,18 +83,19 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/button_browse_modpacks"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/_96sdp"
-                android:background="@drawable/bg_mp_card"
+                android:layout_height="96dp"
+                android:background="@drawable/bg_cs_glass_card"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?android:attr/selectableItemBackground"
-                android:padding="@dimen/padding_medium">
+                android:padding="16dp">
 
                 <ImageView
                     android:id="@+id/browse_icon"
-                    android:layout_width="@dimen/_40sdp"
-                    android:layout_height="@dimen/_40sdp"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
                     android:src="@drawable/ic_search"
+                    app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:tint="@color/neon_green" />
@@ -63,30 +103,31 @@
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/_12sdp"
+                    android:layout_marginStart="14dp"
+                    android:fontFamily="@font/minecraft_ten"
+                    android:includeFontPadding="false"
                     android:text="Browse Modpacks"
                     android:textColor="@color/text_primary_light"
-                    android:textSize="@dimen/_15ssp"
-                    android:textStyle="bold"
+                    android:textSize="16sp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toEndOf="@id/browse_icon"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="@id/browse_icon" />
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/_12sdp"
-                    android:layout_marginTop="@dimen/_4sdp"
+                    android:layout_marginStart="14dp"
+                    android:layout_marginTop="4dp"
                     android:text="Search, discover and install modpacks"
                     android:textColor="@color/text_secondary_dim"
-                    android:textSize="@dimen/_12ssp"
+                    android:textSize="12sp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toEndOf="@id/browse_icon"
                     app:layout_constraintTop_toBottomOf="@id/browse_icon" />
 
                 <ImageView
-                    android:layout_width="@dimen/_18sdp"
-                    android:layout_height="@dimen/_18sdp"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
                     android:src="@drawable/ic_spinner_arrow"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -97,24 +138,25 @@
             <!-- Spacing -->
             <View
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/_12sdp" />
+                android:layout_height="12dp" />
 
             <!-- Import Modpack Card -->
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/button_import_modpack"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/_96sdp"
-                android:background="@drawable/bg_mp_card"
+                android:layout_height="96dp"
+                android:background="@drawable/bg_cs_glass_card"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?android:attr/selectableItemBackground"
-                android:padding="@dimen/padding_medium">
+                android:padding="16dp">
 
                 <ImageView
                     android:id="@+id/import_icon"
-                    android:layout_width="@dimen/_40sdp"
-                    android:layout_height="@dimen/_40sdp"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
                     android:src="@drawable/ic_folder"
+                    app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:tint="@color/neon_green" />
@@ -122,30 +164,31 @@
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/_12sdp"
+                    android:layout_marginStart="14dp"
+                    android:fontFamily="@font/minecraft_ten"
+                    android:includeFontPadding="false"
                     android:text="Import Zip or mrpack"
                     android:textColor="@color/text_primary_light"
-                    android:textSize="@dimen/_15ssp"
-                    android:textStyle="bold"
+                    android:textSize="16sp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toEndOf="@id/import_icon"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="@id/import_icon" />
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/_12sdp"
-                    android:layout_marginTop="@dimen/_4sdp"
-                    android:text="Import a modpack from a local file"
+                    android:layout_marginStart="14dp"
+                    android:layout_marginTop="4dp"
+                    android:text="Install a modpack from a local file"
                     android:textColor="@color/text_secondary_dim"
-                    android:textSize="@dimen/_12ssp"
+                    android:textSize="12sp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toEndOf="@id/import_icon"
                     app:layout_constraintTop_toBottomOf="@id/import_icon" />
 
                 <ImageView
-                    android:layout_width="@dimen/_18sdp"
-                    android:layout_height="@dimen/_18sdp"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
                     android:src="@drawable/ic_spinner_arrow"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"

@@ -48,9 +48,12 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/minecraft_ten"
+                android:includeFontPadding="false"
+                android:letterSpacing="0.02"
                 android:text="@string/cs_world_manager_title"
                 android:textColor="#FFFFFF"
-                android:textSize="16.5sp"
+                android:textSize="17sp"
                 android:textStyle="bold" />
 
             <TextView

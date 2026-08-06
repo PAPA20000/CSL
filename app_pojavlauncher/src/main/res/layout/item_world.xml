@@ -1,104 +1,124 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- WORLD ROW — icon, name, version • last played, size + datapack chips -->
+<!-- WORLD CARD — premium redesign (mobile-first, grid-friendly).
+     Vertical card: world-art header strip, Minecraft-font name, meta,
+     chips + menu. All view IDs preserved for WorldListAdapter (R5). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
-    android:gravity="center_vertical"
-    android:minHeight="76dp"
-    android:orientation="horizontal"
-    android:background="@drawable/bg_cs_settings_row"
+    android:layout_marginBottom="10dp"
+    android:background="@drawable/bg_cs_glass_card"
     android:clickable="true"
     android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    android:minHeight="96dp"
+    android:orientation="vertical"
     android:padding="12dp">
 
-    <FrameLayout
-        android:layout_width="52dp"
-        android:layout_height="52dp"
-        android:background="@drawable/bg_cs_world_icon"
-        android:padding="4dp">
-
-        <ImageView
-            android:id="@+id/world_icon"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="centerCrop"
-            android:contentDescription="@string/cs_world_icon_desc"
-            tools:src="@tools:sample/avatars" />
-    </FrameLayout>
-
+    <!-- ── Top row: art icon + name/actions ── -->
     <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:layout_marginStart="12dp"
-        android:orientation="vertical">
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/world_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="#FFFFFF"
-            android:textSize="14.5sp"
-            android:textStyle="bold"
-            tools:text="My Survival Base" />
+        <FrameLayout
+            android:layout_width="58dp"
+            android:layout_height="58dp"
+            android:background="@drawable/bg_cs_world_icon"
+            android:padding="3dp">
 
-        <TextView
-            android:id="@+id/world_meta"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="#9CA3AF"
-            android:textSize="10.5sp"
-            tools:text="1.20.1 • 2d ago" />
+            <ImageView
+                android:id="@+id/world_icon"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/cs_world_icon_desc"
+                android:scaleType="centerCrop"
+                tools:src="@tools:sample/avatars" />
+        </FrameLayout>
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:orientation="horizontal">
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <TextView
-                android:id="@+id/world_size_chip"
-                android:layout_width="wrap_content"
-                android:layout_height="20dp"
-                android:gravity="center"
-                android:paddingHorizontal="8dp"
-                android:background="@drawable/bg_cs_chip"
+                android:id="@+id/world_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="@font/minecraft_ten"
+                android:includeFontPadding="false"
+                android:letterSpacing="0.02"
+                android:maxLines="1"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp"
+                tools:text="My Survival Base" />
+
+            <TextView
+                android:id="@+id/world_meta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:textColor="#9CA3AF"
-                android:textSize="9.5sp"
-                android:textStyle="bold"
-                tools:text="842 MB" />
-
-            <TextView
-                android:id="@+id/world_datapack_chip"
-                android:layout_width="wrap_content"
-                android:layout_height="20dp"
-                android:layout_marginStart="6dp"
-                android:gravity="center"
-                android:paddingHorizontal="8dp"
-                android:background="@drawable/bg_cs_chip_accent"
-                android:textColor="#E4E4EA"
-                android:textSize="9.5sp"
-                android:textStyle="bold"
-                android:visibility="gone"
-                tools:text="3 datapacks" />
+                android:textSize="10.5sp"
+                tools:text="1.20.1  •  2d ago" />
         </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/world_menu_button"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginStart="6dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/cs_world_actions"
+            android:padding="7dp"
+            android:src="@drawable/ic_cs_more"
+            app:tint="#9CA3AF" />
     </LinearLayout>
 
-    <ImageButton
-        android:id="@+id/world_menu_button"
-        android:layout_width="34dp"
-        android:layout_height="34dp"
-        android:layout_marginStart="8dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/cs_world_actions"
-        android:src="@drawable/ic_cs_more"
-        app:tint="#9CA3AF" />
+    <!-- ── Bottom row: chips ── -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/world_size_chip"
+            android:layout_width="wrap_content"
+            android:layout_height="22dp"
+            android:background="@drawable/bg_cs_chip"
+            android:gravity="center"
+            android:paddingHorizontal="10dp"
+            android:textColor="#9CA3AF"
+            android:textSize="9.5sp"
+            android:textStyle="bold"
+            tools:text="842 MB" />
+
+        <TextView
+            android:id="@+id/world_datapack_chip"
+            android:layout_width="wrap_content"
+            android:layout_height="22dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_cs_chip_accent"
+            android:gravity="center"
+            android:paddingHorizontal="10dp"
+            android:textColor="#E4E4EA"
+            android:textSize="9.5sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            tools:text="3 datapacks" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+    </LinearLayout>
+
 </LinearLayout>

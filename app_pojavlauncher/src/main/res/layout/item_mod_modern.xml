@@ -148,7 +148,7 @@
                 android:padding="9dp"
                 android:scaleType="centerInside"
                 android:src="@drawable/ic_download_trend"
-                app:tint="#FFFFFF" />
+                app:tint="#0D0D0D" />
 
             <!-- Installed / Update state pill -->
             <LinearLayout

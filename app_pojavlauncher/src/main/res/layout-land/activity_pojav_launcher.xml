@@ -51,6 +51,8 @@
             android:layout_marginStart="@dimen/_8sdp"
             android:text="@string/cs_launcher_title"
             android:textSize="@dimen/_14ssp"
+                android:fontFamily="@font/minecraft_ten"
+                android:includeFontPadding="false"
             android:textStyle="bold"
             android:textColor="@color/neon_green"
             android:letterSpacing="0.04"
@@ -144,18 +146,20 @@
             </LinearLayout>
         </FrameLayout>
 
-        <!-- Client Features Toggle Button (Minimalist Pill) -->
-        <Button
-            android:id="@+id/btn_client_features"
+        <!-- About Button (placeholder — full About page comes later).
+             Opens a small dialog with launcher/device info. -->
+        <ImageButton
+            android:id="@+id/btn_about"
             android:layout_width="@dimen/_38sdp"
             android:layout_height="@dimen/_38sdp"
             android:layout_marginHorizontal="@dimen/_4sdp"
-            android:text="✦"
-            android:textSize="18sp"
-            android:textColor="#B39DDB"
-            android:background="@drawable/bg_client_features_btn"
-            android:padding="0dp"
-            android:layout_gravity="center_vertical" />
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/bg_settings_btn"
+            android:contentDescription="@string/cs_about_title"
+            android:padding="@dimen/_7sdp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_info"
+            app:tint="#B39DDB" />
 
         <!-- Nav Skin -->
         <FrameLayout

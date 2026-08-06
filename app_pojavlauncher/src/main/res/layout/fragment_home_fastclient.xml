@@ -72,6 +72,8 @@
                         android:text="Player"
                         android:textColor="#FFFFFF"
                         android:textSize="@dimen/_16ssp"
+                android:fontFamily="@font/minecraft_ten"
+                android:includeFontPadding="false"
                         android:textStyle="bold"
                         android:layout_marginEnd="@dimen/_8sdp" />
 
@@ -225,7 +227,9 @@
                 android:layout_weight="1"
                 android:text="Default"
                 android:textColor="#FFFFFF"
-                android:textSize="@dimen/_12ssp" />
+                android:textSize="@dimen/_12ssp"
+                android:fontFamily="@font/minecraft_ten"
+                android:includeFontPadding="false" />
 
             <ImageView
                 android:layout_width="@dimen/_16sdp"

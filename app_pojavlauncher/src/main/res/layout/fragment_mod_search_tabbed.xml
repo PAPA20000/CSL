@@ -27,14 +27,6 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 app:layout_collapseMode="parallax">
-                
-                <!-- Sponsored Badge (Collapsible) -->
-                <include
-                    layout="@layout/infrawire_powered_badge"
-                    android:layout_width="match_parent"
-                    android:layout_height="34dp"
-                    android:layout_marginHorizontal="14dp"
-                    android:layout_marginTop="8dp" />
 
                 <!-- Header Content -->
                 <LinearLayout
@@ -171,6 +163,17 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal" />
         </HorizontalScrollView>
+
+    <!-- Sponsored Badge — PINNED below the collapsing header (was inside
+         the parallax layer, where it floated out of the card while
+         scrolling — user report). As a plain AppBar child it stays in
+         bounds at all times. -->
+    <include
+        layout="@layout/infrawire_powered_badge"
+        android:layout_width="match_parent"
+        android:layout_height="34dp"
+        android:layout_marginHorizontal="14dp"
+        android:layout_marginBottom="6dp" />
 
     </com.google.android.material.appbar.AppBarLayout>
 

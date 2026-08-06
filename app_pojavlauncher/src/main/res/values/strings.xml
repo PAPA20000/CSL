@@ -295,6 +295,8 @@
     <string name="cs_navtip_settings">Settings</string>
 
     <!-- ── Launch screen: black stage + optional user GIF (video removed) ── -->
+    <string name="cs_about_title">About CS Launcher</string>
+    <string name="cs_about_coming_soon">The full About page is coming soon. For now: %1$s</string>
     <string name="cs_launch_gif_title">Launch Screen GIF</string>
     <string name="cs_launch_gif_summary">Launch stays a clean black screen. Pick any GIF from storage to play on it while the game loads (up to 50 MB).</string>
     <string name="cs_launch_gif_remove_title">Remove Launch GIF</string>

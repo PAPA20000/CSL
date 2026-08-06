@@ -45,6 +45,18 @@ public class SearchModFragment extends Fragment implements ModItemAdapter.Search
 
     private EditText mSearchEditText;
     private ImageButton mFilterButton;
+
+    /** Back navigation for both the header back button and the system back key. */
+    private void goBack() {
+        Fragment parent = getParentFragment();
+        if (parent instanceof MainMenuFragment) {
+            ((MainMenuFragment) parent).refreshHomeState();
+        } else if (parent != null) {
+            parent.getChildFragmentManager().popBackStackImmediate();
+        } else {
+            Tools.removeCurrentFragment(requireActivity());
+        }
+    }
     private RecyclerView mRecyclerview;
     private ModItemAdapter mModItemAdapter;
     private ProgressBar mSearchProgressBar;
@@ -79,6 +91,18 @@ public class SearchModFragment extends Fragment implements ModItemAdapter.Search
         mRecyclerview = view.findViewById(R.id.search_mod_list);
         mStatusTextView = view.findViewById(R.id.search_mod_status_text);
         mFilterButton = view.findViewById(R.id.search_mod_filter);
+        
+        // Fix (user report): the back button existed in the layout but was
+        // never wired — tapping it did nothing. Same wiring as ModsSearchFragment.
+        ImageButton backButton = view.findViewById(R.id.mod_store_back);
+        if (backButton != null) {
+            backButton.setOnClickListener(v -> goBack());
+        }
+        // System back key takes the same path (child-pane aware).
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(),
+                new androidx.activity.OnBackPressedCallback(true) {
+                    @Override public void handleOnBackPressed() { goBack(); }
+                });
         
         if (mSearchFilters.isModpack) {
             TextView title = view.findViewById(R.id.mod_store_title);
