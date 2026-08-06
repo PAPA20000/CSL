@@ -14,40 +14,40 @@ import android.view.View;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.utils.CsPopup;
 
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * CS Launcher V3 — Firebase real-time sync (admin-panel driven).
+ * CS Launcher V3 — Firebase real-time sync (admin panel driven).
  *
- * Uses Firebase Realtime Database REST + Server-Sent-Events (SSE) so NO
- * Firebase SDK / google-services.json is needed — build stays clean.
- *
+ * Uses the official Firebase SDK (google-services.json):
  *   • announcements  → /announcements/{id}   (popup / card / page, markdown)
  *   • notifications  → /notifications/{id}   (mini popups, expiry support)
  *   • sponsorship    → /settings/sponsorshipEnabled (global on/off)
  *   • update         → /update               (version check + force update)
  *
- * Real-time: one background thread holds an SSE stream per root key and
- * reconnects automatically; every change from the HTML admin panel shows up
- * in the launcher within ~1-2s. Data is also cached in SharedPreferences so
- * offline launches still show the last known state.
+ * Real-time: ValueEventListener per root key — every change from the HTML
+ * admin panel appears in the launcher within ~1s, no restart needed. The SDK
+ * keeps an offline cache, so the last known state is shown without internet.
  *
- * Disabled by default — the launcher behaves exactly as before until the
- * user turns on "Firebase Sync" in Settings → Advanced and pastes the DB URL.
+ * Auto-enabled when google-services.json provides a database URL (default).
+ * The Advanced settings toggle can disable it, and the Database URL field
+ * can override the default.
  */
 public final class FirebaseSyncManager {
 
@@ -60,14 +60,12 @@ public final class FirebaseSyncManager {
 
     private static final Handler UI = new Handler(Looper.getMainLooper());
     private static final AtomicBoolean sStarted = new AtomicBoolean(false);
-    private static volatile boolean sRunning = false;
 
     private static volatile JSONObject sAnnouncements = new JSONObject();
     private static volatile JSONObject sNotifications = new JSONObject();
     private static volatile JSONObject sSettings = new JSONObject();
     private static volatile JSONObject sUpdate = new JSONObject();
 
-    private static volatile String sDbUrl = "";
     private static volatile String sSeenAnn = "";
     private static volatile String sSeenNtf = "";
 
@@ -80,7 +78,6 @@ public final class FirebaseSyncManager {
         loadCache(ctx);
         if (!isConfigured(ctx)) return;
         start(ctx);
-        // UI side-effects run on the main thread.
         UI.post(() -> {
             Activity act = ctx instanceof Activity ? (Activity) ctx : null;
             if (act == null || act.isFinishing()) return;
@@ -91,81 +88,70 @@ public final class FirebaseSyncManager {
         });
     }
 
+    /** The database URL: settings override, else google-services.json value. */
+    public static String effectiveDbUrl(Context ctx) {
+        String custom = dbUrlFromPrefs(ctx);
+        if (!custom.isEmpty()) return custom;
+        try {
+            String res = ctx.getString(R.string.firebase_database_url);
+            if (res != null && res.startsWith("https://")) return res;
+        } catch (Throwable ignored) {}
+        return "";
+    }
+
     public static boolean isConfigured(Context ctx) {
-        SharedPreferences p = LauncherPreferences.DEFAULT_PREF != null
+        String url = effectiveDbUrl(ctx);
+        if (url.isEmpty()) return false;
+        // With google-services.json (default URL) → ON by default.
+        // With a custom URL → requires the user toggle.
+        boolean hasCustom = !dbUrlFromPrefs(ctx).isEmpty();
+        return prefs(ctx).getBoolean(PREF_ENABLED, !hasCustom);
+    }
+
+    private static SharedPreferences prefs(Context ctx) {
+        return LauncherPreferences.DEFAULT_PREF != null
                 ? LauncherPreferences.DEFAULT_PREF
                 : ctx.getSharedPreferences("cslauncher_settings", Context.MODE_PRIVATE);
-        return p.getBoolean(PREF_ENABLED, false)
-                && !p.getString(PREF_URL, "").trim().isEmpty();
+    }
+
+    private static String dbUrlFromPrefs(Context ctx) {
+        return prefs(ctx).getString(PREF_URL, "").trim().replaceAll("/$", "");
     }
 
     private static void start(Context ctx) {
         if (sStarted.getAndSet(true)) return;
-        final String db = dbUrl(ctx);
-        sDbUrl = db;
-        sRunning = true;
-        Thread t = new Thread(() -> streamLoop(db, "/announcements", json -> {
-            sAnnouncements = json; persistCache(ctx);
-        }), "fb-ann");
-        t.setDaemon(true); t.start();
-        Thread t2 = new Thread(() -> streamLoop(db, "/notifications", json -> {
-            sNotifications = json; persistCache(ctx);
-        }), "fb-ntf");
-        t2.setDaemon(true); t2.start();
-        Thread t3 = new Thread(() -> streamLoop(db, "/settings", json -> {
-            sSettings = json; persistCache(ctx);
-        }), "fb-set");
-        t3.setDaemon(true); t3.start();
-        Thread t4 = new Thread(() -> streamLoop(db, "/update", json -> {
-            sUpdate = json; persistCache(ctx);
-        }), "fb-upd");
-        t4.setDaemon(true); t4.start();
-    }
-
-    private static String dbUrl(Context ctx) {
-        SharedPreferences p = LauncherPreferences.DEFAULT_PREF != null
-                ? LauncherPreferences.DEFAULT_PREF
-                : ctx.getSharedPreferences("cslauncher_settings", Context.MODE_PRIVATE);
-        return p.getString(PREF_URL, "").trim().replaceAll("/$", "");
-    }
-
-    /** Blocks forever (daemon): SSE stream with auto-reconnect + backoff. */
-    private static void streamLoop(String db, String path, java.util.function.Consumer<JSONObject> onData) {
-        long backoff = 2000;
-        while (sRunning) {
-            try {
-                HttpURLConnection conn = (HttpURLConnection)
-                        new URL(db + path + ".json").openConnection();
-                conn.setRequestProperty("Accept", "text/event-stream");
-                conn.setConnectTimeout(15000);
-                conn.setReadTimeout(0); // stream stays open
-                conn.setUseCaches(false);
-                int code = conn.getResponseCode();
-                if (code != 200) { conn.disconnect(); sleep(backoff = Math.min(backoff * 2, 30000)); continue; }
-                backoff = 2000;
-                InputStream in = conn.getInputStream();
-                BufferedReader r = new BufferedReader(new InputStreamReader(in));
-                String line;
-                while (sRunning && (line = r.readLine()) != null) {
-                    if (!line.startsWith("data:")) continue;
-                    String data = line.substring(5).trim();
-                    if (data.isEmpty() || "null".equals(data)) continue;
-                    try {
-                        JSONObject obj = new JSONObject(data);
-                        UI.post(() -> onData.accept(obj));
-                    } catch (Exception e) { Log.w(TAG, "parse", e); }
-                }
-                r.close(); conn.disconnect();
-            } catch (Throwable t) {
-                Log.w(TAG, "stream " + path + " dropped: " + t.getMessage());
-            }
-            sleep(backoff);
-            backoff = Math.min(backoff * 2, 30000);
+        final String db = effectiveDbUrl(ctx);
+        if (db.isEmpty()) return;
+        try {
+            FirebaseDatabase dbInst = FirebaseDatabase.getInstance(db);
+            try { dbInst.setPersistenceEnabled(true); } catch (Throwable ignored) {}
+            attach(dbInst, "/announcements", json -> { sAnnouncements = json; persistCache(ctx); });
+            attach(dbInst, "/notifications", json -> { sNotifications = json; persistCache(ctx); });
+            attach(dbInst, "/settings", json -> { sSettings = json; persistCache(ctx); });
+            attach(dbInst, "/update", json -> { sUpdate = json; persistCache(ctx); });
+        } catch (Throwable t) {
+            Log.w(TAG, "init failed", t);
         }
     }
 
-    private static void sleep(long ms) {
-        try { Thread.sleep(ms); } catch (InterruptedException ignored) {}
+    private static void attach(FirebaseDatabase db, String path,
+                               java.util.function.Consumer<JSONObject> onData) {
+        DatabaseReference ref = db.getReference(path);
+        ref.addValueEventListener(new ValueEventListener() {
+            @Override public void onDataChange(DataSnapshot snapshot) {
+                Object v = snapshot.getValue();
+                if (v == null) return;
+                try {
+                    JSONObject obj = v instanceof Map ? new JSONObject((Map<?, ?>) v) : new JSONObject(String.valueOf(v));
+                    UI.post(() -> onData.accept(obj));
+                } catch (Throwable e) {
+                    Log.w(TAG, "parse " + path, e);
+                }
+            }
+            @Override public void onCancelled(DatabaseError error) {
+                Log.w(TAG, "cancelled " + path + ": " + error.getMessage());
+            }
+        });
     }
 
     // ─────────────────────────── cache ───────────────────────────
@@ -220,9 +206,9 @@ public final class FirebaseSyncManager {
 
         AlertDialog.Builder b = new AlertDialog.Builder(act)
                 .setTitle("Update available — v" + version)
-                .setMessage(force
-                        ? "A new version is REQUIRED to continue playing.\n\n" + changelog
-                        : "A new version is available.\n\n" + changelog)
+                .setMessage((force
+                        ? "A new version is REQUIRED to continue playing.\n\n"
+                        : "A new version is available.\n\n") + changelog)
                 .setPositiveButton("Download", (d, w) -> {
                     if (!url.isEmpty()) {
                         try { act.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); }
@@ -234,7 +220,6 @@ public final class FirebaseSyncManager {
         AlertDialog d = b.create();
         d.setCancelable(!force); // force update → block launcher usage
         d.setCanceledOnTouchOutside(false);
-        if (force) d.setMessage("A new version is REQUIRED to continue playing.\n\n" + changelog);
         d.show();
     }
 
@@ -246,7 +231,7 @@ public final class FirebaseSyncManager {
         while (keys.hasNext()) {
             try {
                 JSONObject a = sAnnouncements.optJSONObject(keys.next());
-                if (a == null || a.optBoolean("enabled", true) == false) continue;
+                if (a == null || !a.optBoolean("enabled", true)) continue;
                 list.add(a);
             } catch (Throwable ignored) {}
         }
@@ -256,9 +241,8 @@ public final class FirebaseSyncManager {
             if (id.isEmpty() || sSeenAnn.contains(id + ";")) continue;
             sSeenAnn += id + ";";
             persistCache(act.getApplicationContext());
-            String title = a.optString("title", "Announcement");
-            String body = a.optString("body", "");
-            showMarkdownDialog(act, title, body);
+            showMarkdownDialog(act, a.optString("title", "Announcement"),
+                    a.optString("body", ""));
         }
     }
 
@@ -272,7 +256,7 @@ public final class FirebaseSyncManager {
                 JSONObject n = sNotifications.optJSONObject(keys.next());
                 if (n == null || !n.optBoolean("enabled", true)) continue;
                 long exp = n.optLong("expiresAt", 0);
-                if (exp > 0 && exp < System.currentTimeMillis()) continue; // expired
+                if (exp > 0 && exp < System.currentTimeMillis()) continue;
                 list.add(n);
             } catch (Throwable ignored) {}
         }
@@ -285,7 +269,6 @@ public final class FirebaseSyncManager {
             String icon = n.optString("icon", "🔔");
             String title = n.optString("title", "");
             String msg = n.optString("message", "");
-            String priority = n.optString("priority", "normal");
             CsPopup.show(act, icon + " " + title + (msg.isEmpty() ? "" : "\n" + msg));
         }
     }

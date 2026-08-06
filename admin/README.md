@@ -1,32 +1,24 @@
 # CS Launcher V3 — Admin Panel (Firebase)
 
-Pure HTML/CSS/JS admin panel + launcher real-time sync via Firebase
-**Realtime Database** (REST). No app update needed — everything the admin
-changes appears in the launcher within seconds.
+A **single HTML file** (`admin.html`) — pure HTML/CSS/JS, no build step, no
+dependencies. Firebase config is already prefilled from `google-services.json`
+(apiKey + databaseURL). Real-time sync: changes appear in the launcher within
+~1 second via the Firebase SDK.
 
-## Files
+## How to use
 
-| File | Purpose |
-|---|---|
-| `index.html` | Admin panel UI (login, dashboard, announcements, notifications, sponsorship, updates) |
-| `admin.css` | Panel styles (launcher's glass/violet theme) |
-| `admin.js` | All logic — Firebase Auth + Realtime Database REST, 4s polling |
-| `config.js` | **Your Firebase config (apiKey + databaseURL)** |
-
-## Setup (once)
-
-1. **Firebase project** → https://console.firebase.google.com
-2. **Realtime Database** → Create database → *test mode* (then lock down with rules below)
-3. **Authentication** → Sign-in method → enable **Email/Password** → add your admin user
-4. **Web app** → Project settings → Your apps → `</>` → copy **apiKey**
-5. Edit `config.js` → paste `apiKey` + `databaseURL`
-6. Deploy: GitHub Pages / Netlify / any static host — or open `index.html` locally
-7. Sign in with the admin email/password → manage everything
+1. **Open** `admin.html` in any browser (double-click, or host on Netlify /
+   GitHub Pages / any static host).
+2. **Sign in** with your Firebase Auth email/password
+   (Firebase console → Authentication → Email/Password → add your admin user).
+3. Manage everything — announcements, notifications, sponsorship, updates.
+   Every save goes straight to the Realtime Database.
 
 ## Launcher side
 
-In the launcher: **Settings → Advanced → Firebase Sync** — enable it and
-paste the same **database URL** (no API key needed in the launcher).
+The launcher ships with `google-services.json`, so **Firebase Sync is ON by
+default** — no setup needed. (Settings → Advanced → Firebase Sync to
+disable, or paste a different Database URL.)
 
 ## Database schema (auto-created by the panel)
 
