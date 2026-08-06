@@ -82,6 +82,13 @@ public class FastClientHomeFragment extends Fragment {
         setupInfrawireCard(view.findViewById(R.id.infrawire_card_play), 350);
         setupInfrawireCard(view.findViewById(R.id.infrawire_card_feed), 450);
 
+        // Global sponsorship gate (Firebase admin panel): when disabled,
+        // every sponsor card disappears automatically.
+        net.kdt.pojavlaunch.remote.FirebaseSyncManager.gateSponsorView(
+                view.findViewById(R.id.infrawire_card_play));
+        net.kdt.pojavlaunch.remote.FirebaseSyncManager.gateSponsorView(
+                view.findViewById(R.id.infrawire_card_feed));
+
         // Home entrance choreography (user req: nice home animation) —
         // deferred one frame so the window token is ready; internally
         // no-ops when animations are turned Off.

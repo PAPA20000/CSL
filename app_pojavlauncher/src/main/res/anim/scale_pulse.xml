@@ -1,13 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- CSL v3 rebuilt animation — mobile-friendly, snappy, 60fps. -->
+<!-- CSL v3 PASS-2 rebuilt animation — premium, smooth, 60fps. -->
 <scale xmlns:android="http://schemas.android.com/apk/res/android"
-    android:duration="800"
-    android:fromXScale="0.96"
-    android:fromYScale="0.96"
-    android:interpolator="@android:interpolator/fast_out_slow_in"
-    android:pivotX="50%"
-    android:pivotY="50%"
-    android:repeatCount="infinite"
-    android:repeatMode="reverse"
-    android:toXScale="1.04"
-    android:toYScale="1.04" />
+    android:duration="700" android:fromXScale="0.95" android:fromYScale="0.95"
+    android:interpolator="@android:interpolator/fast_out_slow_in" android:pivotX="50%" android:pivotY="50%"
+    android:repeatCount="infinite" android:repeatMode="reverse"
+    android:toXScale="1.05" android:toYScale="1.05" />
