@@ -99,16 +99,13 @@ public final class FirebaseSyncManager {
             String res = ctx.getString(R.string.firebase_database_url);
             if (res != null && res.startsWith("https://")) return res;
         } catch (Throwable ignored) {}
-        return "";
+        return "https://cs-launcher-v3-default-rtdb.asia-southeast1.firebasedatabase.app";
     }
 
     public static boolean isConfigured(Context ctx) {
         String url = effectiveDbUrl(ctx);
-        if (url.isEmpty()) return false;
-        // With google-services.json (default URL) → ON by default.
-        // With a custom URL → requires the user toggle.
-        boolean hasCustom = !dbUrlFromPrefs(ctx).isEmpty();
-        return prefs(ctx).getBoolean(PREF_ENABLED, !hasCustom);
+        if (url == null || url.isEmpty()) return false;
+        return prefs(ctx).getBoolean(PREF_ENABLED, true);
     }
 
     private static SharedPreferences prefs(Context ctx) {
@@ -137,15 +134,38 @@ public final class FirebaseSyncManager {
         }
     }
 
+    private static JSONObject dataSnapshotToJson(DataSnapshot snapshot) {
+        JSONObject obj = new JSONObject();
+        if (snapshot == null || !snapshot.exists()) return obj;
+        for (DataSnapshot child : snapshot.getChildren()) {
+            try {
+                String k = child.getKey();
+                if (k == null) continue;
+                if (child.hasChildren()) {
+                    JSONObject nested = new JSONObject();
+                    for (DataSnapshot prop : child.getChildren()) {
+                        String pk = prop.getKey();
+                        Object pv = prop.getValue();
+                        if (pk != null && pv != null) nested.put(pk, pv);
+                    }
+                    if (!nested.has("id")) nested.put("id", k);
+                    obj.put(k, nested);
+                } else {
+                    Object v = child.getValue();
+                    if (v != null) obj.put(k, v);
+                }
+            } catch (Throwable ignored) {}
+        }
+        return obj;
+    }
+
     private static void attach(FirebaseDatabase db, String path,
                                java.util.function.Consumer<JSONObject> onData) {
         DatabaseReference ref = db.getReference(path);
         ref.addValueEventListener(new ValueEventListener() {
             @Override public void onDataChange(DataSnapshot snapshot) {
-                Object v = snapshot.getValue();
-                if (v == null) return;
                 try {
-                    JSONObject obj = v instanceof Map ? new JSONObject((Map<?, ?>) v) : new JSONObject(String.valueOf(v));
+                    JSONObject obj = dataSnapshotToJson(snapshot);
                     UI.post(() -> onData.accept(obj));
                 } catch (Throwable e) {
                     Log.w(TAG, "parse " + path, e);
