@@ -303,10 +303,10 @@
     <string name="cs_about_made_for">MADE WITH ❤ FOR MINECRAFT: JAVA EDITION ON ANDROID</string>
     <string name="cs_about_credits_heading">Built on Legends</string>
     <string name="cs_about_credit_badge">CREDIT</string>
-    <string name="cs_about_pojav_name">PojavLauncher — "Puja"</string>
+    <string name="cs_about_pojav_name">PojavLauncher</string>
     <string name="cs_about_pojav_role">THE ENGINE THAT STARTED IT ALL</string>
     <string name="cs_about_pojav_desc">PojavLauncher is the legendary open-source Minecraft: Java Edition launcher for Android — the very engine that proved Java Edition can run beautifully on phones. Almost every mobile launcher today stands on the shoulders of this project, and CS Launcher is honoured to carry its spirit forward. Based on the original Boardwalk concept by zhuowei, PojavLauncher brought the dream of portable Java Edition to millions of players.</string>
-    <string name="cs_about_amethyst_name">Amethyst — "Amit"</string>
+    <string name="cs_about_amethyst_name">Amethyst</string>
     <string name="cs_about_amethyst_role">THE UPSTREAM WE GREW FROM</string>
     <string name="cs_about_amethyst_desc">Amethyst is the modern, polished fork of PojavLauncher that gave CS Launcher its direct DNA — its architecture, its renderer stack and its commitment to performance. From Amethyst we inherited the rock-solid launch pipeline and the multi-renderer engine (GL4ES, Zink, MobileGlues and more), and then we rebuilt the whole experience on top of it. Thank you, Amethyst team.</string>
     <string name="cs_about_links_heading">Find Us</string>

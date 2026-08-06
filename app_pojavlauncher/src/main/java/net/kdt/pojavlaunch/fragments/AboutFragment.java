@@ -3,9 +3,9 @@ package net.kdt.pojavlaunch.fragments;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.LayoutInflater;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -20,8 +20,7 @@ import net.kdt.pojavlaunch.utils.animation.MotionSpeed;
 
 /**
  * About page — premium animated page with the launcher story, credits to
- * PojavLauncher ("Puja") and Amethyst ("Amit"), community links and the
- * GPL v3 legal notice.
+ * PojavLauncher and Amethyst, community links and the GPL v3 legal notice.
  */
 public class AboutFragment extends Fragment {
 
@@ -30,6 +29,8 @@ public class AboutFragment extends Fragment {
     private static final String URL_DISCORD = "https://discord.gg/qcu5Hb5Xe";
     private static final String URL_WEBSITE = "https://cs-launcher.netlify.app/";
     private static final String URL_GITHUB = "https://github.com/craftstudioteam";
+
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
 
     public AboutFragment() {
         super(R.layout.fragment_about);
@@ -40,8 +41,7 @@ public class AboutFragment extends Fragment {
         // Version chip
         TextView versionChip = view.findViewById(R.id.about_version_chip);
         if (versionChip != null) {
-            String v = "Version " + BuildConfig.VERSION_NAME;
-            versionChip.setText(v);
+            versionChip.setText("Version " + BuildConfig.VERSION_NAME);
         }
 
         // Back
@@ -64,21 +64,56 @@ public class AboutFragment extends Fragment {
         if (MotionSpeed.isEnabled()) {
             view.post(() -> {
                 if (!isAdded() || isRemoving()) return;
-                // Hero pops in with a jelly overshoot on the logo
+                // Hero logo pops in with a jelly overshoot
                 View logo = view.findViewById(R.id.about_cs_logo);
                 if (logo != null) UiMotion.popIn(logo);
 
-                // Cards cascade: credits → links → legal
-                cascade(view.findViewById(R.id.about_credits_heading), 120);
-                cascade(view.findViewById(R.id.about_pojav_card), 200);
-                cascade(view.findViewById(R.id.about_amethyst_card), 280);
-                cascade(view.findViewById(R.id.about_links_heading), 360);
-                cascade(view.findViewById(R.id.about_link_discord), 420);
-                cascade(view.findViewById(R.id.about_link_website), 470);
-                cascade(view.findViewById(R.id.about_link_github), 520);
-                cascade(view.findViewById(R.id.about_legal_heading), 580);
-                cascade(view.findViewById(R.id.about_legal_card), 640);
+                // Staggered cascade: hero → credits → links → legal
+                cascade(view.findViewById(R.id.about_credits_heading), 100);
+                cascade(view.findViewById(R.id.about_pojav_card), 170);
+                cascade(view.findViewById(R.id.about_amethyst_card), 240);
+                cascade(view.findViewById(R.id.about_links_heading), 310);
+                cascade(view.findViewById(R.id.about_link_discord), 370);
+                cascade(view.findViewById(R.id.about_link_website), 420);
+                cascade(view.findViewById(R.id.about_link_github), 470);
+                cascade(view.findViewById(R.id.about_legal_heading), 530);
+                cascade(view.findViewById(R.id.about_legal_card), 590);
+
+                // Legal notice — TYPEWRITER reveal (user req: text appears as
+                // if being written), starts right after the legal card lands.
+                mHandler.postDelayed(() -> typewriter(
+                        view.findViewById(R.id.about_legal_text),
+                        getString(R.string.cs_about_legal_text)), 950);
             });
+        } else {
+            // Animations off → show the legal text instantly.
+            TextView legal = view.findViewById(R.id.about_legal_text);
+            if (legal != null) legal.setText(getString(R.string.cs_about_legal_text));
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        mHandler.removeCallbacksAndMessages(null);
+    }
+
+    /** Reveals the legal notice word-by-word like it is being typed. */
+    private void typewriter(@Nullable TextView tv, @NonNull String fullText) {
+        if (tv == null || !isAdded()) return;
+        final String[] words = fullText.split(" ");
+        tv.setText("");
+        tv.setVisibility(View.VISIBLE);
+        final long stepMs = Math.max(8L, MotionSpeed.scale(18L)); // per word
+        final StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < words.length; i++) {
+            final int idx = i;
+            mHandler.postDelayed(() -> {
+                if (!isAdded()) return;
+                if (idx > 0) sb.append(" ");
+                sb.append(words[idx]);
+                tv.setText(sb.toString());
+            }, stepMs * (idx + 1));
         }
     }
 
