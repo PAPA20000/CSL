@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- MP row entrance — rise + settle for modpack flow lists -->
+<!-- CSL v3 rebuilt animation — mobile-friendly, snappy, 60fps. -->
 <set xmlns:android="http://schemas.android.com/apk/res/android"
-    android:interpolator="@android:interpolator/accelerate_decelerate"
-    android:duration="280">
-    <alpha android:fromAlpha="0" android:toAlpha="1" />
-    <translate android:fromYDelta="16dp" android:toYDelta="0" />
-    <scale android:fromXScale="0.97" android:toXScale="1.0"
-        android:fromYScale="0.94" android:toYScale="1.0"
-        android:pivotX="50%" android:pivotY="50%" />
+    android:fillAfter="true">
+    <alpha android:duration="200" android:fromAlpha="0.0" android:toAlpha="1.0"
+        android:interpolator="@android:interpolator/decelerate_quad" />
+    <translate android:duration="200" android:fromYDelta="10" android:toYDelta="0"
+        android:interpolator="@android:interpolator/fast_out_slow_in" />
 </set>

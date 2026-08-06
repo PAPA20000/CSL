@@ -35,7 +35,9 @@ public final class UiMotion {
 
     /** Gives every newly created screen a consistent, subtle entrance. */
     public static void revealScreen(View root) {
-        if (root == null || root.getWindowToken() == null) return;
+        if (root == null) return;
+        if (!MotionSpeed.isEnabled()) { settle(root); return; }
+        if (root.getWindowToken() == null) return;
         root.animate().cancel();
         root.setAlpha(0f);
         root.setTranslationY(dp(root, 14));
@@ -94,6 +96,7 @@ public final class UiMotion {
     /** Animates app chrome (header/account/settings) after its layout is attached. */
     public static void revealChrome(View chrome) {
         if (chrome == null) return;
+        if (!MotionSpeed.isEnabled()) return;
         chrome.post(() -> {
             if (chrome.getWindowToken() == null) return;
             chrome.setAlpha(0f);
@@ -109,6 +112,7 @@ public final class UiMotion {
      * own click handling keeps working.
      */
     public static void pressFeedback(View... views) {
+        if (!MotionSpeed.isEnabled()) return;
         for (View view : views) {
             if (view == null) continue;
             view.setOnTouchListener((v, event) -> {
@@ -131,7 +135,9 @@ public final class UiMotion {
 
     /** Soft drop-in for a single element (dialog content, chips, banners...). */
     public static void fadeInDown(View view, long startDelay) {
-        if (view == null || view.getWindowToken() == null) return;
+        if (view == null) return;
+        if (!MotionSpeed.isEnabled()) { settle(view); return; }
+        if (view.getWindowToken() == null) return;
         view.animate().cancel();
         view.setAlpha(0f);
         view.setTranslationY(-dp(view, 10));
@@ -149,6 +155,7 @@ public final class UiMotion {
      */
     public static void popIn(View view) {
         if (view == null) return;
+        if (!MotionSpeed.isEnabled()) { settle(view); return; }
         view.animate().cancel();
         view.setScaleX(0.3f);
         view.setScaleY(0.3f);
@@ -168,6 +175,7 @@ public final class UiMotion {
      */
     public static ValueAnimator pulseSkeleton(View view) {
         if (view == null) return null;
+        if (!MotionSpeed.isEnabled()) return null;
         ValueAnimator animator = ValueAnimator.ofFloat(0.3f, 0.6f);
         animator.setDuration(MotionSpeed.scale(1000L));
         animator.setInterpolator(new LinearInterpolator());
@@ -185,10 +193,21 @@ public final class UiMotion {
     /** Staggered child entrance for RecyclerViews (layout animation). */
     public static void revealList(RecyclerView list) {
         if (list == null || list.getContext() == null) return;
+        if (!MotionSpeed.isEnabled()) return;
         LayoutAnimationController controller = AnimationUtils.loadLayoutAnimation(
                 list.getContext(), R.anim.list_item_enter);
         list.setLayoutAnimation(controller);
         list.scheduleLayoutAnimation();
+    }
+
+    /** Instant final state — used when animations are turned off. */
+    private static void settle(View root) {
+        root.animate().cancel();
+        root.setAlpha(1f);
+        root.setTranslationX(0f);
+        root.setTranslationY(0f);
+        root.setScaleX(1f);
+        root.setScaleY(1f);
     }
 
     private static float dp(View view, float value) {

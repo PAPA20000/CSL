@@ -414,8 +414,13 @@ public class LauncherPreferenceFragment extends Fragment {
                                         getString(R.string.cs_launch_color_reset));
                             }));
                     // ── Launcher theme ──
-                    custItems.add(new SettingItem("launcher_theme", SettingItem.TYPE_THEME_SELECTOR,
-                            "Launcher Theme", "Accent theme presets", null));
+                    // ── Launcher animations (user req: pick Full or Off) ──
+                    custItems.add(new SettingItem("launcher_animations", SettingItem.TYPE_DROPDOWN,
+                            "Launcher Animations",
+                            "Full = all animations on. Off = instant, no motion at all.",
+                            "full")
+                            .setDropdownOptions(new String[]{"Full Animations", "Off (No Animations)"},
+                                    new String[]{"full", "off"}));
                     // ── Language (English only for now — Android default) ──
                     custItems.add(new SettingItem("launcher_language", SettingItem.TYPE_DROPDOWN,
                             "Language",

@@ -137,8 +137,8 @@
         android:layout_marginTop="8dp"
         android:background="@drawable/bg_cs_glass_card"
         android:orientation="vertical"
-        android:paddingHorizontal="12dp"
-        android:paddingVertical="10dp">
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="8dp">
 
         <!-- Top row: icon + label + used size -->
         <LinearLayout
@@ -148,8 +148,8 @@
             android:orientation="horizontal">
 
             <FrameLayout
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:background="@drawable/bg_cs_icon_well">
 
                 <ImageView
@@ -203,8 +203,8 @@
             android:id="@+id/world_storage_bar"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
-            android:layout_height="6dp"
-            android:layout_marginTop="8dp"
+            android:layout_height="4dp"
+            android:layout_marginTop="6dp"
             android:max="100"
             android:progress="0"
             android:progressDrawable="@drawable/bg_cs_world_storage_bar" />
@@ -240,9 +240,9 @@
          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_height="38dp"
         android:layout_marginHorizontal="10dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="6dp"
         android:background="@drawable/bg_cs_input_field"
         android:gravity="center_vertical"
         android:orientation="horizontal"
@@ -277,7 +277,7 @@
     <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="6dp"
         android:overScrollMode="never"
         android:paddingHorizontal="10dp"
         android:scrollbars="none">
@@ -318,7 +318,7 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="6dp"
+        android:layout_marginTop="4dp"
         android:layout_weight="1">
 
         <androidx.recyclerview.widget.RecyclerView
