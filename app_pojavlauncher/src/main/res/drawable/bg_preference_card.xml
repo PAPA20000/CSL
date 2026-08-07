@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- CSL v3 Redesigned Glass/Violet Settings Preference Card -->
+<!-- CSL v3 Professional Graphite/Dark-Grey Preference Card -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="#38B39DDB">
+    android:color="#22E4E4EA">
     <item android:id="@android:id/mask">
         <shape android:shape="rectangle">
             <corners android:radius="18dp" />
@@ -13,10 +13,10 @@
             <item android:state_pressed="true">
                 <shape android:shape="rectangle">
                     <corners android:radius="18dp" />
-                    <solid android:color="#241B3B" />
+                    <solid android:color="#1B1E28" />
                     <stroke
-                        android:width="1.5dp"
-                        android:color="#9575CD" />
+                        android:width="1dp"
+                        android:color="#40E4E4EA" />
                 </shape>
             </item>
             <item>
@@ -24,11 +24,11 @@
                     <corners android:radius="18dp" />
                     <gradient
                         android:angle="315"
-                        android:startColor="#1A162B"
-                        android:endColor="#13101E" />
+                        android:startColor="#1C1F27"
+                        android:endColor="#111216" />
                     <stroke
                         android:width="1dp"
-                        android:color="#33B39DDB" />
+                        android:color="#22E4E4EA" />
                 </shape>
             </item>
         </selector>

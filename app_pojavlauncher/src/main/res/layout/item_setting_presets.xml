@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ═══════════════════════════════════════════════════════════════════
-     PERFORMANCE — one-tap device presets (user req: Low / Medium / High).
-     Three FULL-WIDTH stacked rows with custom glass/violet theming and
-     dedicated emerald / amber / violet button drawables.
+     PERFORMANCE — professional device presets (user req: Low / Medium / High).
+     Three FULL-WIDTH stacked rows with clean dark graphite/grey styling
+     and zero emojis or colorful accents.
      ═══════════════════════════════════════════════════════════════════ -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -24,7 +24,7 @@
         <FrameLayout
             android:layout_width="38dp"
             android:layout_height="38dp"
-            android:background="@drawable/bg_icon_neon">
+            android:background="@drawable/bg_s4_iconwell">
 
             <ImageView
                 android:layout_width="20dp"
@@ -32,7 +32,7 @@
                 android:layout_gravity="center"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_settings_performance"
-                app:tint="#D1C4E9" />
+                app:tint="#E4E4EA" />
         </FrameLayout>
 
         <LinearLayout
@@ -45,7 +45,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="⚡ 1-Click Performance Setup"
+                android:text="1-Click Performance Setup"
                 android:textColor="#FFFFFF"
                 android:textSize="15sp"
                 android:textStyle="bold" />
@@ -55,7 +55,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:text="Select your device class — auto tunes RAM, resolution &amp; engine instantly"
-                android:textColor="#B39DDB"
+                android:textColor="#C9CBD6"
                 android:textSize="11sp" />
         </LinearLayout>
 
@@ -63,7 +63,7 @@
             android:id="@+id/preset_state"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_settings_chip_active"
+            android:background="@drawable/bg_s4_value"
             android:letterSpacing="0.08"
             android:paddingStart="10dp"
             android:paddingEnd="10dp"
@@ -78,7 +78,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#1FFFFFFF"
+        android:background="#1AFFFFFF"
         android:layout_marginTop="14dp"
         android:layout_marginBottom="6dp" />
 
@@ -103,8 +103,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:letterSpacing="0.08"
-                android:text="🟢 LOW-END MOBILE (1–2 GB RAM)"
-                android:textColor="#81C784"
+                android:text="LOW-END MOBILE (1–2 GB RAM)"
+                android:textColor="#E4E4EA"
                 android:textSize="12sp"
                 android:textStyle="bold" />
 
@@ -116,7 +116,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:text="1024 MB RAM • 60% resolution • VSync off • Maximum FPS &amp; battery"
-                android:textColor="#CCCCCC"
+                android:textColor="#9A9AA6"
                 android:textSize="10sp" />
         </LinearLayout>
 
@@ -125,7 +125,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
-            android:background="@drawable/bg_preset_btn_low"
+            android:background="@drawable/bg_settings_btn"
             android:letterSpacing="0.1"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
@@ -158,8 +158,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:letterSpacing="0.08"
-                android:text="🟡 MEDIUM MOBILE (3–4 GB RAM)"
-                android:textColor="#FFD54F"
+                android:text="MEDIUM MOBILE (3–4 GB RAM)"
+                android:textColor="#E4E4EA"
                 android:textSize="12sp"
                 android:textStyle="bold" />
 
@@ -171,7 +171,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:text="2048 MB RAM • 80% resolution • VSync off • Balanced smoothness"
-                android:textColor="#CCCCCC"
+                android:textColor="#9A9AA6"
                 android:textSize="10sp" />
         </LinearLayout>
 
@@ -180,7 +180,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
-            android:background="@drawable/bg_preset_btn_mid"
+            android:background="@drawable/bg_settings_btn"
             android:letterSpacing="0.1"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
@@ -213,8 +213,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:letterSpacing="0.08"
-                android:text="🟣 HIGH-END MOBILE (6+ GB RAM)"
-                android:textColor="#B39DDB"
+                android:text="HIGH-END MOBILE (6+ GB RAM)"
+                android:textColor="#E4E4EA"
                 android:textSize="12sp"
                 android:textStyle="bold" />
 
@@ -226,7 +226,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:text="Auto device RAM • 100% resolution • VSync on • Maximum fidelity"
-                android:textColor="#CCCCCC"
+                android:textColor="#9A9AA6"
                 android:textSize="10sp" />
         </LinearLayout>
 
@@ -235,7 +235,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
-            android:background="@drawable/bg_preset_btn_high"
+            android:background="@drawable/bg_settings_btn"
             android:letterSpacing="0.1"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"

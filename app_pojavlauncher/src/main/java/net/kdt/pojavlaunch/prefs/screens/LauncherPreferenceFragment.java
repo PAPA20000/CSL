@@ -318,7 +318,6 @@ public class LauncherPreferenceFragment extends Fragment {
         rootItems.add(new SettingItem("cat_audio", SettingItem.TYPE_CATEGORY_LINK, "Audio", "Adjust volume levels and sound output parameters", "Audio"));
         // User req: Account category hidden from the settings deck (redundant — login flow owns it; page code stays dormant).
         rootItems.add(new SettingItem("cat_experimental", SettingItem.TYPE_CATEGORY_LINK, "Experimental", "Test launcher orientations, wall-papers, and colors", "Experimental"));
-        rootItems.add(new SettingItem("cat_advanced", SettingItem.TYPE_CATEGORY_LINK, "Advanced", "Perform debug clears and database resets", "Advanced"));
         rootItems.add(new SettingItem("cat_misc", SettingItem.TYPE_CATEGORY_LINK, "Miscellaneous", "Library verifications, system drivers, and in-game capes", "Miscellaneous"));
         if (net.kdt.pojavlaunch.remote.FirebaseSyncManager.isSponsorshipEnabled()) {
             rootItems.add(new SettingItem("cat_sponsors", SettingItem.TYPE_CATEGORY_LINK, "Sponsors", "Official partners backing CS Launcher with cloud power", "Sponsors"));
@@ -1799,19 +1798,19 @@ public class LauncherPreferenceFragment extends Fragment {
             boolean vsync = false;
             boolean sustained = false;
             String modeName = "low";
-            String toastMsg = "🟢 Low-End Mobile preset applied (1024 MB, 60% Res, Maximum FPS)";
+            String toastMsg = "Low-End Mobile preset applied (1024 MB RAM, 60% resolution)";
             if (presetType == 1) {
                 ram = 2048;
                 resRatio = 80;
                 modeName = "med";
-                toastMsg = "🟡 Medium Mobile preset applied (2048 MB, 80% Res, Balanced)";
+                toastMsg = "Medium Mobile preset applied (2048 MB RAM, 80% resolution)";
             } else if (presetType == 2) {
                 ram = highRam;
                 resRatio = 100;
                 vsync = true;
                 sustained = true;
                 modeName = "high";
-                toastMsg = "🟣 High-End Mobile preset applied (" + highRam + " MB, 100% Res, Maximum Fidelity)";
+                toastMsg = "High-End Mobile preset applied (" + highRam + " MB RAM, 100% resolution)";
             }
             try {
                 android.content.SharedPreferences p = LauncherPreferences.DEFAULT_PREF != null
@@ -1863,9 +1862,9 @@ public class LauncherPreferenceFragment extends Fragment {
                         : panel.getContext().getSharedPreferences("cslauncher_settings", Context.MODE_PRIVATE);
                 cur = p.getString("perfPreset", null);
             } catch (Throwable ignored) {}
-            if ("low".equals(cur)) { state.setText("🟢 LOW-END ACTIVE"); state.setVisibility(View.VISIBLE); }
-            else if ("med".equals(cur)) { state.setText("🟡 MEDIUM ACTIVE"); state.setVisibility(View.VISIBLE); }
-            else if ("high".equals(cur)) { state.setText("🟣 HIGH-END ACTIVE"); state.setVisibility(View.VISIBLE); }
+            if ("low".equals(cur)) { state.setText("LOW-END ACTIVE"); state.setVisibility(View.VISIBLE); }
+            else if ("med".equals(cur)) { state.setText("MEDIUM ACTIVE"); state.setVisibility(View.VISIBLE); }
+            else if ("high".equals(cur)) { state.setText("HIGH-END ACTIVE"); state.setVisibility(View.VISIBLE); }
             else state.setVisibility(View.GONE);
         }
 

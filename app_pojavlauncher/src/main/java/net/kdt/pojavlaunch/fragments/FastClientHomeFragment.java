@@ -126,12 +126,10 @@ public class FastClientHomeFragment extends Fragment {
             return;
         }
 
-        TextView tvIcon = root.findViewById(R.id.tv_notification_icon);
         TextView tvTitle = root.findViewById(R.id.tv_notification_title);
         TextView tvBody = root.findViewById(R.id.tv_notification_body);
         View btnClose = root.findViewById(R.id.btn_dismiss_notification);
 
-        if (tvIcon != null) tvIcon.setText(banner.icon);
         if (tvTitle != null) tvTitle.setText(banner.title);
         if (tvBody != null) {
             String snippet = banner.body.replaceAll("[#*`>\\[\\]()-_]", "").trim();
@@ -148,7 +146,7 @@ public class FastClientHomeFragment extends Fragment {
             if (banner.isAnnouncement || banner.body.length() > 60 || banner.body.contains("\n") || banner.body.contains("#") || banner.body.contains("*")) {
                 net.kdt.pojavlaunch.remote.FirebaseSyncManager.showMarkdownDialog(requireActivity(), banner.title, banner.body);
             } else {
-                net.kdt.pojavlaunch.utils.CsPopup.show(requireActivity(), banner.icon + "  " + banner.title + "\n\n" + banner.body);
+                net.kdt.pojavlaunch.utils.CsPopup.show(requireActivity(), banner.title + "\n\n" + banner.body);
             }
         });
 
