@@ -168,7 +168,7 @@ public class LauncherPreferenceFragment extends Fragment {
 
         setupSettingsList();
         mRecyclerView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(
-                requireContext(), R.anim.settings_rows_layout_v4));
+                requireContext(), R.anim.s4h_grid_layout_animation));
         mRecyclerView.scheduleLayoutAnimation();
         updateSaveBar();
     }
@@ -1572,7 +1572,23 @@ public class LauncherPreferenceFragment extends Fragment {
                 if (icon != null) icon.setImageResource(resolveCategoryIconByName(item.categoryLinkTarget));
                 if (title != null) title.setText(item.title);
                 if (summary != null) summary.setText(item.summary);
-                if (badge != null) badge.setText(resolveCategoryBadgeByName(item.categoryLinkTarget));
+                if (badge != null) {
+                    badge.setText(resolveCategoryBadgeByName(item.categoryLinkTarget));
+                    badge.setVisibility(View.VISIBLE);
+                    try {
+                        android.animation.Animator pop = android.animation.AnimatorInflater.loadAnimator(gridCtx, R.animator.s4h_badge_pop);
+                        pop.setTarget(badge);
+                        pop.start();
+                    } catch (Throwable ignored) {}
+                }
+                View iconWell = card.findViewById(R.id.category_card_icon_well);
+                if (iconWell != null) {
+                    try {
+                        android.animation.Animator pulse = android.animation.AnimatorInflater.loadAnimator(gridCtx, R.animator.s4h_icon_pulse);
+                        pulse.setTarget(iconWell);
+                        pulse.start();
+                    } catch (Throwable ignored) {}
+                }
 
                 card.setOnClickListener(v -> {
                     v.animate().scaleX(0.97f).scaleY(0.97f).setDuration(80)
