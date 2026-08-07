@@ -161,6 +161,9 @@ public class LauncherPreferences {
         PREF_CUSTOM_CURSOR_GLOW_COLOR = DEFAULT_PREF.getInt("custom_cursor_glow_color", Color.parseColor("#A6FF3D"));
         PREF_CUSTOM_CURSOR_SCALE = DEFAULT_PREF.getFloat("custom_cursor_scale", 100f);
         PREF_CUSTOM_CURSOR_OPACITY = DEFAULT_PREF.getInt("custom_cursor_opacity", 100) / 100f;
+        try {
+            writeMGRendererSettings();
+        } catch (Throwable ignored) {}
     }
 
     /**

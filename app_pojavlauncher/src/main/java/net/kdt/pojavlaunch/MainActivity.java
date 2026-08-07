@@ -235,12 +235,23 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             GLOBAL_CLIPBOARD = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
             touchCharInput.setCharacterSender(new LwjglCharSender());
 
-            if(minecraftProfile.pojavRendererName != null) {
+            if(minecraftProfile.pojavRendererName != null && !minecraftProfile.pojavRendererName.isEmpty()) {
                 Log.i("RdrDebug","__P_renderer="+minecraftProfile.pojavRendererName);
                 Tools.LOCAL_RENDERER = minecraftProfile.pojavRendererName;
-                // TODO: Remove this jank when it's not relevant anymore
-                // Shitty hack to make OSMZink smoothly transition into kopper
                 if (minecraftProfile.pojavRendererName.equals("vulkan_zink")) Tools.LOCAL_RENDERER = "opengles3_desktopgl_zink_kopper";
+                try {
+                    getSharedPreferences("pojav_renderer_backup", MODE_PRIVATE).edit()
+                        .putString("renderer_" + minecraftProfile.name, Tools.LOCAL_RENDERER).apply();
+                } catch (Throwable ignored) {}
+            } else {
+                try {
+                    String backup = getSharedPreferences("pojav_renderer_backup", MODE_PRIVATE)
+                        .getString("renderer_" + minecraftProfile.name, null);
+                    if (backup != null && !backup.isEmpty()) {
+                        Tools.LOCAL_RENDERER = backup;
+                        minecraftProfile.pojavRendererName = backup;
+                    }
+                } catch (Throwable ignored) {}
             }
 
             setTitle("Minecraft " + minecraftProfile.lastVersionId);

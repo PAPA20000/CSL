@@ -153,6 +153,26 @@ public class ModsSearchFragment extends Fragment {
 
         mFilterButton.setOnClickListener(v -> displayFilterDialog());
 
+        View searchGoBtn = view.findViewById(R.id.search_button_go);
+        if (searchGoBtn != null) {
+            searchGoBtn.setOnClickListener(v -> {
+                mSearchHandler.removeCallbacksAndMessages(null);
+                DownloadListFragment dlf = getListFragment(TAB_TYPES[mCurrentTab]);
+                if (dlf != null) {
+                    dlf.filter(mSearchEditText.getText().toString(),
+                            mSearchFilters.mcVersion, mSearchFilters.modLoader);
+                }
+                mSearchEditText.clearFocus();
+                try {
+                    android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager)
+                            requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    if (imm != null && requireActivity().getCurrentFocus() != null) {
+                        imm.hideSoftInputFromWindow(requireActivity().getCurrentFocus().getWindowToken(), 0);
+                    }
+                } catch (Throwable ignored) {}
+            });
+        }
+
         // Infrawire Powered Badge in AppBar
         View poweredBadge = view.findViewById(R.id.infrawire_powered_badge);
         if (poweredBadge != null) {

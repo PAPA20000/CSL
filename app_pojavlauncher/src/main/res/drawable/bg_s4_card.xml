@@ -1,27 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- CSL v3 True Neutral Dark Grey Card -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- soft shadow -->
     <item android:top="1dp">
         <shape android:shape="rectangle">
             <solid android:color="#14000000" />
             <corners android:radius="14dp" />
         </shape>
     </item>
-    <!-- card face -->
     <item android:bottom="1.5dp">
         <shape android:shape="rectangle">
             <gradient
                 android:angle="145"
-                android:startColor="#2C2D38"
-                android:endColor="#25262F"
+                android:startColor="#2A2A2A"
+                android:endColor="#1E1E1E"
                 android:type="linear" />
             <corners android:radius="14dp" />
             <stroke
                 android:width="1dp"
-                android:color="#33C9CBD6" />
+                android:color="#444444" />
         </shape>
     </item>
-    <!-- top edge highlight -->
     <item
         android:bottom="1.5dp"
         android:gravity="top"
