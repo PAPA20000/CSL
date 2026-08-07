@@ -3,11 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
-    android:background="@drawable/bg_settings_card"
-    android:elevation="4dp"
+    android:layout_marginBottom="10dp"
+    android:background="@drawable/bg_s4_card"
+    android:elevation="2dp"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="14dp">
 
     <!-- Card Title Bar -->
     <LinearLayout
@@ -19,7 +19,12 @@
         <FrameLayout
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:background="@drawable/bg_s4_iconwell">
+            android:background="@drawable/bg_s4h_icon_tile">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_s4h_icon_glow" />
 
             <ImageView
                 android:layout_width="18dp"
@@ -27,7 +32,7 @@
                 android:layout_gravity="center"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_settings_experimental"
-                app:tint="#E4E4EA" />
+                app:tint="#EDEDF2" />
         </FrameLayout>
 
         <LinearLayout
@@ -41,17 +46,17 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="LAUNCHER THEME &amp; ACCENT COLOR"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
+                android:textColor="#F3F3F7"
+                android:textSize="13.5sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="Tap any color swatch below to instantly change launcher theme"
-                android:textColor="#9CA3AF"
-                android:textSize="11sp" />
+                android:text="Select a color preset to apply across the launcher interface"
+                android:textColor="#9A9AA6"
+                android:textSize="10.5sp" />
         </LinearLayout>
     </LinearLayout>
 
@@ -59,10 +64,9 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginTop="12dp"
-        android:layout_marginBottom="14dp"
-        android:background="@drawable/bg_settings_divider_soft" />
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_s4_divider" />
 
-    <!-- Color Swatches Grid Container -->
     <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -74,6 +78,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
-            android:orientation="horizontal" />
+            android:orientation="horizontal"
+            android:paddingHorizontal="4dp" />
     </HorizontalScrollView>
+
 </LinearLayout>

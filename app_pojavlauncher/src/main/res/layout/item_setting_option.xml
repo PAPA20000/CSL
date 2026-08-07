@@ -1,58 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+     Settings Option Row — horizontal / landscape-first
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:gravity="center_vertical"
-    android:background="@drawable/bg_settings_card"
-    android:padding="16dp"
-    android:layout_marginBottom="12dp"
+    android:layout_marginBottom="6dp"
+    android:background="@drawable/bg_s4_row"
     android:clickable="true"
     android:focusable="true"
-    android:foreground="?attr/selectableItemBackground">
+    android:gravity="center_vertical"
+    android:minHeight="48dp"
+    android:orientation="horizontal"
+    android:paddingStart="12dp"
+    android:paddingTop="10dp"
+    android:paddingEnd="12dp"
+    android:paddingBottom="10dp">
 
-    <!-- Setting Icon -->
-    <ImageView
-        android:id="@+id/setting_icon"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:src="@drawable/ic_arrow_back"
-        app:tint="@color/accent_primary"
-        android:contentDescription="Setting Icon" />
+    <FrameLayout
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:background="@drawable/bg_s4h_icon_tile">
 
-    <!-- Title and Subtitle -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_s4h_icon_glow" />
+
+        <ImageView
+            android:id="@+id/setting_icon"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_gravity="center"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_menu_settings"
+            app:tint="#EDEDF2" />
+    </FrameLayout>
+
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="8dp"
         android:layout_weight="1"
-        android:orientation="vertical"
-        android:layout_marginStart="16dp">
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/setting_title"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Feature Name"
-            android:textColor="@color/text_primary_white"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
+            android:maxLines="1"
+            android:textColor="#F3F3F7"
+            android:textSize="13.5sp" />
 
         <TextView
-            android:id="@+id/setting_description"
-            android:layout_width="wrap_content"
+            android:id="@+id/setting_summary"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Enable or disable this feature"
-            android:textColor="@color/text_secondary_light"
-            android:textSize="12sp"
-            android:layout_marginTop="2dp" />
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:lineSpacingMultiplier="1.1"
+            android:maxLines="2"
+            android:textColor="#9A9AA6"
+            android:textSize="10.5sp" />
     </LinearLayout>
-
-    <!-- Toggle Switch -->
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/setting_switch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="visible"/>
 
 </LinearLayout>

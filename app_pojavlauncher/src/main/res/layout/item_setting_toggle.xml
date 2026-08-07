@@ -1,40 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+     Settings Toggle Switch Row — horizontal / landscape-first
+     IDs unchanged: setting_icon, setting_title, setting_summary, setting_fav_star, setting_toggle
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="10dp"
+    android:layout_marginBottom="6dp"
     android:background="@drawable/bg_s4_row"
     android:clickable="true"
     android:focusable="true"
     android:gravity="center_vertical"
-    android:minHeight="74dp"
+    android:minHeight="48dp"
     android:orientation="horizontal"
-    android:paddingStart="14dp"
-    android:paddingTop="14dp"
-    android:paddingEnd="14dp"
-    android:paddingBottom="14dp">
+    android:paddingStart="12dp"
+    android:paddingTop="10dp"
+    android:paddingEnd="12dp"
+    android:paddingBottom="10dp">
 
     <FrameLayout
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:background="@drawable/bg_s4_iconwell">
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:background="@drawable/bg_s4h_icon_tile">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_s4h_icon_glow" />
 
         <ImageView
             android:id="@+id/setting_icon"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
             android:layout_gravity="center"
             android:contentDescription="@null"
             android:src="@drawable/ic_menu_settings"
-            app:tint="#E4E4EA" />
+            app:tint="#EDEDF2" />
     </FrameLayout>
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="14dp"
-        android:layout_marginEnd="12dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="8dp"
         android:layout_weight="1"
         android:orientation="vertical">
 
@@ -43,35 +52,37 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
             android:maxLines="1"
-            android:textColor="#FFFFFF"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            android:textColor="#F3F3F7"
+            android:textSize="13.5sp" />
 
         <TextView
             android:id="@+id/setting_summary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="2dp"
             android:ellipsize="end"
+            android:lineSpacingMultiplier="1.1"
             android:maxLines="2"
-            android:textColor="#9CA3AF"
-            android:textSize="12sp" />
+            android:textColor="#9A9AA6"
+            android:textSize="10.5sp" />
     </LinearLayout>
 
-        <ImageButton
-            android:id="@+id/setting_fav_star"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginStart="6dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/cs_settings_fav_add"
-            android:padding="4dp"
-            android:src="@drawable/ic_csp_star_outline" />
+    <ImageButton
+        android:id="@+id/setting_fav_star"
+        android:layout_width="26dp"
+        android:layout_height="26dp"
+        android:layout_marginStart="6dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/cs_settings_fav_add"
+        android:padding="3dp"
+        android:src="@drawable/ic_csp_star_outline" />
 
     <net.kdt.pojavlaunch.prefs.CustomToggleView
         android:id="@+id/setting_toggle"
-        android:layout_width="54dp"
-        android:layout_height="30dp" />
+        android:layout_width="48dp"
+        android:layout_height="26dp"
+        android:layout_marginStart="8dp" />
 
 </LinearLayout>

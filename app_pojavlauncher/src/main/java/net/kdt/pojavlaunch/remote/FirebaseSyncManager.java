@@ -293,10 +293,10 @@ public final class FirebaseSyncManager {
             if (id.isEmpty() || sSeenNtf.contains(id + ";")) continue;
             sSeenNtf += id + ";";
             persistCache(act.getApplicationContext());
-            String icon = n.optString("icon", "🔔");
+            String icon = n.optString("icon", "");
             String title = n.optString("title", "");
             String msg = n.optString("message", "");
-            CsPopup.show(act, icon + " " + title + (msg.isEmpty() ? "" : "\n" + msg));
+            CsPopup.show(act, (icon.isEmpty() ? "" : icon + " ") + title + (msg.isEmpty() ? "" : "\n" + msg));
         }
     }
 
@@ -408,7 +408,7 @@ public final class FirebaseSyncManager {
             JSONObject n = nList.get(0);
             return new HomeBannerItem(
                     n.optString("id", "ntf"),
-                    n.optString("icon", "🔔"),
+                    n.optString("icon", ""),
                     n.optString("title", ""),
                     n.optString("message", ""),
                     false
@@ -434,7 +434,7 @@ public final class FirebaseSyncManager {
             JSONObject a = aList.get(0);
             return new HomeBannerItem(
                     a.optString("id", "ann"),
-                    "📢",
+                    "",
                     a.optString("title", "Announcement"),
                     a.optString("body", ""),
                     true

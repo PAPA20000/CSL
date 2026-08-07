@@ -27,6 +27,11 @@
             android:layout_height="36dp"
             android:background="@drawable/bg_s4h_icon_tile">
 
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_s4h_icon_glow" />
+
             <ImageView
                 android:layout_width="18dp"
                 android:layout_height="18dp"
