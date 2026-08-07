@@ -444,6 +444,7 @@ public class LauncherPreferenceFragment extends Fragment {
 
                 case "Launcher Settings":
                     List<SettingItem> launcherItems = new ArrayList<>();
+                    launcherItems.add(new SettingItem("perf_presets_launcher", SettingItem.TYPE_PRESET_PANEL, "Performance Presets", "", null));
                     launcherItems.add(new SettingItem("check_for_update_btn", SettingItem.TYPE_ACTION,
                             "Check for Update",
                             "Check online for the latest CS Launcher V3 release via Firebase",
@@ -465,6 +466,7 @@ public class LauncherPreferenceFragment extends Fragment {
 
                 case "Video & Graphics":
                     List<SettingItem> graphicsItems = new ArrayList<>();
+                    graphicsItems.add(new SettingItem("perf_presets_graphics", SettingItem.TYPE_PRESET_PANEL, "Performance Presets", "", null));
                     graphicsItems.add(new SettingItem("mg_renderer_setting_angle", SettingItem.TYPE_DROPDOWN, getString(R.string.mg_renderer_angle), "Select backend ANGLE configuration", "1").setDropdownOptions(new String[]{"Vulkan", "OpenGL (System)", "OpenGLES"}, new String[]{"1", "2", "3"}));
                     graphicsItems.add(new SettingItem("mg_renderer_setting_multidraw", SettingItem.TYPE_DROPDOWN, getString(R.string.mg_renderer_multidraw), "Select multidraw emulation style", "0").setDropdownOptions(new String[]{"Auto", "Prefer Indirect", "Prefer BaseVertex", "Prefer MultiDraw Indirect", "Force DrawElements"}, new String[]{"0", "1", "2", "3", "4"}));
                     graphicsItems.add(new SettingItem("mg_renderer_setting_fsr", SettingItem.TYPE_DROPDOWN, getString(R.string.mg_renderer_title_fsr), "Enable AMD FSR scaler", "0").setDropdownOptions(new String[]{"Disabled", "25%", "50%", "75%", "100%"}, new String[]{"0", "1", "2", "3", "4"}));
@@ -516,6 +518,7 @@ public class LauncherPreferenceFragment extends Fragment {
 
                 case "Java Runtime":
                     List<SettingItem> javaItems = new ArrayList<>();
+                    javaItems.add(new SettingItem("perf_presets_java", SettingItem.TYPE_PRESET_PANEL, "Performance Presets", "", null));
                     javaItems.add(new SettingItem("install_jre", SettingItem.TYPE_ACTION, getString(R.string.multirt_title), getString(R.string.multirt_subtitle), null).setAction(this::openMultiRTDialog));
                     javaItems.add(new SettingItem("javaArgs", SettingItem.TYPE_INPUT, getString(R.string.mcl_setting_title_javaargs), getString(R.string.mcl_setting_subtitle_javaargs), ""));
 
@@ -1764,7 +1767,6 @@ public class LauncherPreferenceFragment extends Fragment {
         // ══ Performance presets (user req): LOW-END / HIGH-END one-tap bundles ══
         private void bindPresetPanel(@NonNull View panel) {
             final android.content.Context ctx = panel.getContext();
-            // HIGH preset RAM: device-aware (35% of total, min 4096, max 6144, /256 step)
             int totalMb = 6144;
             try {
                 android.app.ActivityManager am = (android.app.ActivityManager)
@@ -1779,60 +1781,76 @@ public class LauncherPreferenceFragment extends Fragment {
 
             TextView points = panel.findViewById(R.id.preset_high_points);
             if (points != null) points.setText(
-                    highRam + " MB RAM • 100% resolution • VSync off • Sustained ON");
+                    highRam + " MB RAM • 100% resolution • VSync on • Maximum fidelity");
 
             View lowApply = panel.findViewById(R.id.preset_low_apply);
+            View midApply = panel.findViewById(R.id.preset_mid_apply);
             View highApply = panel.findViewById(R.id.preset_high_apply);
-            if (lowApply != null) lowApply.setOnClickListener(v -> applyPreset(panel, false, highRam));
-            if (highApply != null) highApply.setOnClickListener(v -> applyPreset(panel, true, highRam));
+            if (lowApply != null) lowApply.setOnClickListener(v -> applyPreset(panel, 0, highRam));
+            if (midApply != null) midApply.setOnClickListener(v -> applyPreset(panel, 1, highRam));
+            if (highApply != null) highApply.setOnClickListener(v -> applyPreset(panel, 2, highRam));
             refreshPresetMarker(panel);
         }
 
-        /** Apply a preset bundle to the REAL prefs, mirror into the settings draft
-         *  store (so a later SAVE can never silently revert it), refresh the live
-         *  pref statics, and flash APPLIED on the tapped pill. */
-        private void applyPreset(@NonNull View panel, boolean high, int highRam) {
+        private void applyPreset(@NonNull View panel, int presetType, int highRam) {
             android.content.Context ctx = panel.getContext();
+            int ram = 1024;
+            int resRatio = 60;
+            boolean vsync = false;
+            boolean sustained = false;
+            String modeName = "low";
+            String toastMsg = "🟢 Low-End Mobile preset applied (1024 MB, 60% Res, Maximum FPS)";
+            if (presetType == 1) {
+                ram = 2048;
+                resRatio = 80;
+                modeName = "med";
+                toastMsg = "🟡 Medium Mobile preset applied (2048 MB, 80% Res, Balanced)";
+            } else if (presetType == 2) {
+                ram = highRam;
+                resRatio = 100;
+                vsync = true;
+                sustained = true;
+                modeName = "high";
+                toastMsg = "🟣 High-End Mobile preset applied (" + highRam + " MB, 100% Res, Maximum Fidelity)";
+            }
             try {
                 android.content.SharedPreferences p = LauncherPreferences.DEFAULT_PREF != null
                         ? LauncherPreferences.DEFAULT_PREF
                         : ctx.getSharedPreferences("cslauncher_settings", Context.MODE_PRIVATE);
                 android.content.SharedPreferences.Editor e = p.edit();
-                e.putInt("allocation", high ? highRam : 1280);
-                e.putInt("resolutionRatio", high ? 100 : 70);
-                e.putBoolean("force_vsync", false);        // never panel-lock via EGL
-                e.putBoolean("vsync_in_zink", true);       // env present → driver obeys game swapInterval (0 = unlocked); absent env would FORCE driver vsync — the real 60/120 lock on zink
-                e.putBoolean("sustainedPerformance", high);
-                e.putString("perfPreset", high ? "high" : "low");
+                e.putInt("allocation", ram);
+                e.putInt("resolutionRatio", resRatio);
+                e.putBoolean("force_vsync", false);
+                e.putBoolean("vsync_in_zink", vsync);
+                e.putBoolean("sustainedPerformance", sustained);
+                e.putString("perfPreset", modeName);
                 e.commit();
-                // Draft-store mirror: the settings SAVE flow commits its draft
-                // map later — mirror the bundle there too so it survives.
                 try {
                     android.content.SharedPreferences.Editor d =
                             SettingsSaveManager.getDraftPrefs(ctx).edit();
-                    d.putInt("allocation", high ? highRam : 1280);
-                    d.putInt("resolutionRatio", high ? 100 : 70);
+                    d.putInt("allocation", ram);
+                    d.putInt("resolutionRatio", resRatio);
                     d.putBoolean("force_vsync", false);
-                    d.putBoolean("vsync_in_zink", true);
-                    d.putBoolean("sustainedPerformance", high);
+                    d.putBoolean("vsync_in_zink", vsync);
+                    d.putBoolean("sustainedPerformance", sustained);
                     d.apply();
                 } catch (Throwable ignored) {}
-                LauncherPreferences.loadPreferences(ctx.getApplicationContext()); // refresh statics
+                LauncherPreferences.loadPreferences(ctx.getApplicationContext());
             } catch (Throwable t) {
                 android.widget.Toast.makeText(ctx, "Preset failed to apply", android.widget.Toast.LENGTH_SHORT).show();
                 return;
             }
-            View pill = panel.findViewById(high ? R.id.preset_high_apply : R.id.preset_low_apply);
+            int pillId = R.id.preset_low_apply;
+            if (presetType == 1) pillId = R.id.preset_mid_apply;
+            else if (presetType == 2) pillId = R.id.preset_high_apply;
+            View pill = panel.findViewById(pillId);
             if (pill instanceof TextView) {
                 final TextView tv = (TextView) pill;
                 tv.setText("APPLIED ✓");
                 Tools.MAIN_HANDLER.postDelayed(() -> tv.setText("APPLY"), 1200);
             }
             refreshPresetMarker(panel);
-            android.widget.Toast.makeText(ctx,
-                    high ? "High-End preset applied — restart the game for full effect"
-                            : "Low-End preset applied — restart the game for full effect",
-                    android.widget.Toast.LENGTH_LONG).show();
+            android.widget.Toast.makeText(ctx, toastMsg, android.widget.Toast.LENGTH_LONG).show();
         }
 
         private void refreshPresetMarker(@NonNull View panel) {
@@ -1845,8 +1863,9 @@ public class LauncherPreferenceFragment extends Fragment {
                         : panel.getContext().getSharedPreferences("cslauncher_settings", Context.MODE_PRIVATE);
                 cur = p.getString("perfPreset", null);
             } catch (Throwable ignored) {}
-            if ("low".equals(cur)) { state.setText("LOW-END ACTIVE"); state.setVisibility(View.VISIBLE); }
-            else if ("high".equals(cur)) { state.setText("HIGH-END ACTIVE"); state.setVisibility(View.VISIBLE); }
+            if ("low".equals(cur)) { state.setText("🟢 LOW-END ACTIVE"); state.setVisibility(View.VISIBLE); }
+            else if ("med".equals(cur)) { state.setText("🟡 MEDIUM ACTIVE"); state.setVisibility(View.VISIBLE); }
+            else if ("high".equals(cur)) { state.setText("🟣 HIGH-END ACTIVE"); state.setVisibility(View.VISIBLE); }
             else state.setVisibility(View.GONE);
         }
 

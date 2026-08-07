@@ -1,20 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ═══════════════════════════════════════════════════════════════════
-     PERFORMANCE — one-tap device presets (user req, v2 redesign).
-     Two FULL-WIDTH stacked rows (nothing can overflow on narrow widths),
-     Controller-page master recipe: graphite gradient card, 20dp, hairline
-     stroke, platinum APPLY pills. No trailing filler — the card ends where
-     the content ends.
+     PERFORMANCE — one-tap device presets (user req: Low / Medium / High).
+     Three FULL-WIDTH stacked rows with custom glass/violet theming.
      ═══════════════════════════════════════════════════════════════════ -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="2dp"
-    android:layout_marginBottom="8dp"
-    android:background="@drawable/bg_s4h_category_card"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="12dp"
+    android:background="@drawable/bg_preference_card"
     android:orientation="vertical"
-    android:padding="14dp">
+    android:padding="16dp">
 
     <!-- Header -->
     <LinearLayout
@@ -24,66 +21,73 @@
         android:orientation="horizontal">
 
         <FrameLayout
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="@drawable/bg_s4h_icon_tile">
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@drawable/bg_icon_neon">
 
             <ImageView
-                android:layout_width="18dp"
-                android:layout_height="18dp"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:layout_gravity="center"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_settings_performance"
-                app:tint="#EDEDF2" />
+                app:tint="#D1C4E9" />
         </FrameLayout>
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="14dp"
             android:layout_weight="1"
             android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Performance Presets"
-                android:textColor="#F3F3F7"
-                android:textSize="14sp"
-                android:fontFamily="sans-serif-medium" />
+                android:text="⚡ 1-Click Performance Setup"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="One tap tunes RAM, resolution and vsync for your device class"
-                android:textColor="#9A9AA6"
-                android:textSize="10.5sp" />
+                android:text="Select your device class — auto tunes RAM, resolution &amp; engine instantly"
+                android:textColor="#B39DDB"
+                android:textSize="11sp" />
         </LinearLayout>
 
         <TextView
             android:id="@+id/preset_state"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_s4h_badge_chip"
-            android:letterSpacing="0.1"
-            android:paddingStart="9dp"
-            android:paddingEnd="9dp"
-            android:paddingTop="3dp"
-            android:paddingBottom="4dp"
-            android:textColor="#E4E4EA"
-            android:textSize="9sp"
+            android:background="@drawable/bg_settings_chip_active"
+            android:letterSpacing="0.08"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="5dp"
+            android:textColor="#FFFFFF"
+            android:textSize="9.5sp"
             android:textStyle="bold"
             android:visibility="gone" />
     </LinearLayout>
 
-    <!-- LOW-END row (full width — label column can't squeeze the pill) -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#1FFFFFFF"
+        android:layout_marginTop="14dp"
+        android:layout_marginBottom="6dp" />
+
+    <!-- LOW-END row -->
     <LinearLayout
         android:id="@+id/preset_low_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:background="@drawable/bg_s4_value"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_settings_row"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:padding="12dp">
@@ -98,9 +102,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:letterSpacing="0.08"
-                android:text="LOW-END MOBILE"
-                android:textColor="#C9CBD6"
-                android:textSize="11sp"
+                android:text="🟢 LOW-END MOBILE (1–2 GB RAM)"
+                android:textColor="#81C784"
+                android:textSize="12sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -110,9 +114,9 @@
                 android:layout_marginTop="3dp"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:text="1280 MB RAM • 70% resolution • VSync off • Sustained off"
-                android:textColor="#8E8E9A"
-                android:textSize="9.5sp" />
+                android:text="1024 MB RAM • 60% resolution • VSync off • Maximum FPS &amp; battery"
+                android:textColor="#CCCCCC"
+                android:textSize="10sp" />
         </LinearLayout>
 
         <TextView
@@ -120,25 +124,25 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
-            android:background="@drawable/bg_cs_tab_pill_idle"
+            android:background="@drawable/bg_settings_btn"
             android:letterSpacing="0.1"
-            android:paddingStart="14dp"
-            android:paddingEnd="14dp"
-            android:paddingTop="6dp"
-            android:paddingBottom="7dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
             android:text="APPLY"
-            android:textColor="#E4E4EA"
-            android:textSize="9sp"
+            android:textColor="#FFFFFF"
+            android:textSize="10sp"
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- HIGH-END row -->
+    <!-- MEDIUM row -->
     <LinearLayout
-        android:id="@+id/preset_high_card"
+        android:id="@+id/preset_mid_card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:background="@drawable/bg_s4_value"
+        android:background="@drawable/bg_settings_row"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:padding="12dp">
@@ -153,9 +157,64 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:letterSpacing="0.08"
-                android:text="HIGH-END MOBILE"
-                android:textColor="#F0F0F3"
-                android:textSize="11sp"
+                android:text="🟡 MEDIUM MOBILE (3–4 GB RAM)"
+                android:textColor="#FFD54F"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/preset_mid_points"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="2048 MB RAM • 80% resolution • VSync off • Balanced smoothness"
+                android:textColor="#CCCCCC"
+                android:textSize="10sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/preset_mid_apply"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/bg_settings_btn"
+            android:letterSpacing="0.1"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="APPLY"
+            android:textColor="#FFFFFF"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- HIGH-END row -->
+    <LinearLayout
+        android:id="@+id/preset_high_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_settings_row"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.08"
+                android:text="🟣 HIGH-END MOBILE (6+ GB RAM)"
+                android:textColor="#B39DDB"
+                android:textSize="12sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -165,9 +224,9 @@
                 android:layout_marginTop="3dp"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:text="—"
-                android:textColor="#9C9CA8"
-                android:textSize="9.5sp" />
+                android:text="Auto device RAM • 100% resolution • VSync on • Maximum fidelity"
+                android:textColor="#CCCCCC"
+                android:textSize="10sp" />
         </LinearLayout>
 
         <TextView
@@ -175,15 +234,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
-            android:background="@drawable/bg_cs_tab_pill_active"
+            android:background="@drawable/bg_settings_btn"
             android:letterSpacing="0.1"
-            android:paddingStart="14dp"
-            android:paddingEnd="14dp"
-            android:paddingTop="6dp"
-            android:paddingBottom="7dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
             android:text="APPLY"
-            android:textColor="#151518"
-            android:textSize="9sp"
+            android:textColor="#FFFFFF"
+            android:textSize="10sp"
             android:textStyle="bold" />
     </LinearLayout>
 
