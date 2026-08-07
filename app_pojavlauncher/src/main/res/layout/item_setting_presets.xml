@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ═══════════════════════════════════════════════════════════════════
      PERFORMANCE — one-tap device presets (user req: Low / Medium / High).
-     Three FULL-WIDTH stacked rows with custom glass/violet theming.
+     Three FULL-WIDTH stacked rows with custom glass/violet theming and
+     dedicated emerald / amber / violet button drawables.
      ═══════════════════════════════════════════════════════════════════ -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -124,7 +125,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
-            android:background="@drawable/bg_settings_btn"
+            android:background="@drawable/bg_preset_btn_low"
             android:letterSpacing="0.1"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
@@ -179,7 +180,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
-            android:background="@drawable/bg_settings_btn"
+            android:background="@drawable/bg_preset_btn_mid"
             android:letterSpacing="0.1"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
@@ -234,7 +235,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
-            android:background="@drawable/bg_settings_btn"
+            android:background="@drawable/bg_preset_btn_high"
             android:letterSpacing="0.1"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
