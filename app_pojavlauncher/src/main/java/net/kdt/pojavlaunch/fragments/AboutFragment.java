@@ -43,17 +43,16 @@ public class AboutFragment extends Fragment {
         TextView versionChip = view.findViewById(R.id.about_version_chip);
         if (versionChip != null) {
             versionChip.setText("Version " + BuildConfig.VERSION_NAME);
-            // Temporary debug/testing feature: tap version chip 5 times to view & copy FCM token
+            // Temporary debug/testing feature: tap version chip 20 times to unlock & view FCM token
             versionChip.setOnClickListener(new View.OnClickListener() {
                 private int clicks = 0;
                 @Override
                 public void onClick(View v) {
                     clicks++;
-                    if (clicks >= 5) {
+                    if (clicks >= 20) {
                         clicks = 0;
+                        Toast.makeText(requireContext(), "FCM Debug Token Unlocked!", Toast.LENGTH_SHORT).show();
                         net.kdt.pojavlaunch.remote.CsFirebaseMessagingService.showFcmTokenDebugDialog(requireActivity());
-                    } else if (clicks >= 3) {
-                        Toast.makeText(requireContext(), (5 - clicks) + " more taps to view FCM Debug Token", Toast.LENGTH_SHORT).show();
                     }
                 }
             });

@@ -11,7 +11,7 @@
     <item android:bottom="3dp">
         <shape android:shape="rectangle">
             <gradient
-                android:angle="145"
+                android:angle="135"
                 android:startColor="#24222A"
                 android:endColor="#18161C"
                 android:type="linear" />
