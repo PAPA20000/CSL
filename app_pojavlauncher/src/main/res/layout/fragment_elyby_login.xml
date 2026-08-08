@@ -1,83 +1,221 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+     Ely.by Login — premium dark glass card
+     Landscape / horizontal launcher friendly
+     IDs unchanged for binder compatibility
+-->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_launcher_dark">
+    android:background="@drawable/bg_elyby_page"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <!-- Soft ambient glow behind card -->
+    <View
+        android:id="@+id/elyby_glow"
+        android:layout_width="@dimen/_280sdp"
+        android:layout_height="@dimen/_280sdp"
+        android:background="@drawable/bg_elyby_ambient_glow"
+        android:importantForAccessibility="no"
+        app:layout_constraintBottom_toBottomOf="@id/card_elyby_login"
+        app:layout_constraintEnd_toEndOf="@id/card_elyby_login"
+        app:layout_constraintStart_toStartOf="@id/card_elyby_login"
+        app:layout_constraintTop_toTopOf="@id/card_elyby_login" />
 
     <LinearLayout
         android:id="@+id/card_elyby_login"
-        android:layout_width="@dimen/_250sdp"
+        android:layout_width="@dimen/_270sdp"
         android:layout_height="wrap_content"
+        android:background="@drawable/bg_elyby_card"
+        android:elevation="10dp"
         android:orientation="vertical"
-        android:background="@drawable/bg_fastclient_card"
-        android:padding="@dimen/_16sdp"
-        app:layout_constraintTop_toTopOf="parent"
+        android:paddingStart="@dimen/_18sdp"
+        android:paddingTop="@dimen/_18sdp"
+        android:paddingEnd="@dimen/_18sdp"
+        android:paddingBottom="@dimen/_18sdp"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.48">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <!-- Brand header -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Ely.by Login"
-            android:textColor="#FF4081"
-            android:textSize="@dimen/_16ssp"
-            android:textStyle="bold"
-            android:layout_gravity="center"
-            android:layout_marginBottom="@dimen/_16sdp" />
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingBottom="@dimen/_14sdp">
 
-        <TextView
-            android:layout_width="wrap_content"
+            <!-- Icon well -->
+            <FrameLayout
+                android:layout_width="@dimen/_48sdp"
+                android:layout_height="@dimen/_48sdp"
+                android:background="@drawable/bg_elyby_icon_well"
+                android:elevation="2dp">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_elyby_icon_glow" />
+
+                <!-- Replace src if you have ely.by icon; letter fallback looks clean -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:fontFamily="sans-serif-medium"
+                    android:letterSpacing="0.04"
+                    android:text="E"
+                    android:textColor="#FF4081"
+                    android:textSize="@dimen/_20ssp"
+                    android:textStyle="bold" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:letterSpacing="0.02"
+                android:text="Ely.by Login"
+                android:textColor="#FFFFFF"
+                android:textSize="@dimen/_16ssp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_4sdp"
+                android:alpha="0.9"
+                android:gravity="center"
+                android:letterSpacing="0.06"
+                android:text="SECURE AUTH · EXTERNAL PROVIDER"
+                android:textAllCaps="true"
+                android:textColor="#FF4081"
+                android:textSize="@dimen/_9ssp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginBottom="@dimen/_14sdp"
+            android:background="@drawable/bg_elyby_divider" />
+
+        <!-- Username / Email -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Username / Email"
-            android:textColor="#AAAAAA"
-            android:textSize="@dimen/_11ssp"
-            android:layout_marginBottom="4dp" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingBottom="@dimen/_6sdp">
+
+            <View
+                android:layout_width="3dp"
+                android:layout_height="@dimen/_10sdp"
+                android:background="@drawable/bg_elyby_accent_bar" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/_8sdp"
+                android:letterSpacing="0.1"
+                android:text="USERNAME / EMAIL"
+                android:textAllCaps="true"
+                android:textColor="#C9A0B0"
+                android:textSize="@dimen/_10ssp"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <EditText
             android:id="@+id/login_edit_email"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/_36sdp"
-            android:background="@drawable/bg_folder_row"
-            android:textColor="#FFFFFF"
-            android:textSize="@dimen/_13ssp"
-            android:paddingHorizontal="@dimen/_10sdp"
+            android:layout_height="@dimen/_40sdp"
+            android:layout_marginBottom="@dimen/_12sdp"
+            android:background="@drawable/bg_elyby_input"
+            android:hint="name@email.com"
+            android:imeOptions="actionNext"
+            android:importantForAutofill="no"
             android:inputType="textEmailAddress"
-            android:layout_marginBottom="@dimen/_12sdp" />
+            android:paddingHorizontal="@dimen/_12sdp"
+            android:singleLine="true"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#5A5560"
+            android:textSize="@dimen/_13ssp" />
 
-        <TextView
-            android:layout_width="wrap_content"
+        <!-- Password -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Password"
-            android:textColor="#AAAAAA"
-            android:textSize="@dimen/_11ssp"
-            android:layout_marginBottom="4dp" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingBottom="@dimen/_6sdp">
+
+            <View
+                android:layout_width="3dp"
+                android:layout_height="@dimen/_10sdp"
+                android:background="@drawable/bg_elyby_accent_bar" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/_8sdp"
+                android:letterSpacing="0.1"
+                android:text="PASSWORD"
+                android:textAllCaps="true"
+                android:textColor="#C9A0B0"
+                android:textSize="@dimen/_10ssp"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <EditText
             android:id="@+id/login_edit_password"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/_36sdp"
-            android:background="@drawable/bg_folder_row"
-            android:textColor="#FFFFFF"
-            android:textSize="@dimen/_13ssp"
-            android:paddingHorizontal="@dimen/_10sdp"
+            android:layout_height="@dimen/_40sdp"
+            android:layout_marginBottom="@dimen/_16sdp"
+            android:background="@drawable/bg_elyby_input"
+            android:hint="••••••••"
+            android:imeOptions="actionDone"
+            android:importantForAutofill="no"
             android:inputType="textPassword"
-            android:layout_marginBottom="@dimen/_16sdp" />
+            android:paddingHorizontal="@dimen/_12sdp"
+            android:singleLine="true"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#5A5560"
+            android:textSize="@dimen/_13ssp" />
 
+        <!-- Login CTA -->
         <TextView
             android:id="@+id/login_button"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/_36sdp"
+            android:layout_height="@dimen/_40sdp"
+            android:background="@drawable/bg_elyby_button"
+            android:clickable="true"
+            android:focusable="true"
+            android:fontFamily="sans-serif-medium"
+            android:foreground="@drawable/bg_elyby_button_ripple"
+            android:gravity="center"
+            android:letterSpacing="0.12"
             android:text="LOGIN"
+            android:textAllCaps="true"
             android:textColor="#FFFFFF"
             android:textSize="@dimen/_12ssp"
-            android:textStyle="bold"
+            android:textStyle="bold" />
+
+        <!-- Footer note -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_12sdp"
             android:gravity="center"
-            android:background="@drawable/bg_btn_play_orange"
-            android:backgroundTint="#FF4081"
-            android:clickable="true"
-            android:focusable="true" />
+            android:lineSpacingMultiplier="1.15"
+            android:text="Credentials are sent securely to Ely.by"
+            android:textColor="#6B6570"
+            android:textSize="@dimen/_9ssp" />
 
     </LinearLayout>
 

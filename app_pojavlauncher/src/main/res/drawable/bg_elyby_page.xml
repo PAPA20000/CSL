@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#0D0A14" />
+        </shape>
+    </item>
+    <!-- pink ambient wash top-center -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="420dp"
+                android:centerX="0.5"
+                android:centerY="0.42"
+                android:startColor="#22FF4081"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+    <!-- subtle top vignette depth -->
+    <item android:gravity="top">
+        <shape android:shape="rectangle">
+            <size android:height="120dp" />
+            <gradient
+                android:angle="270"
+                android:startColor="#33000000"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+</layer-list>
