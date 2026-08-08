@@ -11,6 +11,8 @@ import android.os.Looper;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -266,38 +268,16 @@ public final class FirebaseSyncManager {
             if (id.isEmpty() || sSeenAnn.contains(id + ";")) continue;
             sSeenAnn += id + ";";
             persistCache(act.getApplicationContext());
+            boolean fullPage = "page".equalsIgnoreCase(a.optString("type", ""));
             showMarkdownDialog(act, a.optString("title", "Announcement"),
-                    a.optString("body", ""));
+                    a.optString("body", ""), fullPage);
         }
     }
 
-    // ─────────────────────────── UI: notifications ───────────────────────────
+    // ─────────────────────────── UI: notifications (removed per user directive) ───────────────────────────
 
     public static void showNotifications(Activity act) {
-        Iterator<String> keys = sNotifications.keys();
-        List<JSONObject> list = new ArrayList<>();
-        while (keys.hasNext()) {
-            try {
-                String k = keys.next();
-                JSONObject n = sNotifications.optJSONObject(k);
-                if (n == null || !n.optBoolean("enabled", true)) continue;
-                if (!n.has("id")) n.put("id", k);
-                long exp = n.optLong("expiresAt", 0);
-                if (exp > 0 && exp < System.currentTimeMillis()) continue;
-                list.add(n);
-            } catch (Throwable ignored) {}
-        }
-        list.sort((a, b) -> Long.compare(b.optLong("createdAt", 0), a.optLong("createdAt", 0)));
-        for (JSONObject n : list) {
-            String id = n.optString("id", "ntf_" + n.optLong("createdAt", 0));
-            if (id.isEmpty() || sSeenNtf.contains(id + ";")) continue;
-            sSeenNtf += id + ";";
-            persistCache(act.getApplicationContext());
-            String icon = n.optString("icon", "");
-            String title = n.optString("title", "");
-            String msg = n.optString("message", "");
-            CsPopup.show(act, (icon.isEmpty() ? "" : icon + " ") + title + (msg.isEmpty() ? "" : "\n" + msg));
-        }
+        // No-op: user requested removing noisy notifications; announcements handle all communication.
     }
 
     // ─────────────────────────── UI: sponsorship gates ───────────────────────────
@@ -328,12 +308,25 @@ public final class FirebaseSyncManager {
     // ─────────────────────────── markdown dialog ───────────────────────────
 
     public static void showMarkdownDialog(Activity act, String title, String markdown) {
+        showMarkdownDialog(act, title, markdown, false);
+    }
+
+    public static void showMarkdownDialog(Activity act, String title, String markdown, boolean fullPage) {
         try {
             final android.app.Dialog dialog = new android.app.Dialog(act, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
             if (dialog.getWindow() != null) {
-                dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0));
+                dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(fullPage ? 0xFF121212 : 0));
             }
             dialog.setContentView(R.layout.page_announcement_popup);
+
+            View card = dialog.findViewById(R.id.announcement_card);
+            if (card != null && fullPage) {
+                card.getLayoutParams().width = ViewGroup.LayoutParams.MATCH_PARENT;
+                card.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
+                if (card instanceof LinearLayout) {
+                    ((LinearLayout.LayoutParams) card.getLayoutParams()).setMargins(0, 0, 0, 0);
+                }
+            }
 
             TextView tvTitle = dialog.findViewById(R.id.tv_ann_page_title);
             TextView tvBody = dialog.findViewById(R.id.tv_ann_page_body);

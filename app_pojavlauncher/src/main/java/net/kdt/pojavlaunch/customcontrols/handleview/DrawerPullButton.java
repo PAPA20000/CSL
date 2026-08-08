@@ -21,9 +21,9 @@ public class DrawerPullButton extends View {
 
     private void init(){
         mDrawable = VectorDrawableCompat.create(getContext().getResources(), R.drawable.ic_sharp_settings_24, null);
-        // Req-4: readable obsidian pull instead of the faint black wedge
-        setAlpha(0.58f);
-        mBackgroundPaint.setColor(0xFF17171C);
+        if (mDrawable != null) mDrawable.setTint(0xFFFFFFFF);
+        setAlpha(0.95f);
+        mBackgroundPaint.setColor(0xFF1F212B);
     }
 
     @Override

@@ -64,6 +64,17 @@ public class AboutFragment extends Fragment {
         if (MotionSpeed.isEnabled()) {
             view.post(() -> {
                 if (!isAdded() || isRemoving()) return;
+                // Welcome animation for CS Launcher V3
+                View heroCard = view.findViewById(R.id.about_hero_card);
+                if (heroCard != null) {
+                    heroCard.setAlpha(0f);
+                    heroCard.setScaleX(0.9f);
+                    heroCard.setScaleY(0.9f);
+                    heroCard.animate().alpha(1f).scaleX(1f).scaleY(1f)
+                            .setDuration((long)(400 * MotionSpeed.factor()))
+                            .setInterpolator(new android.view.animation.OvershootInterpolator(1.2f))
+                            .start();
+                }
                 // Hero logo pops in with a jelly overshoot
                 View logo = view.findViewById(R.id.about_cs_logo);
                 if (logo != null) UiMotion.popIn(logo);

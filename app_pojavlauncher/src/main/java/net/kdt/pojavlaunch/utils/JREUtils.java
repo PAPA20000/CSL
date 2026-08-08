@@ -313,7 +313,11 @@ public class JREUtils {
         // Local Yggdrasil Server integration for offline accounts
         MinecraftAccount activeAccount = PojavProfile.getCurrentProfileContent(activity, null);
         boolean shouldStopLocalSkinServerAfterLaunch = false;
-        if (activeAccount != null && !activeAccount.isMicrosoft) {
+        boolean isElyBy = activeAccount != null && !activeAccount.isMicrosoft
+                && activeAccount.accessToken != null
+                && !"0".equals(activeAccount.accessToken)
+                && !activeAccount.accessToken.isEmpty();
+        if (activeAccount != null && !activeAccount.isMicrosoft && !isElyBy) {
             String username = activeAccount.username;
             String uuid = activeAccount.profileId;
 
@@ -437,7 +441,18 @@ public class JREUtils {
         userArgs.add("-javaagent:"+new File(Tools.DIR_DATA,"methods_injector_agent/methods_injector_agent.jar").getAbsolutePath());
 
         // === STEP 4: Add authlib-injector BEFORE JVMArgs (which contains main class + game args) ===
-        if (net.kdt.pojavlaunch.yggdrasil.LocalYggdrasilServer.getPort() > 0) {
+        if (isElyBy) {
+            String authlibPath = new File(Tools.DIR_DATA, "authlib-injector/authlib-injector.jar").getAbsolutePath();
+            if (new File(authlibPath).exists()) {
+                userArgs.add("-javaagent:" + authlibPath + "=https://authserver.ely.by");
+                userArgs.add("-Dauthlibinjector.side=client");
+                userArgs.add("-Dminecraft.api.auth.host=https://authserver.ely.by");
+                userArgs.add("-Dminecraft.api.account.host=https://authserver.ely.by");
+                userArgs.add("-Dminecraft.api.session.host=https://authserver.ely.by");
+                userArgs.add("-Dminecraft.api.services.host=https://authserver.ely.by");
+                Logger.appendToLog("=== ELY.BY AUTHLIB INJECTION ACTIVE ===");
+            }
+        } else if (net.kdt.pojavlaunch.yggdrasil.LocalYggdrasilServer.getPort() > 0) {
             int skinPort = net.kdt.pojavlaunch.yggdrasil.LocalYggdrasilServer.getPort();
             String authlibPath = new File(Tools.DIR_DATA, "authlib-injector/authlib-injector.jar").getAbsolutePath();
             

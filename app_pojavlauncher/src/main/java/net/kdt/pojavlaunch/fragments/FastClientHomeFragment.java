@@ -249,6 +249,8 @@ public class FastClientHomeFragment extends Fragment {
             // RAM info
             int ramMb = LauncherPreferences.PREF_RAM_ALLOCATION;
             chipRam.setText(String.format("%.1fGB", ramMb / 1024.0));
+            TextView tvRamBadge = view.findViewById(R.id.tv_profile_ram_badge);
+            if (tvRamBadge != null) tvRamBadge.setText(ramMb + " MB RAM");
 
             // Load profile icon if it's not the default one
             if (profile.icon != null && !profile.icon.equals("default")) {

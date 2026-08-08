@@ -341,11 +341,17 @@ public class OfflineYggdrasilServer {
      * caller can fall back to the default Steve/Alex skin.
      */
     private String proxyToMojang(String uuid) {
+        String res = fetchProfileUrl("https://sessionserver.mojang.com/session/minecraft/profile/" + uuid + "?unsigned=false");
+        if (res != null) return res;
+        return fetchProfileUrl("https://authserver.ely.by/session/minecraft/profile/" + uuid + "?unsigned=false");
+    }
+
+    private String fetchProfileUrl(String urlStr) {
         try {
-            URL url = new URL("https://sessionserver.mojang.com/session/minecraft/profile/" + uuid + "?unsigned=false");
+            URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setConnectTimeout(4000);
-            conn.setReadTimeout(4000);
+            conn.setConnectTimeout(3500);
+            conn.setReadTimeout(3500);
             conn.setRequestProperty("User-Agent", "CSLauncher");
             int code = conn.getResponseCode();
             if (code != 200) return null;
@@ -354,10 +360,8 @@ public class OfflineYggdrasilServer {
                 String line;
                 while ((line = br.readLine()) != null) sb.append(line);
             }
-            Log.i(TAG, "Proxied Mojang profile for " + uuid);
             return sb.toString();
         } catch (Exception e) {
-            Log.w(TAG, "Failed to proxy Mojang profile for " + uuid + ": " + e.getMessage());
             return null;
         }
     }

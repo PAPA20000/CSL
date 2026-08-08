@@ -61,7 +61,11 @@ public class LaunchStageView extends FrameLayout {
     /** Absolute path of the user-imported launch GIF for the given context. */
     @NonNull
     public static File gifFileFor(@NonNull Context ctx) {
-        return new File(ctx.getFilesDir(), GIF_FILE_NAME);
+        File f = new File(ctx.getFilesDir(), GIF_FILE_NAME);
+        if (f.isFile() && f.length() > 0) return f;
+        File bg = new File(net.kdt.pojavlaunch.Tools.DIR_DATA + "/custom_launcher_bg");
+        if (bg.isFile() && bg.length() > 0) return bg;
+        return f;
     }
 
     private View mStaticStage;
