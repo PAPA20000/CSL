@@ -51,6 +51,18 @@ public class LocalLoginFragment extends Fragment {
         if (!hasOnlineProfile()){
             Tools.swapFragment(requireActivity(), MainMenuFragment.class, MainMenuFragment.TAG, null);
         }
+        try {
+            android.view.animation.LayoutAnimationController layoutAnimation =
+                    android.view.animation.AnimationUtils.loadLayoutAnimation(requireContext(), R.anim.auth_layout_animation);
+            if (view instanceof android.view.ViewGroup) {
+                ((android.view.ViewGroup) view).setLayoutAnimation(layoutAnimation);
+            }
+            View statusDot = view.findViewById(R.id.auth_status_dot);
+            if (statusDot != null) {
+                statusDot.startAnimation(android.view.animation.AnimationUtils.loadAnimation(requireContext(), R.anim.auth_status_pulse));
+            }
+        } catch (Throwable ignored) {}
+
         mUsernameEditText = view.findViewById(R.id.login_edit_email);
         mHeadPreview = view.findViewById(R.id.live_head_preview);
         
