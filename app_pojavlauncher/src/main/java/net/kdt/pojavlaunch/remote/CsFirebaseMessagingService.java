@@ -41,6 +41,8 @@ public class CsFirebaseMessagingService extends FirebaseMessagingService {
     private static final String TOPIC_SERVER_NEWS = "server_news";
     private static final String TOPIC_MAINTENANCE = "maintenance";
 
+    private static volatile String sCachedToken = null;
+
     /**
      * Creates required Android 8.0+ Notification Channels.
      */
@@ -88,6 +90,7 @@ public class CsFirebaseMessagingService extends FirebaseMessagingService {
             messaging.getToken().addOnCompleteListener(task -> {
                 if (!task.isSuccessful() || task.getResult() == null) return;
                 String token = task.getResult();
+                sCachedToken = token;
                 if (BuildConfig.DEBUG) {
                     Log.d(TAG, "FCM Registration Token: " + token);
                 }
@@ -102,6 +105,7 @@ public class CsFirebaseMessagingService extends FirebaseMessagingService {
     @Override
     public void onNewToken(@NonNull String token) {
         super.onNewToken(token);
+        sCachedToken = token;
         if (BuildConfig.DEBUG) {
             Log.d(TAG, "New FCM Token: " + token);
         }
@@ -113,6 +117,82 @@ public class CsFirebaseMessagingService extends FirebaseMessagingService {
             messaging.subscribeToTopic(TOPIC_SERVER_NEWS);
             messaging.subscribeToTopic(TOPIC_MAINTENANCE);
         } catch (Throwable ignored) {}
+    }
+
+    /**
+     * Temporary testing / debug feature: Displays the FCM Registration Token
+     * modal dialog with a "Copy Token" button. Accessed via 5-tap gesture on
+     * the App Version chip in the About screen so regular users never see it.
+     */
+    public static void showFcmTokenDebugDialog(android.app.Activity act) {
+        if (act == null || act.isFinishing() || act.isDestroyed()) return;
+
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(act);
+        builder.setTitle("FCM Push Token (Testing Only)");
+
+        final android.widget.TextView tvMessage = new android.widget.TextView(act);
+        tvMessage.setPadding(48, 36, 48, 24);
+        tvMessage.setTextIsSelectable(true);
+        tvMessage.setTextSize(13.5f);
+        tvMessage.setTextColor(0xFFEDEDF2);
+        builder.setView(tvMessage);
+
+        String initialToken = sCachedToken;
+        if (initialToken != null && !initialToken.trim().isEmpty()) {
+            tvMessage.setText("Status: Generated (Ready)\n\nFCM Token:\n" + initialToken);
+        } else {
+            tvMessage.setText("Status: Token is not generated yet (fetching from Firebase Cloud Messaging...)");
+        }
+
+        builder.setPositiveButton("Copy Token", (d, w) -> {
+            String toCopy = sCachedToken;
+            if (toCopy == null || toCopy.trim().isEmpty()) {
+                android.widget.Toast.makeText(act, "No token generated yet to copy!", android.widget.Toast.LENGTH_SHORT).show();
+            } else {
+                try {
+                    android.content.ClipboardManager cm = (android.content.ClipboardManager)
+                            act.getSystemService(Context.CLIPBOARD_SERVICE);
+                    if (cm != null) {
+                        cm.setPrimaryClip(android.content.ClipData.newPlainText("FCM Token", toCopy));
+                        android.widget.Toast.makeText(act, "FCM Token copied to clipboard!", android.widget.Toast.LENGTH_LONG).show();
+                    }
+                } catch (Throwable t) {
+                    android.widget.Toast.makeText(act, "Failed to copy token", android.widget.Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        builder.setNegativeButton("Close", null);
+
+        final android.app.AlertDialog dialog = builder.create();
+        dialog.show();
+
+        // Dynamically fetch or refresh token in case it wasn't cached yet
+        try {
+            FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+                if (!task.isSuccessful() || task.getResult() == null) {
+                    act.runOnUiThread(() -> {
+                        if (sCachedToken == null && dialog.isShowing()) {
+                            tvMessage.setText("Status: Not generated yet\n\nError: "
+                                    + (task.getException() != null ? task.getException().getMessage() : "Unknown FCM error"));
+                        }
+                    });
+                    return;
+                }
+                String token = task.getResult();
+                sCachedToken = token;
+                act.runOnUiThread(() -> {
+                    if (dialog.isShowing()) {
+                        tvMessage.setText("Status: Generated (Ready)\n\nFCM Token:\n" + token);
+                    }
+                });
+            });
+        } catch (Throwable t) {
+            act.runOnUiThread(() -> {
+                if (sCachedToken == null && dialog.isShowing()) {
+                    tvMessage.setText("Status: Not generated yet\n\nError: " + t.getMessage());
+                }
+            });
+        }
     }
 
     @Override

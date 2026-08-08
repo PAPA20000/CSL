@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.widget.Toast;
 import net.kdt.pojavlaunch.BuildConfig;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
@@ -42,6 +43,20 @@ public class AboutFragment extends Fragment {
         TextView versionChip = view.findViewById(R.id.about_version_chip);
         if (versionChip != null) {
             versionChip.setText("Version " + BuildConfig.VERSION_NAME);
+            // Temporary debug/testing feature: tap version chip 5 times to view & copy FCM token
+            versionChip.setOnClickListener(new View.OnClickListener() {
+                private int clicks = 0;
+                @Override
+                public void onClick(View v) {
+                    clicks++;
+                    if (clicks >= 5) {
+                        clicks = 0;
+                        net.kdt.pojavlaunch.remote.CsFirebaseMessagingService.showFcmTokenDebugDialog(requireActivity());
+                    } else if (clicks >= 3) {
+                        Toast.makeText(requireContext(), (5 - clicks) + " more taps to view FCM Debug Token", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
         }
 
         // Back
