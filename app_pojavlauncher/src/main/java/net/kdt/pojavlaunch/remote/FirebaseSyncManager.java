@@ -393,6 +393,21 @@ public final class FirebaseSyncManager {
     }
 
     private static void installApk(Activity act, File apkFile) {
+        if (apkFile == null || !apkFile.exists() || apkFile.length() == 0) {
+            Log.e(TAG, "APK file is missing or empty: " + apkFile);
+            if (act != null) {
+                act.runOnUiThread(() -> {
+                    try {
+                        new AlertDialog.Builder(act)
+                                .setTitle("Installation Error")
+                                .setMessage("Downloaded update APK file is missing or corrupted.")
+                                .setPositiveButton("OK", null)
+                                .show();
+                    } catch (Throwable ignored) {}
+                });
+            }
+            return;
+        }
         try {
             Intent installIntent = new Intent(Intent.ACTION_VIEW);
             Uri apkUri;
@@ -404,7 +419,7 @@ public final class FirebaseSyncManager {
                 apkUri = Uri.fromFile(apkFile);
             }
             installIntent.setDataAndType(apkUri, "application/vnd.android.package-archive");
-            installIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            installIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
             act.startActivity(installIntent);
         } catch (Throwable t) {
             Log.e(TAG, "Failed to launch package installer", t);
