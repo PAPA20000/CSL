@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import android.widget.TextView;
 import java.util.Scanner;
 
 public class ElybyLoginFragment extends Fragment {
@@ -56,6 +57,7 @@ public class ElybyLoginFragment extends Fragment {
         }
 
         mLoginButton.setEnabled(false);
+        if (mLoginButton instanceof TextView) ((TextView) mLoginButton).setText("AUTHENTICATING...");
         Toast.makeText(requireContext(), "Authenticating with Ely.by...", Toast.LENGTH_SHORT).show();
 
         new Thread(() -> {
@@ -123,6 +125,7 @@ public class ElybyLoginFragment extends Fragment {
                     }
                     final String finalError = errorMessage;
                     new Handler(Looper.getMainLooper()).post(() -> {
+                        if (mLoginButton instanceof TextView) ((TextView) mLoginButton).setText("LOGIN");
                         mLoginButton.setEnabled(true);
                         Tools.dialog(requireContext(), "Error", finalError);
                     });
@@ -131,6 +134,7 @@ public class ElybyLoginFragment extends Fragment {
             } catch (Exception e) {
                 Log.e(TAG, "Ely.by login exception", e);
                 new Handler(Looper.getMainLooper()).post(() -> {
+                    if (mLoginButton instanceof TextView) ((TextView) mLoginButton).setText("LOGIN");
                     mLoginButton.setEnabled(true);
                     Tools.showError(requireContext(), e);
                 });

@@ -12,9 +12,12 @@ import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.os.Environment;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import androidx.core.content.FileProvider;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -28,6 +31,11 @@ import net.kdt.pojavlaunch.utils.CsPopup;
 
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -229,23 +237,173 @@ public final class FirebaseSyncManager {
         String changelog = sUpdate.optString("changelog", "");
         boolean force = isForceUpdate();
 
-        AlertDialog.Builder b = new AlertDialog.Builder(act)
-                .setTitle("Update available — v" + version)
-                .setMessage((force
+        try {
+            final android.app.Dialog dialog = new android.app.Dialog(act, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0));
+            }
+            dialog.setContentView(R.layout.dialog_launcher_update);
+            dialog.setCancelable(!force);
+            dialog.setCanceledOnTouchOutside(false);
+
+            TextView tvTitle = dialog.findViewById(R.id.tv_update_title);
+            TextView tvVersion = dialog.findViewById(R.id.tv_update_version);
+            TextView tvChangelog = dialog.findViewById(R.id.tv_update_changelog);
+            View progressContainer = dialog.findViewById(R.id.update_progress_container);
+            TextView tvProgressText = dialog.findViewById(R.id.tv_update_progress_text);
+            ProgressBar progressBar = dialog.findViewById(R.id.update_progress_bar);
+            TextView btnLater = dialog.findViewById(R.id.btn_update_later);
+            TextView btnUpdate = dialog.findViewById(R.id.btn_update_now);
+
+            if (tvTitle != null) tvTitle.setText("UPDATE");
+            if (tvVersion != null) tvVersion.setText("New version available — v" + version);
+            if (tvChangelog != null) {
+                tvChangelog.setText((force
                         ? "A new version is REQUIRED to continue playing.\n\n"
-                        : "A new version is available.\n\n") + changelog)
-                .setPositiveButton("Download", (d, w) -> {
-                    if (!url.isEmpty()) {
-                        try { act.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); }
-                        catch (Throwable t) { Log.w(TAG, "open url", t); }
+                        : "") + (changelog.isEmpty() ? "New features, performance enhancements, and bug fixes." : changelog));
+            }
+
+            if (btnLater != null) {
+                if (force) {
+                    btnLater.setVisibility(View.GONE);
+                } else {
+                    btnLater.setOnClickListener(v -> dialog.dismiss());
+                }
+            }
+
+            if (btnUpdate != null) {
+                btnUpdate.setOnClickListener(v -> {
+                    if (url.isEmpty()) {
+                        tvProgressText.setText("Error: Download URL is missing.");
+                        if (progressContainer != null) progressContainer.setVisibility(View.VISIBLE);
+                        return;
                     }
-                    if (!force) d.dismiss();
+                    downloadUpdateApkInLauncher(act, url, version, dialog, progressContainer, tvProgressText, progressBar, btnLater, btnUpdate);
                 });
-        if (!force) b.setNegativeButton("Later", null);
-        AlertDialog d = b.create();
-        d.setCancelable(!force); // force update → block launcher usage
-        d.setCanceledOnTouchOutside(false);
-        d.show();
+            }
+            dialog.show();
+        } catch (Throwable t) {
+            Log.w(TAG, "checkForUpdate dialog failed", t);
+        }
+    }
+
+    private static void downloadUpdateApkInLauncher(Activity act, String urlStr, String version,
+                                                    android.app.Dialog dialog, View progressContainer,
+                                                    TextView tvProgressText, ProgressBar progressBar,
+                                                    TextView btnLater, TextView btnUpdate) {
+        if (progressContainer != null) progressContainer.setVisibility(View.VISIBLE);
+        if (btnLater != null) btnLater.setVisibility(View.GONE);
+        if (btnUpdate != null) {
+            btnUpdate.setEnabled(false);
+            btnUpdate.setText("DOWNLOADING...");
+        }
+        if (tvProgressText != null) tvProgressText.setText("Downloading update... 0%");
+        if (progressBar != null) progressBar.setProgress(0);
+
+        new Thread(() -> {
+            File apkFile = null;
+            try {
+                File dir = act.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+                if (dir == null || !dir.exists()) dir = act.getCacheDir();
+                apkFile = new File(dir, "CS_LAUNCHER_V3_" + version + ".apk");
+                if (apkFile.exists()) apkFile.delete();
+
+                URL url = new URL(urlStr);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setConnectTimeout(15000);
+                conn.setReadTimeout(30000);
+                conn.setRequestProperty("User-Agent", "CSLauncher-Updater/" + version);
+                conn.connect();
+
+                int responseCode = conn.getResponseCode();
+                if (responseCode != HttpURLConnection.HTTP_OK) {
+                    throw new RuntimeException("Server returned HTTP " + responseCode);
+                }
+
+                int totalLength = conn.getContentLength();
+                InputStream is = conn.getInputStream();
+                FileOutputStream fos = new FileOutputStream(apkFile);
+
+                byte[] buffer = new byte[8192];
+                int len;
+                long totalRead = 0;
+                int lastPercent = -1;
+
+                while ((len = is.read(buffer)) != -1) {
+                    fos.write(buffer, 0, len);
+                    totalRead += len;
+                    if (totalLength > 0) {
+                        int percent = (int) ((totalRead * 100) / totalLength);
+                        if (percent != lastPercent) {
+                            lastPercent = percent;
+                            final int p = percent;
+                            act.runOnUiThread(() -> {
+                                if (progressBar != null) progressBar.setProgress(p);
+                                if (tvProgressText != null) tvProgressText.setText("Downloading update... " + p + "%");
+                            });
+                        }
+                    }
+                }
+                fos.flush();
+                fos.close();
+                is.close();
+
+                final File finalApk = apkFile;
+                act.runOnUiThread(() -> {
+                    if (tvProgressText != null) tvProgressText.setText("Update downloaded");
+                    if (progressBar != null) progressBar.setProgress(100);
+                    if (btnUpdate != null) {
+                        btnUpdate.setText("INSTALL NOW");
+                        btnUpdate.setEnabled(true);
+                        btnUpdate.setOnClickListener(v -> installApk(act, finalApk));
+                    }
+                    installApk(act, finalApk);
+                });
+
+            } catch (Throwable t) {
+                Log.e(TAG, "Update download failed", t);
+                final String err = t.getMessage() != null ? t.getMessage() : "Download error";
+                act.runOnUiThread(() -> {
+                    if (tvProgressText != null) tvProgressText.setText("Download failed: " + err);
+                    if (btnUpdate != null) {
+                        btnUpdate.setText("RETRY");
+                        btnUpdate.setEnabled(true);
+                        btnUpdate.setOnClickListener(v -> downloadUpdateApkInLauncher(act, urlStr, version, dialog, progressContainer, tvProgressText, progressBar, btnLater, btnUpdate));
+                    }
+                    if (btnLater != null && !isForceUpdate()) btnLater.setVisibility(View.VISIBLE);
+                });
+            }
+        }).start();
+    }
+
+    private static void installApk(Activity act, File apkFile) {
+        try {
+            Intent installIntent = new Intent(Intent.ACTION_VIEW);
+            Uri apkUri;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                apkUri = FileProvider.getUriForFile(act,
+                        act.getPackageName() + ".provider", apkFile);
+                installIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            } else {
+                apkUri = Uri.fromFile(apkFile);
+            }
+            installIntent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+            installIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            act.startActivity(installIntent);
+        } catch (Throwable t) {
+            Log.e(TAG, "Failed to launch package installer", t);
+            if (act != null) {
+                act.runOnUiThread(() -> {
+                    try {
+                        new AlertDialog.Builder(act)
+                                .setTitle("Installation Error")
+                                .setMessage("Could not start package installer: " + t.getMessage())
+                                .setPositiveButton("OK", null)
+                                .show();
+                    } catch (Throwable ignored) {}
+                });
+            }
+        }
     }
 
     // ─────────────────────────── UI: announcements ───────────────────────────
@@ -265,10 +423,12 @@ public final class FirebaseSyncManager {
         list.sort((a, b) -> Boolean.compare(b.optBoolean("pinned"), a.optBoolean("pinned")));
         for (JSONObject a : list) {
             String id = a.optString("id", "ann_" + a.optLong("createdAt", 0));
-            if (id.isEmpty() || sSeenAnn.contains(id + ";")) continue;
-            sSeenAnn += id + ";";
+            String seenKey = id + "_" + a.optLong("updatedAt", a.optLong("createdAt", 0));
+            if (id.isEmpty() || (!a.optBoolean("force_show", false) && sSeenAnn.contains(seenKey + ";"))) continue;
+            sSeenAnn += seenKey + ";";
             persistCache(act.getApplicationContext());
-            boolean fullPage = "page".equalsIgnoreCase(a.optString("type", ""));
+            String typeStr = a.optString("announcement_type", a.optString("type", "POPUP"));
+            boolean fullPage = "FULL_SCREEN".equalsIgnoreCase(typeStr) || "page".equalsIgnoreCase(typeStr);
             showMarkdownDialog(act, a.optString("title", "Announcement"),
                     a.optString("body", ""), fullPage);
         }
@@ -317,16 +477,7 @@ public final class FirebaseSyncManager {
             if (dialog.getWindow() != null) {
                 dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(fullPage ? 0xFF121212 : 0));
             }
-            dialog.setContentView(R.layout.page_announcement_popup);
-
-            View card = dialog.findViewById(R.id.announcement_card);
-            if (card != null && fullPage) {
-                card.getLayoutParams().width = ViewGroup.LayoutParams.MATCH_PARENT;
-                card.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
-                if (card instanceof LinearLayout) {
-                    ((LinearLayout.LayoutParams) card.getLayoutParams()).setMargins(0, 0, 0, 0);
-                }
-            }
+            dialog.setContentView(fullPage ? R.layout.page_announcement_fullscreen : R.layout.page_announcement_popup);
 
             TextView tvTitle = dialog.findViewById(R.id.tv_ann_page_title);
             TextView tvBody = dialog.findViewById(R.id.tv_ann_page_body);

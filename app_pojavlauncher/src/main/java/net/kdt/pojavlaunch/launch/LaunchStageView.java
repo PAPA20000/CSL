@@ -174,26 +174,24 @@ public class LaunchStageView extends FrameLayout {
         }
         Log.i(TAG, "bind: user GIF found (" + gif.length() + " bytes) — staging");
 
-        // Attach above the game surface via the dedicated host (video-era fix).
-        ViewGroup host = null;
-        try {
-            View root = getRootView();
-            if (root != null) host = root.findViewById(R.id.video_stage_host);
-        } catch (Throwable ignored) {}
-        mGifHost = host != null ? host : this; // defensive fallback
-
+        // Attach directly inside LaunchStageView (replacing mStaticStage visual layer)
+        // so that all launcher & game-loading controls in activity_basemain.xml
+        // remain 100% functional above the background GIF.
+        mGifHost = this;
         GifStageView gifView = new GifStageView(getContext());
         mGifView = gifView;
-        mGifHost.addView(gifView, new FrameLayout.LayoutParams(
+        this.addView(gifView, 0, new FrameLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         mHandler.postDelayed(mLoadWatchdog, LOAD_WATCHDOG_MS);
         gifView.load(gif, new GifStageView.LoadCallback() {
             @Override public void onReady() {
                 Log.i(TAG, "gif: first painted frame on screen — stage live");
+                if (mStaticStage != null) mStaticStage.setVisibility(View.INVISIBLE);
                 mHandler.removeCallbacks(mLoadWatchdog);
             }
             @Override public void onFailed() {
                 Log.w(TAG, "gif: decode failed — classic black stage");
+                if (mStaticStage != null) mStaticStage.setVisibility(View.VISIBLE);
                 postDropIfSame(gifView);
             }
         });
@@ -228,6 +226,7 @@ public class LaunchStageView extends FrameLayout {
     }
 
     private void releaseGifView() {
+        if (mStaticStage != null) mStaticStage.setVisibility(View.VISIBLE);
         GifStageView v = mGifView;
         mGifView = null;
         if (v != null) {

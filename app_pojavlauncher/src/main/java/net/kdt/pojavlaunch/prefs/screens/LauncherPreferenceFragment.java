@@ -446,7 +446,7 @@ public class LauncherPreferenceFragment extends Fragment {
                     launcherItems.add(new SettingItem("perf_presets_launcher", SettingItem.TYPE_PRESET_PANEL, "Performance Presets", "", null));
                     launcherItems.add(new SettingItem("check_for_update_btn", SettingItem.TYPE_ACTION,
                             "Check for Update",
-                            "Check online for the latest CS Launcher V3 release via Firebase",
+                            "Check online for the latest CS Launcher V3 release",
                             null).setAction(() -> {
                         net.kdt.pojavlaunch.remote.FirebaseSyncManager.checkForUpdateManual(requireActivity());
                     }));
@@ -558,19 +558,10 @@ public class LauncherPreferenceFragment extends Fragment {
                     List<SettingItem> advItems = new ArrayList<>();
                     advItems.add(new SettingItem("check_for_update_adv_btn", SettingItem.TYPE_ACTION,
                             "Check for Update",
-                            "Check online for the latest CS Launcher V3 release via Firebase",
+                            "Check online for the latest CS Launcher V3 release",
                             null).setAction(() -> {
                         net.kdt.pojavlaunch.remote.FirebaseSyncManager.checkForUpdateManual(requireActivity());
                     }));
-                    // Firebase real-time sync (admin panel) — off by default.
-                    advItems.add(new SettingItem("firebase_sync_enabled", SettingItem.TYPE_SWITCH,
-                            "Firebase Sync",
-                            "Real-time announcements, notifications, sponsorship & updates from the admin panel",
-                            false));
-                    advItems.add(new SettingItem("firebase_db_url", SettingItem.TYPE_INPUT,
-                            "Firebase Database URL",
-                            "Paste the Realtime Database URL shown in your Firebase console (e.g. https://xxx-default-rtdb.firebaseio.com)",
-                            ""));
                     advItems.add(new SettingItem("clear_cache_files", SettingItem.TYPE_ACTION, "Clear Shader & Temporary Caches", "Free up storage by deleting temporary rendering files", null).setAction(() -> {
                         try {
                             clearCacheLocal(requireContext());
