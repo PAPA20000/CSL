@@ -133,6 +133,7 @@ public final class FirebaseSyncManager {
         final String db = effectiveDbUrl(ctx);
         if (db.isEmpty()) return;
         try {
+            CsFirebaseMessagingService.initFcm(ctx);
             FirebaseDatabase dbInst = FirebaseDatabase.getInstance(db);
             try { dbInst.setPersistenceEnabled(true); } catch (Throwable ignored) {}
             attach(dbInst, "/announcements", json -> { sAnnouncements = json; persistCache(ctx); notifyHomeBanner(); });
@@ -229,6 +230,21 @@ public final class FirebaseSyncManager {
     public static boolean isForceUpdate() { return sUpdate.optBoolean("force", false); }
 
     // ─────────────────────────── UI: update ───────────────────────────
+
+    public static void checkForUpdateFromFcm(Activity act, String version, String url, String changelog) {
+        if (version != null && !version.trim().isEmpty() && url != null && !url.trim().isEmpty()) {
+            try {
+                sUpdate.put("version", version);
+                sUpdate.put("url", url);
+                sUpdate.put("changelog", changelog != null ? changelog : "");
+            } catch (Throwable ignored) {}
+        }
+        if (hasUpdate()) {
+            checkForUpdate(act);
+        } else {
+            checkForUpdateManual(act);
+        }
+    }
 
     public static void checkForUpdate(Activity act) {
         if (!hasUpdate()) return;

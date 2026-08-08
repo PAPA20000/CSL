@@ -751,6 +751,37 @@ public class LauncherActivity extends BaseActivity {
             showBootOverlayInstant();
         }
         consumeOpenDownloadsIntent(intent);
+        handleFcmNotificationIntent(intent);
+    }
+
+    /**
+     * Handles navigation when an FCM push notification is tapped.
+     * Navigates to existing Update or Announcement screens without creating duplicates.
+     */
+    private void handleFcmNotificationIntent(@Nullable Intent intent) {
+        if (intent == null || !intent.hasExtra("fcm_type")) return;
+        String type = intent.getStringExtra("fcm_type");
+        String title = intent.getStringExtra("fcm_title");
+        String message = intent.getStringExtra("fcm_message");
+        String version = intent.getStringExtra("fcm_version");
+        String url = intent.getStringExtra("fcm_url");
+        String announcementId = intent.getStringExtra("fcm_announcementId");
+
+        // Remove extra immediately so rotating/recreating activity doesn't re-trigger
+        intent.removeExtra("fcm_type");
+
+        if ("update".equalsIgnoreCase(type) || "launcher_updates".equalsIgnoreCase(type)) {
+            // Open existing Launcher Update screen
+            net.kdt.pojavlaunch.remote.FirebaseSyncManager.checkForUpdateFromFcm(this, version, url, message);
+        } else if ("announcement".equalsIgnoreCase(type)
+                || "server_news".equalsIgnoreCase(type)
+                || "maintenance".equalsIgnoreCase(type)
+                || "launcher_announcements".equalsIgnoreCase(type)) {
+            // Open existing Announcement screen
+            String displayTitle = (title != null && !title.trim().isEmpty()) ? title : "Announcement";
+            String displayBody = (message != null && !message.trim().isEmpty()) ? message : "";
+            net.kdt.pojavlaunch.remote.FirebaseSyncManager.showMarkdownDialog(this, displayTitle, displayBody, false);
+        }
     }
 
     /** Notification tap: a per-download card asked to surface the launcher at
@@ -775,6 +806,7 @@ public class LauncherActivity extends BaseActivity {
         // sponsorship toggle, update checks. No-op when disabled (default).
         try {
             net.kdt.pojavlaunch.remote.FirebaseSyncManager.onResume(this);
+            handleFcmNotificationIntent(getIntent());
         } catch (Throwable t) {
             android.util.Log.w("LauncherActivity", "firebase sync skipped", t);
         }
